@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% if title %}
+    <title>{{ title }} - My Sandbox</title>
+    {% else %}
+    <title>Welcome to My Sandbox</title>
+    {% endif %}
+</head>
+<body>
+    <div>My Sandbox : <a href="/index">Home</a></div>
+    <hr>
+    {% block content %}{% endblock %}
+</body>
+</html>
