@@ -15,4 +15,6 @@ def index():
             'body': {'Jomblo happy !!'}
         }
     ]
-    return render_template('index.html', title='Home', user=user, posts=posts)
+    print(app.config)
+    return ''
+    # return render_template('index.html', title='Home', user=user, posts=posts)
