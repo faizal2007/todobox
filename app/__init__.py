@@ -1,7 +1,25 @@
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+import os
 
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_object('app.config')
 app.config.from_pyfile('config.py', silent=True)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.instance_path, app.config['DATABASE_NAME'])
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-from app import routes
+
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+with app.app_context():
+    if db.engine.url.drivername == 'sqlite':
+        migrate.init_app(app, db, render_as_batch=True)
+    else:
+        migrate.init_app(app, db)
+
+
+from app import routes, models
+
+

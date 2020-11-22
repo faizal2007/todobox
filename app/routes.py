@@ -1,20 +1,14 @@
 from flask import render_template
-from app import app
+from app import app, db
+from app.models import Todo
 
 @app.route('/')
 @app.route('/index')
 def index():
-    user = {'username': 'freakie'}
-    posts = [
-        {
-            'author': {'username': 'Jamaluddin'},
-            'body' : {'What a beutiful world!!'}
-        },
-        {
-            'author': {'username': 'Rasputin'},
-            'body': {'Jomblo happy !!'}
-        }
-    ]
-    print(app.config)
-    return ''
-    # return render_template('index.html', title='Home', user=user, posts=posts)
+    # return ''
+    return render_template('index.html')
+
+@app.route('/todo')
+def todo():
+    # print(app.config)
+    return render_template('todo.html')
