@@ -4,47 +4,30 @@
     <main role="main">
         <div class="jumbotron">
             <div class="container">
-                <div class="card-deck mb-3">
-                    <div class="card mb-2">
-                        <div class="card-header">
-                            <h4 class="my-0 font-weight-normal">
-                                Test
-                            </h4>
+                {## 
+                    Setup todo dashboard
+                ##}
+                {% set count = namespace(value=0) %}
+                {% set breaker = 3 %}
+                {% for todo in todo_record %}
+                    {% if loop.index == 1 + count.value %}    
+                        <div class="card-deck mb-3">
+                    {% endif %}
+                            <div class="card"> 
+                                <div class="card-header">
+                                    <h4 class="my-0 font-weight-normal">
+                                        {{ todo.name }}
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    {{ todo.details }}
+                                </div>
+                            </div>
+                    {% if loop.index == breaker + count.value %}
+                        {% set count.value = count.value + breaker %}
                         </div>
-                        <div class="card-body">
-                            teste
-                        </div>
-                    </div>
-                    <div class="card mb-2">
-                        <div class="card-header">
-                            <h4 class="my-0 font-weight-normal">
-                                Test
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            Lorem Ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-                            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-                            Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                        </div>
-                    </div>
-                </div>
-                <div class="card-deck mb-3">
-                    <div class="card mb-2">
-                        <div class="card-header">
-                            <h4 class="my-0 font-weight-normal">
-                                Test
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            Lorem Ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-                            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-                            Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    {% endif %}
+                {% endfor %}
         </div>
     </main>
 {% endblock %}
