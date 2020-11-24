@@ -8,8 +8,14 @@
                     Setup todo dashboard
                 ##}
                 {% set count = namespace(value=0) %}
-                {% set breaker = 3 %}
+                {% set column_size = 4 %}
+                {% set balance_div = (todo_record|length) % column_size  %}
+                {% set breaker = namespace(value=balance_div) %}
+
                 {% for todo in todo_record %}
+                    {% if loop.index > balance_div %}
+                        {% set breaker.value = column_size %}
+                    {% endif %}
                     {% if loop.index == 1 + count.value %}    
                         <div class="card-deck mb-3">
                     {% endif %}
@@ -20,13 +26,15 @@
                                     </h4>
                                 </div>
                                 <div class="card-body">
+                                    {{ todo.timestamp }} <br>
                                     {{ todo.details }}
                                 </div>
                             </div>
-                    {% if loop.index == breaker + count.value %}
-                        {% set count.value = count.value + breaker %}
+                    {% if loop.index == breaker.value + count.value %}
+                        {% set count.value = count.value + breaker.value %}
                         </div>
                     {% endif %}
+                    
                 {% endfor %}
         </div>
     </main>
