@@ -1,7 +1,7 @@
-from flask import render_template
+from flask import render_template, request, redirect, url_for
 from app import app, db
 from app.models import Todo
-from datetime import datetime, date 
+from datetime import datetime, date, timedelta 
 
 @app.route('/')
 @app.route('/index')
@@ -11,11 +11,18 @@ def index():
 
 @app.route('/todo')
 def todo():
-    # todo_record = db.session.query(Todo).filter_by(status=0).all()
-    todo_record = Todo.query.filter_by(status=0).all()
-    print(date.today())
+    #
+    # Query record 
+    today = date.today()
+    today_record = Todo.query.filter(Todo.status == 0, Todo.timestamp.ilike(
+                        today.strftime("%Y-%m-%d") + '%')
+                        ).all()
     
-    return render_template('todo.html', todo_record=todo_record)
+    
+    # print(datetime.now)
+    # print(date.today() - timedelta(days=1))
+    
+    return render_template('todo.html', today_record=today_record)
 
 @app.route('/add_todo')
 def add_todo():
@@ -23,4 +30,10 @@ def add_todo():
     db.session.add(t)
     db.session.commit()
     return 'test'
+
+@app.route('/<path:todo_id>/delete', methods=['POST'])
+def delete(todo_id):
+    Todo.query.filter(Todo.id==todo_id).delete()
+    db.session.commit()
+    return redirect(url_for('todo'))
     

@@ -8,11 +8,11 @@
                     Setup todo dashboard
                 ##}
                 {% set count = namespace(value=0) %}
-                {% set column_size = 4 %}
-                {% set balance_div = (todo_record|length) % column_size  %}
+                {% set column_size = 2 %}
+                {% set balance_div = (today_record|length) % column_size  %}
                 {% set breaker = namespace(value=balance_div) %}
-
-                {% for todo in todo_record %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                {% for todo in today_record %}
                     {% if loop.index > balance_div %}
                         {% set breaker.value = column_size %}
                     {% endif %}
@@ -22,7 +22,11 @@
                             <div class="card"> 
                                 <div class="card-header">
                                     <h4 class="my-0 font-weight-normal">
+                                        {{ todo.id }} : 
                                         {{ todo.name }}
+                                        <button type="button" class="ml-2 mb-1 close" aria-label="Close" data-id='{{ todo.id }}'>
+                                            <span aria-hidden="true">&times;</span>
+                                          </button>
                                     </h4>
                                 </div>
                                 <div class="card-body">
@@ -37,5 +41,6 @@
                     
                 {% endfor %}
         </div>
+        
     </main>
 {% endblock %}
