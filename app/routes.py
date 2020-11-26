@@ -36,4 +36,14 @@ def delete(todo_id):
     Todo.query.filter(Todo.id==todo_id).delete()
     db.session.commit()
     return redirect(url_for('todo'))
+
+@app.route('/add', methods=['POST'])
+def add():
+    if request.method == "POST":
+        print(request.form.get("title"))
+        print(request.form.get("activities"))
+        t = Todo(name=request.form.get("title"), details=request.form.get("activities"))
+        db.session.add(t)
+        db.session.commit()
+    return redirect(url_for('todo'))
     

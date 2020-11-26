@@ -64,15 +64,16 @@
                     </button>
                 </div>
                 <form>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="modal-body">
                         <!-- <p id="todo-id-view">tes</p> -->
                             <div class="form-group">
                                 <label for="titleFormControlInput1">Title</label>
-                                <input type="text" class="form-control" id="titleFormControlInput1">
+                                <input type="text" class="form-control" id="titleFormControlInput1" name="title">
                             </div>
                             <div class="form-group">
                                 <label for="activitiesFormControlTextArea1">Activities</label>
-                                <textarea id="activitiesFormControlTextArea1" class="form-control" rows="3"></textarea>
+                                <textarea id="activitiesFormControlTextArea1" class="form-control" rows="3" name="activities"></textarea>
                             </div>
                     </div>
                     <div class="modal-footer">
@@ -96,6 +97,17 @@
             function(){
                window.location.href = "{{ url_for('todo') }}";
             });
+    })
+
+    $('#today').click(function() {
+        $.post($SCRIPT_ROOT + '/add', {
+            '_csrf_token': '{{ csrf_token() }}',
+            'title': $('#titleFormControlInput1').val(),
+            'activities': $('#activitiesFormControlTextArea1').val()
+        },
+        function() {
+            window.location.href = "{{ url_for('todo') }}";
+        });
     })
 
     /**    
