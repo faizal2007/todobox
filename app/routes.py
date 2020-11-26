@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, make_response, jsonify
 from app import app, db
 from app.models import Todo
 from datetime import datetime, date, timedelta 
@@ -16,8 +16,7 @@ def todo():
     today = date.today()
     today_record = Todo.query.filter(Todo.status == 0, Todo.timestamp.ilike(
                         today.strftime("%Y-%m-%d") + '%')
-                        ).all()
-    
+                        ).order_by(Todo.timestamp.desc()).all()
     
     # print(datetime.now)
     # print(date.today() - timedelta(days=1))
@@ -40,10 +39,31 @@ def delete(todo_id):
 @app.route('/add', methods=['POST'])
 def add():
     if request.method == "POST":
-        print(request.form.get("title"))
-        print(request.form.get("activities"))
-        t = Todo(name=request.form.get("title"), details=request.form.get("activities"))
-        db.session.add(t)
-        db.session.commit()
+        if request.form.get("todo_id") == '':
+            t = Todo(name=request.form.get("title"), details=request.form.get("activities"))
+            db.session.add(t)
+            db.session.commit()
+        else:
+            id = (request.form.get("todo_id"))
+            t = Todo.query.filter_by(id=id).first()
+            t.name = request.form.get("title")
+            t.details = request.form.get("activities")
+            db.session.commit()
+
     return redirect(url_for('todo'))
+
+@app.route('/<path:id>/todo', methods=['POST'])
+def getTodo(id):
+    print(id)
+    t = Todo.query.filter_by(id=id).first()
+    
+    return make_response(
+        jsonify({
+            'status': 'Success',
+            'id': t.id,
+            'title': t.name,
+            'activities': t.details,
+            'todo-status': t.status
+        }), 200
+    )
     

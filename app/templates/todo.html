@@ -65,8 +65,8 @@
                 </div>
                 <form>
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="todo_id"/>
                     <div class="modal-body">
-                        <!-- <p id="todo-id-view">tes</p> -->
                             <div class="form-group">
                                 <label for="titleFormControlInput1">Title</label>
                                 <input type="text" class="form-control" id="titleFormControlInput1" name="title">
@@ -102,6 +102,7 @@
     $('#today').click(function() {
         $.post($SCRIPT_ROOT + '/add', {
             '_csrf_token': '{{ csrf_token() }}',
+            'todo_id': $("input[name='todo_id']").val(),
             'title': $('#titleFormControlInput1').val(),
             'activities': $('#activitiesFormControlTextArea1').val()
         },
@@ -110,10 +111,16 @@
         });
     })
 
-    /**    
     $('.edit').click(function() {
-        $('#todo-id-view').text($(this).data('id'));  
+        // $('#todo-id-view').text($(this).data('id'));  
+        $.post($SCRIPT_ROOT + $(this).data('id') + '/todo', {
+            '_csrf_token': '{{ csrf_token() }}'
+        },
+        function(data) {
+            $("input[name='todo_id']").val(data['id']);
+            $('#titleFormControlInput1').val(data['title']);
+            $('#activitiesFormControlTextArea1').val(data['activities']);
+        });
     })
-    **/
  </script>
 {% endblock %}
