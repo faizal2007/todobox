@@ -102,7 +102,7 @@
     $('#today').click(function() {
         $.post($SCRIPT_ROOT + '/add', {
             '_csrf_token': '{{ csrf_token() }}',
-            'todo_id': $("input[name='todo_id']").val(),
+            'todo_id': '',
             'title': $('#titleFormControlInput1').val(),
             'activities': $('#activitiesFormControlTextArea1').val()
         },
@@ -117,10 +117,45 @@
             '_csrf_token': '{{ csrf_token() }}'
         },
         function(data) {
+            $('.modal-footer').html(data['button']);
             $("input[name='todo_id']").val(data['id']);
             $('#titleFormControlInput1').val(data['title']);
             $('#activitiesFormControlTextArea1').val(data['activities']);
         });
     })
+
+    $(document.body).on("click", "#save", function (e){
+        $.post($SCRIPT_ROOT + '/add', {
+            '_csrf_token': '{{ csrf_token() }}',
+            'todo_id': $("input[name='todo_id']").val(),
+            'title': $('#titleFormControlInput1').val(),
+            'activities': $('#activitiesFormControlTextArea1').val()
+        },
+        function(data) {
+            // window.location.href = "{{ url_for('todo') }}" + '?update=success';
+            // $('.modal-footer').html('<div class="alert alert-warning" role="alert">Saving ...</div>');
+        })
+        .done(function(data){
+            
+            if(data['status'] == 'failed') {
+                $('.modal-footer').html('<div class="alert alert-info alert-dismissible fade show" role="alert">No change made'+
+                                        '</div>');
+                
+                $(".alert").fadeOut(2000).slideUp(5000, function() {
+                    $(this).alert('close');
+                    $('.modal-footer').html(data['button']);
+                    // window.location.href = "{{ url_for('todo') }}";
+                });
+            }
+            else
+                $('.modal-footer').html('<div class="alert alert-success alert-dismissible fade show" role="alert">Saving success'+
+                                    '</div>');
+            // $(".alert").fadeOut(2000).slideUp(5000, function() {
+            //     $(this).alert('close');
+            //     // window.location.href = "{{ url_for('todo') }}";
+            // });
+        });
+    })
+
  </script>
 {% endblock %}

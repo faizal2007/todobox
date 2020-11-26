@@ -46,15 +46,33 @@ def add():
         else:
             id = (request.form.get("todo_id"))
             t = Todo.query.filter_by(id=id).first()
-            t.name = request.form.get("title")
-            t.details = request.form.get("activities")
-            db.session.commit()
+            title = t.name
+            activites = t.details
+            print(title)
+            print(activites)
+
+            if request.form.get("title") == title and request.form.get("activities") == activites :
+                return make_response(
+                    jsonify({
+                        'status': 'failed',
+                        'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>'
+                    })
+                )
+            else:
+                t.name = request.form.get("title")
+                t.details = request.form.get("activities")
+                db.session.commit()
+                return make_response(
+                    jsonify({
+                        'status': 'success'
+                    })
+                )
 
     return redirect(url_for('todo'))
 
 @app.route('/<path:id>/todo', methods=['POST'])
 def getTodo(id):
-    print(id)
+    
     t = Todo.query.filter_by(id=id).first()
     
     return make_response(
@@ -63,7 +81,8 @@ def getTodo(id):
             'id': t.id,
             'title': t.name,
             'activities': t.details,
-            'todo-status': t.status
+            'todo-status': t.status,
+            'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>'
         }), 200
     )
     
