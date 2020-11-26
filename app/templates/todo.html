@@ -3,12 +3,19 @@
 {% block content %}
     <main role="main">
         <div class="jumbotron">
-            <div class="container">
+            <div class="container-l">
+                <div class="container-fluid mb-3 text-right">
+                    <!-- Button trigger modal -->
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#todoModal">
+                        Add Todo
+                    </button>
+                </div>
+                
                 {## 
                     Setup todo dashboard
                 ##}
                 {% set count = namespace(value=0) %}
-                {% set column_size = 2 %}
+                {% set column_size = 3 %}
                 {% set balance_div = (today_record|length) % column_size  %}
                 {% set breaker = namespace(value=balance_div) %}
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
@@ -22,15 +29,18 @@
                             <div class="card"> 
                                 <div class="card-header">
                                     <h4 class="my-0 font-weight-normal">
-                                        {{ todo.id }} : 
                                         {{ todo.name }}
                                         <button type="button" class="ml-2 mb-1 close" aria-label="Close" data-id='{{ todo.id }}'>
                                             <span aria-hidden="true">&times;</span>
-                                          </button>
+                                        </button>
+                                        <button type="button" class="edit" aria-label="Edit" data-id='{{ todo.id }}' data-toggle="modal" data-target="#todoModal">
+                                            <span aria-hidden="true">&#9998;</span>
+                                        </button>
                                     </h4>
                                 </div>
-                                <div class="card-body">
-                                    {{ todo.timestamp }} <br>
+                                <div class="card-body text-left">
+                                    {{ todo.id }} : 
+                                    {{ todo.timestamp }} 
                                     {{ todo.details }}
                                 </div>
                             </div>
@@ -41,6 +51,36 @@
                     
                 {% endfor %}
         </div>
+        <!-- Modal -->
+    <div class="modal fade mt-5" id="todoModal" tabindex="-1" aria-labelledby="todoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="todoModalLabel">What todo... ?</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form>
+                    <div class="modal-body">
+                        <!-- <p id="todo-id-view">tes</p> -->
+                            <div class="form-group">
+                                <label for="titleFormControlInput1">Title</label>
+                                <input type="text" class="form-control" id="titleFormControlInput1">
+                            </div>
+                            <div class="form-group">
+                                <label for="activitiesFormControlTextArea1">Activities</label>
+                                <textarea id="activitiesFormControlTextArea1" class="form-control" rows="3"></textarea>
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" id="today">Today</button>
+                        <button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
         
     </main>
 {% endblock %}
@@ -54,6 +94,12 @@
             function(){
                window.location.href = "{{ url_for('todo') }}";
             });
-        })
+    })
+
+    /**    
+    $('.edit').click(function() {
+        $('#todo-id-view').text($(this).data('id'));  
+    })
+    **/
  </script>
 {% endblock %}
