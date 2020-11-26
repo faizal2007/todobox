@@ -44,3 +44,16 @@
         
     </main>
 {% endblock %}
+{% block extra_script %}
+<script>
+    $('.close').click(function() {
+            //alert($(this).data('id'));
+            $.post($SCRIPT_ROOT + $(this).data('id') + '/delete', {
+            '_csrf_token': '{{ csrf_token() }}'
+            },
+            function(){
+               window.location.href = "{{ url_for('todo') }}";
+            });
+        })
+ </script>
+{% endblock %}

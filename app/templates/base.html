@@ -54,16 +54,5 @@
   integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" 
   crossorigin="anonymous">
 </script>
-  
-  <script>
-    $('.close').click(function() {
-            //alert($(this).data('id'));
-            $.post($SCRIPT_ROOT + $(this).data('id') + '/delete', {
-            '_csrf_token': '{{ csrf_token() }}'
-            },
-            function(){
-               window.location.href = "{{ url_for('todo') }}";
-            });
-        })
- </script>
+{% block extra_script %}{% endblock %}
 </html>
