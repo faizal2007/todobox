@@ -111,6 +111,19 @@
         });
     })
 
+    $('#tomorrow').click(function() {
+        $.post($SCRIPT_ROOT + '/add', {
+            '_csrf_token': '{{ csrf_token() }}',
+            'todo_id': '',
+            'title': $('#titleFormControlInput1').val(),
+            'activities': $('#activitiesFormControlTextArea1').val(),
+            'tomorrow':1
+        },
+        function() {
+            window.location.href = "{{ url_for('todo') }}";
+        });
+    })
+
     $('.edit').click(function() {
         // $('#todo-id-view').text($(this).data('id'));  
         $.post($SCRIPT_ROOT + $(this).data('id') + '/todo', {
@@ -175,7 +188,7 @@
             if($('#todoModal').hasClass('show')) {
                 $('#today').trigger("click");
             }
-            
+
             if($('#todoModal').hasClass('show')) {
                 $('#save').trigger("click");
             }

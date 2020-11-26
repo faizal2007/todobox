@@ -14,7 +14,7 @@ def todo():
     #
     # Query record 
     today = date.today()
-    today_record = Todo.query.filter(Todo.status == 0, Todo.timestamp.ilike(
+    today_record = Todo.query.filter(Todo.status == 0, Todo.modified.ilike(
                         today.strftime("%Y-%m-%d") + '%')
                         ).order_by(Todo.modified.desc()).all()
     
@@ -41,9 +41,14 @@ def add():
     if request.method == "POST":
         getTitle = request.form.get("title").strip() 
         getActivities = request.form.get("activities").strip()
+        tomorrow = date.today() + timedelta(days=1)
+
+        if 'tomorrow' in request.form:
+            getTomorrow = request.form.get("tomorrow").strip()
 
         if request.form.get("todo_id") == '':
-            t = Todo(name=request.form.get("title"), details=request.form.get("activities"))
+            
+            t = Todo(name=getTitle, details=getActivities, timestamp=None, modified=tomorrow)
             db.session.add(t)
             db.session.commit()
         else:
@@ -70,6 +75,7 @@ def add():
                         'status': 'success'
                     })
                 )
+    
 
     return redirect(url_for('todo'))
 
