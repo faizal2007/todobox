@@ -194,6 +194,11 @@
             }
             event.preventDefault();
         }
+        if (event.altKey && event.which === 13) {
+            if($('#todoModal').hasClass('show')) {
+                $('#tomorrow').trigger("click");
+            }
+        }
         if (event.altKey && event.which === 84) {
             $('#addtodo').trigger("click");
         }
