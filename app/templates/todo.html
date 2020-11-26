@@ -35,7 +35,7 @@
                                 <div class="card-body text-left">
                                     {## {{ todo.id }} : ##}
                                     <p>{{ todo.details }}</p>
-                                    <footer class="blockquote-footer">{{ todo.timestamp }}</footer>
+                                    <footer class="blockquote-footer">{{ todo.modified }}</footer>
                                 </div>
                                 <div class="p-1 mr-2 bg-white">
                                     <button type="button" class="ml-2 mb-1 close" aria-label="Close" data-id='{{ todo.id }}'>
@@ -133,7 +133,9 @@
         },
         function(data) {
             // window.location.href = "{{ url_for('todo') }}" + '?update=success';
-            // $('.modal-footer').html('<div class="alert alert-warning" role="alert">Saving ...</div>');
+            $('#titleFormControlInput1').prop("disabled", true);
+            $('#activitiesFormControlTextArea1').prop("disabled", true);
+            $('.modal-footer').html('<div class="alert alert-warning" role="alert">Saving ...</div>');
         })
         .done(function(data){
             
@@ -143,17 +145,23 @@
                 
                 $(".alert").fadeOut(2000).slideUp(5000, function() {
                     $(this).alert('close');
+                    $('#titleFormControlInput1').prop("disabled", false);
+                    $('#activitiesFormControlTextArea1').prop("disabled", false);
                     $('.modal-footer').html(data['button']);
                     // window.location.href = "{{ url_for('todo') }}";
                 });
             }
-            else
+            else {
+                $('#titleFormControlInput1').prop("disabled", true);
+                $('#activitiesFormControlTextArea1').prop("disabled", true);
                 $('.modal-footer').html('<div class="alert alert-success alert-dismissible fade show" role="alert">Saving success'+
                                     '</div>');
-            // $(".alert").fadeOut(2000).slideUp(5000, function() {
-            //     $(this).alert('close');
-            //     // window.location.href = "{{ url_for('todo') }}";
-            // });
+                $(".alert").fadeOut(2000).slideUp(4000, function() {
+                    $(this).alert('close');
+                    window.location.href = "{{ url_for('todo') }}";
+                });
+            }
+           
         });
     })
 

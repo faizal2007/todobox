@@ -16,7 +16,7 @@ def todo():
     today = date.today()
     today_record = Todo.query.filter(Todo.status == 0, Todo.timestamp.ilike(
                         today.strftime("%Y-%m-%d") + '%')
-                        ).order_by(Todo.timestamp.desc()).all()
+                        ).order_by(Todo.modified.desc()).all()
     
     # print(datetime.now)
     # print(date.today() - timedelta(days=1))
@@ -25,9 +25,9 @@ def todo():
 
 @app.route('/add_todo')
 def add_todo():
-    t = Todo(name='Placebo bola labu', details='Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.')
-    db.session.add(t)
-    db.session.commit()
+    # t = Todo(name='Placebo bola labu', details='Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.')
+    # db.session.add(t)
+    # db.session.commit()
     return 'test'
 
 @app.route('/<path:todo_id>/delete', methods=['POST'])
@@ -48,10 +48,10 @@ def add():
             t = Todo.query.filter_by(id=id).first()
             title = t.name
             activites = t.details
-            print(title)
-            print(activites)
+            getTitle = request.form.get("title").strip() 
+            getActivities = request.form.get("activities").strip()
 
-            if request.form.get("title") == title and request.form.get("activities") == activites :
+            if getTitle == title and getActivities == activites :
                 return make_response(
                     jsonify({
                         'status': 'failed',
@@ -59,8 +59,10 @@ def add():
                     })
                 )
             else:
-                t.name = request.form.get("title")
-                t.details = request.form.get("activities")
+                t.name = getTitle
+                t.details = getActivities
+                t.modified = datetime.now()
+
                 db.session.commit()
                 return make_response(
                     jsonify({
