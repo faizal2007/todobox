@@ -6,7 +6,7 @@
             <div class="container-l">
                 <div class="container-fluid mb-3 text-right">
                     <!-- Button trigger modal -->
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#todoModal">
+                    <button type="button" id="addtodo" class="btn btn-primary" data-toggle="modal" data-target="#todoModal">
                         Add Todo
                     </button>
                 </div>
@@ -69,7 +69,7 @@
                     <div class="modal-body">
                             <div class="form-group">
                                 <label for="titleFormControlInput1">Title</label>
-                                <input type="text" class="form-control" id="titleFormControlInput1" name="title">
+                                <input type="text" class="form-control" id="titleFormControlInput1" name="title" autofocus>
                             </div>
                             <div class="form-group">
                                 <label for="activitiesFormControlTextArea1">Activities</label>
@@ -164,6 +164,27 @@
            
         });
     })
+
+    $('#todoModal').on('shown.bs.modal', function() {
+        $(this).find('[autofocus]').focus();
+    });
+
+    $(document).keydown(function(event) {
+        if (event.which === 13) {
+            // $('#today').trigger("click")
+            if($('#todoModal').hasClass('show')) {
+                $('#today').trigger("click");
+            }
+            
+            if($('#todoModal').hasClass('show')) {
+                $('#save').trigger("click");
+            }
+            event.preventDefault();
+        }
+        if (event.altKey && event.which === 84) {
+            $('#addtodo').trigger("click");
+        }
+    });
 
  </script>
 {% endblock %}

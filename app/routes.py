@@ -39,6 +39,9 @@ def delete(todo_id):
 @app.route('/add', methods=['POST'])
 def add():
     if request.method == "POST":
+        getTitle = request.form.get("title").strip() 
+        getActivities = request.form.get("activities").strip()
+
         if request.form.get("todo_id") == '':
             t = Todo(name=request.form.get("title"), details=request.form.get("activities"))
             db.session.add(t)
@@ -48,8 +51,6 @@ def add():
             t = Todo.query.filter_by(id=id).first()
             title = t.name
             activites = t.details
-            getTitle = request.form.get("title").strip() 
-            getActivities = request.form.get("activities").strip()
 
             if getTitle == title and getActivities == activites :
                 return make_response(
