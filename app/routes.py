@@ -26,7 +26,7 @@ def todo():
 
 @app.route('/add_todo')
 def add_todo():
-    t = Todo(name='Study Gimp', details='Add just image')
+    t = Todo(name='Placebo bola labu', details='Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.')
     db.session.add(t)
     db.session.commit()
     return 'test'

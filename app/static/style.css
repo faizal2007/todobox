@@ -1,7 +1,7 @@
 /* Move down content because we have a fixed navbar that is 3.5rem tall */
 
 body {
-  padding-top: 2.5rem;
+  padding-top: 2rem;
 }
 
 .navbar {
@@ -10,6 +10,7 @@ body {
 
 .edit {
   border: none;
+  background-color: transparent;
   float: right;
   font-size: 1.5rem;
   line-height: 1;

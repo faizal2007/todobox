@@ -30,18 +30,20 @@
                                 <div class="card-header">
                                     <h4 class="my-0 font-weight-normal">
                                         {{ todo.name }}
-                                        <button type="button" class="ml-2 mb-1 close" aria-label="Close" data-id='{{ todo.id }}'>
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                        <button type="button" class="edit" aria-label="Edit" data-id='{{ todo.id }}' data-toggle="modal" data-target="#todoModal">
-                                            <span aria-hidden="true">&#9998;</span>
-                                        </button>
                                     </h4>
                                 </div>
                                 <div class="card-body text-left">
-                                    {{ todo.id }} : 
-                                    {{ todo.timestamp }} 
-                                    {{ todo.details }}
+                                    {## {{ todo.id }} : ##}
+                                    <p>{{ todo.details }}</p>
+                                    <footer class="blockquote-footer">{{ todo.timestamp }}</footer>
+                                </div>
+                                <div class="p-1 mr-2 bg-white">
+                                    <button type="button" class="ml-2 mb-1 close" aria-label="Close" data-id='{{ todo.id }}'>
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                    <button type="button" class="edit" aria-label="Edit" data-id='{{ todo.id }}' data-toggle="modal" data-target="#todoModal">
+                                        <span aria-hidden="true">&#9998;</span>
+                                    </button>
                                 </div>
                             </div>
                     {% if loop.index == breaker.value + count.value %}
