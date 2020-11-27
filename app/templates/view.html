@@ -13,7 +13,7 @@
                         <th>ID</th>
                         <th>Created</th>
                         <th>Title</th>
-                        <th>Modified</th>
+                        <th>Activity</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -33,7 +33,7 @@
                         <th>ID</th>
                         <th>Created</th>
                         <th>Title</th>
-                        <th>Modified</th>
+                        <th>Activities</th>
                         <th>Status</th>
                     </tr>
                 </tfoot>
@@ -50,6 +50,7 @@
         
         $(document).ready(function() {
             let table = $('#todoTable').DataTable({
+                "order": [[ 3, "desc" ]],
                 stateSave: true
             });
             $('#todoTable tbody').on( 'click', 'tr', function () {
