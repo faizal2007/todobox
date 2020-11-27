@@ -55,7 +55,7 @@
                     {% endfor %}
                 </div>
         </div>
-        <!-- Modal -->
+    <!-- Modal -->
     <div class="modal fade mt-5" id="todoModal" tabindex="-1" aria-labelledby="todoModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -157,8 +157,8 @@
             
             if(data['status'] == 'failed') {
                 $('.modal-footer').html('<div class="alert alert-info alert-dismissible fade show" role="alert">No change made'+
-                                        '</div>');
-                
+                                    '</div>');
+            
                 $(".alert").fadeOut(2000).slideUp(5000, function() {
                     $(this).alert('close');
                     $('#titleFormControlInput1').prop("disabled", false);

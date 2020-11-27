@@ -19,13 +19,13 @@ def todo():
                         today.strftime("%Y-%m-%d") + '%')
                         ).order_by(Todo.modified.desc()).all()
     
-    # print(datetime.now)
-    # print(date.today() - timedelta(days=1))
-    
     return render_template('todo.html', today_record=today_record)
 
 @app.route('/<path:todo>/view')
 def view(todo):
+
+    done = {False: "Pending", True: "Done"}
+    
     if todo == 'pending':
         records = Todo.query.filter(Todo.status == 0).order_by(Todo.modified.desc()).all()
     elif todo == 'done':
@@ -33,7 +33,7 @@ def view(todo):
     else:
         abort(404)
 
-    return render_template('view.html', records=records)
+    return render_template('view.html', records=records, done=done)
 
 @app.route('/add_todo')
 def add_todo():
@@ -101,18 +101,25 @@ def add():
 
 @app.route('/<path:id>/todo', methods=['POST'])
 def getTodo(id):
-    
-    t = Todo.query.filter_by(id=id).first()
-    
-    return make_response(
-        jsonify({
-            'status': 'Success',
-            'id': t.id,
-            'title': t.name,
-            'activities': t.details,
-            'todo-status': t.status,
-            'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>' +
-                    '<button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>'
-        }), 200
-    )
+    if request.method == "POST":
+        req = request.form
+        t = Todo.query.filter_by(id=id).first()
+        button = '<button type="button" class="btn btn-primary" id="save"> Save </button>\
+                <button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>'
+
+        if req.get('tbl_save') == '1':
+            button = '<button type="button" class="btn btn-primary" id="save"> Save </button>\
+                <button type="button" class="btn btn-secondary" id="delete">Delete</button>'
+
+        return make_response(
+            jsonify({
+                'status': 'Success',
+                'id': t.id,
+                'title': t.name,
+                'activities': t.details,
+                'todo-status': t.status,
+                'button': button
+            }), 200
+        )
+    return redirect(url_for('todo'))
     

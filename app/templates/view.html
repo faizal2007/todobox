@@ -24,7 +24,7 @@
                         <td>{{ momentjs(todo.timestamp).format("DD/MM /YY h:mm a") }}</td>
                         <td>{{ todo.name }}</td>
                         <td>{{ momentjs(todo.modified).calendar() }}</td>
-                        <td>{{ todo.status }}</td>
+                        <td>{{ done[todo.status] }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -38,6 +38,37 @@
                     </tr>
                 </tfoot>
             </table>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade mt-5" id="todoModal" tabindex="-1" aria-labelledby="todoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="todoModalLabel">What todo... ?</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="todo_id"/>
+                    <div class="modal-body">
+                            <div class="form-group">
+                                <label for="titleFormControlInput1">Title</label>
+                                <input type="text" class="form-control" id="titleFormControlInput1" name="title" autofocus>
+                            </div>
+                            <div class="form-group">
+                                <label for="activitiesFormControlTextArea1">Activities</label>
+                                <textarea id="activitiesFormControlTextArea1" class="form-control" rows="3" name="activities"></textarea>
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" id="today">Today</button>
+                        <button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </main>
@@ -55,6 +86,42 @@
             });
             $('#todoTable tbody').on( 'click', 'tr', function () {
                 if ( $(this).hasClass('selected') ) {
+                    let data = table.row(this).data();
+                    $('#todoModal').modal('show');
+                    $.post("/" + data[0] + '/todo', {
+                        '_csrf_token': '{{ csrf_token() }}',
+                        'tbl_save': 1
+                    },
+                    function(data) {
+                        $('.modal-footer').html(data['button']);
+                        $("input[name='todo_id']").val(data['id']);
+                        $('#titleFormControlInput1').val(data['title']);
+                        $('#activitiesFormControlTextArea1').val(data['activities']);
+                    })
+
+                    $(document.body).on("click", "#save", function (e){
+                        alert("save");
+                    })
+
+                    $(document.body).on("click", "#delete", function (e){
+                        $.post("/" + data[0] + '/delete', {
+                            '_csrf_token': '{{ csrf_token() }}'
+                            },
+                            function(){
+                                $('#titleFormControlInput1').prop("disabled", true);
+                                $('#activitiesFormControlTextArea1').prop("disabled", true);
+                            })
+                            .done(function(data){
+                                $('.modal-footer').html('<div class="alert alert-info alert-dismissible fade show" role="alert">Deleting todo ...'+
+                                        '</div>');
+                                        $(".alert").fadeOut(2000).slideUp(5000, function() {
+                                            $(this).alert('close');
+                                            window.location.href = "{{ url_for('view', todo='pending') }}";
+                                        });
+                            })
+                        // alert(data[0]);
+                    })
+
                     $(this).removeClass('selected');
                 }
                 else {
