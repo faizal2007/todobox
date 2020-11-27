@@ -65,7 +65,7 @@ def add():
                 t = Todo(name=getTitle, details=getActivities)
             else:
                 t = Todo(name=getTitle, details=getActivities, timestamp=None, modified=tomorrow)
-
+            
             db.session.add(t)
             db.session.commit()
         else:
@@ -84,8 +84,11 @@ def add():
             else:
                 t.name = getTitle
                 t.details = getActivities
-                t.modified = datetime.now()
-
+                if getTomorrow == '1':
+                    t.modified = datetime.now() + timedelta(days=1)
+                else:
+                    t.modified = datetime.now()
+                
                 db.session.commit()
                 return make_response(
                     jsonify({
@@ -108,7 +111,8 @@ def getTodo(id):
             'title': t.name,
             'activities': t.details,
             'todo-status': t.status,
-            'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>'
+            'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>' +
+                    '<button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>'
         }), 200
     )
     

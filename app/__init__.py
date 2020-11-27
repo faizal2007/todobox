@@ -14,10 +14,7 @@ csrf = CSRFProtect(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.instance_path, app.config['DATABASE_NAME'])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Set jinja template global
-# momentjs = momentjs(app)
-# app.jinja_env.globals.update(momentjs=momentjs)
 app.jinja_env.globals['momentjs'] = momentjs
-# print(momentjs)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)

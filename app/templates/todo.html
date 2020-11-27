@@ -29,9 +29,9 @@
                         {% endif %}
                                 <div class="card"> 
                                     <div class="card-header">
-                                        <h4 class="my-0 font-weight-normal">
+                                        <h5>
                                             {{ todo.name }}
-                                        </h4>
+                                        </h5>
                                     </div>
                                     <div class="card-body text-left">
                                         {## {{ todo.id }} : ##}
@@ -112,11 +112,12 @@
             window.location.href = "{{ url_for('todo') }}";
         });
     })
-
-    $('#tomorrow').click(function() {
+    
+    //$('#tomorrow').click(function() {
+    $(document.body).on("click", "#tomorrow", function (e){
         $.post($SCRIPT_ROOT + '/add', {
             '_csrf_token': '{{ csrf_token() }}',
-            'todo_id': '',
+            'todo_id': $("input[name='todo_id']").val(),
             'title': $('#titleFormControlInput1').val(),
             'activities': $('#activitiesFormControlTextArea1').val(),
             'tomorrow':1
@@ -185,7 +186,7 @@
     });
 
     $(document).keydown(function(event) {
-        if (event.which === 13) {
+        if (event.which === 13 && event.shiftKey != 1 && event.altKey !=1 ) {
             // $('#today').trigger("click")
             if($('#todoModal').hasClass('show')) {
                 $('#today').trigger("click");
