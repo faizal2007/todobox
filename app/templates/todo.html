@@ -19,6 +19,7 @@
                 {% set balance_div = (today_record|length) % column_size  %}
                 {% set breaker = namespace(value=balance_div) %}
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                
                 {% for todo in today_record %}
                     {% if loop.index > balance_div %}
                         {% set breaker.value = column_size %}

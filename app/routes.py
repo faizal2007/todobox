@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, make_response, jsonify
+from flask import render_template, request, redirect, url_for, make_response, jsonify, abort
 from app import app, db
 from app.models import Todo
 from datetime import datetime, date, timedelta 
@@ -20,14 +20,26 @@ def todo():
     
     # print(datetime.now)
     # print(date.today() - timedelta(days=1))
+    print(today_record)
     
     return render_template('todo.html', today_record=today_record)
 
+@app.route('/<path:todo>/view')
+def view(todo):
+    if todo == 'pending':
+        records = Todo.query.filter(Todo.status == 0).order_by(Todo.modified.desc()).all()
+    elif todo == 'done':
+        records = Todo.query.filter(Todo.status == 1).order_by(Todo.modified.desc()).all()
+    else:
+        abort(404)
+
+    return render_template('view.html', records=records)
+
 @app.route('/add_todo')
 def add_todo():
-    # t = Todo(name='Placebo bola labu', details='Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.')
-    # db.session.add(t)
-    # db.session.commit()
+    t = Todo(name='Placebo bola labu', details='Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.')
+    db.session.add(t)
+    db.session.commit()
     return 'test'
 
 @app.route('/<path:todo_id>/delete', methods=['POST'])
@@ -45,10 +57,15 @@ def add():
 
         if 'tomorrow' in request.form:
             getTomorrow = request.form.get("tomorrow").strip()
+        else:
+            getTomorrow = 0
 
         if request.form.get("todo_id") == '':
-            
-            t = Todo(name=getTitle, details=getActivities, timestamp=None, modified=tomorrow)
+            if getTomorrow == 0:
+                t = Todo(name=getTitle, details=getActivities)
+            else:
+                t = Todo(name=getTitle, details=getActivities, timestamp=None, modified=tomorrow)
+
             db.session.add(t)
             db.session.commit()
         else:

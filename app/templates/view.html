@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% set active_page = all %}
+{% block extra_css %}
+    <link href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+<main role="main">
+    <div class="jumbotron bg-white">
+        <div class="container-xl">
+            <table id="todoTable" class="display w-100">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Created</th>
+                        <th>Title</th>
+                        <th>Modified</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for todo in records %}
+                    <tr>
+                        <td>{{ todo.id }}</td>
+                        <td>{{ todo.timestamp }}</td>
+                        <td>{{ todo.name }}</td>
+                        <td>{{ todo.modified }}</td>
+                        <td>{{ todo.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th>ID</th>
+                        <th>Created</th>
+                        <th>Title</th>
+                        <th>Modified</th>
+                        <th>Status</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</main>
+{% endblock %}
+    {% block extra_script %}
+    <script
+    src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js">
+    </script>
+    <script>
+        $(document).ready(function() {
+            let table = $('#todoTable').DataTable({
+                stateSave: true
+            });
+            $('#todoTable tbody').on( 'click', 'tr', function () {
+                if ( $(this).hasClass('selected') ) {
+                    $(this).removeClass('selected');
+                }
+                else {
+                    table.$('tr.selected').removeClass('selected');
+                    $(this).addClass('selected');
+                }
+            } );
+        } );
+    </script>
+{% endblock %}
