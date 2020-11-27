@@ -36,7 +36,7 @@
                                 <div class="card-body text-left">
                                     {## {{ todo.id }} : ##}
                                     <p>{{ todo.details }}</p>
-                                    <footer class="blockquote-footer">{{ todo.modified }}</footer>
+                                    <footer class="blockquote-footer"> {{ momentjs(todo.modified).calendar() }}</footer>
                                 </div>
                                 <div class="p-1 mr-2 bg-white">
                                     <button type="button" class="ml-2 mb-1 close" aria-label="Close" data-id='{{ todo.id }}'>

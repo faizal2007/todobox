@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
+from app.utils import momentjs
 
 import os
 
@@ -12,6 +13,11 @@ csrf = CSRFProtect(app)
 # app.config['SECRET_KEY'] = 'you-will-never-guess'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.instance_path, app.config['DATABASE_NAME'])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Set jinja template global
+# momentjs = momentjs(app)
+# app.jinja_env.globals.update(momentjs=momentjs)
+app.jinja_env.globals['momentjs'] = momentjs
+# print(momentjs)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -23,6 +29,6 @@ with app.app_context():
         migrate.init_app(app, db)
 
 
-from app import routes, models
+from app import routes, models, utils
 
 

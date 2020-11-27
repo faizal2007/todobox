@@ -21,9 +21,9 @@
                     {% for todo in records %}
                     <tr>
                         <td>{{ todo.id }}</td>
-                        <td>{{ todo.timestamp }}</td>
+                        <td>{{ momentjs(todo.timestamp).format("DD/MM /YY h:mm a") }}</td>
                         <td>{{ todo.name }}</td>
-                        <td>{{ todo.modified }}</td>
+                        <td>{{ momentjs(todo.modified).calendar() }}</td>
                         <td>{{ todo.status }}</td>
                     </tr>
                     {% endfor %}
@@ -47,6 +47,7 @@
     src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js">
     </script>
     <script>
+        
         $(document).ready(function() {
             let table = $('#todoTable').DataTable({
                 stateSave: true
