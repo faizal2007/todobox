@@ -20,7 +20,6 @@ def todo():
     
     # print(datetime.now)
     # print(date.today() - timedelta(days=1))
-    print(today_record)
     
     return render_template('todo.html', today_record=today_record)
 
@@ -53,8 +52,8 @@ def add():
     if request.method == "POST":
         getTitle = request.form.get("title").strip() 
         getActivities = request.form.get("activities").strip()
-        tomorrow = date.today() + timedelta(days=1)
-
+        tomorrow = datetime.now() + timedelta(days=1)
+        
         if 'tomorrow' in request.form:
             getTomorrow = request.form.get("tomorrow").strip()
         else:
