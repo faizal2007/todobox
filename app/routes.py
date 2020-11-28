@@ -108,11 +108,13 @@ def getTodo(id):
                 <button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>'
 
         if req.get('tbl_save') == '1':
-            todoBtn = '<button type="button" class="btn btn-primary" id="todo"> Todo </button>'
+            todoBtn = '<button type="button" class="btn btn-primary" id="save"> Todo </button>'
             delBtn = '<button type="button" class="btn btn-warning" id="delete">Delete</button>'
-            button = delBtn
-            if t.modified.date() > datetime.now().date():
-                button = todoBtn + button
+            saveBtn = '<button type="button" class="btn btn-primary" id="save">Save</button>'
+            if t.modified.date() == datetime.now().date():
+                button = saveBtn + delBtn
+            else:
+                button = todoBtn + delBtn
             
         return make_response(
             jsonify({

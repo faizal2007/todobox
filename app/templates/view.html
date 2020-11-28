@@ -78,7 +78,50 @@
     src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js">
     </script>
     <script>
-        
+        function todo_add(data){
+            /**
+             * Function to add todo
+            * */
+            $.post($SCRIPT_ROOT + '/add', {
+                        '_csrf_token': '{{ csrf_token() }}',
+                        'todo_id': data[0],
+                        'title': $('#titleFormControlInput1').val(),
+                        'activities': $('#activitiesFormControlTextArea1').val()
+                    },
+                    function(data) {
+                        $('#titleFormControlInput1').prop("disabled", true);
+                        $('#activitiesFormControlTextArea1').prop("disabled", true);
+                        $('.modal-footer').html('<div class="alert alert-warning" role="alert">Saving ...</div>');
+                    })
+                    .done(function(data){
+                        if(data['status'] == 'failed') {
+                            $('.modal-footer').html('<div class="alert alert-info alert-dismissible fade show" role="alert">No change made'+
+                                                '</div>');
+                        
+                            $(".alert").fadeOut(2000).slideUp(5000, function() {
+                                $(this).alert('close');
+                                $('#titleFormControlInput1').prop("disabled", false);
+                                $('#activitiesFormControlTextArea1').prop("disabled", false);
+                                $('.modal-footer').html('<button type="button" class="btn btn-warning" id="delete">Delete</button>');
+                                // window.location.href = "{{ url_for('todo') }}";
+                            });
+                        }
+                        else {
+                            $('#titleFormControlInput1').prop("disabled", true);
+                            $('#activitiesFormControlTextArea1').prop("disabled", true);
+                            $('.modal-footer').html('<div class="alert alert-success alert-dismissible fade show" role="alert">Saving success'+
+                                                '</div>');
+                            $(".alert").fadeOut(2000).slideUp(4000, function() {
+                                $(this).alert('close');
+                                window.location.href = "{{ url_for('view', todo='pending') }}";
+                            });
+                        }
+                    
+                    });
+        }
+        /**
+         * todo table list
+        * */
         $(document).ready(function() {
             let table = $('#todoTable').DataTable({
                 "order": [[ 3, "desc" ]],
@@ -98,44 +141,8 @@
                         $('#titleFormControlInput1').val(data['title']);
                         $('#activitiesFormControlTextArea1').val(data['activities']);
                     })
-
-                    $(document.body).on("click", "#todo", function (e){
-                        $.post($SCRIPT_ROOT + '/add', {
-                            '_csrf_token': '{{ csrf_token() }}',
-                            'todo_id': data[0],
-                            'title': $('#titleFormControlInput1').val(),
-                            'activities': $('#activitiesFormControlTextArea1').val()
-                        },
-                        function(data) {
-                            $('#titleFormControlInput1').prop("disabled", true);
-                            $('#activitiesFormControlTextArea1').prop("disabled", true);
-                            $('.modal-footer').html('<div class="alert alert-warning" role="alert">Saving ...</div>');
-                        })
-                        .done(function(data){
-                            if(data['status'] == 'failed') {
-                                $('.modal-footer').html('<div class="alert alert-info alert-dismissible fade show" role="alert">No change made'+
-                                                    '</div>');
-                            
-                                $(".alert").fadeOut(2000).slideUp(5000, function() {
-                                    $(this).alert('close');
-                                    $('#titleFormControlInput1').prop("disabled", false);
-                                    $('#activitiesFormControlTextArea1').prop("disabled", false);
-                                    $('.modal-footer').html('<button type="button" class="btn btn-warning" id="delete">Delete</button>');
-                                    // window.location.href = "{{ url_for('todo') }}";
-                                });
-                            }
-                            else {
-                                $('#titleFormControlInput1').prop("disabled", true);
-                                $('#activitiesFormControlTextArea1').prop("disabled", true);
-                                $('.modal-footer').html('<div class="alert alert-success alert-dismissible fade show" role="alert">Saving success'+
-                                                    '</div>');
-                                $(".alert").fadeOut(2000).slideUp(4000, function() {
-                                    $(this).alert('close');
-                                    window.location.href = "{{ url_for('todo') }}";
-                                });
-                            }
-                        
-                        });
+                    $(document.body).on("click", "#save", function (e){
+                        todo_add(data);
                     })
 
                     $(document.body).on("click", "#delete", function (e){
