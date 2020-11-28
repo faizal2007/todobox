@@ -108,9 +108,12 @@ def getTodo(id):
                 <button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>'
 
         if req.get('tbl_save') == '1':
-            button = '<button type="button" class="btn btn-primary" id="save"> Save </button>\
-                <button type="button" class="btn btn-secondary" id="delete">Delete</button>'
-
+            todoBtn = '<button type="button" class="btn btn-primary" id="todo"> Todo </button>'
+            delBtn = '<button type="button" class="btn btn-warning" id="delete">Delete</button>'
+            button = delBtn
+            if t.modified.date() > datetime.now().date():
+                button = todoBtn + button
+            
         return make_response(
             jsonify({
                 'status': 'Success',
@@ -118,6 +121,7 @@ def getTodo(id):
                 'title': t.name,
                 'activities': t.details,
                 'todo-status': t.status,
+                'modified': t.modified,
                 'button': button
             }), 200
         )
