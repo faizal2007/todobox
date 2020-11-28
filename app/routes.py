@@ -69,18 +69,27 @@ def add():
             db.session.add(t)
             db.session.commit()
         else:
-            id = (request.form.get("todo_id"))
+            id = request.form.get("todo_id")
+            byPass = request.form.get("byPass")
             t = Todo.query.filter_by(id=id).first()
             title = t.name
             activites = t.details
+            print(byPass)
 
             if getTitle == title and getActivities == activites :
-                return make_response(
-                    jsonify({
-                        'status': 'failed',
-                        'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>'
-                    })
-                )
+                if getTomorrow == '1':
+                    t.modified = datetime.now() + timedelta(days=1)
+                    db.session.commit()
+                elif byPass == '1':
+                    t.modified = datetime.now()
+                    db.session.commit()
+                else:
+                    return make_response(
+                        jsonify({
+                            'status': 'failed',
+                            'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>'
+                        })
+                    )    
             else:
                 t.name = getTitle
                 t.details = getActivities
@@ -108,7 +117,7 @@ def getTodo(id):
                 <button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>'
 
         if req.get('tbl_save') == '1':
-            todoBtn = '<button type="button" class="btn btn-primary" id="save"> Todo </button>'
+            todoBtn = '<button type="button" class="btn btn-primary" id="todo"> Todo </button>'
             delBtn = '<button type="button" class="btn btn-warning" id="delete">Delete</button>'
             saveBtn = '<button type="button" class="btn btn-primary" id="save">Save</button>'
             if t.modified.date() == datetime.now().date():

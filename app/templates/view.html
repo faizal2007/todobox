@@ -21,7 +21,7 @@
                     {% for todo in records %}
                     <tr>
                         <td>{{ todo.id }}</td>
-                        <td>{{ momentjs(todo.timestamp).format("DD/MM /YY h:mm a") }}</td>
+                        <td>{{ momentjs(todo.timestamp).format("DD/MM/YY h:mm a") }}</td>
                         <td>{{ todo.name }}</td>
                         <td>{{ momentjs(todo.modified).calendar() }}</td>
                         <td>{{ done[todo.status] }}</td>
@@ -78,14 +78,16 @@
     src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js">
     </script>
     <script>
-        function todo_add(data){
+        function todo_add(data, byPass=0){
             /**
              * Function to add todo
             * */
+        
             $.post($SCRIPT_ROOT + '/add', {
                         '_csrf_token': '{{ csrf_token() }}',
                         'todo_id': data[0],
                         'title': $('#titleFormControlInput1').val(),
+                        'byPass': byPass,
                         'activities': $('#activitiesFormControlTextArea1').val()
                     },
                     function(data) {
@@ -141,8 +143,13 @@
                         $('#titleFormControlInput1').val(data['title']);
                         $('#activitiesFormControlTextArea1').val(data['activities']);
                     })
+
                     $(document.body).on("click", "#save", function (e){
                         todo_add(data);
+                    })
+
+                    $(document.body).on("click", "#todo", function (e){
+                        todo_add(data, 1);
                     })
 
                     $(document.body).on("click", "#delete", function (e){
