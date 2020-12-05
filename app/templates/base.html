@@ -33,9 +33,7 @@
   {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- <a class="{{ 'nav-link active' if active_page == 'index' else 'nav-link' }}" href="{{ url_for('index') }}">Home</a> -->
-    
-    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    <nav role="navigation" class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
         <a class="navbar-brand" href="#">{{ config.TITLE }}</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
@@ -49,7 +47,7 @@
             <li class="{{ 'nav-item active' if active_page == 'todo' else 'nav-item' }}">
               <a class="nav-link" href="{{ url_for('todo') }}">Todo</a>
             </li>
-            <li class="{{ 'nav-item active' if active_page == 'todo' else 'nav-item' }}">
+            <li class="{{ 'nav-item active' if active_page == 'pending' else 'nav-item' }}">
               <a class="nav-link" href="{{ url_for('view', todo='pending') }}">Pending</a>
             </li>
           </ul>
