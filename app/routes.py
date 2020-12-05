@@ -1,16 +1,30 @@
-from flask import render_template, request, redirect, url_for, make_response, jsonify, abort
+from flask import render_template, request, redirect, url_for, make_response, jsonify, abort, flash, redirect
 from app import app, db
-from app.models import Todo
-# from app.utils import momentjs
+from flask_login import current_user, login_user, login_required, logout_user
+from app.models import Todo, User
+from app.forms import LoginForm
+from werkzeug.urls import url_parse
 from datetime import datetime, date, timedelta 
+
+"""
+" Initiatiate default user
+"""
+@app.before_first_request
+def initiate_user():
+    user = User.query.all()
+    if len(user) == 0:
+        u = User(username='admin', email='admin@examples.com')
+        u.set_password('admin1234')
+        db.session.add(u)
+        db.session.commit()
 
 @app.route('/')
 @app.route('/index')
 def index():
-    # return ''
-    return render_template('index.html')
+    return render_template('index.html', title="Home")
 
 @app.route('/todo')
+@login_required
 def todo():
     #
     # Query record 
@@ -19,9 +33,32 @@ def todo():
                         today.strftime("%Y-%m-%d") + '%')
                         ).order_by(Todo.modified.desc()).all()
     
-    return render_template('todo.html', today_record=today_record)
+    return render_template('todo.html', title="Todo", today_record=today_record)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('todo'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')
+            return redirect(url_for('login'))
+        login_user(user, remember=form.remember_me.data)
+        next_page = request.args.get('next')
+        if not next_page or url_parse(next_page).netloc != '':
+            next_page = url_parse('index')
+        return redirect(next_page)
+    return render_template('login.html', title='Sign In', form=form)
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
 
 @app.route('/<path:todo>/view')
+@login_required
 def view(todo):
 
     done = {False: "Pending", True: "Done"}
@@ -33,13 +70,13 @@ def view(todo):
     else:
         abort(404)
 
-    return render_template('view.html', records=records, done=done)
+    return render_template('view.html', title="Pending", records=records, done=done)
 
 @app.route('/add_todo')
 def add_todo():
-    t = Todo(name='Placebo bola labu', details='Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.')
-    db.session.add(t)
-    db.session.commit()
+    # t = Todo(name='Placebo bola labu', details='Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.')
+    # db.session.add(t)
+    # db.session.commit()
     return 'test'
 
 @app.route('/<path:todo_id>/delete', methods=['POST'])

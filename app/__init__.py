@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
+from flask_login import LoginManager
 from app.utils import momentjs
 
 import os
@@ -15,6 +16,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.instance
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Set jinja template global
 app.jinja_env.globals['momentjs'] = momentjs
+login = LoginManager(app)
+login.login_view = 'login'
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
