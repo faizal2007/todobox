@@ -1,65 +1,63 @@
 {% extends "base.html" %}
 {% set active_page = 'todo' %}
 {% block content %}
-    <main role="main">
-        <div class="jumbotron">
-            <div class="container">
-                <div class="container-fluid mb-3 text-right">
-                    <!-- Button trigger modal -->
-                    <button type="button" id="addtodo" class="btn btn-primary" data-toggle="modal" data-target="#todoModal">
-                        Add Todo
-                    </button>
-                </div>
-                <div class="container">
-                    {## 
-                        Setup todo dashboard
-                    ##}
-                    {% set count = namespace(value=0) %}
-                    {% set column_size = 3 %}
-                    {% set balance_div = (today_record|length) % column_size  %}
-                    {% set breaker = namespace(value=balance_div) %}
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    
-                    {% for todo in today_record %}
-                        {% if loop.index > balance_div %}
-                            {% set breaker.value = column_size %}
-                        {% endif %}
-                        {% if loop.index == 1 + count.value %}    
-                            <div class="card-deck mb-3">
-                        {% endif %}
-                                <div class="card"> 
-                                    <div class="card-header">
-                                        <h5>
-                                            {{ todo.name }}
-                                        </h5>
-                                    </div>
-                                    <div class="card-body text-left">
-                                        {## {{ todo.id }} : ##}
-                                        <p>{{ todo.details }}</p>
-                                        <footer class="blockquote-footer"> {{ momentjs(todo.modified).calendar() }}</footer>
-                                    </div>
-                                    <div class="p-1 mr-2 bg-white">
-                                        <button type="button" class="ml-2 mb-1 done" aria-label="Done" data-id='{{ todo.id }}'>
-                                            <span class="material-icons">
-                                                assignment_turned_in
-                                            </span>
-                                        </button>
-                                        <button type="button" class="ml-2 mb-1 close" aria-label="Close" data-id='{{ todo.id }}'>
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                        <button type="button" class="edit" aria-label="Edit" data-id='{{ todo.id }}' data-toggle="modal" data-target="#todoModal">
-                                            <span aria-hidden="true">&#9998;</span>
-                                        </button>
-                                    </div>
-                                </div>
-                        {% if loop.index == breaker.value + count.value %}
-                            {% set count.value = count.value + breaker.value %}
-                            </div>
-                        {% endif %}
-                        
-                    {% endfor %}
-                </div>
+<main role="main">
+    <div class="container">
+        <div class="container-fluid mb-3 text-right">
+            <!-- Button trigger modal -->
+            <button type="button" id="addtodo" class="btn btn-primary" data-toggle="modal" data-target="#todoModal">
+                Add Todo
+            </button>
         </div>
+        <div class="container">
+            {## 
+                Setup todo dashboard
+            ##}
+            {% set count = namespace(value=0) %}
+            {% set column_size = 3 %}
+            {% set balance_div = (today_record|length) % column_size  %}
+            {% set breaker = namespace(value=balance_div) %}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            {% for todo in today_record %}
+                {% if loop.index > balance_div %}
+                    {% set breaker.value = column_size %}
+                {% endif %}
+                {% if loop.index == 1 + count.value %}    
+                    <div class="card-deck mb-3">
+                {% endif %}
+                        <div class="card"> 
+                            <div class="card-header">
+                                <h5>
+                                    {{ todo.name }}
+                                </h5>
+                            </div>
+                            <div class="card-body text-left">
+                                {## {{ todo.id }} : ##}
+                                <p>{{ todo.details }}</p>
+                                <footer class="blockquote-footer"> {{ momentjs(todo.modified).calendar() }}</footer>
+                            </div>
+                            <div class="p-1 mr-2 bg-white">
+                                <button type="button" class="ml-2 mb-1 done" aria-label="Done" data-id='{{ todo.id }}'>
+                                    <span class="material-icons">
+                                        assignment_turned_in
+                                    </span>
+                                </button>
+                                <button type="button" class="ml-2 mb-1 close" aria-label="Close" data-id='{{ todo.id }}'>
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                <button type="button" class="edit" aria-label="Edit" data-id='{{ todo.id }}' data-toggle="modal" data-target="#todoModal">
+                                    <span aria-hidden="true">&#9998;</span>
+                                </button>
+                            </div>
+                        </div>
+                {% if loop.index == breaker.value + count.value %}
+                    {% set count.value = count.value + breaker.value %}
+                    </div>
+                {% endif %}
+                
+            {% endfor %}
+    </div>
     <!-- Modal -->
     <div class="modal fade mt-5" id="todoModal" tabindex="-1" aria-labelledby="todoModalLabel" aria-hidden="true">
         <div class="modal-dialog">

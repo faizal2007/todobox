@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% set active_page = 'account security' %}
+{% block content %}
+<main role="main">
+    <div class="container text-center">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div id="changeAlert" class="alert alert-success alert-dismissible fade show" role="alert">
+            
+                {% for message in messages %}
+                    {{ message }}
+                {% endfor %}
+            
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endif %}
+    {% endwith %}
+        <div class="container-fluid badge badge-light border pt-3">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="form-group row">
+                    {{ form.oldPassword.label(class="col-sm-3 col-form-label") }}
+                    <div class="col-sm-7">
+                        {{ form.oldPassword(size=32, class="form-control") }}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        {% for error in form.oldPassword.errors %}
+                            <span style="color: red;">[{{ error }}]</span>
+                        {% endfor %}    
+                    </div>
+                </div>
+                <div class="form-group row">
+                    {{ form.password.label(for="inputPassword", class="col-sm-3 col-form-label") }}
+                    <div class="col-sm-7">
+                        {{ form.password(size=32, class="form-control") }}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        {% for error in form.password.errors %}
+                            <span style="color: red;">[{{ error }}]</span>
+                        {% endfor %}    
+                    </div>
+                </div>
+                <div class="form-group row">
+                    {{ form.confirm.label(for="inputPassword", class="col-sm-3 col-form-label") }}
+                    <div class="col-sm-7">
+                        {{ form.confirm(size=32, class="form-control") }}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        {% for error in form.password.errors %}
+                            <span style="color: red;">[{{ error }}]</span>
+                        {% endfor %}    
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-10 text-right">
+                        <button type="submit" class="btn btn-primary">Change password</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+    </div>
+</main>
+{% endblock%}
+{% block extra_script %}
+<script>
+    $('#changeAlert').on('closed.bs.alert', function () {
+        window.location.href = "{{ url_for('logout') }}";
+    })
+    $(".alert").fadeOut(3000).slideUp(3000, function() {
+            window.location.href = "{{ url_for('logout') }}";
+    });
+</script>
+{% endblock %}

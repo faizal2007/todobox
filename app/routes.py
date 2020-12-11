@@ -2,7 +2,7 @@ from flask import render_template, request, redirect, url_for, make_response, js
 from app import app, db
 from flask_login import current_user, login_user, login_required, logout_user
 from app.models import Todo, User
-from app.forms import LoginForm
+from app.forms import LoginForm, ChangePassword
 from werkzeug.urls import url_parse
 from datetime import datetime, date, timedelta 
 
@@ -53,9 +53,23 @@ def login():
     return render_template('login.html', title='Sign In', form=form)
 
 @app.route('/logout')
+@login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+@app.route('/security', methods=['GET', 'POST'])
+@login_required
+def security():
+    form = ChangePassword(userId=current_user.id)
+    if form.validate_on_submit():
+        user = User.query.filter_by(id=form.userId.data).first()
+        user.set_password(form.password.data)
+        db.session.commit()
+        flash('Password Successfully changed.')
+        return redirect(url_for('security'))
+    
+    return render_template('security.html', title='User Security', form=form)
 
 @app.route('/<path:todo>/view')
 @login_required
@@ -80,12 +94,14 @@ def add_todo():
     return 'test'
 
 @app.route('/<path:todo_id>/delete', methods=['POST'])
+@login_required
 def delete(todo_id):
     Todo.query.filter(Todo.id==todo_id).delete()
     db.session.commit()
     return redirect(url_for('todo'))
 
 @app.route('/add', methods=['POST'])
+@login_required
 def add():
     if request.method == "POST":
         getTitle = request.form.get("title").strip() 
@@ -111,7 +127,6 @@ def add():
             t = Todo.query.filter_by(id=id).first()
             title = t.name
             activites = t.details
-            print(byPass)
 
             if getTitle == title and getActivities == activites :
                 if getTomorrow == '1':
@@ -146,6 +161,7 @@ def add():
     return redirect(url_for('todo'))
 
 @app.route('/<path:id>/todo', methods=['POST'])
+@login_required
 def getTodo(id):
     if request.method == "POST":
         req = request.form
