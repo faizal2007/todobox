@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% set active_page = 'user account' %}
+{% block content %}
+<main role="main">
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div id="changeAlert" class="alert alert-success alert-dismissible fade show" role="alert">
+            {% for message in messages %}
+                {{ message }}<br>
+            {% endfor %}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endif %}
+        {% endwith %}
+        <div class="container-fluid badge badge-light border pt-3">
+            <form action="" method="POST">
+                {{ form.hidden_tag() }}
+                <div class="form-group row">
+                    {{ form.username.label(class="col-sm-3 col-form-label") }}
+                    <div class="col-sm-7">
+                        {{ form.username(size=32, class="form-control", value=current_user.username) }}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        {% for error in form.username.errors %}
+                            <span style="color: red;">[{{ error }}]</span>
+                        {% endfor %}    
+                    </div>
+                </div>
+                <div class="form-group row">
+                    {{ form.email.label(class="col-sm-3 col-form-label") }}
+                    <div class="col-sm-7">
+                        {{ form.email(size=32, class="form-control", value=current_user.email) }}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        {% for error in form.email.errors %}
+                            <span style="color: red;">[{{ error }}]</span>
+                        {% endfor %}    
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-10 text-right">
+                        <button type="submit" class="btn btn-primary">Update Account</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %}

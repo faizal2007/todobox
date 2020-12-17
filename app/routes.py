@@ -2,7 +2,7 @@ from flask import render_template, request, redirect, url_for, make_response, js
 from app import app, db
 from flask_login import current_user, login_user, login_required, logout_user
 from app.models import Todo, User
-from app.forms import LoginForm, ChangePassword
+from app.forms import LoginForm, ChangePassword, UpdateAccount
 from werkzeug.urls import url_parse
 from datetime import datetime, date, timedelta 
 
@@ -38,6 +38,7 @@ def todo():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
+        session.permanent = True
         return redirect(url_for('todo'))
     form = LoginForm()
     if form.validate_on_submit():
@@ -70,6 +71,34 @@ def security():
         return redirect(url_for('security'))
     
     return render_template('security.html', title='User Security', form=form)
+
+@app.route('/account', methods=['GET', 'POST'])
+@login_required
+def account():
+    form = UpdateAccount()
+    if form.validate_on_submit():
+        user = User.query.filter_by(id=current_user.id).first()
+        if user.check_username(form.username.data) and not user.check_email(form.email.data):
+            """ Update Email address """
+            user.email = form.email.data
+            db.session.commit()
+            flash('Email successfully updated.')
+        elif not user.check_username(form.username.data) and user.check_email(form.email.data):
+            """ Update email address """
+            user.username = form.username.data
+            db.session.commit()
+            flash('Username updated.')
+        elif not user.check_username(form.username.data) and not user.check_email(form.email.data):
+            """ Update email and username address """
+            user.username = form.username.data
+            user.email = form.email.data
+            db.session.commit()
+            flash('Username updated.')
+            flash('Email updated.')
+        else:
+            flash('No change made.')
+        # print(user.check_email(form.email.data))
+    return render_template('account.html', title='User Account', form=form)
 
 @app.route('/<path:todo>/view')
 @login_required

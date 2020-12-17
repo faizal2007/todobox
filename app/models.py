@@ -19,10 +19,22 @@ class User(UserMixin, db.Model):
         
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def check_username(self, username):
+        if self.username == username:
+            return True
+        else:
+            return False
+        
+    def check_email(self, email):
+        if self.email == email:
+            return True
+        else:
+            return False
 
 class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), index=True, nullable=False)
+    name = db.Column(db.String(80), index=True, nullable=False)
     details = db.Column(db.String(250))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.now)
     modified = db.Column(db.DateTime, index=True, default=datetime.now)
