@@ -1,2 +1,6 @@
 FLASK_ENV=development
 FLASK_APP=mysandbox.py
+POSTGRES_URL="192.168.1.24:5432"
+POSTGRES_USER="postgres"
+POSTGRES_PW="cyb3rsp@c3"
+POSTGRES_DB="todo_db"

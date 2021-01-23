@@ -29,9 +29,7 @@ def todo():
     #
     # Query record 
     today = date.today()
-    today_record = Todo.query.filter(Todo.status == 0, Todo.modified.ilike(
-                        today.strftime("%Y-%m-%d") + '%')
-                        ).order_by(Todo.modified.desc()).all()
+    today_record = Todo.query.filter(Todo.status == False, Todo.modified >= today.strftime("%Y-%m-%d")).order_by(Todo.modified.desc()).all()
     
     return render_template('todo.html', title="Todo", today_record=today_record)
 
@@ -107,9 +105,9 @@ def view(todo):
     done = {False: "Pending", True: "Done"}
     
     if todo == 'pending':
-        records = Todo.query.filter(Todo.status == 0).order_by(Todo.modified.desc()).all()
+        records = Todo.query.filter(Todo.status == False).order_by(Todo.modified.desc()).all()
     elif todo == 'done':
-        records = Todo.query.filter(Todo.status == 1).order_by(Todo.modified.desc()).all()
+        records = Todo.query.filter(Todo.status == True).order_by(Todo.modified.desc()).all()
     else:
         abort(404)
 
@@ -219,4 +217,3 @@ def getTodo(id):
             }), 200
         )
     return redirect(url_for('todo'))
-    

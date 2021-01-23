@@ -5,15 +5,22 @@ from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager
 from datetime import timedelta 
 from app.utils import momentjs
-
+from lib.database import connect_postgres
 import os
 
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_object('app.config')
 app.config.from_pyfile('config.py', silent=True)
 csrf = CSRFProtect(app)
-# app.config['SECRET_KEY'] = 'you-will-never-guess'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.instance_path, app.config['DATABASE_NAME'])
+
+if app.config['DATABASE_DEFAULT'] == 'postgres':
+    """ postgres connection """
+    connect_postgres(app)
+else:
+    """ sqlite connection """
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.instance_path, app.config['DATABASE_NAME'])
+
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(minutes=120)
 # Set jinja template global
