@@ -29,7 +29,12 @@ def todo():
     #
     # Query record 
     today = date.today()
-    today_record = Todo.query.filter(Todo.status == False, Todo.modified >= today.strftime("%Y-%m-%d")).order_by(Todo.modified.desc()).all()
+    today_record = Todo.query.filter(
+                                        Todo.status == False, 
+                                        Todo.modified >= today.strftime("%Y-%m-%d")
+                            ).order_by(
+                                        Todo.modified.asc()
+    ).all()
     
     return render_template('todo.html', title="Todo", today_record=today_record)
 
