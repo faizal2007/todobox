@@ -4,7 +4,7 @@ from flask_login import current_user, login_user, login_required, logout_user
 from app.models import Todo, User
 from app.forms import LoginForm, ChangePassword, UpdateAccount
 from werkzeug.urls import url_parse
-from datetime import datetime, date, timedelta 
+from datetime import datetime, date, timedelta
 
 """
 " Initiatiate default user
@@ -27,21 +27,20 @@ def index():
 @login_required
 def todo():
     #
-    # Query record 
+    # Query record
     today = date.today()
     today_record = Todo.query.filter(
-                                        Todo.status == False, 
+                                        Todo.status == False,
                                         Todo.modified >= today.strftime("%Y-%m-%d")
                             ).order_by(
                                         Todo.modified.asc()
     ).all()
-    
+
     return render_template('todo.html', title="Todo", today_record=today_record)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        session.permanent = True
         return redirect(url_for('todo'))
     form = LoginForm()
     if form.validate_on_submit():
@@ -52,7 +51,8 @@ def login():
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_parse('todo')
+            next_page = url_for('todo')
+
         return redirect(next_page)
     return render_template('login.html', title='Sign In', form=form)
 
@@ -72,7 +72,7 @@ def security():
         db.session.commit()
         flash('Password Successfully changed.')
         return redirect(url_for('security'))
-    
+
     return render_template('security.html', title='User Security', form=form)
 
 @app.route('/account', methods=['GET', 'POST'])
@@ -108,7 +108,7 @@ def account():
 def view(todo):
 
     done = {False: "Pending", True: "Done"}
-    
+
     if todo == 'pending':
         records = Todo.query.filter(Todo.status == False).order_by(Todo.modified.desc()).all()
     elif todo == 'done':
@@ -136,10 +136,10 @@ def delete(todo_id):
 @login_required
 def add():
     if request.method == "POST":
-        getTitle = request.form.get("title").strip() 
+        getTitle = request.form.get("title").strip()
         getActivities = request.form.get("activities").strip()
         tomorrow = datetime.now() + timedelta(days=1)
-        
+
         if 'tomorrow' in request.form:
             getTomorrow = request.form.get("tomorrow").strip()
         else:
@@ -150,7 +150,7 @@ def add():
                 t = Todo(name=getTitle, details=getActivities)
             else:
                 t = Todo(name=getTitle, details=getActivities, timestamp=None, modified=tomorrow)
-            
+
             db.session.add(t)
             db.session.commit()
         else:
@@ -173,7 +173,7 @@ def add():
                             'status': 'failed',
                             'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>'
                         })
-                    )    
+                    )
             else:
                 t.name = getTitle
                 t.details = getActivities
@@ -181,14 +181,14 @@ def add():
                     t.modified = datetime.now() + timedelta(days=1)
                 else:
                     t.modified = datetime.now()
-                
+
                 db.session.commit()
                 return make_response(
                     jsonify({
                         'status': 'success'
                     })
                 )
-    
+
 
     return redirect(url_for('todo'))
 
@@ -209,7 +209,7 @@ def getTodo(id):
                 button = saveBtn + delBtn
             else:
                 button = todoBtn + delBtn
-            
+
         return make_response(
             jsonify({
                 'status': 'Success',

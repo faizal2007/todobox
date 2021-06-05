@@ -5,7 +5,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager
 from datetime import timedelta 
 from app.utils import momentjs
-from lib.database import connect_postgres
+from lib.database import connect_db
 import os
 
 app = Flask(__name__, instance_relative_config=True)
@@ -14,8 +14,9 @@ app.config.from_pyfile('config.py', silent=True)
 csrf = CSRFProtect(app)
 
 if app.config['DATABASE_DEFAULT'] == 'postgres':
-    """ postgres connection """
-    connect_postgres(app)
+    connect_db('postgres', app)
+elif app.config['DATABASE_DEFAULT'] == 'mysql':
+    connect_db('mysql', app)
 else:
     """ sqlite connection """
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.instance_path, app.config['DATABASE_NAME'])
