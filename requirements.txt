@@ -10,6 +10,7 @@ Flask-Migrate==3.0.1
 Flask-SQLAlchemy==2.5.1
 Flask-WTF==0.15.1
 greenlet==1.1.0
+gunicorn==20.1.0
 idna==3.2
 isort==5.8.0
 itsdangerous==2.0.1
@@ -18,8 +19,10 @@ lazy-object-proxy==1.6.0
 Mako==1.1.4
 MarkupSafe==2.0.1
 mccabe==0.6.1
+mysqlclient==2.0.3
 pip==20.1.1
 pkg-resources==0.0.0
+psycopg2-binary==2.8.6
 pylint==2.8.3
 pylint-flask==0.6
 pylint-flask-sqlalchemy==0.2.0
