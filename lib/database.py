@@ -9,7 +9,6 @@ def connect_db(type, app):
     DB_USER=os.environ.get('DB_USER')
     DB_PW=urllib.parse.quote(os.environ.get('DB_PW'))
     DB_NAME=os.environ.get('DB_NAME')
-    print(DB_PW)
 
     if type == 'mysql':
         DB_URL = 'mysql://{user}:{pw}@{url}/{db}'.format(user=DB_USER,pw=DB_PW,url=DB_URL,db=DB_NAME)
