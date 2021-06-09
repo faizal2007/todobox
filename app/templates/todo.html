@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 {% set active_page = 'todo' %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+{% endblock %}
 {% block content %}
 <main role="main">
     <div class="container">
@@ -34,7 +37,9 @@
                             </div>
                             <div class="card-body text-left">
                                 {## {{ todo.id }} : ##}
-                                <p>{{ todo.details }}</p>
+                                <p id="todo-details">
+                                        {{ todo.details_html|safe }}
+                                </p>
                                 <footer class="blockquote-footer"> {{ momentjs(todo.modified).calendar() }}</footer>
                             </div>
                             <div class="p-1 mr-2 bg-white">
@@ -68,13 +73,16 @@
                     <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form>
+                <form class="needs-validation">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <input type="hidden" name="todo_id"/>
                     <div class="modal-body">
                             <div class="form-group">
                                 <label for="titleFormControlInput1">Title</label>
                                 <input type="text" class="form-control" id="titleFormControlInput1" name="title" autofocus>
+                                <div id="invalidInput1Feedback" class="invalid-feedback">
+                                    Please Choose Title.
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="activitiesFormControlTextArea1">Activities</label>
@@ -93,7 +101,27 @@
     </main>
 {% endblock %}
 {% block extra_script %}
+<script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
+    let simplemde = new SimpleMDE({ 
+        spellChecker: false,
+        toolbarTips: true,
+        toolbar: [
+                        "bold", 
+                        "italic", 
+                        "heading-1",
+                        "heading-2",
+                        "heading-3",
+                        "unordered-list", 
+                        "ordered-list", "|", 
+                        "quote",
+                        "link",
+                        "preview"
+                    ],
+        element: $("#activitiesFormControlTextArea1")[0] });
+        simplemde.render();
+
     $('.close').click(function() {
             //alert($(this).data('id'));
             $.post($SCRIPT_ROOT + $(this).data('id') + '/delete', {
@@ -109,29 +137,28 @@
             '_csrf_token': '{{ csrf_token() }}',
             'todo_id': '',
             'title': $('#titleFormControlInput1').val(),
-            'activities': $('#activitiesFormControlTextArea1').val()
+            'activities': simplemde.value(),
+            'activities_html': marked(simplemde.value())
         },
-        function() {
-            window.location.href = "{{ url_for('todo') }}";
+        function(data) {
+            /**window.location.href = "{{ url_for('todo') }}";**/
+            if(data['status'] == 'failed') {
+                
+                $('form.needs-validation').last().addClass('was-invalidated')
+                $('#titleFormControlInput1').last().addClass('is-invalid')
+            }
+            else {
+                window.location.href = "{{ url_for('todo') }}";
+            }
+            
         });
     })
     
-    //$('#tomorrow').click(function() {
-    $(document.body).on("click", "#tomorrow", function (e){
-        $.post($SCRIPT_ROOT + '/add', {
-            '_csrf_token': '{{ csrf_token() }}',
-            'todo_id': $("input[name='todo_id']").val(),
-            'title': $('#titleFormControlInput1').val(),
-            'activities': $('#activitiesFormControlTextArea1').val(),
-            'tomorrow':1
-        },
-        function() {
-            window.location.href = "{{ url_for('view', todo='pending') }}";
-        });
-    })
-
+   
+   
     $('.edit').click(function() {
         // $('#todo-id-view').text($(this).data('id'));  
+        
         $.post($SCRIPT_ROOT + $(this).data('id') + '/todo', {
             '_csrf_token': '{{ csrf_token() }}'
         },
@@ -139,7 +166,26 @@
             $('.modal-footer').html(data['button']);
             $("input[name='todo_id']").val(data['id']);
             $('#titleFormControlInput1').val(data['title']);
-            $('#activitiesFormControlTextArea1').val(data['activities']);
+            /**$('#activitiesFormControlTextArea1').val(data['activities']);**/
+            //alert("div.CodeMirror").hasClass("CodeMirror-focused");
+            simplemde.value(data['activities']);
+            
+        }) ;
+    })
+
+     //$('#tomorrow').click(function() {
+        $(document.body).on("click", "#tomorrow", function (e){
+        
+        $.post($SCRIPT_ROOT + '/add', {
+            '_csrf_token': '{{ csrf_token() }}',
+            'todo_id': $("input[name='todo_id']").val(),
+            'title': $('#titleFormControlInput1').val(),
+            'activities': simplemde.value(),
+            'activities_html': marked(simplemde.value()),
+            'tomorrow':1
+        },
+        function() {
+            window.location.href = "{{ url_for('view', todo='pending') }}";
         });
     })
 
@@ -148,7 +194,8 @@
             '_csrf_token': '{{ csrf_token() }}',
             'todo_id': $("input[name='todo_id']").val(),
             'title': $('#titleFormControlInput1').val(),
-            'activities': $('#activitiesFormControlTextArea1').val()
+            'activities': simplemde.value(),
+            'activities_html': marked(simplemde.value())
         },
         function(data) {
             // window.location.href = "{{ url_for('todo') }}" + '?update=success';
@@ -183,32 +230,27 @@
            
         });
     })
-
+    
     $('#todoModal').on('shown.bs.modal', function() {
         $(this).find('[autofocus]').focus();
+        simplemde.codemirror.refresh();
     });
-
+    
     $(document).keydown(function(event) {
-        if (event.which === 13 && event.shiftKey != 1 && event.altKey !=1 ) {
-            // $('#today').trigger("click")
+        if (event.which === 13) {
             if($('#todoModal').hasClass('show')) {
-                $('#today').trigger("click");
-            }
+                if($("div.CodeMirror").hasClass("CodeMirror-focused") != true) {
+                    $('#today').trigger("click");
+                }
 
-            if($('#todoModal').hasClass('show')) {
-                $('#save').trigger("click");
+                if(event.shiftKey && event.which === 13) {
+                    $('#today').trigger("click");
+                }
             }
+        
             event.preventDefault();
         }
-        if (event.altKey && event.which === 13) {
-            if($('#todoModal').hasClass('show')) {
-                $('#tomorrow').trigger("click");
-            }
-        }
-        if (event.altKey && event.which === 84) {
-            $('#addtodo').trigger("click");
-        }
     });
-
+    
  </script>
 {% endblock %}

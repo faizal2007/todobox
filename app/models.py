@@ -36,6 +36,7 @@ class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), index=True, nullable=False)
     details = db.Column(db.String(250))
+    details_html = db.Column(db.String(500))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.now)
     modified = db.Column(db.DateTime, index=True, default=datetime.now)
     status = db.Column(db.Boolean(), default=False)

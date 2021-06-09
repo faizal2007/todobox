@@ -1,3 +1,4 @@
+from os import pipe
 from flask import render_template, request, redirect, url_for, make_response, jsonify, abort, flash, redirect
 from app import app, db
 from flask_login import current_user, login_user, login_required, logout_user
@@ -27,13 +28,16 @@ def index():
 @login_required
 def todo():
     #
-    # Query record
+    # Query record for today
     today = date.today()
+    start = '{} {}'.format(today, '00:00')
+    end = '{} {}'.format(today, '23:59')
+    
     today_record = Todo.query.filter(
                                         Todo.status == False,
-                                        Todo.modified >= today.strftime("%Y-%m-%d")
+                                        Todo.modified.between(start, end) 
                             ).order_by(
-                                        Todo.modified.asc()
+                                        Todo.modified.desc()
     ).all()
 
     return render_template('todo.html', title="Todo", today_record=today_record)
@@ -138,7 +142,16 @@ def add():
     if request.method == "POST":
         getTitle = request.form.get("title").strip()
         getActivities = request.form.get("activities").strip()
+        getActivities_html = request.form.get("activities_html").strip()
         tomorrow = datetime.now() + timedelta(days=1)
+
+        if getTitle == '':
+            return make_response(
+                        jsonify({
+                            'status': 'failed',
+                            'msg': 'Title Required.'
+                        })
+                    )
 
         if 'tomorrow' in request.form:
             getTomorrow = request.form.get("tomorrow").strip()
@@ -147,9 +160,9 @@ def add():
 
         if request.form.get("todo_id") == '':
             if getTomorrow == 0:
-                t = Todo(name=getTitle, details=getActivities)
+                t = Todo(name=getTitle, details=getActivities, details_html=getActivities_html)
             else:
-                t = Todo(name=getTitle, details=getActivities, timestamp=None, modified=tomorrow)
+                t = Todo(name=getTitle, details=getActivities, details_html=getActivities_html,timestamp=None, modified=tomorrow)
 
             db.session.add(t)
             db.session.commit()
@@ -177,6 +190,7 @@ def add():
             else:
                 t.name = getTitle
                 t.details = getActivities
+                t.details_html = getActivities_html
                 if getTomorrow == '1':
                     t.modified = datetime.now() + timedelta(days=1)
                 else:
