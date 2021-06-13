@@ -2,22 +2,21 @@ from os import pipe
 from flask import render_template, request, redirect, url_for, make_response, jsonify, abort, flash, redirect
 from app import app, db
 from flask_login import current_user, login_user, login_required, logout_user
-from app.models import Todo, User
+from app.models import Todo, User, Status, Tracker
 from app.forms import LoginForm, ChangePassword, UpdateAccount
 from werkzeug.urls import url_parse
 from datetime import datetime, date, timedelta
 
 """
-" Initiatiate default user
+" Initiatiate default data
 """
 @app.before_first_request
-def initiate_user():
-    user = User.query.all()
-    if len(user) == 0:
-        u = User(username='admin', email='admin@examples.com')
-        u.set_password('admin1234')
-        db.session.add(u)
-        db.session.commit()
+def initiate_data():
+    if not len(User.query.all()):
+        User.seed()
+
+    if not len(Status.query.all()):
+        Status.seed()
 
 @app.route('/')
 @app.route('/index')
@@ -34,12 +33,11 @@ def todo():
     end = '{} {}'.format(today, '23:59')
     
     today_record = Todo.query.filter(
-                                        Todo.status == False,
                                         Todo.modified.between(start, end) 
                             ).order_by(
                                         Todo.modified.desc()
     ).all()
-
+    
     return render_template('todo.html', title="Todo", today_record=today_record)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -114,25 +112,19 @@ def view(todo):
     done = {False: "Pending", True: "Done"}
 
     if todo == 'pending':
-        records = Todo.query.filter(Todo.status == False).order_by(Todo.modified.desc()).all()
+        records = Todo.query.filter(Todo.status_id != 1).order_by(Todo.modified.desc()).all()
     elif todo == 'done':
-        records = Todo.query.filter(Todo.status == True).order_by(Todo.modified.desc()).all()
+        records = Todo.query.filter(Todo.status_id == 2).order_by(Todo.modified.desc()).all()
     else:
         abort(404)
 
     return render_template('view.html', title="Pending", records=records, done=done)
 
-@app.route('/add_todo')
-def add_todo():
-    # t = Todo(name='Placebo bola labu', details='Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.')
-    # db.session.add(t)
-    # db.session.commit()
-    return 'test'
-
 @app.route('/<path:todo_id>/delete', methods=['POST'])
 @login_required
 def delete(todo_id):
-    Todo.query.filter(Todo.id==todo_id).delete()
+    todo = Todo.query.get(todo_id)
+    db.session.delete(todo)
     db.session.commit()
     return redirect(url_for('todo'))
 
@@ -160,12 +152,20 @@ def add():
 
         if request.form.get("todo_id") == '':
             if getTomorrow == 0:
-                t = Todo(name=getTitle, details=getActivities, details_html=getActivities_html)
+                t = Todo(name=getTitle, details=getActivities, user_id=current_user.id, details_html=getActivities_html)
             else:
-                t = Todo(name=getTitle, details=getActivities, details_html=getActivities_html,timestamp=None, modified=tomorrow)
+                t = Todo(
+                        name=getTitle, 
+                        details=getActivities, 
+                        user_id=current_user.id, 
+                        details_html=getActivities_html,
+                        timestamp=None, 
+                        modified=tomorrow)
 
             db.session.add(t)
             db.session.commit()
+            Tracker.update(t.id, 1)   
+
         else:
             id = request.form.get("todo_id")
             byPass = request.form.get("byPass")
@@ -176,7 +176,9 @@ def add():
             if getTitle == title and getActivities == activites :
                 if getTomorrow == '1':
                     t.modified = datetime.now() + timedelta(days=1)
+                    print(t.id)
                     db.session.commit()
+                    Tracker.update(t.id, 4)
                 elif byPass == '1':
                     t.modified = datetime.now()
                     db.session.commit()
@@ -230,9 +232,17 @@ def getTodo(id):
                 'id': t.id,
                 'title': t.name,
                 'activities': t.details,
-                'todo-status': t.status,
                 'modified': t.modified,
                 'button': button
             }), 200
         )
     return redirect(url_for('todo'))
+
+@app.route('/<path:id>/list', methods=['POST', 'GET'])
+@login_required
+def getList(id):
+    print(Todo.getList())
+    for todo in Todo.getList():
+        print(todo['Todo'].id, todo['Tracker'].status_id, todo['Tracker'].timestamp)
+
+    return render_template('list.html', title='List Todo', todo=Todo.getList())

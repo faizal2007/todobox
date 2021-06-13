@@ -26,7 +26,7 @@
                         <td>{{ todo.name }}</td>
                         <td>{{ momentjs(todo.modified).calendar() }}</td>
                         <td>{{ todo.details }}</td>
-                        <td>{{ done[todo.status] }}</td>
+                        <td>{{ todo.status_id }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
