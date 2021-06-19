@@ -16,9 +16,10 @@
             {## 
                 Setup todo dashboard
             ##}
+            
             {% set count = namespace(value=0) %}
             {% set column_size = 3 %}
-            {% set balance_div = (today_record|length) % column_size  %}
+            {% set balance_div = 10 % column_size  %}
             {% set breaker = namespace(value=balance_div) %}
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             
@@ -32,15 +33,15 @@
                         <div class="card"> 
                             <div class="card-header">
                                 <h5>
-                                    {{ todo.name }}
+                                    {{ todo.Todo.name }}
                                 </h5>
                             </div>
                             <div class="card-body text-left">
                                 {## {{ todo.id }} : ##}
                                 <p id="todo-details">
-                                        {{ todo.details_html|safe }}
+                                        {{ todo.Todo.details_html|safe }}
                                 </p>
-                                <footer class="blockquote-footer"> {{ momentjs(todo.modified).calendar() }}</footer>
+                                <footer class="blockquote-footer"> {{ momentjs(todo.Tracker.timestamp).calendar() }}</footer>
                             </div>
                             <div class="p-1 mr-2 bg-white">
                                 <button type="button" class="ml-2 mb-1 done" aria-label="Done" data-id='{{ todo.id }}'>
@@ -48,10 +49,10 @@
                                         assignment_turned_in
                                     </span>
                                 </button>
-                                <button type="button" class="ml-2 mb-1 close" aria-label="Close" data-id='{{ todo.id }}'>
+                                <button type="button" class="ml-2 mb-1 close" aria-label="Close" data-id='{{ todo.Todo.id }}'>
                                     <span aria-hidden="true">&times;</span>
                                 </button>
-                                <button type="button" class="edit" aria-label="Edit" data-id='{{ todo.id }}' data-toggle="modal" data-target="#todoModal">
+                                <button type="button" class="edit" aria-label="Edit" data-id='{{ todo.Todo.id }}' data-toggle="modal" data-target="#todoModal">
                                     <span aria-hidden="true">&#9998;</span>
                                 </button>
                             </div>
@@ -185,7 +186,7 @@
             'tomorrow':1
         },
         function() {
-            window.location.href = "{{ url_for('view', todo='pending') }}";
+            window.location.href = "{{ url_for('todo') }}";
         });
     })
 

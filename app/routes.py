@@ -28,15 +28,11 @@ def index():
 def todo():
     #
     # Query record for today
-    today = date.today()
-    start = '{} {}'.format(today, '00:00')
-    end = '{} {}'.format(today, '23:59')
+    query_date = date.today()
+    start = '{} {}'.format(query_date, '00:00')
+    end = '{} {}'.format(query_date, '23:59')
     
-    today_record = Todo.query.filter(
-                                        Todo.modified.between(start, end) 
-                            ).order_by(
-                                        Todo.modified.desc()
-    ).all()
+    today_record = Todo.getList('today', start, end).order_by(Todo.timestamp.desc())
     
     return render_template('todo.html', title="Todo", today_record=today_record)
 
@@ -164,21 +160,23 @@ def add():
 
             db.session.add(t)
             db.session.commit()
-            Tracker.update(t.id, 1)   
-
+            if getTomorrow:
+                Tracker.add(t.id, 1, tomorrow)
+            else:
+                Tracker.add(t.id, 1)
         else:
-            id = request.form.get("todo_id")
+            todo_id = request.form.get("todo_id")
+
             byPass = request.form.get("byPass")
-            t = Todo.query.filter_by(id=id).first()
+            t = Todo.query.filter_by(id=todo_id).first()
             title = t.name
             activites = t.details
-
+            print(Tracker.getId(todo_id))
             if getTitle == title and getActivities == activites :
                 if getTomorrow == '1':
                     t.modified = datetime.now() + timedelta(days=1)
-                    print(t.id)
                     db.session.commit()
-                    Tracker.update(t.id, 4)
+                    Tracker.add(todo_id, 4, datetime.now() + timedelta(days=1))
                 elif byPass == '1':
                     t.modified = datetime.now()
                     db.session.commit()
@@ -241,8 +239,18 @@ def getTodo(id):
 @app.route('/<path:id>/list', methods=['POST', 'GET'])
 @login_required
 def getList(id):
-    print(Todo.getList())
-    for todo in Todo.getList():
-        print(todo['Todo'].id, todo['Tracker'].status_id, todo['Tracker'].timestamp)
+    # print(Todo.getList(id))
+    # abort(404)
+   
+    if id == 'today':
+        query_date = date.today()
+        start = '{} {}'.format(query_date, '00:00')
+        end = '{} {}'.format(query_date, '23:59')
+    elif id == 'tomorrow':
+        query_date = date.today() + timedelta(days=1)
+        start = '{} {}'.format(query_date, '00:00')
+        end = '{} {}'.format(query_date, '23:59')
+    else:
+        abort(404)
 
-    return render_template('list.html', title='List Todo', todo=Todo.getList())
+    return render_template('list.html', title='List Todo', todo=Todo.getList(id, start, end))

@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # from sqlalchemy.orm import backref, func
 from sqlalchemy import func
+from sqlalchemy.sql.expression import null
 from app import db, login
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
@@ -46,13 +47,25 @@ class User(UserMixin, db.Model):
             return False
 
 class Tracker(object):
-    def __init__(self, todo_id, status_id):
+    def __init__(self, todo_id, status_id, timestamp):
         self.todo_id = todo_id
         self.status_id =  status_id
+        self.timestamp = timestamp
 
-    def update(todo_id, status_id):
-        db.session.add(Tracker(todo_id=todo_id, status_id=status_id))
+    def add(todo_id, status_id, timestamp=datetime.now()):
+        print(timestamp)
+        db.session.add(Tracker(todo_id=todo_id, status_id=status_id, timestamp=timestamp))
         db.session.commit()
+    
+    def getId(todo_id):
+        todo = db.session.query( 
+                                Tracker.id,
+                                func.max(Tracker.timestamp)
+                    ).filter(
+                        Tracker.todo_id == todo_id
+                    ).group_by(Tracker.todo_id)
+
+        return todo.first().id
 
 tracker = db.Table('tracker',
         db.metadata,
@@ -75,10 +88,11 @@ class Todo(db.Model):
     def __repr__(self):
         return '<Todo {}'.format(self.name)
 
-    def getList():
+    def getList(type, start, end):
 
-        status_id = 2
+        done = 2
         latest_todo = db.session.query(func.max(Tracker.timestamp)).group_by(Tracker.todo_id)
+        
         todo = db.session.query(
                                 Todo, 
                                 Tracker
@@ -86,9 +100,10 @@ class Todo(db.Model):
                     Tracker
             ).filter(
                     Tracker.timestamp.in_(latest_todo),
-                    Tracker.status_id != status_id
+                    Tracker.timestamp.between(start, end),
+                    Tracker.status_id != done
             )
-
+        
         return todo
 
 class Status(db.Model):
