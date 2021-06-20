@@ -6,21 +6,25 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta content="Todo application to track down our daily activity" name="description" />
         <!-- App favicon -->
-          <link rel="shortcut icon" href="/static/assets/images/favicon.ico">
-          <!-- Google font -->
-          <link rel="preconnect" href="https://fonts.gstatic.com">
-          <link rel="preconnect" href="https://fonts.gstatic.com">
-          <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@900&display=swap" rel="stylesheet">
-
+		<link rel="shortcut icon" href="/static/assets/images/favicon.ico">
         <!-- App css -->
         <link href="/static/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
         <link href="/static/assets/css/app-modern.min.css" rel="stylesheet" type="text/css" id="light-style" />
         <link href="/static/assets/css/app-modern-dark.min.css" rel="stylesheet" type="text/css" id="dark-style" />
         <style>
-             div .topnav-logo {
-               font-family: 'Big Shoulders Stencil Display', cursive;
-             }
+			@font-face {
+				font-family: 'BungeeShade-Regular.ttf';
+				src: url('/static/fonts/BungeeShade-Regular.ttf');
+				font-family: 'Lemon Tuesday.otf';
+				src: url('/static/fonts/Lemon Tuesday.otf');
+			}
+			div .topnav-logo {
+				font-family: 'Lemon Tuesday.otf';
+			}
         </style>
+		<script type=text/javascript>
+			$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+		</script>
 		{% block extra_css %}{% endblock %}
 		{% block extra_script_header %}{% endblock %}
 		<script 

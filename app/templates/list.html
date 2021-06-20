@@ -15,6 +15,7 @@
                               {% set column_size = 3 %}
                               {% set balance_div = 4 % column_size  %}
                               {% set breaker = namespace(value=balance_div) %}
+                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                               {% for list in todo %}
                               {% if loop.index > balance_div %}
                                    {% set breaker.value = column_size %}
@@ -26,8 +27,13 @@
                                              <div class="card">
                                                   <div class="card-body">
                                                        <div class="card-widgets">
-                                                            <a href="#" data-toggle="tooltip" data-original-title="Done"><i class="mdi mdi-clipboard-check-outline"></i></a> 
-                                                            <a class="pr-2" href="#" data-toggle="tooltip" data-original-title="Edit"><i class="mdi mdi-clipboard-edit-outline"></i></a> 
+                                                            <!-- <button type="button" class="edit" aria-label="Edit" data-id='' data-toggle="modal" data-target="#todoModal">
+                                                                 <span aria-hidden="true">&#9998;</span>
+                                                             </button> -->
+                                                       {% if title == 'today' %}
+                                                            <a class="done" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Done"><i class="mdi mdi-clipboard-check-outline"></i></a> 
+                                                       {% endif %}
+                                                            <a class="edit pr-2" href="#" data-toggle="tooltip" data-original-title="Edit"><i class="mdi mdi-clipboard-edit-outline"></i></a> 
                                                             <a href="#" data-toggle="tooltip" data-original-title="Close"><i class="mdi mdi-close"></i></a>
                                                        </div>
                                                        <h3 class="card-title mb-0">{{ list.Todo.name|title }}</h3>
@@ -52,7 +58,27 @@
                </div>
           </div>
      </div>
-{% endblock %}   
+{% endblock %}  
+{% block extra_script_footer %}
+<script>
+     $('.done').click(function() {
+          // console.log($(this).data('id'));
+          $.post($SCRIPT_ROOT + $(this).data('id') + '/done', {
+            '_csrf_token': '{{ csrf_token() }}'
+          },
+          function(data){
+               console.log(data);
+               window.location.href = "{{ url_for('list', id='today') }}";
+          });
+     })
+
+     $('.edit').click(function() {
+          console.log('edit');
+          console.log($SCRIPT_ROOT);
+     })
+
+</script>
+{% endblock %} 
 
 
 

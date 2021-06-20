@@ -53,7 +53,6 @@ class Tracker(object):
         self.timestamp = timestamp
 
     def add(todo_id, status_id, timestamp=datetime.now()):
-        print(timestamp)
         db.session.add(Tracker(todo_id=todo_id, status_id=status_id, timestamp=timestamp))
         db.session.commit()
     
@@ -99,10 +98,11 @@ class Todo(db.Model):
             ).join(
                     Tracker
             ).filter(
-                    Tracker.timestamp.in_(latest_todo),
+                    Tracker.timestamp == Todo.modified,
                     Tracker.timestamp.between(start, end),
-                    Tracker.status_id != done
+                    Tracker.status_id != 2
             )
+        print(todo)
         return todo
 
 class Status(db.Model):

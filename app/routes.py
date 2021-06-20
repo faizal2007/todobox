@@ -163,7 +163,7 @@ def add():
             if getTomorrow:
                 Tracker.add(t.id, 1, tomorrow)
             else:
-                Tracker.add(t.id, 1)
+                Tracker.add(t.id, 1, t.timestamp)
         else:
             todo_id = request.form.get("todo_id")
 
@@ -253,4 +253,22 @@ def list(id):
     else:
         abort(404)
 
-    return render_template('list.html', title=id, todo=Todo.getList(id, start, end))
+    return render_template('list.html', title=id, todo=Todo.getList(id, start, end).order_by(Tracker.timestamp.asc()))
+
+@app.route('/<path:id>/<path:todo_id>/done', methods=['POST'])
+# @app.route('/<path:todo_id>/done', methods=['POST'])
+@login_required
+def done(id, todo_id):
+    todo = Todo.query.filter_by(id=todo_id).first()
+    date_entry = datetime.now()
+
+    if id == 'today':
+        todo.modified = date_entry
+        Tracker.add(todo.id, 2, date_entry)
+    print(id)
+    return make_response(
+            jsonify({
+                'status': 'Success',
+                'todo_id': todo.id
+            }), 200
+    )
