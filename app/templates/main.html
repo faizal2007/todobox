@@ -23,6 +23,11 @@
         </style>
 		{% block extra_css %}{% endblock %}
 		{% block extra_script_header %}{% endblock %}
+		<script 
+			src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js" 
+			integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ==" 
+			crossorigin="anonymous">
+		</script>
         
     </head>
    
@@ -56,7 +61,7 @@
 														<img src="/static/assets/images/users/avatar-1.jpg" alt="user-image" class="rounded-circle">
 													</span> -->
 													<span class="account-user-avatar">
-															<i class="dripicons-user"></i>
+															<i class="dripicons-user font-20"></i>
 													</span>
 													<span>
 														<span class="account-user-name">Faizal Sadri</span>
@@ -79,18 +84,6 @@
 													<a href="javascript:void(0);" class="dropdown-item notify-item">
 														<i class="mdi mdi-account-edit mr-1"></i>
 														<span>Settings</span>
-													</a>
-				
-													<!-- item-->
-													<a href="javascript:void(0);" class="dropdown-item notify-item">
-														<i class="mdi mdi-lifebuoy mr-1"></i>
-														<span>Support</span>
-													</a>
-				
-													<!-- item-->
-													<a href="javascript:void(0);" class="dropdown-item notify-item">
-														<i class="mdi mdi-lock-outline mr-1"></i>
-														<span>Lock Screen</span>
 													</a>
 				
 													<!-- item-->
@@ -139,12 +132,12 @@
 							</div>
 						</div>
 					</div>
-					
 
 		{% block content %}{% endblock %}
         <!-- bundle -->
         <script src="/static/assets/js/vendor.min.js"></script>
         <script src="/static/assets/js/app.min.js"></script>
+		
 		{% block extra_script_footer %}{% endblock %}
         
     </body>

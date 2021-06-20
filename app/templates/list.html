@@ -31,6 +31,10 @@
                                                        <p class="card-text">
                                                             {{ list.Todo.details_html|safe }}
                                                        </p>
+                                                       <footer class="blockquote-footer"> 
+                                                            <i class="uil uil-schedule font-16 mr-1"></i>
+                                                            {{ momentjs(list.Tracker.timestamp).calendar() }}
+                                                       </footer>
                                                   </div>
                                              </div> <!-- end card-->
                                    {% if loop.index == breaker.value + count.value %}
