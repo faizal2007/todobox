@@ -171,7 +171,7 @@ def add():
             t = Todo.query.filter_by(id=todo_id).first()
             title = t.name
             activites = t.details
-            print(Tracker.getId(todo_id))
+
             if getTitle == title and getActivities == activites :
                 if getTomorrow == '1':
                     t.modified = datetime.now() + timedelta(days=1)
@@ -236,9 +236,9 @@ def getTodo(id):
         )
     return redirect(url_for('todo'))
 
-@app.route('/<path:id>/list', methods=['POST', 'GET'])
+@app.route('/<path:id>/list')
 @login_required
-def getList(id):
+def list(id):
     # print(Todo.getList(id))
     # abort(404)
    
@@ -253,4 +253,4 @@ def getList(id):
     else:
         abort(404)
 
-    return render_template('list.html', title='List Todo', todo=Todo.getList(id, start, end))
+    return render_template('list.html', title=id, todo=Todo.getList(id, start, end))

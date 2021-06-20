@@ -48,11 +48,9 @@
             <li class="{{ 'nav-item active' if active_page == 'todo' else 'nav-item' }}">
               <a class="nav-link" href="{{ url_for('todo') }}">Todo</a>
             </li>
-            {#
-            <li class="{{ 'nav-item active' if active_page == 'pending' else 'nav-item' }}">
-              <a class="nav-link" href="{{ url_for('view', todo='pending') }}">Pending</a>
+            <li class="{{ 'nav-item active' if active_page == 'tomorrow' else 'nav-item' }}">
+              <a class="nav-link" href="{{ url_for('list', id='tomorrow') }}">Tomorrow</a>
             </li>
-            #}
           </ul>
         </div>
           <div class="collapse navbar-collapse" id="navbarNav">
