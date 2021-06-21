@@ -16,10 +16,12 @@
                          
                          <div class="col-sm-4">
                               {% set form_title = 'What to do ? ' %}
-                              <a type="button" class="btn btn-danger btn-rounded mb-3" data-toggle="modal" data-target="#info-header-modal" href="#">
+                              {% if title == 'today' %}
+                              <a id="create-todo-main" type="button" class="btn btn-danger btn-rounded mb-3" data-toggle="modal" data-target="#info-header-modal" href="#">
                                    <i class="mdi mdi-plus"></i>
                                    Create Todo
                               </a>
+                              {% endif %}
                          </div>
                          
                          <div class="container-fluid">
@@ -45,8 +47,8 @@
                                                        {% if title == 'today' %}
                                                             <a class="done" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Done"><i class="mdi mdi-clipboard-check-outline"></i></a> 
                                                        {% endif %}
-                                                            <a class="edit pr-2" href="#" data-toggle="tooltip" data-original-title="Edit"><i class="mdi mdi-clipboard-edit-outline"></i></a> 
-                                                            <a class="close" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Close"><i class="mdi mdi-close"></i></a>
+                                                            <a class="edit pr-2" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Edit"><i class="mdi mdi-clipboard-edit-outline"></i></a> 
+                                                            <a class="close-todo" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Close"><i class="mdi mdi-close"></i></a>
                                                        </div>
                                                        <h3 class="card-title mb-0">{{ list.Todo.name|title }}</h3>
                                                        <div class="divider"><hr></div>
@@ -107,17 +109,35 @@
      })
 
      $('.edit').click(function() {
-          console.log('edit');
-          console.log($SCRIPT_ROOT);
+          $.post('/' + $(this).data('id') + '/todo', {
+            '_csrf_token': '{{ csrf_token() }}'
+          },
+          function(data){
+               $('#info-header-modal').modal('show');
+               $('#title-input-normal').val(data['title']);
+               $("input[name='todo_id']").val(data['id']);
+               simplemde.value(data['activities']);
+               console.log(data)
+          });
      })
 
-     $('.close').click(function() {
+     $('.close-todo').click(function() {
+          let title = '{{ title }}'
           $.post('/' + $(this).data('id') + '/delete', {
             '_csrf_token': '{{ csrf_token() }}'
           },
           function(data){
-               window.location.href = "{{ url_for('list', id='today') }}";
+               if(title == 'today')
+                    window.location.href = "{{ url_for('list', id='today') }}";
+               else
+                    window.location.href = "{{ url_for('list', id='tomorrow') }}";
           });
+     })
+     // reset value
+     $('#create-todo-main').click(function() {
+          $('#title-input-normal').val('');
+          $("input[name='todo_id']").val('')
+          simplemde.value('');
      })
 
      /** Script for html modal **/
@@ -127,11 +147,13 @@
           let title = $('#title-input-normal').val();
           let activities = simplemde.value();
           let activities_html = marked(simplemde.value());
-
+          let todo_id = $("input[name='todo_id']").val();
+          console.log(title);
+          
           if(title) {
                $.post('/add', {
                     '_csrf_token': '{{ csrf_token() }}',
-                    'todo_id': '',
+                    'todo_id': todo_id ? todo_id:'',
                     'title': title,
                     'activities': activities,
                     'activities_html': activities_html
@@ -142,9 +164,13 @@
           }
           else
                $('#title-input-normal').last().addClass('is-invalid')
+          
      })
 
-
+     $('#info-header-modal').on('shown.bs.modal', function() {
+          $(this).find('[autofocus]').focus();
+          simplemde.codemirror.refresh();
+     });
 </script>
 {% endblock %} 
 

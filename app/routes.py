@@ -174,9 +174,9 @@ def add():
 
             if getTitle == title and getActivities == activites :
                 if getTomorrow == '1':
-                    t.modified = datetime.now() + timedelta(days=1)
+                    t.modified = tomorrow
                     db.session.commit()
-                    Tracker.add(todo_id, 4, datetime.now() + timedelta(days=1))
+                    Tracker.add(todo_id, 4, tomorrow)
                 elif byPass == '1':
                     t.modified = datetime.now()
                     db.session.commit()
@@ -192,11 +192,14 @@ def add():
                 t.details = getActivities
                 t.details_html = getActivities_html
                 if getTomorrow == '1':
-                    t.modified = datetime.now() + timedelta(days=1)
+                    t.modified = tomorrow
+                    db.session.commit()
+                    Tracker.add(todo_id, 4, tomorrow)
                 else:
                     t.modified = datetime.now()
-
-                db.session.commit()
+                    db.session.commit()
+                    Tracker.add(todo_id, 1, datetime.now())
+                
                 return make_response(
                     jsonify({
                         'status': 'success'
