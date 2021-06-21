@@ -1,15 +1,27 @@
 {% extends "main.html" %}
+{% block extra_css %}
+	<link href='{{ url_for('static', filename='assets/css/vendor/simplemde.min.css') }}' rel="stylesheet" type="text/css" />
+{% endblock %}
 {% block content %}
      {% set active_page = title %}
                <!-- Start Content-->
                <div class="container-fluid">
                     <!-- start page title -->
                     <div class="row">
-                         <div class="col-12">
+                         <div class="col-12 pb-1">
                               <div class="page-title-box">
                                    <h1 class="page-title">{{ active_page|title }}</h1>
                               </div>
                          </div>
+                         
+                         <div class="col-sm-4">
+                              {% set form_title = 'What to do ? ' %}
+                              <a type="button" class="btn btn-danger btn-rounded mb-3" data-toggle="modal" data-target="#info-header-modal" href="#">
+                                   <i class="mdi mdi-plus"></i>
+                                   Create Todo
+                              </a>
+                         </div>
+                         
                          <div class="container-fluid">
                               {% set count = namespace(value=0) %}
                               {% set column_size = 3 %}
@@ -34,7 +46,7 @@
                                                             <a class="done" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Done"><i class="mdi mdi-clipboard-check-outline"></i></a> 
                                                        {% endif %}
                                                             <a class="edit pr-2" href="#" data-toggle="tooltip" data-original-title="Edit"><i class="mdi mdi-clipboard-edit-outline"></i></a> 
-                                                            <a href="#" data-toggle="tooltip" data-original-title="Close"><i class="mdi mdi-close"></i></a>
+                                                            <a class="close" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Close"><i class="mdi mdi-close"></i></a>
                                                        </div>
                                                        <h3 class="card-title mb-0">{{ list.Todo.name|title }}</h3>
                                                        <div class="divider"><hr></div>
@@ -53,13 +65,36 @@
                                    {% endif %}
                               {% endfor %}
                          </div>
-                              
+                         
                     </div>
                </div>
           </div>
+          {% include "todo_add.html" %}
      </div>
 {% endblock %}  
 {% block extra_script_footer %}
+<!-- SimpleMDE js -->
+<script src='{{ url_for('static', filename='assets/js/vendor/simplemde.min.js') }}'></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+     let simplemde = new SimpleMDE({ 
+        spellChecker: false,
+        toolbarTips: true,
+        toolbar: [
+                        "bold", 
+                        "italic", 
+                        "unordered-list", 
+                        "ordered-list", "|", 
+                        "quote",
+                        "link",
+                        "preview"
+                    ],
+        element: $("#details-textarea")[0] });
+        simplemde.render();
+</script>
+<!-- SimpleMDE demo -->
+<!-- <script src="assets/js/pages/demo.simplemde.js"></script> -->
+                                                                                                    
 <script>
      $('.done').click(function() {
           // console.log($(this).data('id'));
@@ -67,7 +102,6 @@
             '_csrf_token': '{{ csrf_token() }}'
           },
           function(data){
-               console.log(data);
                window.location.href = "{{ url_for('list', id='today') }}";
           });
      })
@@ -76,6 +110,40 @@
           console.log('edit');
           console.log($SCRIPT_ROOT);
      })
+
+     $('.close').click(function() {
+          $.post('/' + $(this).data('id') + '/delete', {
+            '_csrf_token': '{{ csrf_token() }}'
+          },
+          function(data){
+               window.location.href = "{{ url_for('list', id='today') }}";
+          });
+     })
+
+     /** Script for html modal **/
+
+     $('.create-todo').click(function() {
+          
+          let title = $('#title-input-normal').val();
+          let activities = simplemde.value();
+          let activities_html = marked(simplemde.value());
+
+          if(title) {
+               $.post('/add', {
+                    '_csrf_token': '{{ csrf_token() }}',
+                    'todo_id': '',
+                    'title': title,
+                    'activities': activities,
+                    'activities_html': activities_html
+               },
+               function(data){
+                    window.location.href = "{{ url_for('list', id='today') }}";
+               });
+          }
+          else
+               $('#title-input-normal').last().addClass('is-invalid')
+     })
+
 
 </script>
 {% endblock %} 

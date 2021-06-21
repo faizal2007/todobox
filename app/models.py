@@ -102,7 +102,6 @@ class Todo(db.Model):
                     Tracker.timestamp.between(start, end),
                     Tracker.status_id != 2
             )
-        print(todo)
         return todo
 
 class Status(db.Model):

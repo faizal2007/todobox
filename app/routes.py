@@ -252,11 +252,10 @@ def list(id):
         end = '{} {}'.format(query_date, '23:59')
     else:
         abort(404)
-
+        
     return render_template('list.html', title=id, todo=Todo.getList(id, start, end).order_by(Tracker.timestamp.asc()))
 
 @app.route('/<path:id>/<path:todo_id>/done', methods=['POST'])
-# @app.route('/<path:todo_id>/done', methods=['POST'])
 @login_required
 def done(id, todo_id):
     todo = Todo.query.filter_by(id=todo_id).first()
@@ -265,7 +264,7 @@ def done(id, todo_id):
     if id == 'today':
         todo.modified = date_entry
         Tracker.add(todo.id, 2, date_entry)
-    print(id)
+
     return make_response(
             jsonify({
                 'status': 'Success',
