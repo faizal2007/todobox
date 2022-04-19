@@ -122,9 +122,9 @@ def view(todo):
 @app.route('/<path:todo_id>/delete', methods=['POST'])
 @login_required
 def delete(todo_id):
-    todo = Todo.query.get(todo_id)
-    db.session.delete(todo)
-    db.session.commit()
+
+    Tracker.delete(todo_id)
+
     return redirect(url_for('todo'))
 
 @app.route('/add', methods=['POST'])

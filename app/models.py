@@ -66,6 +66,11 @@ class Tracker(object):
 
         return todo.first().id
 
+    def delete(todo_id):
+        db.session.query(Tracker).filter(Tracker.todo_id == todo_id).delete()
+        db.session.query(Todo).filter(Todo.id == todo_id).delete()
+        db.session.commit()
+
 tracker = db.Table('tracker',
         db.metadata,
         db.Column('id', db.Integer, primary_key=True),
