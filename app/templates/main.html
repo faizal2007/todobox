@@ -48,7 +48,7 @@
 					<div class="content">
 							<div class="navbar-custom topnav-navbar">
 								<div class="container-fluid">
-										<a href="index.html" class="topnav-logo">
+										<a href="{{ url_for('index') }}" class="topnav-logo">
 											<p class="h1 text-muted">{{ config.TITLE }}</p>
 										</a>
 										<a class="navbar-toggle"  data-toggle="collapse" data-target="#topnav-menu-content">
@@ -92,7 +92,7 @@
 													</a>
 				
 													<!-- item-->
-													<a href="javascript:void(0);" class="dropdown-item notify-item">
+													<a href="{{ url_for('logout')}}" class="dropdown-item notify-item">
 														<i class="mdi mdi-logout mr-1"></i>
 														<span>Logout</span>
 													</a>
@@ -117,7 +117,7 @@
 											</ul>
 											<ul class="navbar-nav">
 												<li class="nav-item dropdown">
-													<a class="nav-link dropdown-toggle arrow-none" href="{{ url_for('todo') }}" id="topnav-today">
+													<a class="nav-link dropdown-toggle arrow-none" href="{{ url_for('list', id='today') }}" id="topnav-today">
 														<i class="uil-notes mr-1"></i>Today 
 													</a>
 												</li>

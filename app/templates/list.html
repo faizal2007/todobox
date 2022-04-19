@@ -77,7 +77,6 @@
 {% block extra_script_footer %}
 <!-- SimpleMDE js -->
 <script src='{{ url_for('static', filename='assets/js/vendor/simplemde.min.js') }}'></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
      let simplemde = new SimpleMDE({ 
         spellChecker: false,
@@ -146,7 +145,7 @@
           
           let title = $('#title-input-normal').val();
           let activities = simplemde.value();
-          let activities_html = marked(simplemde.value());
+          //let activities_html = marked(simplemde.value());
           let todo_id = $("input[name='todo_id']").val();
           console.log(title);
           
@@ -156,7 +155,7 @@
                     'todo_id': todo_id ? todo_id:'',
                     'title': title,
                     'activities': activities,
-                    'activities_html': activities_html
+                    //'activities_html': activities_html
                },
                function(data){
                     window.location.href = "{{ url_for('list', id='today') }}";

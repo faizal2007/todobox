@@ -1,4 +1,6 @@
+from importlib.resources import path
 from os import pipe
+from unittest.mock import patch
 from flask import render_template, request, redirect, url_for, make_response, jsonify, abort, flash, redirect
 from app import app, db
 from flask_login import current_user, login_user, login_required, logout_user
@@ -6,6 +8,7 @@ from app.models import Todo, User, Status, Tracker
 from app.forms import LoginForm, ChangePassword, UpdateAccount
 from werkzeug.urls import url_parse
 from datetime import datetime, date, timedelta
+import markdown
 
 """
 " Initiatiate default data
@@ -21,7 +24,7 @@ def initiate_data():
 @app.route('/')
 @app.route('/index')
 def index():
-    return render_template('index.html', title="Home")
+    return redirect(url_for('list', id='today'))
 
 @app.route('/todo')
 @login_required
@@ -39,7 +42,7 @@ def todo():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('todo'))
+        return redirect(url_for('list', id='today'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -49,7 +52,7 @@ def login():
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('todo')
+            next_page = url_for('list', id='today')
 
         return redirect(next_page)
     return render_template('login.html', title='Sign In', form=form)
@@ -130,7 +133,7 @@ def add():
     if request.method == "POST":
         getTitle = request.form.get("title").strip()
         getActivities = request.form.get("activities").strip()
-        getActivities_html = request.form.get("activities_html").strip()
+        getActivities_html = markdown.markdown(getActivities, extensions=['fenced_code'])
         tomorrow = datetime.now() + timedelta(days=1)
 
         if getTitle == '':

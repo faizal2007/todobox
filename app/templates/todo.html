@@ -103,7 +103,6 @@
 {% endblock %}
 {% block extra_script %}
 <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
     let simplemde = new SimpleMDE({ 
         spellChecker: false,
@@ -139,7 +138,7 @@
             'todo_id': '',
             'title': $('#titleFormControlInput1').val(),
             'activities': simplemde.value(),
-            'activities_html': marked(simplemde.value())
+            'activities_html': simplemde.value()
         },
         function(data) {
             /**window.location.href = "{{ url_for('todo') }}";**/
@@ -182,7 +181,7 @@
             'todo_id': $("input[name='todo_id']").val(),
             'title': $('#titleFormControlInput1').val(),
             'activities': simplemde.value(),
-            'activities_html': marked(simplemde.value()),
+            'activities_html': simplemde.value(),
             'tomorrow':1
         },
         function() {
@@ -196,7 +195,7 @@
             'todo_id': $("input[name='todo_id']").val(),
             'title': $('#titleFormControlInput1').val(),
             'activities': simplemde.value(),
-            'activities_html': marked(simplemde.value())
+            'activities_html': simplemde.value()
         },
         function(data) {
             // window.location.href = "{{ url_for('todo') }}" + '?update=success';
