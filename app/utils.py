@@ -1,4 +1,6 @@
-from jinja2 import Markup
+#from jinja2 import Markup
+from markupsafe import Markup
+
 from datetime import datetime
 
 class momentjs:

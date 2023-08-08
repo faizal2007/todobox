@@ -13,7 +13,7 @@ import markdown
 """
 " Initiatiate default data
 """
-@app.before_first_request
+@app.before_request
 def initiate_data():
     if not len(User.query.all()):
         User.seed()
