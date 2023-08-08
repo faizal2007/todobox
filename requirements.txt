@@ -38,7 +38,6 @@ six==1.16.0
 SQLAlchemy==1.4.17
 toml==0.10.2
 typing_extensions==4.5.0
-upgrade-requirements==1.7.0
 Werkzeug==2.3.6
 wrapt==1.12.1
 WTForms==2.3.3
