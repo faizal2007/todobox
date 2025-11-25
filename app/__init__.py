@@ -7,6 +7,7 @@ from datetime import timedelta
 from app.utils import momentjs
 from lib.database import connect_db
 import os
+import hashlib
 
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_object('app.config')
@@ -26,6 +27,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(minutes=120)
 # Set jinja template global
 app.jinja_env.globals['momentjs'] = momentjs
+
+# Add md5 filter for Gravatar
+@app.template_filter('md5')
+def md5_filter(text):
+    return hashlib.md5(text.encode('utf-8')).hexdigest()
+
 login = LoginManager(app)
 login.login_view = 'login' # type: ignore[attr-defined]
 login.refresh_view = 'relogin' # type: ignore[attr-defined]

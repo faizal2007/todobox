@@ -13,6 +13,7 @@ from sqlalchemy import asc, desc
 import markdown
 from bleach import clean
 from wtforms.csrf.core import CSRF
+import requests
 
 # Allowed HTML tags for sanitized Markdown output
 ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a']
@@ -33,6 +34,50 @@ def csrf_validation_error(e):
     """Handle CSRF validation errors gracefully"""
     flash('Session expired. Please login again.', 'warning')
     return redirect(url_for('login'))
+
+# Fallback local quotes
+LOCAL_QUOTES = [
+    "Stay focused",
+    "Keep it simple",
+    "Progress over perfection",
+    "One step at a time",
+    "You got this",
+    "Be present",
+    "Make it count",
+    "Dream big",
+    "Start now",
+    "Stay curious",
+    "Do better",
+    "Be kind",
+    "Never stop learning",
+    "Create value",
+    "Think different"
+]
+
+@app.route('/api/quote')
+def get_quote():
+    """Fetch a wisdom quote from ZenQuotes API with local fallback"""
+    try:
+        # Try ZenQuotes
+        try:
+            response = requests.get('https://zenquotes.io/api/random', timeout=3)
+            if response.status_code == 200:
+                data = response.json()
+                if data and len(data) > 0:
+                    quote = data[0].get('q', '').strip()
+                    if quote:
+                        return jsonify({'quote': quote[:100]})  # Truncate to 100 chars
+        except (requests.RequestException, ValueError, ConnectionError):
+            pass
+        
+        # Use local fallback quote if API fails
+        import random
+        fallback_quote = random.choice(LOCAL_QUOTES)
+        return jsonify({'quote': fallback_quote})
+        
+    except Exception as e:
+        # Last resort: return a default quote
+        return jsonify({'quote': 'Stay focused'})
 
 """
 " Initiatiate default data

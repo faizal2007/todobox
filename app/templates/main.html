@@ -8,6 +8,8 @@
         <!-- App favicon -->
 		
 		<link rel="shortcut icon" href='{{ url_for('static', filename='assets/images/favicon.ico') }}'>
+		<!-- Preload fonts -->
+		<link rel="preload" as="font" href='/static/fonts/Lemon Tuesday.otf' type="font/otf" crossorigin>
         <!-- App css -->
         <link href='{{ url_for('static', filename='assets/css/icons.min.css') }}' rel="stylesheet" type="text/css" />
         <link href='{{ url_for('static', filename='assets/css/app-modern.min.css') }}' rel="stylesheet" type="text/css" id="light-style" />
@@ -63,14 +65,11 @@
 											<li class="dropdown notification-list">
 												<a class="nav-link dropdown-toggle nav-user arrow-none mr-0" data-toggle="dropdown" id="topbar-userdrop" href="#" role="button" aria-haspopup="true"
 													aria-expanded="false">
-													<!-- <span class="account-user-avatar"> 
-														<img src="/static/assets/images/users/avatar-1.jpg" alt="user-image" class="rounded-circle">
-													</span> -->
 													<span class="account-user-avatar">
-															<i class="dripicons-user font-20"></i>
+														<img src="https://www.gravatar.com/avatar/{{ current_user.email|lower|replace(' ', '')|md5 }}?s=32&d=identicon" alt="user-avatar" class="rounded-circle" style="width: 32px; height: 32px;">
 													</span>
 													<span>
-														<span class="account-user-name">Faizal Sadri</span>
+														<span class="account-user-name">{{ current_user.username }}</span>
 														<span class="account-position" id="current-date"></span>
 													</span>
 												</a>

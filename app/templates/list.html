@@ -68,6 +68,11 @@
                                                             <i class="uil uil-schedule font-16 mr-1"></i>
                                                             {{ momentjs(list.Tracker.timestamp).calendar() }}
                                                        </footer>
+                                                       <div style="margin-top: 15px; text-align: right;">
+                                                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; display: inline-block;">
+                                                                 <i class="mdi mdi-lightbulb-on mr-1"></i><span class="card-wisdom">Stay focused</span>
+                                                            </div>
+                                                       </div>
                                                   </div>
                                              </div> <!-- end card-->
                                    {% if loop.index == breaker.value + count.value %}
@@ -244,6 +249,28 @@
                          $('.create-todo').click();
                     }
                }
+          });
+          
+          // Add wisdom quotes to each card
+          var cardWisdoms = document.querySelectorAll('.card-wisdom');
+          var count = cardWisdoms.length;
+          
+          // Fetch quotes from backend API endpoint
+          cardWisdoms.forEach(function(el, index) {
+               $.ajax({
+                    url: '/api/quote',
+                    type: 'GET',
+                    timeout: 5000,
+                    success: function(data) {
+                         if (data.quote) {
+                              el.textContent = data.quote;
+                         }
+                    },
+                    error: function() {
+                         // Fallback: use a default quote if API fails
+                         el.textContent = 'Stay focused';
+                    }
+               });
           });
      });
 </script>
