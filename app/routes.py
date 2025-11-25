@@ -529,7 +529,7 @@ def list(id):
     else:
         abort(404)
         
-    return render_template('list.html', title=id, todo=Todo.getList(id, start, end).order_by(desc(Tracker.timestamp)))
+    return render_template('list.html', title=id, todo=Todo.getList(id, start, end, user_id=current_user.id).order_by(desc(Tracker.timestamp)))
 
 @app.route('/<path:id>/<path:todo_id>/done', methods=['POST'])
 @login_required

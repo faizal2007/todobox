@@ -101,7 +101,7 @@ class Todo(db.Model): # type: ignore[attr-defined]
         return '<Todo {}>'.format(self.name)
 
     @classmethod
-    def getList(cls, type, start, end):
+    def getList(cls, type, start, end, user_id=None):
         # Validate input to prevent potential injection
         valid_types = ['today', 'tomorrow']
         if type not in valid_types:
@@ -110,7 +110,7 @@ class Todo(db.Model): # type: ignore[attr-defined]
         done = 2
         latest_todo = db.session.query(func.max(Tracker.timestamp)).group_by(Tracker.todo_id) # type: ignore[attr-defined]
         
-        todo = db.session.query( # type: ignore[attr-defined]
+        query = db.session.query( # type: ignore[attr-defined]
                                 Todo, 
                                 Tracker
             ).join(
@@ -120,7 +120,12 @@ class Todo(db.Model): # type: ignore[attr-defined]
                     Tracker.timestamp.between(start, end), # type: ignore[attr-defined]
                     Tracker.status_id != 2 # type: ignore[attr-defined]
             )
-        return todo
+        
+        # Filter by user if user_id is provided
+        if user_id is not None:
+            query = query.filter(Todo.user_id == user_id) # type: ignore[attr-defined]
+        
+        return query
 
 class Status(db.Model): # type: ignore[attr-defined]
     id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]

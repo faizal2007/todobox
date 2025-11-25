@@ -36,26 +36,23 @@
                     {% endfor %}
                 </div>
                 <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+                
+                <!-- Login Buttons Row -->
+                <div class="row" style="margin-top: 20px;">
+                    <div class="col-md-6">
+                        <p>{{ form.submit(class="btn btn-primary btn-block") }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ url_for('oauth_login_google') }}" class="btn btn-danger btn-block" role="button">
+                            <i class="mdi mdi-google"></i> Sign in with Google
+                        </a>
+                    </div>
+                </div>
             </form>
             
             <!-- Divider -->
             <div class="text-center my-4">
                 <p class="text-muted"></p>
-            </div>
-            
-            <!-- Login Buttons Row -->
-            <div class="row" style="margin-top: 20px;">
-                <div class="col-md-6">
-                    <form method="post" action="">
-                        {{ form.hidden_tag() }}
-                        <p>{{ form.submit(class="btn btn-primary btn-block") }}</p>
-                    </form>
-                </div>
-                <div class="col-md-6">
-                    <a href="{{ url_for('oauth_login_google') }}" class="btn btn-danger btn-block" role="button">
-                        <i class="mdi mdi-google"></i> Sign in with Google
-                    </a>
-                </div>
             </div>
         </div>
     </div>

@@ -45,13 +45,20 @@
             <li class="{{ 'nav-item active' if active_page == 'index' else 'nav-item' }}">
               <a class="nav-link" href="{{ url_for('index') }}">Home</a>
             </li>
+          </ul>
+          {% if not current_user.is_anonymous %}
+          <ul class="navbar-nav mr-auto">
             <li class="{{ 'nav-item active' if active_page == 'today' else 'nav-item' }}">
               <a class="nav-link" href="{{ url_for('list', id='today') }}">Today</a>
             </li>
             <li class="{{ 'nav-item active' if active_page == 'tomorrow' else 'nav-item' }}">
               <a class="nav-link" href="{{ url_for('list', id='tomorrow') }}">Tomorrow</a>
             </li>
+            <li class="{{ 'nav-item active' if active_page == 'Undone Tasks' else 'nav-item' }}">
+              <a class="nav-link" href="{{ url_for('undone') }}">Undone Tasks</a>
+            </li>
           </ul>
+          {% endif %}
         </div>
           <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto nav-flex-icons w-auto">
