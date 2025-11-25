@@ -4,12 +4,12 @@
     <main role="main">
         <div class="jumbotron">
                 <div class="container">
-                <h1 class="cover-heading">&nbsp;</h1>
-                <p class="lead">
-                    <script type="text/javascript" src="https://www.brainyquote.com/link/quotebr.js"></script>
+                <h1 class="cover-heading">Welcome to Your Todo Dashboard</h1>
+                <p class="lead" id="quoteContainer">
+                    Loading inspirational quote...
                 </p>
                 <p class="lead">
-                <a href="https://www.brainyquote.com/quote_of_the_day" target="_blank" rel="nofollow" class="btn btn-lg btn-secondary">Learn more</a>
+                <a href="https://www.brainyquote.com/quote_of_the_day" target="_blank" rel="noopener noreferrer" class="btn btn-lg btn-secondary">View Quote of the Day</a>
                 </p>
             </div>
         </div>
@@ -17,7 +17,13 @@
 {% endblock %}
 {% block extra_script %}
 <script>
-    $('.cover-heading').text($('.lead b').text());
-    $('.lead b').remove();
+    document.addEventListener('DOMContentLoaded', function() {
+        // Remove the old jQuery code that was setting heading from external script
+        var quoteContainer = document.getElementById('quoteContainer');
+        if (quoteContainer) {
+            // Display a default message since external script is removed
+            quoteContainer.textContent = 'Start organizing your tasks and boost your productivity!';
+        }
+    });
 </script>
 {% endblock %}
