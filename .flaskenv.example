@@ -1,30 +1,35 @@
-FLASK_ENV=development
+# FLASK_ENV=development
 FLASK_APP=mysandbox.py
+TITLE=Shimasu
 
 # Security - CHANGE THESE IN PRODUCTION!
-SECRET_KEY="change-me-to-a-secure-random-key"
-SALT="change-me-to-a-secure-salt"
+SECRET_KEY=change-me-to-a-secure-random-key
+SALT=change-me-to-a-secure-salt
 
 # Database Configuration
-# For SQLite (default)
 DATABASE_DEFAULT=sqlite
 DATABASE_NAME=mysandbox.db
 
-# For PostgreSQL (uncomment and configure)
+# Optional: For PostgreSQL (uncomment and configure)
 # DATABASE_DEFAULT=postgres
-# POSTGRES_URL="192.168.1.25:5432"
-# POSTGRES_USER="postgres"
-# POSTGRES_PW="your-secure-password"
-# POSTGRES_DB="todo_db"
+# POSTGRES_URL=192.168.1.25:5432
+# POSTGRES_USER=postgres
+# POSTGRES_PW=your-secure-password
+# POSTGRES_DB=todo_db
 
-# For MySQL (uncomment and configure)
+# Optional: For MySQL (uncomment and configure)
 # DATABASE_DEFAULT=mysql
-# DB_URL="localhost"
-# DB_USER="mysandbox"
-# DB_PW="your-secure-password"
-# DB_NAME="mysandbox"
+# DB_URL=localhost
+# DB_USER=mysandbox
+# DB_PW=your-secure-password
+# DB_NAME=mysandbox
 
 # Application Settings
-TITLE="My Sandbox"
+TITLE=My Sandbox
 BIND_ADDRESS=127.0.0.1
-PORT=9191
+PORT=5000
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your_client_id_here
+GOOGLE_CLIENT_SECRET=your_client_secret_here
+OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google

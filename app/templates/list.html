@@ -25,20 +25,12 @@
                          </div>
                          
                          <div class="container-fluid">
-                              {% set count = namespace(value=0) %}
-                              {% set column_size = 3 %}
-                              {% set balance_div = 4 % column_size  %}
-                              {% set breaker = namespace(value=balance_div) %}
-                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                              {% for list in todo %}
-                              {% if loop.index > balance_div %}
-                                   {% set breaker.value = column_size %}
-                                   {% endif %}
-                                   {% if loop.index == 1 + count.value %}    
-                                        <div class="card-deck mb-3">
-                                   {% endif %}
+                              <div class="row justify-content-center">
+                                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                   {% for list in todo %}
+                                        <div class="col-md-4 col-lg-3 mb-3">
                                              <!-- Portlet card -->
-                                             <div class="card">
+                                             <div class="card h-100">
                                                   <div class="card-body">
                                                        <div class="card-widgets">
                                                             <!-- <button type="button" class="edit" aria-label="Edit" data-id='' data-toggle="modal" data-target="#todoModal">
@@ -75,11 +67,9 @@
                                                        </div>
                                                   </div>
                                              </div> <!-- end card-->
-                                   {% if loop.index == breaker.value + count.value %}
-                                   {% set count.value = count.value + breaker.value %}
                                         </div>
-                                   {% endif %}
-                              {% endfor %}
+                                   {% endfor %}
+                              </div>
                          </div>
                          
                     </div>
