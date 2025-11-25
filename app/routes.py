@@ -65,18 +65,18 @@ def dashboard():
     chart_segments = {'done': 0, 're-assign': 0, 'pending': 0}
     
     # Get all todos and analyze each one properly
-    all_todos = db.session.query(Todo).all()  # type: ignore
+    all_todos: list = db.session.query(Todo).all()  # type: ignore
     
     for todo in all_todos:
         # Get all trackers for this todo to check completion history
         todo_trackers = db.session.query(Tracker, Status.name).join(Status).filter(  # type: ignore
-            Tracker.todo_id == todo.id 
-        ).order_by(Tracker.timestamp).all()
+            Tracker.todo_id == todo.id  # type: ignore
+        ).order_by(Tracker.timestamp).all()  # type: ignore
         
         # Get latest status
         latest_tracker = db.session.query(Tracker, Status.name).join(Status).filter(  # type: ignore
-            Tracker.todo_id == todo.id
-        ).order_by(desc(Tracker.timestamp)).first()
+            Tracker.todo_id == todo.id  # type: ignore
+        ).order_by(desc(Tracker.timestamp)).first()  # type: ignore
         
         if not latest_tracker:
             continue
@@ -117,8 +117,8 @@ def dashboard():
     for todo in all_todos:
         # Get all trackers for this todo ordered by timestamp
         todo_trackers = db.session.query(Tracker, Status.name).join(Status).filter(  # type: ignore
-            Tracker.todo_id == todo.id 
-        ).order_by(Tracker.timestamp).all()
+            Tracker.todo_id == todo.id  # type: ignore
+        ).order_by(Tracker.timestamp).all()  # type: ignore
         
         reassign_count = 0
         is_completed = False

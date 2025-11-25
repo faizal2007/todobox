@@ -84,9 +84,10 @@
                             <div class="progress">
                                 {% set completion_rate = (done_count / total_count * 100) | round(1) if total_count > 0 else 0 %}
                                 <div class="progress-bar bg-success" role="progressbar" 
+                                     id="completionProgressBar"
                                      style="width: {{ completion_rate }}%" 
-                                     aria-valuenow="{{ completion_rate }}" 
-                                     aria-valuemin="0" aria-valuemax="100"
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100"
                                      aria-label="Completion rate: {{ completion_rate }}%">
                                     {{ completion_rate }}%
                                 </div>
@@ -173,6 +174,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Set completion progress bar aria-valuenow attribute
+    const progressBar = document.getElementById('completionProgressBar');
+    if (progressBar) {
+        const widthPercent = progressBar.style.width;
+        const ariaValue = parseInt(widthPercent, 10) || 0;
+        progressBar.setAttribute('aria-valuenow', ariaValue);
+    }
+    
     // Initialize the chart
     const canvas = document.getElementById('todoChart');
     if (!canvas || typeof Chart === 'undefined') {
