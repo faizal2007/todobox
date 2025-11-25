@@ -8,15 +8,19 @@ When running `flask db upgrade`, the following error occurred:
 ImportError: cannot import name 'url_encode' from 'werkzeug.urls'
 ```
 
-This happened because the installed versions of Flask-WTF and Flask-Login were incompatible with the newer Werkzeug 3.0.6. The `url_encode`, `url_decode`, and `url_parse` functions were removed from `werkzeug.urls` in Werkzeug 3.0.
+This happened because the installed versions of Flask-WTF and Flask-Login
+were incompatible with the newer Werkzeug 3.0.6. The `url_encode`,
+`url_decode`, and `url_parse` functions were removed from `werkzeug.urls`
+in Werkzeug 3.0.
 
 ## Root Cause
 
-Several outdated Flask extensions were trying to import functions from `werkzeug.urls` that no longer exist:
+Several outdated Flask extensions were trying to import functions
+from `werkzeug.urls` that no longer exist:
 
 1. **Flask-WTF 1.1.1** → tried to import `url_encode` (missing in Werkzeug 3.0)
-2. **Flask-Login 0.6.2** → tried to import `url_decode` (missing in Werkzeug 3.0)  
-3. **app/routes.py** → tried to import `url_parse` from `werkzeug.urls` (missing in Werkzeug 3.0)
+2. **Flask-Login 0.6.2** → tried to import `url_decode` (missing in Werkzeug 3.0)
+3. **app/routes.py** → tried to import `url_parse` from `werkzeug.urls`
 
 ## Solution Applied
 
@@ -64,7 +68,8 @@ from werkzeug.urls import url_parse
 from urllib.parse import urlparse as url_parse
 ```
 
-The `urlparse` function is now imported from Python's standard library `urllib.parse` instead of Werkzeug.
+The `urlparse` function is now imported from Python's standard library
+`urllib.parse` instead of Werkzeug.
 
 ### 4. Created Missing Directories
 
@@ -110,10 +115,10 @@ INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
 
 ## Compatibility Matrix
 
-| Component | Old Version | New Version | Werkzeug Support |
-|-----------|------------|------------|-----------------|
-| Flask-WTF | 1.1.1 | 1.2.2 | 3.0.6+ ✓ |
-| Flask-Login | 0.6.2 | 0.6.3 | 3.0.6+ ✓ |
+| Component   | Old Version | New Version | Werkzeug Support |
+| ----------- | ----------- | ----------- | ---------------- |
+| Flask-WTF   | 1.1.1       | 1.2.2       | 3.0.6+ ✓         |
+| Flask-Login | 0.6.2       | 0.6.3       | 3.0.6+ ✓         |
 | Werkzeug | 3.0.6 | 3.0.6 | Current ✓ |
 
 ## Next Steps

@@ -2,7 +2,8 @@
 
 ## Overview
 
-This guide covers creating users for the MySandbox application on first-time setup. There are **three methods** available:
+This guide covers creating users for the MySandbox application on first-time
+setup. There are **three methods** available:
 
 1. **Interactive Python Script** (Recommended for first-time setup)
 2. **Flask CLI Commands** (Recommended for administration)
@@ -93,10 +94,10 @@ Select option (1-3): 2
 
 ### Validation Rules
 
-| Field | Rules |
-|-------|-------|
-| Username | 3-64 chars, alphanumeric + _ - |
-| Email | Valid format, unique |
+| Field    | Rules                               |
+| -------- | ----------------------------------- |
+| Username | 3-64 chars, alphanumeric + _ -      |
+| Email    | Valid format, unique                |
 | Password | Min 8 chars, must match confirmation |
 
 ### Example Session: Create Custom Admin
@@ -266,7 +267,8 @@ INSERT INTO user (username, email, password_hash)
 VALUES ('admin', 'admin@examples.com', 'pbkdf2:sha256:...');
 ```
 
-**⚠️ Note:** Password hash must be generated using Werkzeug's `generate_password_hash()` function. Use Python:
+**⚠️ Note:** Password hash must be generated using Werkzeug's
+`generate_password_hash()` function. Use Python:
 
 ```python
 from werkzeug.security import generate_password_hash
@@ -543,13 +545,13 @@ flask create-user --username admin --email admin@example.com --password AutoGene
 
 ## 📚 Command Reference
 
-| Command | Purpose | Example |
-|---------|---------|---------|
-| `python3 create_user.py` | Interactive script | `python3 create_user.py` |
-| `flask create-user` | Create user (interactive) | `flask create-user` |
-| `flask reset-password` | Change password | `flask reset-password --username admin` |
-| `flask list-users` | Show all users | `flask list-users` |
-| `flask delete-user` | Remove user | `flask delete-user` |
+| Command                  | Purpose                   | Example                              |
+| ------------------------ | ------------------------- | ------------------------------------ |
+| `python3 create_user.py` | Interactive script        | `python3 create_user.py`             |
+| `flask create-user`      | Create user (interactive) | `flask create-user`                  |
+| `flask reset-password`   | Change password           | `flask reset-password --username admin` |
+| `flask list-users`       | Show all users            | `flask list-users`                   |
+| `flask delete-user`      | Remove user               | `flask delete-user`                  |
 
 ---
 
