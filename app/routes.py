@@ -191,8 +191,25 @@ def add():
         else:
             getTomorrow = 0
 
+        # Handle scheduled datetime
+        scheduled_datetime = None
+        if 'scheduled_datetime' in request.form and request.form.get("scheduled_datetime").strip():
+            try:
+                scheduled_datetime = datetime.fromisoformat(request.form.get("scheduled_datetime").strip())
+            except ValueError:
+                scheduled_datetime = None
+
         if request.form.get("todo_id") == '':
-            if getTomorrow == 0:
+            if scheduled_datetime:
+                # Use scheduled datetime - keep timestamp as None (default), only set modified
+                t = Todo(
+                        name=getTitle, 
+                        details=getActivities, 
+                        user_id=current_user.id, 
+                        details_html=getActivities_html,
+                        timestamp=None, 
+                        modified=scheduled_datetime)
+            elif getTomorrow == 0:
                 t = Todo(name=getTitle, details=getActivities, user_id=current_user.id, details_html=getActivities_html)
             else:
                 t = Todo(
@@ -205,7 +222,9 @@ def add():
 
             db.session.add(t)
             db.session.commit()
-            if getTomorrow:
+            if scheduled_datetime:
+                Tracker.add(t.id, 1, scheduled_datetime)
+            elif getTomorrow:
                 Tracker.add(t.id, 1, tomorrow)
             else:
                 Tracker.add(t.id, 1, t.timestamp)
@@ -218,7 +237,11 @@ def add():
             activites = t.details
 
             if getTitle == title and getActivities == activites :
-                if getTomorrow == '1':
+                if scheduled_datetime:
+                    t.modified = scheduled_datetime
+                    db.session.commit()
+                    Tracker.add(todo_id, 4, scheduled_datetime)
+                elif getTomorrow == '1':
                     t.modified = tomorrow
                     db.session.commit()
                     Tracker.add(todo_id, 4, tomorrow)
@@ -236,7 +259,11 @@ def add():
                 t.name = getTitle
                 t.details = getActivities
                 t.details_html = getActivities_html
-                if getTomorrow == '1':
+                if scheduled_datetime:
+                    t.modified = scheduled_datetime
+                    db.session.commit()
+                    Tracker.add(todo_id, 4, scheduled_datetime)
+                elif getTomorrow == '1':
                     t.modified = tomorrow
                     db.session.commit()
                     Tracker.add(todo_id, 4, tomorrow)
@@ -279,6 +306,7 @@ def getTodo(id):
                 'title': t.name,
                 'activities': t.details,
                 'modified': t.modified,
+                'scheduled_datetime': t.modified.strftime('%Y-%m-%dT%H:%M') if t.modified else '',
                 'button': button
             }), 200
         )

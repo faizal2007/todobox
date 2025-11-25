@@ -25,6 +25,18 @@
 						<label for="details-textarea">Why ???</label>
 						<textarea class="form-control" id="details-textarea" rows="5"></textarea>
 					</div>
+					<div class="form-group">
+						<label for="scheduled-datetime">Schedule Date/Time (optional)</label>
+						<div class="input-group">
+							<input type="datetime-local" class="form-control" id="scheduled-datetime" name="scheduled_datetime">
+							<div class="input-group-append">
+								<button type="button" class="btn btn-outline-secondary" id="clear-datetime" title="Clear date/time">
+									<i class="mdi mdi-close"></i>
+								</button>
+							</div>
+						</div>
+						<small class="form-text text-muted">Leave empty for today's todo</small>
+					</div>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-light btn-rounded" data-dismiss="modal">Close</button>
