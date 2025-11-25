@@ -13,6 +13,7 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
     email = db.Column(db.String(120), index=True, unique=True) # type: ignore[attr-defined]
     fullname = db.Column(db.String(100)) # type: ignore[attr-defined]
     password_hash = db.Column(db.String(255)) # type: ignore[attr-defined]
+    api_token = db.Column(db.String(255), unique=True, index=True) # type: ignore[attr-defined]  # API token for external access
     oauth_provider = db.Column(db.String(50)) # type: ignore[attr-defined]  # 'google' or None for password auth
     oauth_id = db.Column(db.String(255), index=True) # type: ignore[attr-defined]  # Google subject ID
     todo = db.relationship('Todo', backref='user', lazy='dynamic') # type: ignore[attr-defined]
@@ -38,6 +39,25 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
         
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def generate_api_token(self):
+        """Generate a new API token for the user"""
+        import secrets
+        import string
+        alphabet = string.ascii_letters + string.digits
+        token = ''.join(secrets.choice(alphabet) for _ in range(32))
+        self.api_token = token
+        db.session.commit()  # type: ignore[attr-defined]
+        return token
+    
+    def check_api_token(self, token):
+        """Check if the provided token matches the user's API token"""
+        return self.api_token == token
+    
+    @classmethod
+    def get_user_by_api_token(cls, token):
+        """Get user by API token"""
+        return cls.query.filter_by(api_token=token).first()
     
     def check_username(self, username):
         if self.username == username:

@@ -30,6 +30,7 @@ Visit `http://localhost:5000` in your browser.
 - 💾 **Flexible Storage** - Support for SQLite, MySQL, and PostgreSQL
 - 🧂 **Salt Generator** - Secure password hashing with cryptographically strong salts
 - 🚀 **Ready to Deploy** - Production-ready with unified configuration
+- 🔑 **API Access** - RESTful API with token-based authentication for external integrations
 
 ## Technology Stack
 
@@ -92,19 +93,25 @@ mysandbox/
 
 ## API Endpoints
 
+### Authentication
+
+- `POST /api/auth/token` - Generate API token (requires session auth)
+
 ### Todo Management
 
-- `GET /api/todo` - Fetch all todos
-- `POST /api/todo` - Create new todo
-- `PUT /api/todo/<id>` - Update todo
-- `DELETE /api/todo/<id>` - Delete todo
+- `GET /api/todo` - Fetch all todos (requires API token)
+- `POST /api/todo` - Create new todo (requires API token)
+- `PUT /api/todo/<id>` - Update todo (requires API token)
+- `DELETE /api/todo/<id>` - Delete todo (requires API token)
 
 ### Wisdom Quotes
 
-- `GET /api/quote` - Fetch random wisdom quote
+- `GET /api/quote` - Fetch random wisdom quote (public)
 
-### Setup
+### User Interface
 
+- `GET /settings` - Settings page (password change and API token management)
+- `GET /account` - Account information management
 - `GET /setup` - Interactive setup wizard
 
 ## Configuration
@@ -147,16 +154,35 @@ GRANT ALL PRIVILEGES ON mysandbox_db.* TO 'user'@'localhost';
 
 Set `DATABASE_DEFAULT=postgres` in `.flaskenv` and ensure PostgreSQL is installed.
 
-## Security Features
+## API Token Management
 
-- ✅ Secure salt generation for password hashing
-- ✅ Environment variables for all secrets
-- ✅ XSS protection with HTML sanitization
-- ✅ SQL injection prevention with parameterized queries
-- ✅ CSRF protection with Flask-WTF
-- ✅ Gravatar integration with no-referrer policy
-- ✅ Server-side API proxying (no CORS errors)
-- ✅ Duplicate user prevention
+Users can generate and manage API tokens through the web interface:
+
+1. **Access Settings**: Navigate to Profile → Settings
+2. **Generate Token**: Click "Generate API Token" to create a new token
+3. **Copy Token**: Use the copy button to copy your token securely
+4. **Regenerate**: Generate a new token (old token becomes invalid)
+5. **Revoke**: Permanently remove API access
+
+**Security Notes:**
+
+- Keep your API token secure and never share it publicly
+- Tokens provide full access to your todo data
+- Regenerate tokens regularly for security
+- Revoke tokens immediately if compromised
+
+**Example API Usage:**
+
+```bash
+# Get all todos
+curl -H "Authorization: Bearer YOUR_API_TOKEN" http://localhost:5000/api/todo
+
+# Create a new todo
+curl -X POST -H "Authorization: Bearer YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "New Task", "details": "Task details"}' \
+  http://localhost:5000/api/todo
+```
 
 ## Recent Updates
 

@@ -1,8 +1,8 @@
 from importlib.resources import path
 from os import pipe
 from unittest.mock import patch
-from flask import render_template, request, redirect, url_for, make_response, jsonify, abort, flash, redirect, session
-from app import app, db
+from flask import render_template, request, redirect, url_for, make_response, jsonify, abort, flash, redirect, session, g
+from app import app, db, csrf
 from flask_login import current_user, login_user, login_required, logout_user
 from app.models import Todo, User, Status, Tracker
 from app.forms import LoginForm, ChangePassword, UpdateAccount
@@ -13,17 +13,40 @@ from sqlalchemy import asc, desc
 import markdown
 from bleach import clean
 from wtforms.csrf.core import CSRF
+from functools import wraps
 import requests
+
+# API Token Authentication Decorator
+def require_api_token(f):
+    """Decorator to require API token authentication for API endpoints"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Missing or invalid API token'}), 401
+        
+        token = auth_header.split(' ')[1]
+        user = User.get_user_by_api_token(token)
+        if not user:
+            return jsonify({'error': 'Invalid API token'}), 401
+        
+        # Add user to Flask g object for the request context
+        g.user = user
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Allowed HTML tags for sanitized Markdown output
 ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a']
 ALLOWED_ATTRIBUTES = {'a': ['href', 'title']}
 
-# CSRF Error Handler
+# CSRF Error Handler - only for web routes
 @app.errorhandler(400)
 def handle_csrf_error(e):
     """Handle CSRF token errors - redirect to login with session expired message"""
     if 'CSRF' in str(e) or 'csrf' in str(e).lower():
+        # Check if this is an API request
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'CSRF validation failed'}), 400
         flash('Session expired. Please login again.', 'warning')
         return redirect(url_for('login'))
     return redirect(url_for('index'))
@@ -32,6 +55,8 @@ def handle_csrf_error(e):
 @app.errorhandler(400)
 def csrf_validation_error(e):
     """Handle CSRF validation errors gracefully"""
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'CSRF validation failed'}), 400
     flash('Session expired. Please login again.', 'warning')
     return redirect(url_for('login'))
 
@@ -55,40 +80,181 @@ LOCAL_QUOTES = [
 ]
 
 @app.route('/api/quote')
+@csrf.exempt
 def get_quote():
-    """Fetch a wisdom quote from ZenQuotes API with local fallback"""
-    try:
-        # Try ZenQuotes
-        try:
-            response = requests.get('https://zenquotes.io/api/random', timeout=3)
-            if response.status_code == 200:
-                data = response.json()
-                if data and len(data) > 0:
-                    quote = data[0].get('q', '').strip()
-                    if quote:
-                        return jsonify({'quote': quote[:100]})  # Truncate to 100 chars
-        except (requests.RequestException, ValueError, ConnectionError):
-            pass
+    """Return a local quote without external API calls"""
+    import random
+    fallback_quote = random.choice(LOCAL_QUOTES)
+    return jsonify({'quote': fallback_quote})
+
+@app.route('/api/auth/token', methods=['POST'])
+@csrf.exempt
+@login_required
+def generate_api_token():
+    """Generate a new API token for the authenticated user"""
+    token = current_user.generate_api_token()
+    return jsonify({
+        'token': token,
+        'message': 'API token generated successfully. Keep this token secure!'
+    })
+
+@app.route('/api/todo', methods=['GET'])
+@csrf.exempt
+@require_api_token
+def get_todos():
+    """Get all todos for the authenticated user"""
+    user = g.user
+    
+    # Get all todos for the user
+    todos = Todo.query.filter_by(user_id=user.id).all()
+    
+    todo_list = []
+    for todo in todos:
+        # Get latest status
+        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(desc(Tracker.timestamp)).first()
+        status = 'pending'
+        if latest_tracker:
+            status_obj = Status.query.get(latest_tracker.status_id)
+            if status_obj:
+                status = status_obj.name
         
-        # Use local fallback quote if API fails
-        import random
-        fallback_quote = random.choice(LOCAL_QUOTES)
-        return jsonify({'quote': fallback_quote})
-        
-    except Exception as e:
-        # Last resort: return a default quote
-        return jsonify({'quote': 'Stay focused'})
+        todo_list.append({
+            'id': todo.id,
+            'title': todo.name,
+            'details': todo.details,
+            'status': status,
+            'created_at': todo.timestamp.isoformat(),
+            'modified_at': todo.modified.isoformat()
+        })
+    
+    return jsonify({'todos': todo_list})
+
+@app.route('/api/todo', methods=['POST'])
+@csrf.exempt
+@require_api_token
+def create_todo():
+    """Create a new todo for the authenticated user"""
+    user = g.user
+
+    data = request.get_json()
+    if not data or 'title' not in data:
+        return jsonify({'error': 'Title is required'}), 400
+    
+    title = data['title'].strip()
+    details = data.get('details', '').strip()
+    
+    if not title:
+        return jsonify({'error': 'Title cannot be empty'}), 400
+    
+    # Create todo
+    details_html = clean(markdown.markdown(details, extensions=['fenced_code']), 
+                        tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+    
+    todo = Todo(name=title, details=details, details_html=details_html, user_id=user.id)
+    db.session.add(todo)  # type: ignore[attr-defined]
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    # Add tracker entry
+    Tracker.add(todo.id, 1, todo.timestamp)
+    
+    return jsonify({
+        'id': todo.id,
+        'title': todo.name,
+        'details': todo.details,
+        'status': 'pending',
+        'created_at': todo.timestamp.isoformat(),
+        'modified_at': todo.modified.isoformat()
+    }), 201
+
+@app.route('/api/todo/<int:todo_id>', methods=['PUT'])
+@csrf.exempt
+@require_api_token
+def update_todo(todo_id):
+    """Update a todo for the authenticated user"""
+    user = g.user
+    
+    todo = Todo.query.filter_by(id=todo_id, user_id=user.id).first()
+    if not todo:
+        return jsonify({'error': 'Todo not found'}), 404
+    
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
+    # Update fields
+    if 'title' in data:
+        title = data['title'].strip()
+        if not title:
+            return jsonify({'error': 'Title cannot be empty'}), 400
+        todo.name = title
+    
+    if 'details' in data:
+        details = data['details'].strip()
+        todo.details = details
+        todo.details_html = clean(markdown.markdown(details, extensions=['fenced_code']), 
+                                 tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+    
+    if 'status' in data:
+        status_name = data['status']
+        status = Status.query.filter_by(name=status_name).first()
+        if status:
+            todo.modified = datetime.now()
+            Tracker.add(todo.id, status.id, todo.modified)
+    
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    # Get current status
+    latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(desc(Tracker.timestamp)).first()
+    current_status = 'pending'
+    if latest_tracker:
+        status_obj = Status.query.get(latest_tracker.status_id)
+        if status_obj:
+            current_status = status_obj.name
+    
+    return jsonify({
+        'id': todo.id,
+        'title': todo.name,
+        'details': todo.details,
+        'status': current_status,
+        'created_at': todo.timestamp.isoformat(),
+        'modified_at': todo.modified.isoformat()
+    })
+
+@app.route('/api/todo/<int:todo_id>', methods=['DELETE'])
+@csrf.exempt
+@require_api_token
+def delete_todo(todo_id):
+    """Delete a todo for the authenticated user"""
+    user = g.user
+    
+    todo = Todo.query.filter_by(id=todo_id, user_id=user.id).first()
+    if not todo:
+        return jsonify({'error': 'Todo not found'}), 404
+    
+    # Delete trackers first
+    Tracker.query.filter_by(todo_id=todo_id).delete()
+    # Delete todo
+    db.session.delete(todo)  # type: ignore[attr-defined]
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    return jsonify({'message': 'Todo deleted successfully'})
 
 """
 " Initiatiate default data
 """
-@app.before_request
-def initiate_data():
-    if not len(User.query.all()):
-        User.seed()
+"""
+" Initialize default data on app startup
+"""
+def init_default_data():
+    """Initialize default data on application startup"""
+    with app.app_context():
+        if not len(User.query.all()):
+            User.seed()
+        if not len(Status.query.all()):
+            Status.seed()
 
-    if not len(Status.query.all()):
-        Status.seed()
+# Initialize data once when app starts
+init_default_data()
 
 @app.route('/')
 @app.route('/index')
@@ -276,30 +442,6 @@ def oauth_callback_google():
         next_page = url_for('list', id='today')
     
     return redirect(next_page)
-
-@app.route('/security', methods=['GET', 'POST'])
-@login_required
-def security():
-    form = ChangePassword()
-    try:
-        if form.validate_on_submit():
-            # Verify old password matches
-            user = User.query.filter_by(id=current_user.id).first()
-            if not user.check_password(form.oldPassword.data):
-                flash('Old password is incorrect.', 'error')
-            else:
-                # Change password
-                user.set_password(form.password.data)
-                db.session.commit()  # type: ignore[attr-defined]
-                flash('Password Successfully changed.', 'success')
-                return redirect(url_for('security'))
-    except Exception as e:
-        if 'csrf' in str(e).lower():
-            flash('Session expired. Please login again.', 'warning')
-            return redirect(url_for('login'))
-        raise
-
-    return render_template('security.html', title='User Security', form=form)
 
 @app.route('/account', methods=['GET', 'POST'])
 @login_required
@@ -592,3 +734,44 @@ def done(id, todo_id):
                 'todo_id': todo.id
             }), 200
     )
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    """Settings page for managing password and API tokens"""
+    password_form = ChangePassword()
+    
+    # Handle password change
+    if password_form.validate_on_submit() and 'change_password' in request.form:
+        try:
+            # Verify old password matches
+            user = User.query.filter_by(id=current_user.id).first()
+            if not user.check_password(password_form.oldPassword.data):
+                flash('Old password is incorrect.', 'error')
+            else:
+                # Change password
+                user.set_password(password_form.password.data)
+                db.session.commit()  # type: ignore[attr-defined]
+                flash('Password changed successfully.', 'success')
+                return redirect(url_for('settings'))
+        except Exception as e:
+            if 'csrf' in str(e).lower():
+                flash('Session expired. Please login again.', 'warning')
+                return redirect(url_for('login'))
+            raise
+    
+    # Handle API token actions
+    if request.method == 'POST':
+        if 'generate_token' in request.form:
+            # Generate new API token
+            token = current_user.generate_api_token()
+            flash('New API token generated successfully!', 'success')
+            return redirect(url_for('settings'))
+        elif 'revoke_token' in request.form:
+            # Revoke current API token
+            current_user.api_token = None
+            db.session.commit()  # type: ignore[attr-defined]
+            flash('API token revoked successfully!', 'success')
+            return redirect(url_for('settings'))
+    
+    return render_template('settings.html', title='Settings', password_form=password_form)

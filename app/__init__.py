@@ -40,6 +40,14 @@ login.refresh_view = 'relogin' # type: ignore[attr-defined]
 login.needs_refresh_message = (u"Session timedout, please re-login")
 login.needs_refresh_message_category = "info"
 
+# Return JSON 401 for API requests, redirect for others
+from flask import jsonify, request, url_for, redirect
+@login.unauthorized_handler
+def unauthorized():
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    return redirect(url_for('login'))
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 

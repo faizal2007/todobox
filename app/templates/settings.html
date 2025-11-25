@@ -1,0 +1,256 @@
+{% extends "main.html" %}
+{% set active_page = title %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h1 class="page-title">
+                    <i class="mdi mdi-settings mr-2"></i>{{ active_page|title }}
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            {% set alert_type = 'alert-success' if category == 'success' else 'alert-danger' if category == 'error' else 'alert-warning' if category == 'warning' else 'alert-info' %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert {{ alert_type }} alert-dismissible fade show" role="alert">
+                        <i class="mdi mdi-{{ 'check-circle' if category == 'success' else 'alert-circle' }} mr-2"></i>
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Password Change Section -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-lock-reset mr-2"></i>Change Password
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ password_form.hidden_tag() }}
+                        
+                        <!-- Old Password Field -->
+                        <div class="form-group">
+                            {{ password_form.oldPassword.label(class="font-weight-bold") }}
+                            <div class="input-group">
+                                {{ password_form.oldPassword(class="form-control", placeholder="Enter your current password", id="oldPassword") }}
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('oldPassword')" aria-label="Toggle password visibility">
+                                        <i class="mdi mdi-eye" id="oldPassword-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% for error in password_form.oldPassword.errors %}
+                                <small class="form-text text-danger d-block mt-1">
+                                    <i class="mdi mdi-alert-circle mr-1"></i>{{ error }}
+                                </small>
+                            {% endfor %}
+                        </div>
+
+                        <!-- New Password Field -->
+                        <div class="form-group">
+                            {{ password_form.password.label(class="font-weight-bold") }}
+                            <div class="input-group">
+                                {{ password_form.password(class="form-control", placeholder="Enter your new password", id="password") }}
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')" aria-label="Toggle password visibility">
+                                        <i class="mdi mdi-eye" id="password-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% for error in password_form.password.errors %}
+                                <small class="form-text text-danger d-block mt-1">
+                                    <i class="mdi mdi-alert-circle mr-1"></i>{{ error }}
+                                </small>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Confirm Password Field -->
+                        <div class="form-group">
+                            {{ password_form.confirm.label(class="font-weight-bold") }}
+                            <div class="input-group">
+                                {{ password_form.confirm(class="form-control", placeholder="Confirm your new password", id="confirm") }}
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm')" aria-label="Toggle password visibility">
+                                        <i class="mdi mdi-eye" id="confirm-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% for error in password_form.confirm.errors %}
+                                <small class="form-text text-danger d-block mt-1">
+                                    <i class="mdi mdi-alert-circle mr-1"></i>{{ error }}
+                                </small>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-group mt-4">
+                            <button type="submit" name="change_password" class="btn btn-warning btn-block">
+                                <i class="mdi mdi-lock-reset mr-1"></i>Change Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Token Management Section -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-api mr-2"></i>API Token Management
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        API tokens allow external applications to access your todo data programmatically.
+                        Keep your token secure and never share it publicly.
+                    </p>
+
+                    {% if current_user.api_token %}
+                    <!-- Current Token Display -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="mdi mdi-key-variant mr-2"></i>Current API Token
+                        </h6>
+                        <div class="d-flex align-items-center">
+                            <code class="flex-grow-1 mr-3" id="apiToken">{{ current_user.api_token }}</code>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard()">
+                                <i class="mdi mdi-content-copy mr-1"></i>Copy
+                            </button>
+                        </div>
+                        <small class="form-text text-muted mt-2">
+                            <i class="mdi mdi-shield-alert mr-1"></i>
+                            This token provides full access to your todo data. Keep it secure!
+                        </small>
+                    </div>
+
+                    <!-- Token Actions -->
+                    <div class="d-flex gap-2">
+                        <form method="POST" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" name="generate_token" class="btn btn-warning"
+                                    onclick="return confirm('Are you sure you want to generate a new token? The old token will be invalidated.')">
+                                <i class="mdi mdi-refresh mr-1"></i>Generate New Token
+                            </button>
+                        </form>
+                        <form method="POST" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" name="revoke_token" class="btn btn-danger"
+                                    onclick="return confirm('Are you sure you want to revoke your API token? This will prevent all API access until you generate a new token.')">
+                                <i class="mdi mdi-delete mr-1"></i>Revoke Token
+                            </button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <!-- No Token Message -->
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="mdi mdi-key-remove mr-2"></i>No API Token
+                        </h6>
+                        <p class="mb-0">You don't have an API token yet. Generate one to enable API access to your todos.</p>
+                    </div>
+
+                    <!-- Generate Token Button -->
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" name="generate_token" class="btn btn-success">
+                            <i class="mdi mdi-key-plus mr-1"></i>Generate API Token
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Documentation Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-book-open mr-2"></i>API Documentation
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Authentication</h6>
+                            <p class="small text-muted mb-3">
+                                Include your API token in the Authorization header:
+                            </p>
+                            <code class="d-block small mb-3">Authorization: Bearer YOUR_API_TOKEN</code>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Endpoints</h6>
+                            <ul class="small mb-0">
+                                <li><code>GET /api/todo</code> - Get all todos</li>
+                                <li><code>POST /api/todo</code> - Create todo</li>
+                                <li><code>PUT /api/todo/&lt;id&gt;</code> - Update todo</li>
+                                <li><code>DELETE /api/todo/&lt;id&gt;</code> - Delete todo</li>
+                                <li><code>GET /api/quote</code> - Get random quote</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard() {
+    const tokenElement = document.getElementById('apiToken');
+    const token = tokenElement.textContent;
+    
+    navigator.clipboard.writeText(token).then(function() {
+        // Show temporary success message
+        const originalText = tokenElement.innerHTML;
+        tokenElement.innerHTML = '<span class="text-success">Copied to clipboard!</span>';
+        setTimeout(function() {
+            tokenElement.innerHTML = originalText;
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Failed to copy: ', err);
+        alert('Failed to copy token to clipboard');
+    });
+}
+
+function togglePassword(fieldId) {
+    const input = document.getElementById(fieldId);
+    const icon = document.getElementById(fieldId + '-icon');
+    
+    if (!input) {
+        console.error('Input element not found:', fieldId);
+        return;
+    }
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'mdi mdi-eye-off';
+    } else {
+        input.type = 'password';
+        icon.className = 'mdi mdi-eye';
+    }
+}
+</script>
+
+{% endblock %}
