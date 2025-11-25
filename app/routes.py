@@ -1,11 +1,12 @@
 from importlib.resources import path
 from os import pipe
 from unittest.mock import patch
-from flask import render_template, request, redirect, url_for, make_response, jsonify, abort, flash, redirect
+from flask import render_template, request, redirect, url_for, make_response, jsonify, abort, flash, redirect, session
 from app import app, db
 from flask_login import current_user, login_user, login_required, logout_user
 from app.models import Todo, User, Status, Tracker
 from app.forms import LoginForm, ChangePassword, UpdateAccount
+from app.oauth import generate_google_auth_url, process_google_callback
 from urllib.parse import urlparse as url_parse
 from datetime import datetime, date, timedelta
 from sqlalchemy import asc
@@ -201,6 +202,48 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+@app.route('/auth/login/google')
+def oauth_login_google():
+    """Redirect user to Google for authentication"""
+    auth_url = generate_google_auth_url()
+    return redirect(auth_url)
+
+@app.route('/auth/callback/google')
+def oauth_callback_google():
+    """Handle Google OAuth callback"""
+    code = request.args.get("code")
+    error = request.args.get("error")
+    
+    if error:
+        flash('Google authentication failed. Please try again.', 'warning')
+        return redirect(url_for('login'))
+    
+    if not code:
+        flash('Authentication failed: no authorization code received.', 'warning')
+        return redirect(url_for('login'))
+    
+    # Process the Google callback
+    user, is_new = process_google_callback(code)
+    
+    if not user:
+        flash('Google authentication failed. Please try again or use password login.', 'warning')
+        return redirect(url_for('login'))
+    
+    # Log in the user
+    login_user(user, remember=True)
+    
+    if is_new:
+        flash(f'Welcome! Your account has been created with {user.email}', 'success')
+        next_page = url_for('account')  # Redirect to account page to complete profile
+    else:
+        flash(f'Welcome back, {user.username}!', 'success')
+        next_page = request.args.get('next') or url_for('list', id='today')
+    
+    if not next_page or url_parse(next_page).netloc != '':
+        next_page = url_for('list', id='today')
+    
+    return redirect(next_page)
 
 @app.route('/security', methods=['GET', 'POST'])
 @login_required

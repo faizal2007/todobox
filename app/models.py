@@ -13,11 +13,15 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
     email = db.Column(db.String(120), index=True, unique=True) # type: ignore[attr-defined]
     fullname = db.Column(db.String(100)) # type: ignore[attr-defined]
     password_hash = db.Column(db.String(255)) # type: ignore[attr-defined]
+    oauth_provider = db.Column(db.String(50)) # type: ignore[attr-defined]  # 'google' or None for password auth
+    oauth_id = db.Column(db.String(255), index=True) # type: ignore[attr-defined]  # Google subject ID
     todo = db.relationship('Todo', backref='user', lazy='dynamic') # type: ignore[attr-defined]
 
-    def __init__(self, username, email):
+    def __init__(self, username, email, oauth_provider=None, oauth_id=None):
         self.username = username
         self.email = email
+        self.oauth_provider = oauth_provider
+        self.oauth_id = oauth_id
 
     @classmethod
     def seed(cls):

@@ -25,3 +25,7 @@ SQLAlchemy==1.4.17
 typing_extensions==4.15.0
 Werkzeug==3.0.6
 WTForms==3.2.1
+Flask-OAuthlib==0.9.7
+google-auth-oauthlib==1.2.0
+google-auth==2.26.0
+requests==2.31.0

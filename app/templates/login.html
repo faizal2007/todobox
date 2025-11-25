@@ -3,7 +3,7 @@
 {% block content %}
 <main role="main">
     <div class="jumbotron">
-        <div class="container w-50 p-3">
+        <div class="container w-50 p-3" style="background-color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.15);">
             <h2>Sign In</h2>
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -17,6 +17,8 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
+            
+            <!-- Traditional Login Form -->
             <form action="" method="post" id="loginForm">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
@@ -34,8 +36,27 @@
                     {% endfor %}
                 </div>
                 <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
-                <p>{{ form.submit(class="btn btn-primary") }}</p>
             </form>
+            
+            <!-- Divider -->
+            <div class="text-center my-4">
+                <p class="text-muted"></p>
+            </div>
+            
+            <!-- Login Buttons Row -->
+            <div class="row" style="margin-top: 20px;">
+                <div class="col-md-6">
+                    <form method="post" action="">
+                        {{ form.hidden_tag() }}
+                        <p>{{ form.submit(class="btn btn-primary btn-block") }}</p>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <a href="{{ url_for('oauth_login_google') }}" class="btn btn-danger btn-block" role="button">
+                        <i class="mdi mdi-google"></i> Sign in with Google
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </main>
