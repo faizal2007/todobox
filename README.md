@@ -61,7 +61,7 @@ gunicorn -w 4 mysandbox:app  # Start with Gunicorn
 
 ## Project Structure
 
-```text
+```bash
 mysandbox/
 ├── app/
 │   ├── __init__.py         # Flask app factory
@@ -93,15 +93,18 @@ mysandbox/
 ## API Endpoints
 
 ### Todo Management
+
 - `GET /api/todo` - Fetch all todos
 - `POST /api/todo` - Create new todo
 - `PUT /api/todo/<id>` - Update todo
 - `DELETE /api/todo/<id>` - Delete todo
 
 ### Wisdom Quotes
+
 - `GET /api/quote` - Fetch random wisdom quote
 
 ### Setup
+
 - `GET /setup` - Interactive setup wizard
 
 ## Configuration
@@ -129,9 +132,11 @@ OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google
 ## Database Setup
 
 ### SQLite (Default)
+
 Auto-created on first run - no additional setup needed.
 
 ### MySQL
+
 ```bash
 CREATE DATABASE mysandbox_db;
 CREATE USER 'user'@'localhost' IDENTIFIED BY 'password';
@@ -139,6 +144,7 @@ GRANT ALL PRIVILEGES ON mysandbox_db.* TO 'user'@'localhost';
 ```
 
 ### PostgreSQL
+
 Set `DATABASE_DEFAULT=postgres` in `.flaskenv` and ensure PostgreSQL is installed.
 
 ## Security Features
@@ -155,6 +161,7 @@ Set `DATABASE_DEFAULT=postgres` in `.flaskenv` and ensure PostgreSQL is installe
 ## Recent Updates
 
 See [CHANGELOG.md](CHANGELOG.md) for all recent changes including:
+
 - Wisdom quotes integration (ZenQuotes + local fallback)
 - Salt generator function
 - Todo grid layout reorganization

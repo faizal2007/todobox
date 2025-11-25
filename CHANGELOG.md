@@ -8,7 +8,6 @@
 - Gravatar user avatars with identicon fallback
 - Current date display in user dropdown using moment.js
 - `/api/quote` Flask endpoint for server-side quote fetching
-- Salt generator function in config.py for secure password hashing
 - Todo list grid layout with responsive Bootstrap styling
 - Setup wizard with 5-step configuration guide
 - Server-side proxy for quote API (eliminates CORS errors)
