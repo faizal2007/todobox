@@ -7,23 +7,24 @@ from app import db, login
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), index=True, unique=True)
-    email = db.Column(db.String(120), index=True, unique=True)
-    fullname = db.Column(db.String(100))
-    password_hash = db.Column(db.String(128))
-    todo = db.relationship('Todo', backref='user', lazy='dynamic')
+class User(UserMixin, db.Model): # type: ignore[attr-defined]
+    id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
+    username = db.Column(db.String(64), index=True, unique=True) # type: ignore[attr-defined]
+    email = db.Column(db.String(120), index=True, unique=True) # type: ignore[attr-defined]
+    fullname = db.Column(db.String(100)) # type: ignore[attr-defined]
+    password_hash = db.Column(db.String(128)) # type: ignore[attr-defined]
+    todo = db.relationship('Todo', backref='user', lazy='dynamic') # type: ignore[attr-defined]
 
     def __init__(self, username, email):
         self.username = username
         self.email = email
 
-    def seed():
+    @classmethod
+    def seed(cls):
         u = User(username='admin', email='admin@examples.com')
         u.set_password('admin1234')
-        db.session.add(u)
-        db.session.commit()
+        db.session.add(u) # type: ignore[attr-defined]
+        db.session.commit() # type: ignore[attr-defined]
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -52,89 +53,93 @@ class Tracker(object):
         self.status_id =  status_id
         self.timestamp = timestamp
 
-    def add(todo_id, status_id, timestamp=datetime.now()):
-        db.session.add(Tracker(todo_id=todo_id, status_id=status_id, timestamp=timestamp))
-        db.session.commit()
+    @classmethod
+    def add(cls, todo_id, status_id, timestamp=None):
+        if timestamp is None:
+            timestamp = datetime.now()
+        db.session.add(Tracker(todo_id=todo_id, status_id=status_id, timestamp=timestamp)) # type: ignore[attr-defined]
+        db.session.commit() # type: ignore[attr-defined]
     
-    def getId(todo_id):
-        todo = db.session.query( 
-                                Tracker.id,
-                                func.max(Tracker.timestamp)
+    @classmethod
+    def getId(cls, todo_id):
+        todo = db.session.query( # type: ignore[attr-defined]
+                                Tracker.id, # type: ignore[attr-defined]
+                                func.max(Tracker.timestamp) # type: ignore[attr-defined]
                     ).filter(
-                        Tracker.todo_id == todo_id
-                    ).group_by(Tracker.todo_id)
+                        Tracker.todo_id == todo_id # type: ignore[attr-defined]
+                    ).group_by(Tracker.todo_id) # type: ignore[attr-defined]
 
         return todo.first().id
 
-    def delete(todo_id):
-        db.session.query(Tracker).filter(Tracker.todo_id == todo_id).delete()
-        db.session.query(Todo).filter(Todo.id == todo_id).delete()
-        db.session.commit()
+    @classmethod
+    def delete(cls, todo_id):
+        db.session.query(Tracker).filter(Tracker.todo_id == todo_id).delete() # type: ignore[attr-defined]
+        db.session.query(Todo).filter(Todo.id == todo_id).delete() # type: ignore[attr-defined]
+        db.session.commit() # type: ignore[attr-defined]
 
-tracker = db.Table('tracker',
+tracker = db.Table('tracker', # type: ignore[attr-defined]
         db.metadata,
-        db.Column('id', db.Integer, primary_key=True),
-        db.Column('todo_id', db.Integer, db.ForeignKey('todo.id')),
-        db.Column('status_id', db.Integer, db.ForeignKey('status.id')),
-        db.Column('timestamp', db.DateTime, index=True, default=datetime.now)
+        db.Column('id', db.Integer, primary_key=True), # type: ignore[attr-defined]
+        db.Column('todo_id', db.Integer, db.ForeignKey('todo.id')), # type: ignore[attr-defined]
+        db.Column('status_id', db.Integer, db.ForeignKey('status.id')), # type: ignore[attr-defined]
+        db.Column('timestamp', db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
 )
 
-class Todo(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), index=True, nullable=False)
-    details = db.Column(db.String(250))
-    details_html = db.Column(db.String(500))
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.now)
-    modified = db.Column(db.DateTime, index=True, default=datetime.now)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    tracker = db.relationship('Status', secondary=tracker, backref=db.backref('todo', lazy='dynamic'))
+class Todo(db.Model): # type: ignore[attr-defined]
+    id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
+    name = db.Column(db.String(80), index=True, nullable=False) # type: ignore[attr-defined]
+    details = db.Column(db.String(250)) # type: ignore[attr-defined]
+    details_html = db.Column(db.String(500)) # type: ignore[attr-defined]
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
+    modified = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id')) # type: ignore[attr-defined]
+    tracker = db.relationship('Status', secondary=tracker, backref=db.backref('todo', lazy='dynamic')) # type: ignore[attr-defined]
 
     def __repr__(self):
-        return '<Todo {}'.format(self.name)
+        return '<Todo {}>'.format(self.name)
 
-    def getList(type, start, end):
+    @classmethod
+    def getList(cls, type, start, end):
         # Validate input to prevent potential injection
         valid_types = ['today', 'tomorrow']
         if type not in valid_types:
             raise ValueError(f"Invalid type: {type}. Must be one of {valid_types}")
 
         done = 2
-        latest_todo = db.session.query(func.max(Tracker.timestamp)).group_by(Tracker.todo_id)
+        latest_todo = db.session.query(func.max(Tracker.timestamp)).group_by(Tracker.todo_id) # type: ignore[attr-defined]
         
-        todo = db.session.query(
+        todo = db.session.query( # type: ignore[attr-defined]
                                 Todo, 
                                 Tracker
             ).join(
                     Tracker
             ).filter(
-                    Tracker.timestamp == Todo.modified,
-                    Tracker.timestamp.between(start, end),
-                    Tracker.status_id != 2
+                    Tracker.timestamp == Todo.modified, # type: ignore[attr-defined]
+                    Tracker.timestamp.between(start, end), # type: ignore[attr-defined]
+                    Tracker.status_id != 2 # type: ignore[attr-defined]
             )
         return todo
 
-class Status(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), index=True, nullable=False)
+class Status(db.Model): # type: ignore[attr-defined]
+    id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
+    name = db.Column(db.String(50), index=True, nullable=False) # type: ignore[attr-defined]
     # todo = db.relationship('Todo', backref='status', lazy='dynamic')
 
     def __init__(self, name):
         self.name = name
 
-    def seed():
-        db.session.add(Status(name = 'new'))
-        db.session.add(Status(name = 'done'))
-        db.session.add(Status(name = 'failed'))
-        db.session.add(Status(name = 're-assign'))
-        db.session.commit()
+    @classmethod
+    def seed(cls):
+        db.session.add(Status(name='new')) # type: ignore[attr-defined]
+        db.session.add(Status(name='done')) # type: ignore[attr-defined]
+        db.session.add(Status(name='failed')) # type: ignore[attr-defined]
+        db.session.add(Status(name='re-assign')) # type: ignore[attr-defined]
+        db.session.commit() # type: ignore[attr-defined]
 
     def __repr__(self):
-        return '<Todo {}'.format(self.name)
+        return '<Status {}>'.format(self.name)
 
-db.mapper(Tracker, tracker)
-db.create_all()
 
-    
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))

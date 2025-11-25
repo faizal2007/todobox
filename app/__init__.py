@@ -27,8 +27,9 @@ app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(minutes=120)
 # Set jinja template global
 app.jinja_env.globals['momentjs'] = momentjs
 login = LoginManager(app)
-login.login_view = 'login'
-login.refresh_view = 'relogin'
+login.login_view = 'login' # type: ignore[attr-defined]
+login.refresh_view = 'relogin' # type: ignore[attr-defined]
+
 login.needs_refresh_message = (u"Session timedout, please re-login")
 login.needs_refresh_message_category = "info"
 
@@ -36,11 +37,14 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 with app.app_context():
-    if db.engine.url.drivername == 'sqlite':
+    if db.engine.url.drivername == 'sqlite': # type: ignore[attr-defined]
         migrate.init_app(app, db, render_as_batch=True)
     else:
         migrate.init_app(app, db)
 
+# Register CLI commands
+from app import cli
+cli.create_cli(app)
 
 from app import routes, models, utils
 

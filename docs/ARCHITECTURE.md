@@ -2,7 +2,7 @@
 
 ## High-Level Architecture
 
-```
+```bash
 
 ┌─────────────────────────────────────────────────────────────┐
 │                      Browser (Client)                       │
@@ -58,47 +58,61 @@
 
 ## Layered Architecture
 
-### 1. **Presentation Layer** (`app/templates/`)
+### 1. Presentation Layer (`app/templates/`)
+
 Renders HTML views to the browser
+
 - `base.html`: Base template with common layout
 - `login.html`: Authentication UI
 - `todo.html`, `list.html`: Todo management UI
 - `account.html`, `security.html`: User settings UI
 
-### 2. **Request Handler Layer** (`app/routes.py`)
+### 2. Request Handler Layer (`app/routes.py`)
+
 Processes HTTP requests and coordinates responses
+
 - Validates input from forms
 - Calls business logic
 - Renders templates or returns JSON
 - Handles redirects and error responses
 
-### 3. **Form Validation Layer** (`app/forms.py`)
+### 3. Form Validation Layer (`app/forms.py`)
+
 WTForms-based validation layer
+
 - Validates user input before processing
 - Implements custom validators
 - Provides CSRF protection
 
-### 4. **Authentication Layer** (`app/__init__.py`)
+### 4. Authentication Layer (`app/__init__.py`)
+
 Manages user authentication and sessions
+
 - Flask-Login integration
 - Session timeout (2 hours)
 - Login required protection
 
-### 5. **Business Logic Layer** (`app/models.py`)
+### 5. Business Logic Layer (`app/models.py`)
+
 Contains application logic and data operations
+
 - User authentication (password hashing)
 - Todo CRUD operations
 - Task status tracking
 - Query methods
 
-### 6. **Data Access Layer** (`lib/database.py`)
+### 6. Data Access Layer (`lib/database.py`)
+
 Manages database connections and configuration
+
 - Multi-database support (SQLite, MySQL, PostgreSQL)
 - Connection string management
 - Environment variable handling
 
-### 7. **Database Layer**
+### 7. Database Layer
+
 Physical data storage
+
 - SQLite (development)
 - MySQL/PostgreSQL (production)
 
@@ -110,7 +124,7 @@ Physical data storage
 
 The application supports three database backends via environment configuration:
 
-```
+```text
 DATABASE_DEFAULT=sqlite     (Default) - SQLite development database
 DATABASE_DEFAULT=mysql      - MySQL 5.7+ production database
 DATABASE_DEFAULT=postgres   - PostgreSQL production database
@@ -145,6 +159,7 @@ else:
 - Ideal for: Production, multi-user scenarios, team development
 
 **Environment Variables:**
+
 ```bash
 DATABASE_DEFAULT=mysql
 DB_URL=192.168.1.112
@@ -160,6 +175,7 @@ DB_NAME=shimasu_db
 - Ideal for: Advanced queries, better transaction handling
 
 **Environment Variables:**
+
 ```bash
 DATABASE_DEFAULT=postgres
 DB_URL=localhost
@@ -177,6 +193,7 @@ DB_NAME=mysandbox
 - **When NOT Used**: When `DATABASE_DEFAULT=mysql` or `DATABASE_DEFAULT=postgres`
 
 **Status as of November 2025:**
+
 - ✅ Instance folder not created when MySQL configured
 - ✅ No SQLite database in use when `DATABASE_DEFAULT=mysql`
 - ✅ Multi-database support verified working
@@ -186,7 +203,7 @@ DB_NAME=mysandbox
 
 ## File Structure & Responsibilities
 
-```
+```text
 mysandbox/
 ├── app/
 │   ├── __init__.py              # App factory, configuration
@@ -251,7 +268,8 @@ mysandbox/
 ## Data Flow
 
 ### Todo Creation Flow
-```
+
+```text
 1. User submits form on todo.html
    ↓
 2. POST /add route handler (routes.py)
@@ -270,7 +288,8 @@ mysandbox/
 ```
 
 ### User Authentication Flow
-```
+
+```text
 1. User visits / (index)
    ↓
 2. Redirect to /login (if not authenticated)
@@ -287,7 +306,8 @@ mysandbox/
 ```
 
 ### Task Status Update Flow
-```
+
+```text
 1. User clicks "Done" button on todo item
    ↓
 2. AJAX POST to /<id>/<todo_id>/done
@@ -306,23 +326,28 @@ mysandbox/
 ## Design Patterns Used
 
 ### Model-View-Controller (MVC)
+
 - **Model**: `app/models.py` (User, Todo, Status, Tracker)
 - **View**: `app/templates/` (Jinja2 templates)
 - **Controller**: `app/routes.py` (Route handlers)
 
 ### Dependency Injection
+
 - Flask app instance passed to extensions
 - Database connection configured in `app/__init__.py`
 
 ### Factory Pattern
+
 - Flask app created in `app/__init__.py`
 - Extensions (db, migrate, csrf, login) configured with app
 
 ### Repository Pattern (Partial)
+
 - Query methods in models (`Todo.getList()`)
 - Methods encapsulate database logic
 
 ### Singleton Pattern
+
 - Single Flask app instance
 - Single database instance
 - Single login manager instance
@@ -331,7 +356,7 @@ mysandbox/
 
 ### Entity Relationships
 
-```
+```text
 User (1) ─────────► (Many) Todo
   │                     │
   │                     ├─ name (String)
@@ -357,7 +382,7 @@ User (1) ─────────► (Many) Todo
 
 ## Request Processing Pipeline
 
-```
+```text
 HTTP Request
     ↓
 Flask URL Routing (route matching)
@@ -392,7 +417,8 @@ HTTP Response (HTML or JSON)
    - Default values
 
 ### Configuration Flow
-```
+
+```text
 app/config.py (base config)
     ↓
 app.config.from_pyfile('config.py', silent=True)
@@ -406,7 +432,7 @@ Final Configuration
 
 ## Database Connection Flow
 
-```
+```text
 1. app/__init__.py
    ├─ Check DATABASE_DEFAULT setting
    │
@@ -431,7 +457,8 @@ Final Configuration
 ## Session & State Management
 
 ### Session Lifetime
-```
+
+```text
 User Login
     ↓
 Session created (2 hours duration)
@@ -452,13 +479,14 @@ Session destroyed
 ```
 
 ### Server-Side State
+
 - Stored in database (persistent)
 - Session data in Flask session (temporary)
 - User identified by session token
 
 ## Security Architecture
 
-```
+```text
 Incoming Request
     ↓
 CSRF Token Validation (csrf_protect)
@@ -481,16 +509,19 @@ Response (Safe)
 ## Performance Considerations
 
 ### Caching Opportunities
+
 - User objects (cache after login)
 - Status types (seed once, rarely change)
 - Todo queries (cache for 5 minutes)
 
 ### Database Optimization
+
 - Indexes on: username, email, timestamps
 - Lazy loading vs eager loading
 - Query optimization in `Todo.getList()`
 
 ### Bottlenecks
+
 - Markdown rendering on every save
 - No pagination for large todo lists
 - No async operations
@@ -498,18 +529,21 @@ Response (Safe)
 ## Scalability Recommendations
 
 ### Horizontal Scaling
+
 - Use MySQL/PostgreSQL (not SQLite)
 - Use Gunicorn with multiple workers
 - Add load balancer
 - Use Redis for session store
 
 ### Vertical Scaling
+
 - Database indexing optimization
 - Query caching
 - Connection pooling
 
 ### Architecture Evolution
-```
+
+```text
 Current (Single Server)
     ↓
 Add Caching Layer (Redis)
@@ -525,7 +559,7 @@ Containerization (Docker + Kubernetes)
 
 ## Third-Party Libraries Architecture
 
-```
+```text
 Flask Framework
 ├─ Flask-SQLAlchemy (ORM)
 ├─ Flask-Migrate (Database migrations)
@@ -551,7 +585,8 @@ Utilities
 ## Deployment Architecture Options
 
 ### Option 1: Standalone Server
-```
+
+```text
 Internet
     ↓
 Nginx (reverse proxy)
@@ -564,7 +599,8 @@ MySQL/PostgreSQL
 ```
 
 ### Option 2: Containerized
-```
+
+```text
 Internet
     ↓
 Nginx
@@ -575,7 +611,8 @@ External Database
 ```
 
 ### Option 3: Scalable
-```
+
+```text
 Internet
     ↓
 Load Balancer

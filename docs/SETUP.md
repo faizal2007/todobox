@@ -63,7 +63,8 @@ DB_PASSWORD=password    # or use DB_PW
 DB_NAME=mysandbox
 ```
 
-**Important:** 
+**Important:**
+
 - Set `DATABASE_DEFAULT=mysql` to use external MySQL (no instance/ folder needed)
 - Leave `DATABASE_DEFAULT` unset or use `sqlite` for development with SQLite database
 
@@ -97,7 +98,7 @@ The application will be available at `http://127.0.0.1:9191`
 
 No additional configuration needed. Database file will be created at:
 
-```
+```text
 instance/mysandbox.db
 ```
 
@@ -105,53 +106,53 @@ instance/mysandbox.db
 
 1. Create database and user:
 
-```sql
-CREATE DATABASE mysandbox;
-CREATE USER 'mysandbox'@'localhost' IDENTIFIED BY 'password';
-GRANT ALL PRIVILEGES ON mysandbox.* TO 'mysandbox'@'localhost';
-FLUSH PRIVILEGES;
-```
+   ```sql
+   CREATE DATABASE mysandbox;
+   CREATE USER 'mysandbox'@'localhost' IDENTIFIED BY 'password';
+   GRANT ALL PRIVILEGES ON mysandbox.* TO 'mysandbox'@'localhost';
+   FLUSH PRIVILEGES;
+   ```
 
-2. Configure `.flaskenv`:
+1. Configure `.flaskenv`:
 
-```bash
-DATABASE_DEFAULT=mysql
-DB_URL=localhost
-DB_USER=mysandbox
-DB_PW=password
-DB_NAME=mysandbox
-```
+   ```bash
+   DATABASE_DEFAULT=mysql
+   DB_URL=localhost
+   DB_USER=mysandbox
+   DB_PW=password
+   DB_NAME=mysandbox
+   ```
 
-3. Initialize database:
+1. Initialize database:
 
-```bash
-flask db upgrade
-```
+   ```bash
+   flask db upgrade
+   ```
 
 ### PostgreSQL
 
 1. Create database and user:
 
-```sql
-CREATE USER mysandbox WITH PASSWORD 'password';
-CREATE DATABASE mysandbox OWNER mysandbox;
-```
+   ```sql
+   CREATE USER mysandbox WITH PASSWORD 'password';
+   CREATE DATABASE mysandbox OWNER mysandbox;
+   ```
 
-2. Configure `.flaskenv`:
+1. Configure `.flaskenv`:
 
-```bash
-DATABASE_DEFAULT=postgres
-DB_URL=localhost
-DB_USER=mysandbox
-DB_PW=password
-DB_NAME=mysandbox
-```
+   ```bash
+   DATABASE_DEFAULT=postgres
+   DB_URL=localhost
+   DB_USER=mysandbox
+   DB_PW=password
+   DB_NAME=mysandbox
+   ```
 
-3. Initialize database:
+1. Initialize database:
 
-```bash
-flask db upgrade
-```
+   ```bash
+   flask db upgrade
+   ```
 
 ## Running in Production
 
@@ -188,6 +189,7 @@ FLASK_DEBUG=1
 ```
 
 This enables:
+
 - Auto-reloader on file changes
 - Detailed error pages
 - Debug toolbar integration
@@ -223,6 +225,7 @@ flask db history
 ### "No such file or directory: instance/mysandbox.db"
 
 The instance directory is only needed for SQLite. If using MySQL/PostgreSQL:
+
 - Ensure `DATABASE_DEFAULT=mysql` (or postgres) is set in `.flaskenv`
 - Create the database on your MySQL/PostgreSQL server first
 - Then run `flask db upgrade`

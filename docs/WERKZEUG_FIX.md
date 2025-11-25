@@ -4,7 +4,7 @@
 
 When running `flask db upgrade`, the following error occurred:
 
-```
+```bash
 ImportError: cannot import name 'url_encode' from 'werkzeug.urls'
 ```
 
@@ -24,11 +24,12 @@ Several outdated Flask extensions were trying to import functions from `werkzeug
 
 **File:** `requirements.txt`
 
-```
+```bash
 Flask-WTF==1.1.1  →  Flask-WTF==1.2.2
 ```
 
 **Command:**
+
 ```bash
 pip install --upgrade Flask-WTF
 ```
@@ -37,11 +38,12 @@ pip install --upgrade Flask-WTF
 
 **File:** `requirements.txt`
 
-```
+```bash
 Flask-Login==0.6.2  →  Flask-Login==0.6.3
 ```
 
 **Command:**
+
 ```bash
 pip install --upgrade Flask-Login
 ```
@@ -51,11 +53,13 @@ pip install --upgrade Flask-Login
 **File:** `app/routes.py`
 
 **Before:**
+
 ```python
 from werkzeug.urls import url_parse
 ```
 
 **After:**
+
 ```python
 from urllib.parse import urlparse as url_parse
 ```
@@ -89,12 +93,14 @@ After applying the fixes, all components work correctly:
 ## Testing
 
 ### Before Fixes
+
 ```bash
 $ flask db upgrade
 ImportError: cannot import name 'url_encode' from 'werkzeug.urls'
 ```
 
 ### After Fixes
+
 ```bash
 $ flask db upgrade
 INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
@@ -115,6 +121,7 @@ INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
 Now you can:
 
 1. **Run the application:**
+
    ```bash
    flask run
    ```
@@ -126,6 +133,7 @@ Now you can:
 3. **Change the default password immediately** (security best practice)
 
 4. **Create a `.flaskenv` file with secure values:**
+
    ```bash
    cp .flaskenv.example .flaskenv
    nano .flaskenv

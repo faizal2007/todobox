@@ -13,13 +13,15 @@
 ### 1. Database Configuration Optimization ✅
 
 #### What Was Done
+
 - Verified MySQL configuration in `.flaskenv`
 - Fixed `lib/database.py` to support both `DB_PASSWORD` and `DB_PW` variable names
 - Enhanced error handling with validation for required environment variables
 - Confirmed multi-database support working (sqlite/mysql/postgres)
 
 #### Configuration Status
-```
+
+```bash
 FLASK_ENV=development
 FLASK_APP=mysandbox.py
 DATABASE_DEFAULT=mysql
@@ -30,6 +32,7 @@ DB_NAME=shimasu_db
 ```
 
 #### Verification Results
+
 - ✅ App imports successfully
 - ✅ MySQL connection established (192.168.1.112:3306)
 - ✅ Database migrations work (`flask db upgrade` successful)
@@ -39,17 +42,21 @@ DB_NAME=shimasu_db
 ### 2. Instance Folder Optimization ✅
 
 #### Issue Resolved
+
 User questioned why `instance/` folder was needed when MySQL is configured.
 
 #### Root Cause
+
 `DATABASE_DEFAULT` environment variable not explicitly set, causing fallback to SQLite mode.
 
 #### Solution Applied
+
 - Added `DATABASE_DEFAULT=mysql` to `.flaskenv`
 - Updated `lib/database.py` to validate required variables
 - Confirmed instance folder not created when MySQL configured
 
 #### Result
+
 - No unnecessary SQLite database created
 - Instance folder only created/used when `DATABASE_DEFAULT=sqlite`
 - Production-ready configuration optimized
@@ -58,13 +65,15 @@ User questioned why `instance/` folder was needed when MySQL is configured.
 
 #### Files Modified
 
-**QUICKSTART.md**
+#### QUICKSTART.md
+
 - Updated environment variables documentation
 - Clarified `DATABASE_DEFAULT` options and defaults
 - Added note about instance folder behavior (MySQL vs SQLite)
 - Added "Recent Updates" section with November 2025 changes
 
-**SETUP.md**
+#### SETUP.md
+
 - Enhanced configuration instructions
 - Clarified MySQL vs SQLite setup requirements
 - Updated troubleshooting: instance folder only needed for SQLite
@@ -72,7 +81,8 @@ User questioned why `instance/` folder was needed when MySQL is configured.
 - Added admin password change instructions
 - Added database reset procedures
 
-**ARCHITECTURE.md**
+#### ARCHITECTURE.md
+
 - Added comprehensive "Database Configuration" section
 - Documented all three database support options (sqlite/mysql/postgres)
 - Explained database selection logic
@@ -127,6 +137,7 @@ User questioned why `instance/` folder was needed when MySQL is configured.
 ### Immediate Actions Required
 
 1. **Create MySQL Database**
+
    ```sql
    CREATE DATABASE shimasu_db;
    CREATE USER 'freakie'@'192.168.1.%' IDENTIFIED BY 'md711964';
@@ -135,15 +146,18 @@ User questioned why `instance/` folder was needed when MySQL is configured.
    ```
 
 2. **Run Database Migrations**
+
    ```bash
    flask db upgrade
    ```
+
    This will:
    - Create all tables
    - Seed default admin user
    - Seed default status types
 
 3. **Change Admin Password**
+
    - Login with `admin / admin1234`
    - Go to `/security` page
    - Change to strong password
@@ -151,18 +165,21 @@ User questioned why `instance/` folder was needed when MySQL is configured.
 
 ### Next Phase
 
-4. **Start Application**
+1. **Start Application**
+
    ```bash
    flask run
    ```
 
-5. **Test Functionality**
+2. **Test Functionality**
+
    - Create test todos
    - Mark as done
    - Delete items
    - Change account settings
 
-6. **Deploy to Production**
+3. **Deploy to Production**
+
    - Use Gunicorn with multiple workers
    - Set up Nginx reverse proxy
    - Configure HTTPS/SSL
@@ -295,6 +312,7 @@ python3 -c "from werkzeug import __version__; print(__version__)"
 ## Remaining Known Issues (From CODE_REVIEW)
 
 ### Major Issues (6)
+
 - [ ] Error handling in route handlers (non-critical)
 - [ ] Missing decorators for caching/optimization
 - [ ] No logging framework set up
@@ -303,6 +321,7 @@ python3 -c "from werkzeug import __version__; print(__version__)"
 - [ ] Missing type hints
 
 ### Minor Issues (5)
+
 - [ ] Code style improvements
 - [ ] Additional documentation in complex functions
 - [ ] Magic numbers for constants
@@ -316,19 +335,22 @@ python3 -c "from werkzeug import __version__; print(__version__)"
 ## Next Session Actions
 
 ### Phase 1: Database Initialization
+
 1. Create MySQL database and user
 2. Run `flask db upgrade`
 3. Verify schema created
 4. Test MySQL connectivity
 
 ### Phase 2: Initial Setup
+
 1. Start Flask application
-2. Access http://127.0.0.1:9191
+2. Access [http://127.0.0.1:9191](http://127.0.0.1:9191)
 3. Login with admin/admin1234
 4. Change admin password
 5. Create test todos
 
 ### Phase 3: Production Preparation
+
 1. Configure Gunicorn
 2. Set up Nginx reverse proxy
 3. Enable HTTPS/SSL
@@ -336,6 +358,7 @@ python3 -c "from werkzeug import __version__; print(__version__)"
 5. Set up backup procedures
 
 ### Phase 4: Code Quality (Optional)
+
 1. Add unit tests
 2. Implement logging
 3. Add type hints

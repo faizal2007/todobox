@@ -3,6 +3,7 @@
 ## Getting Started Quickly
 
 ### First-Time Setup (5 minutes)
+
 ```bash
 # 1. Create virtual environment
 python3 -m venv venv
@@ -21,7 +22,8 @@ flask db upgrade
 flask run
 ```
 
-**Access:** http://127.0.0.1:9191
+**Access:** [http://127.0.0.1:9191](http://127.0.0.1:9191)  
+*Note: The application runs on port 9191 as configured in the `.flaskenv` file. The default Flask port is 5000. You can change the port by editing the `FLASK_RUN_PORT` variable in `.flaskenv`.*
 **Login:** admin / admin1234
 
 ---
@@ -29,6 +31,7 @@ flask run
 ## Common Commands
 
 ### Flask Commands
+
 ```bash
 # Run development server
 flask run
@@ -47,6 +50,7 @@ flask db history
 ```
 
 ### Database Commands
+
 ```bash
 # Access SQLite database
 sqlite3 instance/mysandbox.db
@@ -59,6 +63,7 @@ psql -U mysandbox -h localhost mysandbox
 ```
 
 ### Gunicorn Commands
+
 ```bash
 # Run with Gunicorn (production)
 gunicorn -w 4 -b 0.0.0.0:9191 mysandbox:app
@@ -105,20 +110,24 @@ gunicorn -w 4 -b 0.0.0.0:9191 --access-logfile - mysandbox:app
 ## Database Models Quick Reference
 
 ### User
+
 - Stores login credentials
 - Key method: `set_password()`, `check_password()`
 - One user has many todos
 
 ### Todo
+
 - Stores task information
 - Key method: `getList(type, start, end)`
 - Has many status changes (via Tracker)
 
 ### Status
+
 - Predefined status types (new, done, failed, re-assign)
 - Key method: `seed()` - initializes defaults
 
 ### Tracker
+
 - Tracks status history of todos
 - Key method: `add()` - records status change
 
@@ -127,12 +136,14 @@ gunicorn -w 4 -b 0.0.0.0:9191 --access-logfile - mysandbox:app
 ## Environment Variables
 
 ### Required
+
 ```bash
 FLASK_APP=mysandbox.py
 DATABASE_DEFAULT=mysql   # or sqlite (default), postgres
 ```
 
 ### Optional
+
 ```bash
 FLASK_ENV=development     # or production
 FLASK_DEBUG=1            # Enable debug mode
@@ -141,6 +152,7 @@ PORT=9191                # Server port
 ```
 
 ### MySQL/PostgreSQL Configuration
+
 ```bash
 # Only required if DATABASE_DEFAULT is mysql or postgres
 DB_URL=localhost         # Database host/IP
@@ -157,17 +169,18 @@ DB_NAME=mysandbox        # Database name
 
 | Setting | File | Default | Notes |
 |---------|------|---------|-------|
-| SECRET_KEY | app/config.py | 'you-will-never-guess' | ⚠️ Change for production |
-| SALT | app/config.py | (hardcoded) | ⚠️ Change for production |
-| SESSION_TIMEOUT | app/__init__.py | 120 minutes | User logged out after timeout |
-| DATABASE_NAME | app/config.py | mysandbox.db | SQLite database filename |
-| DATABASE_DEFAULT | app/config.py | sqlite | Which database to use |
+| SECRET_KEY | app/config.py | 'you-will-never-guess' | Change for production |
+| SALT | app/config.py | (hardcoded) | Change for production |
+| Session Timeout | app/**init__.py | 120 minutes | User logged out after timeout |
+| Database Name | app/config.py | mysandbox.db | SQLite database filename |
+| Database Default | app/config.py | sqlite | Which database to use |
 
 ---
 
 ## Debugging Tips
 
 ### Enable Debug Mode
+
 ```bash
 export FLASK_ENV=development
 export FLASK_DEBUG=1
@@ -175,6 +188,7 @@ flask run
 ```
 
 ### Check Application Health
+
 ```bash
 # View logs
 tail -f /var/log/syslog | grep mysandbox
@@ -190,19 +204,23 @@ flask shell
 
 ### Common Issues
 
-**"No module named 'app'"**
+#### "No module named 'app'"
+
 - Ensure virtual environment is activated
 - Check you're in correct directory
 
-**"Database locked"**
+#### "Database locked"
+
 - Close other database connections
 - Check SQLite WAL files
 
-**"Port 9191 already in use"**
+#### "Port 9191 already in use"
+
 - Change PORT in .flaskenv
 - Or kill process: `lsof -i :9191 | kill -9 <PID>`
 
-**"CSRF validation failed"**
+#### "CSRF validation failed"
+
 - Ensure form includes `{{ csrf_token() }}`
 - Check session is active
 
@@ -211,6 +229,7 @@ flask shell
 ## Development Workflow
 
 ### Create Feature
+
 ```bash
 # 1. Create feature branch
 git checkout -b feature/new-feature
@@ -229,6 +248,7 @@ git push origin feature/new-feature
 ```
 
 ### Database Changes
+
 ```bash
 # 1. Modify model in app/models.py
 
@@ -252,6 +272,7 @@ git commit -m "Add migration"
 ## Form Usage
 
 ### Creating a Form
+
 ```python
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, validators
@@ -261,6 +282,7 @@ class MyForm(FlaskForm):
 ```
 
 ### Using in Template
+
 ```html
 <form method="post">
     {{ form.hidden_tag() }}
@@ -282,6 +304,7 @@ class MyForm(FlaskForm):
 ## Template Tags & Filters
 
 ### Jinja2 Common Tags
+
 ```html
 <!-- Conditionals -->
 {% if condition %}...{% endif %}
@@ -298,6 +321,7 @@ class MyForm(FlaskForm):
 ```
 
 ### Common Filters
+
 ```html
 {{ text|upper }}          <!-- Uppercase -->
 {{ text|lower }}          <!-- Lowercase -->
@@ -312,6 +336,7 @@ class MyForm(FlaskForm):
 ## Testing Checklist
 
 ### Authentication
+
 - [ ] Login with valid credentials
 - [ ] Login fails with invalid credentials
 - [ ] Logout clears session
@@ -319,6 +344,7 @@ class MyForm(FlaskForm):
 - [ ] Session timeout works
 
 ### Todo Operations
+
 - [ ] Create new todo
 - [ ] Edit existing todo
 - [ ] Mark todo as done
@@ -328,6 +354,7 @@ class MyForm(FlaskForm):
 - [ ] Markdown renders correctly
 
 ### Account Management
+
 - [ ] Update username
 - [ ] Update email
 - [ ] Change password
@@ -382,11 +409,13 @@ class MyForm(FlaskForm):
 ## Resource Links
 
 ### Documentation
+
 - [Flask Documentation](https://flask.palletsprojects.com/)
 - [SQLAlchemy Documentation](https://docs.sqlalchemy.org/)
 - [WTForms Documentation](https://wtforms.readthedocs.io/)
 
 ### Related Files in This Project
+
 - Setup Guide: [SETUP.md](SETUP.md)
 - API Reference: [API.md](API.md)
 - Database Models: [MODELS.md](MODELS.md)
@@ -399,21 +428,25 @@ class MyForm(FlaskForm):
 ## Quick Fixes
 
 ### Add New Model
+
 1. Define in `app/models.py`
 2. Run `flask db migrate -m "Add model"`
 3. Run `flask db upgrade`
 
 ### Add New Route
+
 1. Add function to `app/routes.py`
 2. Decorate with `@app.route()`
 3. Create template if needed
 
 ### Add Form Validation
+
 1. Add validator to form in `app/forms.py`
 2. Add custom validation method if needed
 3. Check errors in template
 
 ### Add Database Field
+
 1. Add column to model
 2. Run `flask db migrate`
 3. Review migration file
@@ -435,23 +468,24 @@ class MyForm(FlaskForm):
 
 ---
 
----
-
 ## Recent Updates (November 2025)
 
 ✅ **Security Patches Applied:**
+
 - Hardcoded secrets replaced with environment variables
 - XSS vulnerability fixed (HTML sanitization with bleach)
 - SQL injection risk mitigated (input validation added)
 - Form validation for duplicate accounts enabled
 
 ✅ **Werkzeug Compatibility Fixed:**
+
 - Flask-WTF upgraded to 1.2.2
 - Flask-Login upgraded to 0.6.3
 - All deprecated imports updated
 - Database migrations now working (`flask db upgrade` runs successfully)
 
 ✅ **Database Configuration Optimized:**
+
 - MySQL now configured as primary database (192.168.1.112)
 - Instance folder no longer created when using external database
 - Multi-database support working (sqlite/mysql/postgres)
