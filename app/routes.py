@@ -9,7 +9,7 @@ from app.forms import LoginForm, ChangePassword, UpdateAccount
 from app.oauth import generate_google_auth_url, process_google_callback
 from urllib.parse import urlparse as url_parse
 from datetime import datetime, date, timedelta
-from sqlalchemy import asc
+from sqlalchemy import asc, desc
 import markdown
 from bleach import clean
 from wtforms.csrf.core import CSRF
@@ -158,19 +158,6 @@ def dashboard():
                          chart_segments=chart_segments,
                          recent_todos=recent_todos,
                          reassignment_stats=reassignment_stats)
-
-@app.route('/todo')
-@login_required
-def todo():
-    #
-    # Query record for today
-    query_date = date.today()
-    start = '{} {}'.format(query_date, '00:00')
-    end = '{} {}'.format(query_date, '23:59')
-    
-    today_record = Todo.getList('today', start, end).order_by(Todo.timestamp.desc())
-    
-    return render_template('todo.html', title="Todo", today_record=today_record)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -366,7 +353,7 @@ def delete(todo_id):
 
     Tracker.delete(todo_id)
 
-    return redirect(url_for('todo'))
+    return redirect(url_for('list', id='today'))
 
 @app.route('/add', methods=['POST'])
 @login_required
@@ -493,7 +480,7 @@ def add():
                 )
 
 
-    return redirect(url_for('todo'))
+    return redirect(url_for('list', id='today'))
 
 @app.route('/<path:id>/todo', methods=['POST'])
 @login_required
@@ -523,7 +510,7 @@ def getTodo(id):
                 'button': button
             }), 200
         )
-    return redirect(url_for('todo'))
+    return redirect(url_for('list', id='today'))
 
 @app.route('/<path:id>/list')
 @login_required
@@ -542,7 +529,7 @@ def list(id):
     else:
         abort(404)
         
-    return render_template('list.html', title=id, todo=Todo.getList(id, start, end).order_by(asc(Tracker.timestamp)))
+    return render_template('list.html', title=id, todo=Todo.getList(id, start, end).order_by(desc(Tracker.timestamp)))
 
 @app.route('/<path:id>/<path:todo_id>/done', methods=['POST'])
 @login_required

@@ -226,6 +226,26 @@
           $(this).find('[autofocus]').focus();
           simplemde.codemirror.refresh();
      });
+
+     $(document).ready(function() {
+    
+          $(document).keydown(function(event) {
+               // Only if modal is visible
+               if ($('#info-header-modal').hasClass('show')) {
+                    // Detect Ctrl + Enter to save
+                    if ((event.ctrlKey || event.metaKey) && event.which === 13) {
+                         event.preventDefault();
+                         $('.create-todo').click();
+                    }
+                    
+                    // Detect Ctrl + S to save
+                    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+                         event.preventDefault();
+                         $('.create-todo').click();
+                    }
+               }
+          });
+     });
 </script>
 {% endblock %} 
 

@@ -237,6 +237,22 @@
     });
     
     $(document).keydown(function(event) {
+        // Ctrl+Enter (or Cmd+Enter on Mac) to save
+        if ((event.ctrlKey || event.metaKey) && event.keyCode === 13) {
+            if($('#todoModal').hasClass('show')) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Click save button if it exists (editing mode)
+                let saveBtn = $('#todoModal').find('#save');
+                if (saveBtn.length > 0) {
+                    saveBtn.click();
+                }
+                return false;
+            }
+        }
+        
+        // Regular Enter key behavior (without Ctrl/Cmd)
         if (event.which === 13) {
             if($('#todoModal').hasClass('show')) {
                 if($("div.CodeMirror").hasClass("CodeMirror-focused") != true) {
