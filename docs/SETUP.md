@@ -47,26 +47,31 @@ cp .flaskenv.example .flaskenv
 Edit `.flaskenv` with your settings:
 
 ```bash
-# Required
+# Flask Settings
 FLASK_APP=mysandbox.py
 FLASK_ENV=development
-DATABASE_DEFAULT=mysql  # or sqlite (default), postgres
+SECRET_KEY=your-secure-key-here
+SALT=your-secure-salt-here
 
-# Application settings
+# Application Settings
+TITLE=My Sandbox
 BIND_ADDRESS=127.0.0.1
-PORT=9191
+PORT=5000
 
-# For MySQL/PostgreSQL only
-DB_URL=localhost
-DB_USER=username
-DB_PASSWORD=password    # or use DB_PW
-DB_NAME=mysandbox
+# Database (choose one)
+DATABASE_DEFAULT=sqlite  # or mysql, postgres
+
+# Google OAuth (optional)
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-client-secret
+OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google
 ```
 
 **Important:**
 
-- Set `DATABASE_DEFAULT=mysql` to use external MySQL (no instance/ folder needed)
-- Leave `DATABASE_DEFAULT` unset or use `sqlite` for development with SQLite database
+- Generate secure SALT using: `python3 -c "from app.config import generate_salt; print(generate_salt())"`
+- For SQLite: No additional database setup needed
+- For MySQL/PostgreSQL: See Database Setup section below
 
 ### 5. Initialize Database
 

@@ -22,9 +22,8 @@ flask db upgrade
 flask run
 ```
 
-**Access:** [http://127.0.0.1:9191](http://127.0.0.1:9191)  
-*Note: The application runs on port 9191 as configured in the `.flaskenv` file. The default Flask port is 5000. You can change the port by editing the `FLASK_RUN_PORT` variable in `.flaskenv`.*
-**Login:** admin / admin1234
+**Access:** [http://localhost:5000](http://localhost:5000)  
+*The application runs on port 5000 by default. Configure the PORT variable in `.flaskenv` to change it.*
 
 ---
 
@@ -47,6 +46,9 @@ flask db downgrade
 
 # Show migration history
 flask db history
+
+# Generate secure salt
+python3 -c "from app.config import generate_salt; print(generate_salt())"
 ```
 
 ### Database Commands
@@ -66,13 +68,13 @@ psql -U mysandbox -h localhost mysandbox
 
 ```bash
 # Run with Gunicorn (production)
-gunicorn -w 4 -b 0.0.0.0:9191 mysandbox:app
+gunicorn -w 4 -b 0.0.0.0:5000 mysandbox:app
 
 # Run with worker auto-reload
-gunicorn -w 4 -b 0.0.0.0:9191 --reload mysandbox:app
+gunicorn -w 4 -b 0.0.0.0:5000 --reload mysandbox:app
 
 # Run with access logging
-gunicorn -w 4 -b 0.0.0.0:9191 --access-logfile - mysandbox:app
+gunicorn -w 4 -b 0.0.0.0:5000 --access-logfile - mysandbox:app
 ```
 
 ---
