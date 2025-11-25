@@ -48,7 +48,7 @@ Visit `http://localhost:5000` in your browser.
 Complete documentation is available in the `/docs` folder:
 
 - **[📖 Documentation Index](docs/DOCUMENTATION_MASTER_INDEX.md)** - Full navigation guide
-- **[🚀 Quick Start](docs/START_HERE.md)** - Getting started guide
+- **[🚀 Quick Start](docs/QUICKSTART.md)** - Quick reference guide
 - **[⚙️ Setup Guide](docs/SETUP.md)** - Detailed installation
 - **[🔌 API Reference](docs/API.md)** - Complete API documentation
 - **[🏗️ Architecture](docs/ARCHITECTURE.md)** - System design

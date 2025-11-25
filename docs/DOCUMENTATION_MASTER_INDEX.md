@@ -26,22 +26,7 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 ### 📖 Core Documentation (Essential Reading)
 
-#### 1. **START_HERE.md** - Begin Here! 👈
-
-**For:** First-time readers  
-**Read Time:** 5 minutes  
-**Topics:**
-
-- What is MySandbox?
-- Quick navigation guide
-- Most common tasks
-- Where to find help
-
-**Start here if:** You're new to the project
-
----
-
-#### 2. **README.md** - Project Overview
+#### 1. **README.md** - Project Overview
 
 **For:** Understanding the project  
 **Read Time:** 10 minutes  
@@ -52,11 +37,9 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 - Features overview
 - Quick links
 
-**Start here if:** You want project context
-
 ---
 
-#### 3. **SETUP.md** - Installation Guide ⭐
+#### 2. **SETUP.md** - Installation Guide ⭐
 
 **For:** Setting up the application  
 **Read Time:** 15 minutes  
@@ -74,7 +57,7 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 ---
 
-#### 4. **QUICKSTART.md** - Quick Reference
+#### 3. **QUICKSTART.md** - Quick Reference
 
 **For:** Quick lookups and common tasks  
 **Read Time:** 5 minutes (per lookup)  
@@ -95,7 +78,7 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 ### 🎯 Feature & API Documentation
 
-#### 5. **USER_CREATION.md** - User Management System ⭐
+#### 4. **USER_CREATION.md** - User Management System ⭐
 
 **For:** Creating and managing users  
 **Read Time:** 20 minutes  
@@ -113,7 +96,7 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 ---
 
-#### 6. **API.md** - Complete API Reference
+#### 5. **API.md** - Complete API Reference
 
 **For:** Endpoint documentation  
 **Read Time:** 15 minutes  
@@ -133,7 +116,7 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 ---
 
-#### 7. **MODELS.md** - Database Schema
+#### 6. **MODELS.md** - Database Schema
 
 **For:** Database structure and models  
 **Read Time:** 15 minutes  
@@ -154,7 +137,7 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 ### 🏗️ System & Architecture Documentation
 
-#### 8. **ARCHITECTURE.md** - System Design ⭐
+#### 7. **ARCHITECTURE.md** - System Design ⭐
 
 **For:** Understanding how the system works  
 **Read Time:** 20 minutes  
@@ -176,7 +159,7 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 ---
 
-#### 9. **OVERVIEW.md** - Project Description
+#### 8. **OVERVIEW.md** - Project Description
 
 **For:** Detailed project information  
 **Read Time:** 10 minutes  
@@ -196,7 +179,7 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 ### 🔍 Quality & Maintenance Documentation
 
-#### 10. **CODE_REVIEW.md** - Code Analysis & Issues
+#### 9. **CODE_REVIEW.md** - Code Analysis & Issues
 
 **For:** Code quality and improvement recommendations  
 **Read Time:** 15 minutes  
@@ -215,7 +198,7 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 ---
 
-#### 11. **DEPLOYMENT.md** - Production Deployment Guide
+#### 10. **DEPLOYMENT.md** - Production Deployment Guide
 
 **For:** Deploying to production  
 **Read Time:** 20 minutes  
@@ -239,7 +222,7 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 ### 📊 Progress & Status Documentation
 
-#### 12. **PROGRESS_NOVEMBER_2025.md** - Session Summary
+#### 11. **PROGRESS_NOVEMBER_2025.md** - Session Summary
 
 **For:** Latest session progress and status  
 **Read Time:** 15 minutes  
@@ -259,7 +242,7 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 ---
 
-#### 13. **WERKZEUG_FIX.md** - Compatibility Fix Documentation
+#### 12. **WERKZEUG_FIX.md** - Compatibility Fix Documentation
 
 **For:** Understanding Werkzeug 3.0.6 fixes  
 **Read Time:** 10 minutes  
@@ -276,47 +259,13 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 ---
 
-#### 14. **FIRST_TIME_USER_SYSTEM.md** - User Creation System Overview
-
-**For:** Understanding the user creation system  
-**Read Time:** 10 minutes  
-**Topics:**
-
-- System components created
-- Features overview
-- Quick start (30 seconds)
-- File structure
-- Verification checklist
-- Status summary
-
-**Use this when:** Understanding how user creation works
-
----
-
-#### 15. **UPDATE_COMPLETE_NOVEMBER_2025.md** - Documentation Update Summary
-
-**For:** What was updated in documentation  
-**Read Time:** 10 minutes  
-**Topics:**
-
-- Files updated (4)
-- Files created (2)
-- Files unchanged (6)
-- Key information updates
-- Verification checklist
-- Next steps
-
-**Use this when:** Understanding what documentation changed
-
----
-
 ## 🎯 Quick Navigation by Purpose
 
 ### I want to
 
 #### Get Started
 
-1. Read **START_HERE.md** (5 min)
+1. Read **README.md** (5 min)
 2. Follow **SETUP.md** (15 min)
 3. Use **USER_CREATION.md** (5 min)
 4. Run **`python3 create_user.py`**
@@ -375,14 +324,14 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 | Metric | Value |
 |--------|-------|
-| Total documentation files | 15 |
-| Total documentation size | ~80 KB |
+| Total documentation files | 12 |
+| Total documentation size | ~60 KB |
 | Code examples | 100+ |
 | Diagrams | 10+ |
 | Tables | 30+ |
 | Issues identified | 15 |
-| Sections | 150+ |
-| Read time (full suite) | ~3 hours |
+| Sections | 100+ |
+| Read time (full suite) | ~2.5 hours |
 
 ---
 
@@ -401,7 +350,7 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 
 ### By User Role
 
-- **Developer:** START_HERE.md → SETUP.md → ARCHITECTURE.md
+- **Developer:** README.md → SETUP.md → ARCHITECTURE.md
 - **Administrator:** USER_CREATION.md → DEPLOYMENT.md → QUICKSTART.md
 - **DevOps Engineer:** DEPLOYMENT.md → ARCHITECTURE.md
 - **Security Officer:** CODE_REVIEW.md → DEPLOYMENT.md → SETUP.md
@@ -431,11 +380,9 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 - ✅ Deployment (DEPLOYMENT.md)
 - ✅ User creation (USER_CREATION.md)
 - ✅ Project overview (OVERVIEW.md)
-- ✅ First-time guide (START_HERE.md)
 - ✅ Progress tracking (PROGRESS_NOVEMBER_2025.md)
 - ✅ Compatibility fixes (WERKZEUG_FIX.md)
-- ✅ System overview (FIRST_TIME_USER_SYSTEM.md)
-- ✅ Update summary (UPDATE_COMPLETE_NOVEMBER_2025.md)
+- ✅ Security patches (SECURITY_PATCHES.md)
 - ✅ Index (INDEX.md)
 - ✅ README (README.md)
 
@@ -446,11 +393,11 @@ This documentation suite provides **comprehensive coverage** of the MySandbox Fl
 ### Option 1: Quick Setup
 
 ```bash
-# 1. Read this quick guide
-cat docs/START_HERE.md
+# 1. Read the README
+cat docs/README.md
 
 # 2. Follow setup
-bash SETUP.md commands
+less docs/SETUP.md
 
 # 3. Create user
 python3 create_user.py
@@ -465,7 +412,7 @@ flask run
 # 1. Read complete setup
 less docs/SETUP.md
 
-# 2. Read first time user creation
+# 2. Read user creation guide
 less docs/USER_CREATION.md
 
 # 3. Create user (interactive)
@@ -479,7 +426,7 @@ flask run
 
 ```bash
 # 1. Check quick start
-cat CREATE_USER_QUICK_START.md
+cat docs/QUICKSTART.md
 
 # 2. Run all in sequence
 source venv/bin/activate
@@ -494,7 +441,7 @@ flask run
 
 ### For Beginners
 
-1. **START_HERE.md** (5 min) - Get oriented
+1. **README.md** (5 min) - Get oriented
 2. **SETUP.md** (15 min) - Install system
 3. **QUICKSTART.md** (5 min) - Learn common tasks
 4. **OVERVIEW.md** (10 min) - Understand features
@@ -565,7 +512,6 @@ flask run
 
 ```bash
 docs/
-├── START_HERE.md                      ← Begin here
 ├── README.md                          ← Project overview
 ├── QUICKSTART.md                      ← Quick reference
 ├── SETUP.md                           ← Installation guide
@@ -578,12 +524,11 @@ docs/
 ├── DEPLOYMENT.md                      ← Production guide
 ├── PROGRESS_NOVEMBER_2025.md          ← Current status
 ├── WERKZEUG_FIX.md                    ← Compatibility fix
-├── FIRST_TIME_USER_SYSTEM.md          ← User system overview
-├── UPDATE_COMPLETE_NOVEMBER_2025.md   ← Update summary
+├── SECURITY_PATCHES.md                ← Security documentation
 └── INDEX.md                           ← File index
 ```
 
-**Total:** 16 documentation files
+**Total:** 14 documentation files
 
 ---
 
@@ -604,7 +549,7 @@ docs/
 
 ### For New Users
 
-1. Read **START_HERE.md**
+1. Read **README.md**
 2. Follow **SETUP.md**
 3. Create user with **USER_CREATION.md**
 4. Start application
@@ -645,8 +590,8 @@ docs/
 
 ---
 
-**Total Documentation:** 16 files | ~80 KB | 150+ sections | 100+ examples
+**Total Documentation:** 14 files | ~60 KB | 100+ sections | 100+ examples
 
-👉 **Start with:** `START_HERE.md`
+👉 **Start with:** `README.md`
 
 Good luck with MySandbox! 🚀
