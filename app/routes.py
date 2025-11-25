@@ -10,10 +10,27 @@ from urllib.parse import urlparse as url_parse
 from datetime import datetime, date, timedelta
 import markdown
 from bleach import clean
+from wtforms.csrf.core import CSRF
 
 # Allowed HTML tags for sanitized Markdown output
 ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a']
 ALLOWED_ATTRIBUTES = {'a': ['href', 'title']}
+
+# CSRF Error Handler
+@app.errorhandler(400)
+def handle_csrf_error(e):
+    """Handle CSRF token errors - redirect to login with session expired message"""
+    if 'CSRF' in str(e) or 'csrf' in str(e).lower():
+        flash('Session expired. Please login again.', 'warning')
+        return redirect(url_for('login'))
+    return redirect(url_for('index'))
+
+# CSRF Validation Error Handler
+@app.errorhandler(400)
+def csrf_validation_error(e):
+    """Handle CSRF validation errors gracefully"""
+    flash('Session expired. Please login again.', 'warning')
+    return redirect(url_for('login'))
 
 """
 " Initiatiate default data
@@ -49,17 +66,24 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('list', id='today'))
     form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
+    
+    try:
+        if form.validate_on_submit():
+            user = User.query.filter_by(username=form.username.data).first()
+            if user is None or not user.check_password(form.password.data):
+                flash('Invalid username or password')
+                return redirect(url_for('login'))
+            login_user(user, remember=form.remember_me.data)
+            next_page = request.args.get('next')
+            if not next_page or url_parse(next_page).netloc != '':
+                next_page = url_for('list', id='today')
+            return redirect(next_page)
+    except Exception as e:
+        if 'csrf' in str(e).lower():
+            flash('Session expired. Please login again.', 'warning')
             return redirect(url_for('login'))
-        login_user(user, remember=form.remember_me.data)
-        next_page = request.args.get('next')
-        if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('list', id='today')
-
-        return redirect(next_page)
+        raise
+    
     return render_template('login.html', title='Sign In', form=form)
 
 @app.route('/logout')
@@ -72,12 +96,18 @@ def logout():
 @login_required
 def security():
     form = ChangePassword(userId=current_user.id)
-    if form.validate_on_submit():
-        user = User.query.filter_by(id=form.userId.data).first()
-        user.set_password(form.password.data)
-        db.session.commit()
-        flash('Password Successfully changed.')
-        return redirect(url_for('security'))
+    try:
+        if form.validate_on_submit():
+            user = User.query.filter_by(id=form.userId.data).first()
+            user.set_password(form.password.data)
+            db.session.commit()
+            flash('Password Successfully changed.')
+            return redirect(url_for('security'))
+    except Exception as e:
+        if 'csrf' in str(e).lower():
+            flash('Session expired. Please login again.', 'warning')
+            return redirect(url_for('login'))
+        raise
 
     return render_template('security.html', title='User Security', form=form)
 
@@ -85,28 +115,34 @@ def security():
 @login_required
 def account():
     form = UpdateAccount()
-    if form.validate_on_submit():
-        user = User.query.filter_by(id=current_user.id).first()
-        if user.check_username(form.username.data) and not user.check_email(form.email.data):
-            """ Update Email address """
-            user.email = form.email.data
-            db.session.commit()
-            flash('Email successfully updated.')
-        elif not user.check_username(form.username.data) and user.check_email(form.email.data):
-            """ Update email address """
-            user.username = form.username.data
-            db.session.commit()
-            flash('Username updated.')
-        elif not user.check_username(form.username.data) and not user.check_email(form.email.data):
-            """ Update email and username address """
-            user.username = form.username.data
-            user.email = form.email.data
-            db.session.commit()
-            flash('Username updated.')
-            flash('Email updated.')
-        else:
-            flash('No change made.')
-        # print(user.check_email(form.email.data))
+    try:
+        if form.validate_on_submit():
+            user = User.query.filter_by(id=current_user.id).first()
+            if user.check_username(form.username.data) and not user.check_email(form.email.data):
+                """ Update Email address """
+                user.email = form.email.data
+                db.session.commit()
+                flash('Email successfully updated.')
+            elif not user.check_username(form.username.data) and user.check_email(form.email.data):
+                """ Update email address """
+                user.username = form.username.data
+                db.session.commit()
+                flash('Username updated.')
+            elif not user.check_username(form.username.data) and not user.check_email(form.email.data):
+                """ Update email and username address """
+                user.username = form.username.data
+                user.email = form.email.data
+                db.session.commit()
+                flash('Username updated.')
+                flash('Email updated.')
+            else:
+                flash('No change made.')
+    except Exception as e:
+        if 'csrf' in str(e).lower():
+            flash('Session expired. Please login again.', 'warning')
+            return redirect(url_for('login'))
+        raise
+    
     return render_template('account.html', title='User Account', form=form)
 
 @app.route('/<path:todo>/view')

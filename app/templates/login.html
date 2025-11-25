@@ -5,14 +5,26 @@
     <div class="jumbotron">
         <div class="container w-50 p-3">
             <h2>Sign In</h2>
-            <form action="" method="post">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form action="" method="post" id="loginForm">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
-                        {{ form.username.label(for="loginInputEmail") }}
-                        {{ form.username(size=32, class="form-control") }}
-                        {% for error in form.username.errors %}
-                            <span style="color: red;">[{{ error }}]</span>
-                        {% endfor %}
+                    {{ form.username.label(for="loginInputEmail") }}
+                    {{ form.username(size=32, class="form-control") }}
+                    {% for error in form.username.errors %}
+                        <span style="color: red;">[{{ error }}]</span>
+                    {% endfor %}
                 </div>
                 <div class="form-group">
                     {{ form.password.label }}
@@ -24,16 +36,36 @@
                 <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
                 <p>{{ form.submit(class="btn btn-primary") }}</p>
             </form>
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                <ul>
-                    {% for message in messages %}
-                    <li>{{ message }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            {% endwith %}
         </div>
     </div>
 </main>
+
+<script>
+    // Reload page every 10 minutes to refresh CSRF token
+    setInterval(function() {
+        // Only refresh if user hasn't interacted with the form
+        if (document.getElementById('loginForm').dataset.submitted !== 'true') {
+            location.reload();
+        }
+    }, 10 * 60 * 1000);
+    
+    // Mark form as submitted when user clicks submit
+    document.getElementById('loginForm').addEventListener('submit', function() {
+        this.dataset.submitted = 'true';
+    });
+    
+    // Handle form submission with CSRF error handling
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        if (this.dataset.submitted === 'true') {
+            // Prevent double submission
+            setTimeout(function() {
+                // If page hasn't redirected in 2 seconds, show error
+                var alert = document.createElement('div');
+                alert.className = 'alert alert-warning alert-dismissible fade show';
+                alert.innerHTML = 'Session expired. Please refresh and try again. <button type="button" class="close" data-dismiss="alert">&times;</button>';
+                document.querySelector('.jumbotron').insertBefore(alert, document.querySelector('form'));
+            }, 2000);
+        }
+    });
+</script>
 {% endblock %}

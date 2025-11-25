@@ -12,7 +12,7 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
     username = db.Column(db.String(64), index=True, unique=True) # type: ignore[attr-defined]
     email = db.Column(db.String(120), index=True, unique=True) # type: ignore[attr-defined]
     fullname = db.Column(db.String(100)) # type: ignore[attr-defined]
-    password_hash = db.Column(db.String(128)) # type: ignore[attr-defined]
+    password_hash = db.Column(db.String(255)) # type: ignore[attr-defined]
     todo = db.relationship('Todo', backref='user', lazy='dynamic') # type: ignore[attr-defined]
 
     def __init__(self, username, email):
@@ -47,11 +47,16 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
         else:
             return False
 
-class Tracker(object):
-    def __init__(self, todo_id, status_id, timestamp):
+class Tracker(db.Model): # type: ignore[attr-defined]
+    id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
+    todo_id = db.Column(db.Integer, db.ForeignKey('todo.id')) # type: ignore[attr-defined]
+    status_id = db.Column(db.Integer, db.ForeignKey('status.id')) # type: ignore[attr-defined]
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
+
+    def __init__(self, todo_id, status_id, timestamp=None):
         self.todo_id = todo_id
-        self.status_id =  status_id
-        self.timestamp = timestamp
+        self.status_id = status_id
+        self.timestamp = timestamp if timestamp is not None else datetime.now()
 
     @classmethod
     def add(cls, todo_id, status_id, timestamp=None):
@@ -77,14 +82,6 @@ class Tracker(object):
         db.session.query(Todo).filter(Todo.id == todo_id).delete() # type: ignore[attr-defined]
         db.session.commit() # type: ignore[attr-defined]
 
-tracker = db.Table('tracker', # type: ignore[attr-defined]
-        db.metadata,
-        db.Column('id', db.Integer, primary_key=True), # type: ignore[attr-defined]
-        db.Column('todo_id', db.Integer, db.ForeignKey('todo.id')), # type: ignore[attr-defined]
-        db.Column('status_id', db.Integer, db.ForeignKey('status.id')), # type: ignore[attr-defined]
-        db.Column('timestamp', db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
-)
-
 class Todo(db.Model): # type: ignore[attr-defined]
     id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
     name = db.Column(db.String(80), index=True, nullable=False) # type: ignore[attr-defined]
@@ -93,7 +90,7 @@ class Todo(db.Model): # type: ignore[attr-defined]
     timestamp = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
     modified = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
     user_id = db.Column(db.Integer, db.ForeignKey('user.id')) # type: ignore[attr-defined]
-    tracker = db.relationship('Status', secondary=tracker, backref=db.backref('todo', lazy='dynamic')) # type: ignore[attr-defined]
+    tracker_entries = db.relationship('Tracker', backref='todo', lazy='dynamic') # type: ignore[attr-defined]
 
     def __repr__(self):
         return '<Todo {}>'.format(self.name)
