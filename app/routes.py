@@ -8,6 +8,7 @@ from app.models import Todo, User, Status, Tracker
 from app.forms import LoginForm, ChangePassword, UpdateAccount
 from urllib.parse import urlparse as url_parse
 from datetime import datetime, date, timedelta
+from sqlalchemy import asc
 import markdown
 from bleach import clean
 from wtforms.csrf.core import CSRF
@@ -95,14 +96,19 @@ def logout():
 @app.route('/security', methods=['GET', 'POST'])
 @login_required
 def security():
-    form = ChangePassword(userId=current_user.id)
+    form = ChangePassword()
     try:
         if form.validate_on_submit():
-            user = User.query.filter_by(id=form.userId.data).first()
-            user.set_password(form.password.data)
-            db.session.commit()
-            flash('Password Successfully changed.')
-            return redirect(url_for('security'))
+            # Verify old password matches
+            user = User.query.filter_by(id=current_user.id).first()
+            if not user.check_password(form.oldPassword.data):
+                flash('Old password is incorrect.', 'error')
+            else:
+                # Change password
+                user.set_password(form.password.data)
+                db.session.commit()  # type: ignore[attr-defined]
+                flash('Password Successfully changed.', 'success')
+                return redirect(url_for('security'))
     except Exception as e:
         if 'csrf' in str(e).lower():
             flash('Session expired. Please login again.', 'warning')
@@ -115,28 +121,32 @@ def security():
 @login_required
 def account():
     form = UpdateAccount()
+    
     try:
         if form.validate_on_submit():
             user = User.query.filter_by(id=current_user.id).first()
-            if user.check_username(form.username.data) and not user.check_email(form.email.data):
-                """ Update Email address """
-                user.email = form.email.data
-                db.session.commit()
-                flash('Email successfully updated.')
-            elif not user.check_username(form.username.data) and user.check_email(form.email.data):
-                """ Update email address """
+            updates = []
+            
+            # Check and update username
+            if not user.check_username(form.username.data):
                 user.username = form.username.data
-                db.session.commit()
-                flash('Username updated.')
-            elif not user.check_username(form.username.data) and not user.check_email(form.email.data):
-                """ Update email and username address """
-                user.username = form.username.data
+                updates.append('Username')
+            
+            # Check and update email
+            if not user.check_email(form.email.data):
                 user.email = form.email.data
-                db.session.commit()
-                flash('Username updated.')
-                flash('Email updated.')
+                updates.append('Email')
+            
+            # Update fullname if provided
+            if form.fullname.data and form.fullname.data.strip():
+                user.fullname = form.fullname.data.strip()
+                updates.append('Full Name')
+            
+            if updates:
+                db.session.commit()  # type: ignore[attr-defined]
+                flash(f'{", ".join(updates)} successfully updated.', 'success')
             else:
-                flash('No change made.')
+                flash('No changes made.', 'info')
     except Exception as e:
         if 'csrf' in str(e).lower():
             flash('Session expired. Please login again.', 'warning')
@@ -172,10 +182,33 @@ def delete(todo_id):
 @login_required
 def add():
     if request.method == "POST":
-        getTitle = request.form.get("title").strip()
-        getActivities = request.form.get("activities").strip()
+        getTitle = (request.form.get("title") or "").strip()
+        getActivities = (request.form.get("activities") or "").strip()
         getActivities_html = clean(markdown.markdown(getActivities, extensions=['fenced_code']), 
                                    tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+        
+        # Handle new schedule_day parameter
+        schedule_day = request.form.get("schedule_day", "today")
+        custom_date = request.form.get("custom_date", "")
+        
+        print(f"DEBUG: schedule_day={schedule_day}, custom_date={custom_date}")  # Debug line
+        
+        # Calculate target date based on schedule selection
+        if schedule_day == "tomorrow":
+            target_date = datetime.now() + timedelta(days=1)
+        elif schedule_day == "custom" and custom_date:
+            try:
+                # Parse the date and set time to current time
+                parsed_date = datetime.strptime(custom_date, "%Y-%m-%d").date()
+                current_time = datetime.now().time()
+                target_date = datetime.combine(parsed_date, current_time)
+                print(f"DEBUG: Parsed custom date: {target_date}")  # Debug line
+            except ValueError:
+                print(f"DEBUG: Invalid date format: {custom_date}")  # Debug line
+                target_date = datetime.now()  # Default to today if invalid date
+        else:
+            target_date = datetime.now()  # Default to today
+        
         tomorrow = datetime.now() + timedelta(days=1)
 
         if getTitle == '':
@@ -186,45 +219,60 @@ def add():
                         })
                     )
 
+        # Legacy support for old 'tomorrow' parameter
         if 'tomorrow' in request.form:
-            getTomorrow = request.form.get("tomorrow").strip()
+            getTomorrow = (request.form.get("tomorrow") or "").strip()
         else:
             getTomorrow = 0
 
         if request.form.get("todo_id") == '':
-            if getTomorrow == 0:
-                t = Todo(name=getTitle, details=getActivities, user_id=current_user.id, details_html=getActivities_html)
+            # Creating new todo
+            t = Todo(name=getTitle, details=getActivities, user_id=current_user.id, details_html=getActivities_html)
+            
+            # Override default timestamps if custom schedule is selected
+            if schedule_day != "today" or getTomorrow != 0:
+                # We need to set these after adding to session but before commit
+                db.session.add(t)  # type: ignore[attr-defined]
+                db.session.flush()  # type: ignore[attr-defined]  # This assigns the ID without committing
+                
+                # Now update the timestamps
+                t.timestamp = target_date
+                t.modified = target_date
+                print(f"DEBUG: Setting custom timestamp: {target_date}")  # Debug line
             else:
-                t = Todo(
-                        name=getTitle, 
-                        details=getActivities, 
-                        user_id=current_user.id, 
-                        details_html=getActivities_html,
-                        timestamp=None, 
-                        modified=tomorrow)
+                db.session.add(t)  # type: ignore[attr-defined]
 
-            db.session.add(t)
-            db.session.commit()
-            if getTomorrow:
-                Tracker.add(t.id, 1, tomorrow)
-            else:
+            db.session.commit()  # type: ignore[attr-defined]
+            
+            print(f"DEBUG: Todo created with ID: {t.id}, timestamp: {t.timestamp}, modified: {t.modified}")  # Debug line
+            
+            # Add tracker entry with appropriate date
+            if schedule_day == "today" and getTomorrow == 0:
+                # For today, use the actual timestamp from the todo
                 Tracker.add(t.id, 1, t.timestamp)
+                print(f"DEBUG: Tracker added for TODAY with timestamp: {t.timestamp}")
+            else:
+                # For tomorrow or custom date, use the target_date
+                Tracker.add(t.id, 1, target_date)
+                print(f"DEBUG: Tracker added for {schedule_day.upper()} with timestamp: {target_date}")
         else:
+            # Updating existing todo
             todo_id = request.form.get("todo_id")
-
             byPass = request.form.get("byPass")
             t = Todo.query.filter_by(id=todo_id).first()
             title = t.name
             activites = t.details
 
             if getTitle == title and getActivities == activites :
-                if getTomorrow == '1':
-                    t.modified = tomorrow
-                    db.session.commit()
-                    Tracker.add(todo_id, 4, tomorrow)
+                if schedule_day != "today" or getTomorrow == '1':
+                    # For tomorrow or custom date, use target_date
+                    t.modified = target_date
+                    db.session.commit()  # type: ignore[attr-defined]
+                    Tracker.add(todo_id, 4, target_date)
+                    print(f"DEBUG: Updated todo (no content change) - Tracker added with timestamp: {target_date}")
                 elif byPass == '1':
                     t.modified = datetime.now()
-                    db.session.commit()
+                    db.session.commit()  # type: ignore[attr-defined]
                 else:
                     return make_response(
                         jsonify({
@@ -236,14 +284,17 @@ def add():
                 t.name = getTitle
                 t.details = getActivities
                 t.details_html = getActivities_html
-                if getTomorrow == '1':
-                    t.modified = tomorrow
-                    db.session.commit()
-                    Tracker.add(todo_id, 4, tomorrow)
+                if schedule_day != "today" or getTomorrow == '1':
+                    # For tomorrow or custom date, use target_date
+                    t.modified = target_date
+                    db.session.commit()  # type: ignore[attr-defined]
+                    Tracker.add(todo_id, 4, target_date)
+                    print(f"DEBUG: Updated todo (content changed) - Tracker added with timestamp: {target_date}")
                 else:
                     t.modified = datetime.now()
-                    db.session.commit()
+                    db.session.commit()  # type: ignore[attr-defined]
                     Tracker.add(todo_id, 1, datetime.now())
+                    print(f"DEBUG: Updated todo for TODAY - Tracker added with timestamp: {datetime.now()}")
                 
                 return make_response(
                     jsonify({
@@ -301,7 +352,7 @@ def list(id):
     else:
         abort(404)
         
-    return render_template('list.html', title=id, todo=Todo.getList(id, start, end).order_by(Tracker.timestamp.asc()))
+    return render_template('list.html', title=id, todo=Todo.getList(id, start, end).order_by(asc(Tracker.timestamp)))
 
 @app.route('/<path:id>/<path:todo_id>/done', methods=['POST'])
 @login_required

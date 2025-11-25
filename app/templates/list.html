@@ -45,10 +45,19 @@
                                                                  <span aria-hidden="true">&#9998;</span>
                                                              </button> -->
                                                        {% if title == 'today' %}
-                                                            <a class="done" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Done"><i class="mdi mdi-clipboard-check-outline"></i></a> 
+                                                            <a class="done" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Done" aria-label="Mark as done">
+                                                                <i class="mdi mdi-clipboard-check-outline"></i>
+                                                                <span class="sr-only">Mark as done</span>
+                                                            </a> 
                                                        {% endif %}
-                                                            <a class="edit pr-2" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Edit"><i class="mdi mdi-clipboard-edit-outline"></i></a> 
-                                                            <a class="close-todo" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Delete"><i class="mdi mdi-close"></i></a>
+                                                            <a class="edit pr-2" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Edit" aria-label="Edit todo">
+                                                                <i class="mdi mdi-clipboard-edit-outline"></i>
+                                                                <span class="sr-only">Edit todo</span>
+                                                            </a> 
+                                                            <a class="close-todo" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Delete" aria-label="Delete todo">
+                                                                <i class="mdi mdi-close"></i>
+                                                                <span class="sr-only">Delete todo</span>
+                                                            </a>
                                                        </div>
                                                        <h3 class="card-title mb-0">{{ list.Todo.name|title }}</h3>
                                                        <div class="divider"><hr></div>
@@ -137,7 +146,41 @@
           $('#title-input-normal').val('');
           $("input[name='todo_id']").val('')
           simplemde.value('');
+          // Reset schedule selection to today
+          $('input[name="schedule_day"][value="today"]').prop('checked', true);
+          $('label[for="today"]').addClass('active');
+          $('label[for="tomorrow"], label[for="custom_day"]').removeClass('active');
+          $('#custom-date-picker').hide();
      })
+
+     // Handle schedule day selection
+     $('input[name="schedule_day"]').change(function() {
+          console.log('Schedule changed to:', $(this).val());
+          if ($(this).val() === 'custom') {
+               $('#custom-date-picker').show();
+          } else {
+               $('#custom-date-picker').hide();
+          }
+     });
+
+     // Handle label clicks for button group
+     $('label[for="today"], label[for="tomorrow"], label[for="custom_day"]').click(function() {
+          const targetInput = $(this).attr('for');
+          const inputValue = $('#' + targetInput).val();
+          
+          // Remove active class from all labels
+          $('label[for="today"], label[for="tomorrow"], label[for="custom_day"]').removeClass('active');
+          // Add active class to clicked label
+          $(this).addClass('active');
+          
+          console.log('Button clicked:', inputValue);
+          
+          if (inputValue === 'custom') {
+               $('#custom-date-picker').show();
+          } else {
+               $('#custom-date-picker').hide();
+          }
+     });
 
      /** Script for html modal **/
 
@@ -145,9 +188,11 @@
           
           let title = $('#title-input-normal').val();
           let activities = simplemde.value();
-          //let activities_html = marked(simplemde.value());
           let todo_id = $("input[name='todo_id']").val();
-          console.log(title);
+          let schedule_day = $('input[name="schedule_day"]:checked').val();
+          let custom_date = $('#custom_date').val();
+          
+          console.log(title, schedule_day, custom_date);
           
           if(title) {
                $.post('/add', {
@@ -155,10 +200,21 @@
                     'todo_id': todo_id ? todo_id:'',
                     'title': title,
                     'activities': activities,
-                    //'activities_html': activities_html
+                    'schedule_day': schedule_day,
+                    'custom_date': custom_date
                },
                function(data){
-                    window.location.href = "{{ url_for('list', id='today') }}";
+                    console.log('Server response:', data);
+                    // Redirect based on schedule selection
+                    if (schedule_day === 'tomorrow') {
+                         window.location.href = "{{ url_for('list', id='tomorrow') }}";
+                    } else if (schedule_day === 'custom') {
+                         // For custom dates, redirect to today page for now
+                         // Could be enhanced to create a custom date view
+                         window.location.href = "{{ url_for('list', id='today') }}";
+                    } else {
+                         window.location.href = "{{ url_for('list', id='today') }}";
+                    }
                });
           }
           else

@@ -1,82 +1,189 @@
-{% extends "base.html" %}
-{% set active_page = 'account security' %}
+{% extends "main.html" %}
+{% set active_page = title %}
 {% block content %}
-<main role="main">
-    <div class="container text-center">
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <div id="changeAlert" class="alert alert-success alert-dismissible fade show" role="alert">
-            
-                {% for message in messages %}
-                    {{ message }}
-                {% endfor %}
-            
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+<div class="container-fluid">
+    <!-- Start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h1 class="page-title">
+                    <i class="mdi mdi-lock-outline mr-2"></i>{{ active_page|title }}
+                </h1>
+            </div>
         </div>
-        {% endif %}
-    {% endwith %}
-        <div class="container-fluid badge badge-light border pt-3">
-            <form method="POST">
-                {{ form.hidden_tag() }}
-                <div class="form-group row">
-                    {{ form.oldPassword.label(class="col-sm-3 col-form-label") }}
-                    <div class="col-sm-7">
-                        {{ form.oldPassword(size=32, class="form-control") }}
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col">
-                        {% for error in form.oldPassword.errors %}
-                            <span style="color: red;">[{{ error }}]</span>
-                        {% endfor %}    
-                    </div>
-                </div>
-                <div class="form-group row">
-                    {{ form.password.label(for="inputPassword", class="col-sm-3 col-form-label") }}
-                    <div class="col-sm-7">
-                        {{ form.password(size=32, class="form-control") }}
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col">
-                        {% for error in form.password.errors %}
-                            <span style="color: red;">[{{ error }}]</span>
-                        {% endfor %}    
-                    </div>
-                </div>
-                <div class="form-group row">
-                    {{ form.confirm.label(for="inputPassword", class="col-sm-3 col-form-label") }}
-                    <div class="col-sm-7">
-                        {{ form.confirm(size=32, class="form-control") }}
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col">
-                        {% for error in form.password.errors %}
-                            <span style="color: red;">[{{ error }}]</span>
-                        {% endfor %}    
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-10 text-right">
-                        <button type="submit" class="btn btn-primary">Change password</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-        
     </div>
-</main>
-{% endblock%}
-{% block extra_script %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            {% set alert_type = 'alert-success' if category == 'success' else 'alert-danger' if category == 'error' else 'alert-warning' if category == 'warning' else 'alert-info' %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert {{ alert_type }} alert-dismissible fade show" role="alert">
+                        <i class="mdi mdi-{{ 'check-circle' if category == 'success' else 'alert-circle' }} mr-2"></i>
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Password Change Section -->
+        <div class="col-xl-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-lock mr-2"></i>Change Password
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        <i class="mdi mdi-information mr-2"></i>
+                        Keep your account secure by using a strong password. We recommend changing your password regularly.
+                    </p>
+
+                    <form method="POST" id="passwordForm">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Old Password Field -->
+                        <div class="form-group">
+                            {{ form.oldPassword.label("Current Password", class="font-weight-bold") }}
+                            <div class="input-group">
+                                {{ form.oldPassword(class="form-control", placeholder="Enter your current password", id="oldPassword") }}
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('oldPassword')" aria-label="Show or hide password">
+                                        <i class="mdi mdi-eye" id="oldPassword-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% for error in form.oldPassword.errors %}
+                                <small class="form-text text-danger d-block mt-1">
+                                    <i class="mdi mdi-alert-circle mr-1"></i>{{ error }}
+                                </small>
+                            {% endfor %}
+                        </div>
+
+                        <!-- New Password Field -->
+                        <div class="form-group">
+                            {{ form.password.label("New Password", class="font-weight-bold") }}
+                            <div class="input-group">
+                                {{ form.password(class="form-control", placeholder="Enter a strong new password", id="newPassword") }}
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('newPassword')" aria-label="Show or hide password">
+                                        <i class="mdi mdi-eye" id="newPassword-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted d-block mt-2">
+                                <i class="mdi mdi-lightbulb mr-1"></i>Password should be at least 8 characters long with uppercase, lowercase, and numbers.
+                            </small>
+                            {% for error in form.password.errors %}
+                                <small class="form-text text-danger d-block mt-2">
+                                    <i class="mdi mdi-alert-circle mr-1"></i>{{ error }}
+                                </small>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Confirm Password Field -->
+                        <div class="form-group">
+                            {{ form.confirm.label("Confirm New Password", class="font-weight-bold") }}
+                            <div class="input-group">
+                                {{ form.confirm(class="form-control", placeholder="Re-enter your new password", id="confirmPassword") }}
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('confirmPassword')" aria-label="Show or hide password">
+                                        <i class="mdi mdi-eye" id="confirmPassword-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% for error in form.confirm.errors %}
+                                <small class="form-text text-danger d-block mt-2">
+                                    <i class="mdi mdi-alert-circle mr-1"></i>{{ error }}
+                                </small>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-danger btn-block">
+                                <i class="mdi mdi-lock mr-1"></i>Change Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Tips Sidebar -->
+        <div class="col-xl-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-shield-alert mr-2"></i>Password Tips
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <i class="mdi mdi-check-circle text-success mr-2"></i>
+                            <strong>Make it long:</strong> Use at least 12 characters
+                        </li>
+                        <li class="mb-3">
+                            <i class="mdi mdi-check-circle text-success mr-2"></i>
+                            <strong>Mix it up:</strong> Use uppercase, lowercase, numbers & symbols
+                        </li>
+                        <li class="mb-3">
+                            <i class="mdi mdi-check-circle text-success mr-2"></i>
+                            <strong>Avoid patterns:</strong> Don't use sequential numbers or keyboard patterns
+                        </li>
+                        <li class="mb-3">
+                            <i class="mdi mdi-check-circle text-success mr-2"></i>
+                            <strong>Keep it secret:</strong> Never share your password
+                        </li>
+                        <li>
+                            <i class="mdi mdi-check-circle text-success mr-2"></i>
+                            <strong>Update regularly:</strong> Change password every 90 days
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_script_footer %}
 <script>
-    $('#changeAlert').on('closed.bs.alert', function () {
-        window.location.href = "{{ url_for('logout') }}";
-    })
-    $(".alert").fadeOut(3000).slideUp(3000, function() {
-            window.location.href = "{{ url_for('logout') }}";
+    // Toggle password visibility
+    function togglePasswordVisibility(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = document.getElementById(fieldId + '-icon');
+        
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.classList.remove('mdi-eye');
+            icon.classList.add('mdi-eye-off');
+        } else {
+            field.type = 'password';
+            icon.classList.remove('mdi-eye-off');
+            icon.classList.add('mdi-eye');
+        }
+    }
+
+    // Form validation on submit
+    document.getElementById('passwordForm').addEventListener('submit', function(e) {
+        const password = document.querySelector('input[name="password"]').value;
+        const confirm = document.querySelector('input[name="confirm"]').value;
+        
+        if (password !== confirm) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            return false;
+        }
     });
 </script>
 {% endblock %}

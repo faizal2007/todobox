@@ -11,22 +11,18 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Sign In')
     
 class ChangePassword(FlaskForm):
-    userId = HiddenField()
     oldPassword = PasswordField('Old Password', validators=[DataRequired()])
     password = PasswordField('New Password', [
         validators.DataRequired(),
         validators.EqualTo('confirm', message='Passwords must match')
     ])
     confirm = PasswordField('Repeat Password')
-    
-    def validate_oldPassword(self, oldPassword):
-        user = User.query.filter_by(id=self.userId.data).first()
-        if user.check_password(oldPassword.data) == False:
-            raise ValidationError('Old Password not match')
         
 class UpdateAccount(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
+    fullname = StringField('Full Name')
+    submit = SubmitField('Update Account')
 
     def validate_username(self, username):
         # Allow current username, but prevent duplicates

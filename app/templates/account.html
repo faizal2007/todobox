@@ -1,56 +1,91 @@
-{% extends "base.html" %}
-{% set active_page = 'user account' %}
+{% extends "main.html" %}
+{% set active_page = title %}
 {% block content %}
-<main role="main">
-    <div class="container">
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <div id="changeAlert" class="alert alert-success alert-dismissible fade show" role="alert">
-            {% for message in messages %}
-                {{ message }}<br>
-            {% endfor %}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        {% endif %}
-        {% endwith %}
-        <div class="container-fluid badge badge-light border pt-3">
-            <form action="" method="POST">
-                {{ form.hidden_tag() }}
-                <div class="form-group row">
-                    {{ form.username.label(class="col-sm-3 col-form-label") }}
-                    <div class="col-sm-7">
-                        {{ form.username(size=32, class="form-control", value=current_user.username) }}
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col">
-                        {% for error in form.username.errors %}
-                            <span style="color: red;">[{{ error }}]</span>
-                        {% endfor %}    
-                    </div>
-                </div>
-                <div class="form-group row">
-                    {{ form.email.label(class="col-sm-3 col-form-label") }}
-                    <div class="col-sm-7">
-                        {{ form.email(size=32, class="form-control", value=current_user.email) }}
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col">
-                        {% for error in form.email.errors %}
-                            <span style="color: red;">[{{ error }}]</span>
-                        {% endfor %}    
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-10 text-right">
-                        <button type="submit" class="btn btn-primary">Update Account</button>
-                    </div>
-                </div>
-            </form>
+<div class="container-fluid">
+    <!-- Start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h1 class="page-title">
+                    <i class="mdi mdi-account-edit mr-2"></i>{{ active_page|title }}
+                </h1>
+            </div>
         </div>
     </div>
-</main>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            {% set alert_type = 'alert-success' if category == 'success' else 'alert-danger' if category == 'error' else 'alert-warning' if category == 'warning' else 'alert-info' %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert {{ alert_type }} alert-dismissible fade show" role="alert">
+                        <i class="mdi mdi-{{ 'check-circle' if category == 'success' else 'alert-circle' }} mr-2"></i>
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Account Information Section -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-account-circle mr-2"></i>Account Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="" method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Username Field -->
+                        <div class="form-group">
+                            {{ form.username.label(class="font-weight-bold") }}
+                            {{ form.username(size=32, class="form-control", value=current_user.username) }}
+                            {% for error in form.username.errors %}
+                                <small class="form-text text-danger d-block mt-1">
+                                    <i class="mdi mdi-alert-circle mr-1"></i>{{ error }}
+                                </small>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Email Field -->
+                        <div class="form-group">
+                            {{ form.email.label(class="font-weight-bold") }}
+                            {{ form.email(size=32, class="form-control", value=current_user.email) }}
+                            {% for error in form.email.errors %}
+                                <small class="form-text text-danger d-block mt-1">
+                                    <i class="mdi mdi-alert-circle mr-1"></i>{{ error }}
+                                </small>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Full Name Field -->
+                        <div class="form-group">
+                            {{ form.fullname.label(class="font-weight-bold") }}
+                            {{ form.fullname(size=32, class="form-control", value=current_user.fullname or '', placeholder="Enter your full name") }}
+                            {% for error in form.fullname.errors %}
+                                <small class="form-text text-danger d-block mt-1">
+                                    <i class="mdi mdi-alert-circle mr-1"></i>{{ error }}
+                                </small>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-group mt-4">
+                            {{ form.submit(class="btn btn-primary btn-block") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

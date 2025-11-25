@@ -25,6 +25,25 @@
 						<label for="details-textarea">Why ???</label>
 						<textarea class="form-control" id="details-textarea" rows="5"></textarea>
 					</div>
+					
+					<!-- Schedule/Day Selection -->
+					<div class="form-group">
+						<label>Schedule for:</label>
+						<div class="btn-group btn-group-toggle d-block" data-toggle="buttons">
+							<label class="btn btn-outline-primary btn-sm active" for="today">
+								<input type="radio" name="schedule_day" id="today" value="today" checked autocomplete="off"> Today
+							</label>
+							<label class="btn btn-outline-primary btn-sm" for="tomorrow">
+								<input type="radio" name="schedule_day" id="tomorrow" value="tomorrow" autocomplete="off"> Tomorrow
+							</label>
+							<label class="btn btn-outline-primary btn-sm" for="custom_day">
+								<input type="radio" name="schedule_day" id="custom_day" value="custom" autocomplete="off"> Custom Date
+							</label>
+						</div>
+						<div class="mt-2" id="custom-date-picker" style="display: none;">
+							<input type="date" class="form-control form-control-sm" id="custom_date" name="custom_date">
+						</div>
+					</div>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-light btn-rounded" data-dismiss="modal">Close</button>
