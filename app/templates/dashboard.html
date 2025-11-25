@@ -1,0 +1,265 @@
+{% extends "main.html" %}
+{% set active_page = 'dashboard' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Dashboard</h1>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Chart Section -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="mdi mdi-chart-donut"></i> Todo Status Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; width: 100%; height: 400px;">
+                        <canvas id="todoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Section -->
+        <div class="col-lg-4 mb-4">
+            <div class="row">
+                {% set done_count = chart_segments.get('done', 0) %}
+                {% set reassign_count = chart_segments.get('re-assign', 0) %}
+                {% set pending_count = chart_segments.get('pending', 0) %}
+                {% set total_count = done_count + reassign_count + pending_count %}
+                
+                <div class="col-12 mb-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Completed</h6>
+                                    <h3 class="mb-0">{{ done_count }}</h3>
+                                </div>
+                                <i class="mdi mdi-check-circle-outline mdi-36px"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12 mb-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Pending</h6>
+                                    <h3 class="mb-0">{{ pending_count }}</h3>
+                                </div>
+                                <i class="mdi mdi-clock-outline mdi-36px"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12 mb-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Total</h6>
+                                    <h3 class="mb-0">{{ total_count }}</h3>
+                                </div>
+                                <i class="mdi mdi-format-list-bulleted mdi-36px"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if total_count > 0 %}
+                <div class="col-12 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">Completion Rate</h6>
+                            <div class="progress">
+                                {% set completion_rate = (done_count / total_count * 100) | round(1) if total_count > 0 else 0 %}
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ completion_rate }}%" 
+                                     aria-valuenow="{{ completion_rate }}" 
+                                     aria-valuemin="0" aria-valuemax="100"
+                                     aria-label="Completion rate: {{ completion_rate }}%">
+                                    {{ completion_rate }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="mdi mdi-repeat"></i> Re-assignment Analysis
+                            </h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <h4 class="mb-1 text-warning">{{ reassignment_stats.avg_reassignments_before_completion }}</h4>
+                                        <p class="text-muted mb-0 font-12">Avg Re-assignments<br>Before Completion</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <h4 class="mb-1 text-info">{{ reassignment_stats.todos_with_reassignments }}</h4>
+                                        <p class="text-muted mb-0 font-12">Todos with<br>Re-assignments</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="mdi mdi-information"></i> 
+                                    Total re-assignments: {{ reassignment_stats.total_reassignments }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Recent Activity -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="mdi mdi-history"></i> Recent Todos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_todos %}
+                        <div class="list-group list-group-flush">
+                            {% for todo in recent_todos %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ todo.name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="mdi mdi-calendar"></i> 
+                                        {{ momentjs(todo.target_date).format('MMMM Do, YYYY') }}
+                                    </small>
+                                </div>
+                                <span class="badge badge-primary badge-pill">
+                                    {{ momentjs(todo.timestamp).format('MMM D') }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="mdi mdi-format-list-bulleted mdi-48px text-muted mb-3"></i>
+                            <p class="text-muted mb-0">No todos yet. <a href="{{ url_for('list', id='today') }}">Create your first todo!</a></p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_script_footer %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the chart
+    const canvas = document.getElementById('todoChart');
+    if (!canvas || typeof Chart === 'undefined') {
+        console.error('Chart initialization failed: missing canvas or Chart.js library');
+        return;
+    }
+    
+    try {
+        const chartSegments = {{ chart_segments | tojson | safe }};
+        const ctx = canvas.getContext('2d');
+        
+        // Create enhanced 3-segment doughnut chart
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(chartSegments).map(status => {
+                    if (status === 'done') return 'Done';
+                    if (status === 're-assign') return 'Re-assign';
+                    if (status === 'pending') return 'Pending';
+                    return status.charAt(0).toUpperCase() + status.slice(1);
+                }),
+                datasets: [{
+                    data: Object.values(chartSegments),
+                    backgroundColor: [
+                        '#28a745',  // done - green
+                        '#fd7e14',  // re-assign - orange
+                        '#ffc107'   // pending - yellow
+                    ],
+                    borderColor: '#fff',
+                    borderWidth: 3,
+                    hoverBorderWidth: 4,
+                    hoverBorderColor: '#333'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 25,
+                            usePointStyle: true,
+                            font: {
+                                size: 13,
+                                weight: '500'
+                            },
+                            boxWidth: 15,
+                            boxHeight: 15
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.85)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#fff',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${label}: ${value} todos (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '65%',
+                animation: {
+                    animateRotate: true,
+                    duration: 1200,
+                    easing: 'easeInOutQuart'
+                },
+                elements: {
+                    arc: {
+                        borderWidth: 3
+                    }
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error creating chart:', error);
+    }
+});
+</script>
+{% endblock %}

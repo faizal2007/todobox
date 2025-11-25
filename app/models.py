@@ -89,6 +89,7 @@ class Todo(db.Model): # type: ignore[attr-defined]
     details_html = db.Column(db.String(500)) # type: ignore[attr-defined]
     timestamp = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
     modified = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
+    target_date = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
     user_id = db.Column(db.Integer, db.ForeignKey('user.id')) # type: ignore[attr-defined]
     tracker_entries = db.relationship('Tracker', backref='todo', lazy='dynamic') # type: ignore[attr-defined]
 

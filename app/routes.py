@@ -47,7 +47,116 @@ def initiate_data():
 @app.route('/')
 @app.route('/index')
 def index():
-    return redirect(url_for('list', id='today'))
+    return redirect(url_for('dashboard'))
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    from app.models import Todo, Tracker, Status
+    from sqlalchemy import func, desc, and_
+    
+    # Get latest status for each todo  
+    latest_tracker_subquery = db.session.query(  # type: ignore
+        Tracker.todo_id,  # type: ignore
+        func.max(Tracker.timestamp).label('latest_timestamp')
+    ).group_by(Tracker.todo_id).subquery()  # type: ignore
+    
+    # Get proper status categorization: check if todo was EVER completed, not just current status
+    chart_segments = {'done': 0, 're-assign': 0, 'pending': 0}
+    
+    # Get all todos and analyze each one properly
+    all_todos = db.session.query(Todo).all()  # type: ignore
+    
+    for todo in all_todos:
+        # Get all trackers for this todo to check completion history
+        todo_trackers = db.session.query(Tracker, Status.name).join(Status).filter(  # type: ignore
+            Tracker.todo_id == todo.id 
+        ).order_by(Tracker.timestamp).all()
+        
+        # Get latest status
+        latest_tracker = db.session.query(Tracker, Status.name).join(Status).filter(  # type: ignore
+            Tracker.todo_id == todo.id
+        ).order_by(desc(Tracker.timestamp)).first()
+        
+        if not latest_tracker:
+            continue
+            
+        latest_status = latest_tracker[1]
+        
+        # Check if todo was ever completed (has 'done' status in history)
+        was_ever_completed = any(status == 'done' for _, status in todo_trackers)
+        
+        # Count re-assignments in history
+        reassignment_count = sum(1 for _, status in todo_trackers if status == 're-assign')
+        
+        # Categorize todo properly
+        if was_ever_completed:
+            # If todo was completed, it counts as "done" regardless of current status
+            chart_segments['done'] += 1
+        elif reassignment_count > 0:
+            # If todo was never completed but has re-assignments, count as "re-assign"
+            chart_segments['re-assign'] += 1
+        else:
+            # If todo was never completed and never re-assigned, count as "pending"
+            chart_segments['pending'] += 1
+    
+    # Remove zero values for cleaner chart
+    chart_segments = {k: v for k, v in chart_segments.items() if v > 0}
+    
+    # Calculate re-assignment statistics
+    reassignment_stats = {
+        'total_reassignments': 0,
+        'completed_after_reassignments': 0,
+        'avg_reassignments_before_completion': 0.0,
+        'todos_with_reassignments': 0
+    }
+    
+    # Get all todos and analyze their re-assignment patterns
+    all_todos = db.session.query(Todo).all()  # type: ignore
+    
+    for todo in all_todos:
+        # Get all trackers for this todo ordered by timestamp
+        todo_trackers = db.session.query(Tracker, Status.name).join(Status).filter(  # type: ignore
+            Tracker.todo_id == todo.id 
+        ).order_by(Tracker.timestamp).all()
+        
+        reassign_count = 0
+        is_completed = False
+        
+        # Count re-assignments and check if completed
+        for tracker, status_name in todo_trackers:
+            if status_name == 're-assign':
+                reassign_count += 1
+            elif status_name == 'done':
+                is_completed = True
+        
+        # Update statistics
+        if reassign_count > 0:
+            reassignment_stats['todos_with_reassignments'] += 1
+        
+        reassignment_stats['total_reassignments'] += reassign_count
+        
+        if is_completed:
+            reassignment_stats['completed_after_reassignments'] += reassign_count
+    
+    # Calculate average re-assignments before completion  
+    # We already have the completion data from our loop above
+    completed_todos_count = chart_segments['done']
+    
+    if completed_todos_count > 0:
+        reassignment_stats['avg_reassignments_before_completion'] = round(
+            reassignment_stats['completed_after_reassignments'] / completed_todos_count, 1
+        )
+    else:
+        reassignment_stats['avg_reassignments_before_completion'] = 0.0
+    
+    # Get recent todos for activity feed
+    recent_todos = db.session.query(Todo).order_by(desc(Todo.timestamp)).limit(5).all()  # type: ignore
+    
+    return render_template('dashboard.html', 
+                         chart_segments=chart_segments,
+                         recent_todos=recent_todos,
+                         reassignment_stats=reassignment_stats)
 
 @app.route('/todo')
 @login_required
@@ -154,6 +263,44 @@ def account():
         raise
     
     return render_template('account.html', title='User Account', form=form)
+
+@app.route('/undone')
+@login_required
+def undone():
+    """Show all undone/pending todos across all dates"""
+    # Get all todos that are not completed (status_id != 2)
+    # Use a simpler approach - get all todos and filter by latest tracker status
+    
+    undone_todos = []
+    all_todos = Todo.query.filter_by(user_id=current_user.id).order_by(Todo.modified.desc()).all()
+    
+    for todo in all_todos:
+        # Get the latest tracker entry for this todo
+        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc()).first()  # type: ignore[attr-defined]
+        
+        # Only include if the latest status is not completed (status_id != 2)
+        if latest_tracker and latest_tracker.status_id != 2:
+            undone_todos.append((todo, latest_tracker))
+    
+    return render_template('undone.html', title='Undone Tasks', todos=undone_todos)
+
+@app.route('/<path:todo_id>/done', methods=['POST'])
+@login_required
+def mark_done(todo_id):
+    """Mark a todo as done from any page"""
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if todo:
+        date_entry = datetime.now()
+        todo.modified = date_entry
+        db.session.commit()  # type: ignore[attr-defined]
+        Tracker.add(todo.id, 2, date_entry)  # Status 2 = Done
+
+    return make_response(
+        jsonify({
+            'status': 'Success',
+            'todo_id': todo.id if todo else None
+        }), 200
+    )
 
 @app.route('/<path:todo>/view')
 @login_required

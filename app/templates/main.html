@@ -111,8 +111,13 @@
 													<a 
 															class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-dashboards" 
 															role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-														<i class="uil-dashboard mr-1"></i>Dashboards 
+														<i class="uil-dashboard mr-1"></i>Dashboards <span class="mdi mdi-chevron-down"></span>
 													</a>
+													<div class="dropdown-menu" aria-labelledby="topnav-dashboards">
+														<a href="{{ url_for('dashboard') }}" class="dropdown-item">
+															<i class="mdi mdi-chart-donut mr-1"></i>Overview
+														</a>
+													</div>
 												</li>
 											</ul>
 											<ul class="navbar-nav">
@@ -124,8 +129,15 @@
 											</ul>
 											<ul class="navbar-nav">
 												<li class="nav-item dropdown">
-													<a class="nav-link dropdown-toggle arrow-none" href="{{ url_for('list', id='tomorrow') }}" id="topnav-dashboards">
+													<a class="nav-link dropdown-toggle arrow-none" href="{{ url_for('list', id='tomorrow') }}" id="topnav-tomorrow">
 														<i class="uil-diary-alt mr-1"></i>Tomorrow
+													</a>
+												</li>
+											</ul>
+											<ul class="navbar-nav">
+												<li class="nav-item dropdown">
+													<a class="nav-link dropdown-toggle arrow-none" href="{{ url_for('undone') }}" id="topnav-undone">
+														<i class="uil-list-ul mr-1"></i>Undone Tasks
 													</a>
 												</li>
 											</ul>
