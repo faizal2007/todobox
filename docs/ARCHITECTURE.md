@@ -102,6 +102,88 @@ Physical data storage
 - SQLite (development)
 - MySQL/PostgreSQL (production)
 
+---
+
+## Database Configuration (Updated November 2025)
+
+### Supported Databases
+
+The application supports three database backends via environment configuration:
+
+```
+DATABASE_DEFAULT=sqlite     (Default) - SQLite development database
+DATABASE_DEFAULT=mysql      - MySQL 5.7+ production database
+DATABASE_DEFAULT=postgres   - PostgreSQL production database
+```
+
+### Database Selection Logic
+
+```python
+# From app/__init__.py
+if app.config['DATABASE_DEFAULT'] == 'mysql':
+    connect_db('mysql', app)           # Use MySQL
+elif app.config['DATABASE_DEFAULT'] == 'postgres':
+    connect_db('postgres', app)        # Use PostgreSQL
+else:
+    # SQLite fallback (default if DATABASE_DEFAULT not set)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/mysandbox.db'
+```
+
+### SQLite Configuration
+
+- **Default** choice for development
+- Database file: `instance/mysandbox.db`
+- **No setup required** - database created automatically on first migration
+- Ideal for: Learning, testing, single-user development
+- Instance folder created automatically when using SQLite
+
+### MySQL Configuration (Current Production)
+
+- Configured via `.flaskenv` (192.168.1.112 - shimasu_db)
+- Connection string: `mysql+mysqldb://user:password@host:port/database`
+- **Database must be created manually** before running migrations
+- Ideal for: Production, multi-user scenarios, team development
+
+**Environment Variables:**
+```bash
+DATABASE_DEFAULT=mysql
+DB_URL=192.168.1.112
+DB_USER=freakie
+DB_PASSWORD=md711964
+DB_NAME=shimasu_db
+```
+
+### PostgreSQL Configuration
+
+- Connection string: `postgresql://user:password@host:port/database`
+- Similar setup to MySQL
+- Ideal for: Advanced queries, better transaction handling
+
+**Environment Variables:**
+```bash
+DATABASE_DEFAULT=postgres
+DB_URL=localhost
+DB_USER=mysandbox
+DB_PASSWORD=password
+DB_NAME=mysandbox
+```
+
+### Instance Folder Status
+
+- **Purpose**: Local development data storage (SQLite only)
+- **Contents**: SQLite database file, local config overrides
+- **Git Status**: Not version controlled (in .gitignore)
+- **When Used**: Only when `DATABASE_DEFAULT=sqlite` (or unset)
+- **When NOT Used**: When `DATABASE_DEFAULT=mysql` or `DATABASE_DEFAULT=postgres`
+
+**Status as of November 2025:**
+- ✅ Instance folder not created when MySQL configured
+- ✅ No SQLite database in use when `DATABASE_DEFAULT=mysql`
+- ✅ Multi-database support verified working
+- ✅ MySQL connection established (192.168.1.112:3306)
+
+---
+
 ## File Structure & Responsibilities
 
 ```

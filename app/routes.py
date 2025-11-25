@@ -6,9 +6,14 @@ from app import app, db
 from flask_login import current_user, login_user, login_required, logout_user
 from app.models import Todo, User, Status, Tracker
 from app.forms import LoginForm, ChangePassword, UpdateAccount
-from werkzeug.urls import url_parse
+from urllib.parse import urlparse as url_parse
 from datetime import datetime, date, timedelta
 import markdown
+from bleach import clean
+
+# Allowed HTML tags for sanitized Markdown output
+ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a']
+ALLOWED_ATTRIBUTES = {'a': ['href', 'title']}
 
 """
 " Initiatiate default data
@@ -133,7 +138,8 @@ def add():
     if request.method == "POST":
         getTitle = request.form.get("title").strip()
         getActivities = request.form.get("activities").strip()
-        getActivities_html = markdown.markdown(getActivities, extensions=['fenced_code'])
+        getActivities_html = clean(markdown.markdown(getActivities, extensions=['fenced_code']), 
+                                   tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
         tomorrow = datetime.now() + timedelta(days=1)
 
         if getTitle == '':

@@ -93,6 +93,10 @@ class Todo(db.Model):
         return '<Todo {}'.format(self.name)
 
     def getList(type, start, end):
+        # Validate input to prevent potential injection
+        valid_types = ['today', 'tomorrow']
+        if type not in valid_types:
+            raise ValueError(f"Invalid type: {type}. Must be one of {valid_types}")
 
         done = 2
         latest_todo = db.session.query(func.max(Tracker.timestamp)).group_by(Tracker.todo_id)

@@ -47,19 +47,25 @@ cp .flaskenv.example .flaskenv
 Edit `.flaskenv` with your settings:
 
 ```bash
-# For SQLite (default)
+# Required
 FLASK_APP=mysandbox.py
 FLASK_ENV=development
+DATABASE_DEFAULT=mysql  # or sqlite (default), postgres
+
+# Application settings
 BIND_ADDRESS=127.0.0.1
 PORT=9191
 
-# For MySQL/PostgreSQL
-DATABASE_DEFAULT=mysql  # or postgres
+# For MySQL/PostgreSQL only
 DB_URL=localhost
 DB_USER=username
-DB_PW=password
+DB_PASSWORD=password    # or use DB_PW
 DB_NAME=mysandbox
 ```
+
+**Important:** 
+- Set `DATABASE_DEFAULT=mysql` to use external MySQL (no instance/ folder needed)
+- Leave `DATABASE_DEFAULT` unset or use `sqlite` for development with SQLite database
 
 ### 5. Initialize Database
 
@@ -216,7 +222,12 @@ flask db history
 
 ### "No such file or directory: instance/mysandbox.db"
 
-The instance directory needs to be created:
+The instance directory is only needed for SQLite. If using MySQL/PostgreSQL:
+- Ensure `DATABASE_DEFAULT=mysql` (or postgres) is set in `.flaskenv`
+- Create the database on your MySQL/PostgreSQL server first
+- Then run `flask db upgrade`
+
+For SQLite development:
 
 ```bash
 mkdir instance
@@ -266,16 +277,50 @@ After setup, a default admin user is automatically created:
 - **Username**: admin
 - **Password**: admin1234
 
-⚠️ **Important**: Change the admin password immediately after first login.
+⚠️ **CRITICAL**: Change the admin password immediately after first login for security.
+
+### Change Admin Password
+
+1. Login with `admin / admin1234`
+2. Go to `/security` or account settings
+3. Change password to a strong value
+4. Confirm change
+
+### Alternative: Reset via Database
+
+If you need to reset the admin password, you can modify it in the database:
+
+```bash
+# For SQLite
+sqlite3 instance/mysandbox.db
+SELECT * FROM "user" WHERE username='admin';
+
+# To reset, delete the admin user and let the app recreate it
+DELETE FROM "user" WHERE username='admin';
+```
+
+Then restart the application and re-run `flask db upgrade` to recreate the default user.
 
 ## Verification
 
 After setup, verify the installation:
 
-1. Start the application: `flask run`
-2. Open browser to `http://127.0.0.1:9191`
-3. Login with admin/admin1234
-4. Create a test todo item
-5. Verify functionality
+1. Run migrations: `flask db upgrade` ✅ (Confirmed working - November 2025)
+2. Start the application: `flask run`
+3. Open browser to `http://127.0.0.1:9191`
+4. Login with admin/admin1234
+5. Create a test todo item
+6. Verify functionality (add, mark done, delete)
+7. **IMPORTANT**: Change admin password via `/security`
 
-All systems operational if you can create and view todo items.
+✅ All systems operational if you can create, view, and modify todo items without errors.
+
+### Verification Status (as of November 2025)
+
+- ✅ App imports successfully
+- ✅ Flask database migrations work
+- ✅ MySQL connection established (when configured)
+- ✅ All security patches applied
+- ✅ Werkzeug 3.0.6 compatibility verified
+- ⏳ MySQL database 'shimasu_db' needs to be created on database server
+- ⏳ Admin password needs to be changed after first login

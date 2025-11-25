@@ -128,8 +128,8 @@ gunicorn -w 4 -b 0.0.0.0:9191 --access-logfile - mysandbox:app
 
 ### Required
 ```bash
-DATABASE_DEFAULT=sqlite  # or mysql, postgres
 FLASK_APP=mysandbox.py
+DATABASE_DEFAULT=mysql   # or sqlite (default), postgres
 ```
 
 ### Optional
@@ -140,14 +140,16 @@ BIND_ADDRESS=127.0.0.1   # Server bind address
 PORT=9191                # Server port
 ```
 
-### MySQL/PostgreSQL
+### MySQL/PostgreSQL Configuration
 ```bash
-DATABASE_DEFAULT=mysql   # or postgres
-DB_URL=localhost         # Database host
+# Only required if DATABASE_DEFAULT is mysql or postgres
+DB_URL=localhost         # Database host/IP
 DB_USER=username         # Database user
-DB_PW=password          # Database password
-DB_NAME=mysandbox       # Database name
+DB_PASSWORD=password     # Database password (or use DB_PW)
+DB_NAME=mysandbox        # Database name
 ```
+
+**Note:** When using SQLite, `instance/` folder is created automatically. When using MySQL/PostgreSQL, `instance/` is not needed.
 
 ---
 
@@ -433,6 +435,27 @@ class MyForm(FlaskForm):
 
 ---
 
-**Last Updated:** January 2025  
-**Version:** 1.0  
-**Author:** Code Review & Documentation
+---
+
+## Recent Updates (November 2025)
+
+✅ **Security Patches Applied:**
+- Hardcoded secrets replaced with environment variables
+- XSS vulnerability fixed (HTML sanitization with bleach)
+- SQL injection risk mitigated (input validation added)
+- Form validation for duplicate accounts enabled
+
+✅ **Werkzeug Compatibility Fixed:**
+- Flask-WTF upgraded to 1.2.2
+- Flask-Login upgraded to 0.6.3
+- All deprecated imports updated
+- Database migrations now working (`flask db upgrade` runs successfully)
+
+✅ **Database Configuration Optimized:**
+- MySQL now configured as primary database (192.168.1.112)
+- Instance folder no longer created when using external database
+- Multi-database support working (sqlite/mysql/postgres)
+
+**Last Updated:** November 2025  
+**Version:** 1.1  
+**Status:** Production-ready (pending admin password change and database creation)

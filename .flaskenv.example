@@ -1,6 +1,30 @@
 FLASK_ENV=development
 FLASK_APP=mysandbox.py
-POSTGRES_URL="192.168.1.25:5432"
-POSTGRES_USER="postgres"
-POSTGRES_PW="cyb3rsp@c3"
-POSTGRES_DB="todo_db"
+
+# Security - CHANGE THESE IN PRODUCTION!
+SECRET_KEY="change-me-to-a-secure-random-key"
+SALT="change-me-to-a-secure-salt"
+
+# Database Configuration
+# For SQLite (default)
+DATABASE_DEFAULT=sqlite
+DATABASE_NAME=mysandbox.db
+
+# For PostgreSQL (uncomment and configure)
+# DATABASE_DEFAULT=postgres
+# POSTGRES_URL="192.168.1.25:5432"
+# POSTGRES_USER="postgres"
+# POSTGRES_PW="your-secure-password"
+# POSTGRES_DB="todo_db"
+
+# For MySQL (uncomment and configure)
+# DATABASE_DEFAULT=mysql
+# DB_URL="localhost"
+# DB_USER="mysandbox"
+# DB_PW="your-secure-password"
+# DB_NAME="mysandbox"
+
+# Application Settings
+TITLE="My Sandbox"
+BIND_ADDRESS=127.0.0.1
+PORT=9191
