@@ -2,6 +2,20 @@
 
 A Flask-based personal task management application with wisdom quotes, user authentication, and multi-database support.
 
+## Screenshots
+
+### Login
+![Login](docs/screenshots/login.png)
+
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Save Todo
+![Save Todo](docs/screenshots/save-todo.png)
+
+### Delete Todo
+![Delete Todo](docs/screenshots/delete-todo.png)
+
 ## Quick Start
 
 ```bash
