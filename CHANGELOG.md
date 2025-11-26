@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.2.0] - Performance & Font Optimization - 2025-11-26
+
+### Added
+
+- `.vscode/settings.json` - VSCode configuration to suppress harmless Jinja2 linting errors in HTML files
+
+### Changed
+
+- Optimized font loading strategy with lazy-loading for Google Fonts
+- Replaced custom font dependencies with system fonts (Segoe UI fallback)
+- Updated script tag syntax for modern JavaScript compatibility
+- Removed font preload directives that were blocking page rendering
+
+### Fixed
+
+- **CRITICAL**: Slow network warnings from blocking font preload on `main.html`
+- Malformed `@font-face` CSS rules with duplicate font-family declarations
+- Page load performance issue caused by `Lemon Tuesday.otf` preload
+- VSCode property assignment errors in base.html template
+- Font loading strategy now uses async loading with `media="print" onload`
+
+### Performance Improvements
+
+- Eliminated render-blocking font resources
+- Page now renders instantly with system fonts while custom fonts load in background
+- Improved Largest Contentful Paint (LCP) Core Web Vital
+- No more "slow network detected" browser warnings
+
+---
+
 ## [1.1.0] - API Authentication & CSRF Fixes - 2025-11-26
 
 ### Added
