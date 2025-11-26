@@ -267,6 +267,15 @@ def init_default_data():
 
 # Initialize data once when app starts
 init_default_data()  # ENABLED AFTER SUCCESSFUL NEW MIGRATION
+
+@app.route('/')
+def root():
+    """Root route - redirect to dashboard if logged in, otherwise to login"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    else:
+        return redirect(url_for('login'))
+
 @app.route('/index')
 def index():
     return redirect(url_for('dashboard'))
