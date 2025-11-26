@@ -155,7 +155,7 @@ def create_todo():
     db.session.commit()  # type: ignore[attr-defined]
     
     # Add tracker entry
-    Tracker.add(todo.id, 1, todo.timestamp)
+    Tracker.add(todo.id, 5, todo.timestamp)  # Status 5 = new
     
     return jsonify({
         'id': todo.id,
@@ -247,14 +247,26 @@ def delete_todo(todo_id):
 """
 def init_default_data():
     """Initialize default data on application startup"""
-    with app.app_context():
-        if not len(User.query.all()):
-            User.seed()
-        if not len(Status.query.all()):
-            Status.seed()
+    try:
+        with app.app_context():
+            # Check and seed users if none exist
+            user_count = User.query.count()
+            if user_count == 0:
+                User.seed()
+
+            # Always check and seed status records - be more robust
+            status_count = Status.query.count()
+            if status_count == 0:
+                Status.seed()
+                db.session.commit()  # type: ignore[attr-defined]
+    except Exception as e:
+        print(f"ERROR: Failed to initialize default data: {e}")
+        # Don't let this crash the app, but log the error
+        import traceback
+        traceback.print_exc()
 
 # Initialize data once when app starts
-    init_default_data()  # ENABLED AFTER SUCCESSFUL NEW MIGRATION@app.route('/')
+init_default_data()  # ENABLED AFTER SUCCESSFUL NEW MIGRATION
 @app.route('/index')
 def index():
     return redirect(url_for('dashboard'))
@@ -493,8 +505,8 @@ def undone():
         # Get the latest tracker entry for this todo
         latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc()).first()  # type: ignore[attr-defined]
         
-        # Only include if the latest status is not completed (status_id != 2)
-        if latest_tracker and latest_tracker.status_id != 2:
+        # Only include if the latest status is not completed (status_id != 6)
+        if latest_tracker and latest_tracker.status_id != 6:
             undone_todos.append((todo, latest_tracker))
     
     return render_template('undone.html', title='Undone Tasks', todos=undone_todos)
@@ -508,7 +520,7 @@ def mark_done(todo_id):
         date_entry = datetime.now()
         todo.modified = date_entry
         db.session.commit()  # type: ignore[attr-defined]
-        Tracker.add(todo.id, 2, date_entry)  # Status 2 = Done
+        Tracker.add(todo.id, 6, date_entry)  # Status 6 = Done
 
     return make_response(
         jsonify({
@@ -524,9 +536,21 @@ def view(todo):
     done = {False: "Pending", True: "Done"}
 
     if todo == 'pending':
-        records = Todo.query.filter(Todo.status_id != 1).order_by(Todo.modified.desc()).all()
+        # Get todos where the latest tracker status is not 'new' (status_id != 5)
+        records = []
+        all_todos = Todo.query.filter_by(user_id=current_user.id).order_by(Todo.modified.desc()).all()
+        for t in all_todos:
+            latest_tracker = Tracker.query.filter_by(todo_id=t.id).order_by(Tracker.timestamp.desc()).first()
+            if latest_tracker and latest_tracker.status_id != 5:  # Not new
+                records.append(t)
     elif todo == 'done':
-        records = Todo.query.filter(Todo.status_id == 2).order_by(Todo.modified.desc()).all()
+        # Get todos where the latest tracker status is 'done' (status_id == 6)
+        records = []
+        all_todos = Todo.query.filter_by(user_id=current_user.id).order_by(Todo.modified.desc()).all()
+        for t in all_todos:
+            latest_tracker = Tracker.query.filter_by(todo_id=t.id).order_by(Tracker.timestamp.desc()).first()
+            if latest_tracker and latest_tracker.status_id == 6:  # Done
+                records.append(t)
     else:
         abort(404)
 
@@ -611,11 +635,11 @@ def add():
             # Add tracker entry with appropriate date
             if schedule_day == "today" and getTomorrow == 0:
                 # For today, use the actual timestamp from the todo
-                Tracker.add(t.id, 1, t.timestamp)
+                Tracker.add(t.id, 5, t.timestamp)  # Status 5 = new
                 print(f"DEBUG: Tracker added for TODAY with timestamp: {t.timestamp}")
             else:
                 # For tomorrow or custom date, use the target_date
-                Tracker.add(t.id, 1, target_date)
+                Tracker.add(t.id, 5, target_date)  # Status 5 = new
                 print(f"DEBUG: Tracker added for {schedule_day.upper()} with timestamp: {target_date}")
         else:
             # Updating existing todo
@@ -630,7 +654,7 @@ def add():
                     # For tomorrow or custom date, use target_date
                     t.modified = target_date
                     db.session.commit()  # type: ignore[attr-defined]
-                    Tracker.add(todo_id, 4, target_date)
+                    Tracker.add(todo_id, 8, target_date)  # Status 8 = re-assign
                     print(f"DEBUG: Updated todo (no content change) - Tracker added with timestamp: {target_date}")
                 elif byPass == '1':
                     t.modified = datetime.now()
@@ -650,12 +674,12 @@ def add():
                     # For tomorrow or custom date, use target_date
                     t.modified = target_date
                     db.session.commit()  # type: ignore[attr-defined]
-                    Tracker.add(todo_id, 4, target_date)
+                    Tracker.add(todo_id, 8, target_date)  # Status 8 = re-assign
                     print(f"DEBUG: Updated todo (content changed) - Tracker added with timestamp: {target_date}")
                 else:
                     t.modified = datetime.now()
                     db.session.commit()  # type: ignore[attr-defined]
-                    Tracker.add(todo_id, 1, datetime.now())
+                    Tracker.add(todo_id, 5, datetime.now())  # Status 5 = new
                     print(f"DEBUG: Updated todo for TODAY - Tracker added with timestamp: {datetime.now()}")
                 
                 return make_response(
@@ -724,7 +748,7 @@ def done(id, todo_id):
 
     if id == 'today':
         todo.modified = date_entry
-        Tracker.add(todo.id, 2, date_entry)
+        Tracker.add(todo.id, 6, date_entry)  # Status 6 = Done
 
     return make_response(
             jsonify({
