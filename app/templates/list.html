@@ -38,16 +38,25 @@
                                                              </button> -->
                                                        {% if title == 'today' %}
                                                             <a class="done" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Done" aria-label="Mark as done">
-                                                                <i class="mdi mdi-clipboard-check-outline"></i>
+                                                                <i class="mdi mdi-clipboard-check-outline done-icon"></i>
+                                                                <span class="done-loading" style="display: none;">
+                                                                    <i class="mdi mdi-loading mdi-spin"></i>
+                                                                </span>
                                                                 <span class="sr-only">Mark as done</span>
                                                             </a> 
                                                        {% endif %}
                                                             <a class="edit pr-2" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Edit" aria-label="Edit todo">
-                                                                <i class="mdi mdi-clipboard-edit-outline"></i>
+                                                                <i class="mdi mdi-clipboard-edit-outline edit-icon"></i>
+                                                                <span class="edit-loading" style="display: none;">
+                                                                    <i class="mdi mdi-loading mdi-spin"></i>
+                                                                </span>
                                                                 <span class="sr-only">Edit todo</span>
                                                             </a> 
                                                             <a class="close-todo" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Delete" aria-label="Delete todo">
-                                                                <i class="mdi mdi-close"></i>
+                                                                <i class="mdi mdi-close delete-icon"></i>
+                                                                <span class="delete-loading" style="display: none;">
+                                                                    <i class="mdi mdi-loading mdi-spin"></i>
+                                                                </span>
                                                                 <span class="sr-only">Delete todo</span>
                                                             </a>
                                                        </div>
@@ -102,16 +111,38 @@
                                                                                                     
 <script>
      $('.done').click(function() {
-          // console.log($(this).data('id'));
-          $.post($SCRIPT_ROOT + $(this).data('id') + '/done', {
+          var $button = $(this);
+          var $icon = $button.find('.done-icon');
+          var $loading = $button.find('.done-loading');
+          
+          // Show loading state
+          $icon.hide();
+          $loading.show();
+          $button.prop('disabled', true);
+          
+          $.post($SCRIPT_ROOT + $button.data('id') + '/done', {
             '_csrf_token': '{{ csrf_token() }}'
           },
           function(data){
                window.location.href = "{{ url_for('list', id='today') }}";
+          }).fail(function() {
+               // Hide loading state on error
+               $icon.show();
+               $loading.hide();
+               $button.prop('disabled', false);
           });
      })
 
      $('.edit').click(function() {
+          var $button = $(this);
+          var $icon = $button.find('.edit-icon');
+          var $loading = $button.find('.edit-loading');
+          
+          // Show loading state
+          $icon.hide();
+          $loading.show();
+          $button.prop('disabled', true);
+          
           $.post('/' + $(this).data('id') + '/todo', {
             '_csrf_token': '{{ csrf_token() }}'
           },
@@ -121,10 +152,29 @@
                $("input[name='todo_id']").val(data['id']);
                simplemde.value(data['activities']);
                console.log(data)
+               
+               // Hide loading state after modal is shown
+               $icon.show();
+               $loading.hide();
+               $button.prop('disabled', false);
+          }).fail(function() {
+               // Hide loading state on error
+               $icon.show();
+               $loading.hide();
+               $button.prop('disabled', false);
           });
      })
 
      $('.close-todo').click(function() {
+          var $button = $(this);
+          var $icon = $button.find('.delete-icon');
+          var $loading = $button.find('.delete-loading');
+          
+          // Show loading state
+          $icon.hide();
+          $loading.show();
+          $button.prop('disabled', true);
+          
           let title = '{{ title }}'
           $.post('/' + $(this).data('id') + '/delete', {
             '_csrf_token': '{{ csrf_token() }}'
@@ -134,6 +184,11 @@
                     window.location.href = "{{ url_for('list', id='today') }}";
                else
                     window.location.href = "{{ url_for('list', id='tomorrow') }}";
+          }).fail(function() {
+               // Hide loading state on error
+               $icon.show();
+               $loading.hide();
+               $button.prop('disabled', false);
           });
      })
      // reset value
@@ -187,9 +242,16 @@
           let schedule_day = $('input[name="schedule_day"]:checked').val();
           let custom_date = $('#custom_date').val();
           
-          console.log(title, schedule_day, custom_date);
-          
           if(title) {
+               var $button = $(this);
+               var $icon = $button.find('.create-icon');
+               var $loading = $button.find('.create-loading');
+               
+               // Show loading state
+               $icon.hide();
+               $loading.show();
+               $button.prop('disabled', true);
+               
                $.post('/add', {
                     '_csrf_token': '{{ csrf_token() }}',
                     'todo_id': todo_id ? todo_id:'',
@@ -210,6 +272,11 @@
                     } else {
                          window.location.href = "{{ url_for('list', id='today') }}";
                     }
+               }).fail(function() {
+                    // Hide loading state on error
+                    $icon.show();
+                    $loading.hide();
+                    $button.prop('disabled', false);
                });
           }
           else
