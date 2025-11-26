@@ -266,7 +266,7 @@ def init_default_data():
         traceback.print_exc()
 
 # Initialize data once when app starts
-init_default_data()  # ENABLED AFTER SUCCESSFUL NEW MIGRATION
+# init_default_data()  # DISABLED - moved to app startup hook
 
 @app.route('/')
 def root():

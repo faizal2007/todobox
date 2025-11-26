@@ -63,4 +63,50 @@ cli.create_cli(app)
 
 from app import routes, models, utils
 
+# Initialize default data when app starts (not during import)
+_initialized = False
+
+def initialize_default_data():
+    """Initialize default data on first request, not during import"""
+    global _initialized
+    if _initialized:
+        return
+    
+    try:
+        # Check if tables exist before querying - use try/except for robustness
+        try:
+            user_count = models.User.query.count()
+        except Exception:
+            print("⚠️  User table not accessible, skipping data initialization")
+            return
+            
+        try:
+            status_count = models.Status.query.count()
+        except Exception:
+            print("⚠️  Status table not accessible, skipping data initialization")
+            return
+
+        # Check and seed users if none exist
+        if user_count == 0:
+            models.User.seed()
+
+        # Always check and seed status records - be more robust
+        if status_count == 0:
+            models.Status.seed()
+            db.session.commit()  # type: ignore[attr-defined]
+        
+        _initialized = True
+        print("✅ Default data initialized successfully")
+        
+    except Exception as e:
+        print(f"ERROR: Failed to initialize default data: {e}")
+        # Don't let this crash the app, but log the error
+        import traceback
+        traceback.print_exc()
+
+@app.before_request
+def ensure_initialized():
+    """Ensure default data is initialized on first request"""
+    initialize_default_data()
+
 
