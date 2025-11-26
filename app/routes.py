@@ -254,9 +254,7 @@ def init_default_data():
             Status.seed()
 
 # Initialize data once when app starts
-init_default_data()
-
-@app.route('/')
+    init_default_data()  # ENABLED AFTER SUCCESSFUL NEW MIGRATION@app.route('/')
 @app.route('/index')
 def index():
     return redirect(url_for('dashboard'))
