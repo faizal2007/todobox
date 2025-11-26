@@ -26,6 +26,12 @@ def upgrade():
     with op.batch_alter_table('status', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_status_name'), ['name'], unique=False)
 
+    # Seed status table
+    op.execute("INSERT INTO status (id, name) VALUES (5, 'new')")
+    op.execute("INSERT INTO status (id, name) VALUES (6, 'done')")
+    op.execute("INSERT INTO status (id, name) VALUES (7, 'failed')")
+    op.execute("INSERT INTO status (id, name) VALUES (8, 're-assign')")
+
     op.create_table('user',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('username', sa.String(length=64), nullable=True),

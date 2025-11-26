@@ -157,10 +157,10 @@ class Status(db.Model): # type: ignore[attr-defined]
 
     @classmethod
     def seed(cls):
-        db.session.add(Status(name='new')) # type: ignore[attr-defined]
-        db.session.add(Status(name='done')) # type: ignore[attr-defined]
-        db.session.add(Status(name='failed')) # type: ignore[attr-defined]
-        db.session.add(Status(name='re-assign')) # type: ignore[attr-defined]
+        db.session.add(Status(id=5, name='new')) # type: ignore[attr-defined]
+        db.session.add(Status(id=6, name='done')) # type: ignore[attr-defined]
+        db.session.add(Status(id=7, name='failed')) # type: ignore[attr-defined]
+        db.session.add(Status(id=8, name='re-assign')) # type: ignore[attr-defined]
         db.session.commit() # type: ignore[attr-defined]
 
     def __repr__(self):

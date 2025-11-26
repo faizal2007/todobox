@@ -372,7 +372,7 @@ def dashboard():
     
     # Calculate average re-assignments before completion  
     # We already have the completion data from our loop above
-    completed_todos_count = chart_segments['done']
+    completed_todos_count = chart_segments.get('done', 0)
     
     if completed_todos_count > 0:
         reassignment_stats['avg_reassignments_before_completion'] = round(
