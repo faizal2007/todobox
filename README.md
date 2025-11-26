@@ -93,26 +93,142 @@ mysandbox/
 
 ## API Endpoints
 
-### Authentication
+All API endpoints return **JSON** responses and require Bearer token authentication (except `/api/quote`).
 
-- `POST /api/auth/token` - Generate API token (requires session auth)
+### Authentication & Token Management
+
+#### Generate API Token
+
+```http
+POST /api/auth/token
+Authorization: Bearer <session-based or valid API token>
+```
+
+**Response (201 Created):**
+
+```json
+{
+  "token": "9IXlqQjNYjk5xfhfmOKWGDWh6PTnY9g1",
+  "message": "API token generated successfully. Keep this token secure!"
+}
+```
 
 ### Todo Management
 
-- `GET /api/todo` - Fetch all todos (requires API token)
-- `POST /api/todo` - Create new todo (requires API token)
-- `PUT /api/todo/<id>` - Update todo (requires API token)
-- `DELETE /api/todo/<id>` - Delete todo (requires API token)
+#### List All Todos
+
+```http
+GET /api/todo
+Authorization: Bearer YOUR_API_TOKEN
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "todos": [
+    {
+      "id": 1,
+      "title": "Buy groceries",
+      "details": "Milk, eggs, bread",
+      "status": "pending",
+      "created_at": "2025-11-26T06:49:12",
+      "modified_at": "2025-11-26T06:49:12"
+    }
+  ]
+}
+```
+
+#### Create New Todo
+
+```http
+POST /api/todo
+Authorization: Bearer YOUR_API_TOKEN
+Content-Type: application/json
+
+{
+  "title": "New Task",
+  "details": "Optional task details (supports Markdown)"
+}
+```
+
+**Response (201 Created):**
+
+```json
+{
+  "id": 25,
+  "title": "New Task",
+  "details": "Optional task details",
+  "status": "pending",
+  "created_at": "2025-11-26T06:49:12",
+  "modified_at": "2025-11-26T06:49:12"
+}
+```
+
+#### Update Todo
+
+```http
+PUT /api/todo/<id>
+Authorization: Bearer YOUR_API_TOKEN
+Content-Type: application/json
+
+{
+  "title": "Updated title",
+  "details": "Updated details",
+  "status": "done"
+}
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "id": 25,
+  "title": "Updated title",
+  "details": "Updated details",
+  "status": "done",
+  "created_at": "2025-11-26T06:49:12",
+  "modified_at": "2025-11-26T07:15:33"
+}
+```
+
+#### Delete Todo
+
+```http
+DELETE /api/todo/<id>
+Authorization: Bearer YOUR_API_TOKEN
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "message": "Todo deleted successfully"
+}
+```
 
 ### Wisdom Quotes
 
-- `GET /api/quote` - Fetch random wisdom quote (public)
+#### Get Random Quote
 
-### User Interface
+```http
+GET /api/quote
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "quote": "Stay focused"
+}
+```
+
+### Web Interface Routes
 
 - `GET /settings` - Settings page (password change and API token management)
 - `GET /account` - Account information management
-- `GET /setup` - Interactive setup wizard
+- `GET /dashboard` - Dashboard with statistics
+- `GET /list/<date>` - Todo list for specific date (today/tomorrow)
 
 ## Configuration
 
@@ -204,4 +320,6 @@ See [CHANGELOG.md](CHANGELOG.md) for all recent changes including:
 
 ## License
 
-This project is provided as-is for educational and personal use.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+You are free to use, modify, and distribute this software for any purpose, including commercial use, as long as you include the original copyright notice and license terms.
