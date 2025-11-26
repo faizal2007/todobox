@@ -5,6 +5,34 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - Database Integrity & Deployment Fixes - 2025-11-26
+
+### 1.3.1 - Fixed
+
+- **CRITICAL**: Foreign key constraint errors when saving todos due to mismatched status IDs
+- **CRITICAL**: Migration script failures when database tables don't exist yet
+- KeyError in dashboard route when no completed todos exist (chart_segments['done'])
+- Flask server binding to localhost only, preventing network access
+- Database seeding creating status records with wrong auto-incremented IDs (1-4 instead of 5-8)
+
+### 1.3.1 - Changed
+
+- Updated status table seeding to use explicit IDs (5=new, 6=done, 7=failed, 8=re-assign)
+- Made database initialization more defensive with try/except blocks for missing tables
+- Moved all markdown documentation files to `docs/` folder (keeping README and CHANGELOG in root)
+- Configured Flask to bind to specific IP address (192.168.1.112:5000) for network access
+- Temporarily disabled Google OAuth routes due to missing google-auth dependency
+- Added data seeding to migration script for reliable initial data setup
+
+### 1.3.1 - Technical Implementation
+
+- Status.seed() method now uses explicit ID assignment instead of auto-increment
+- Migration script includes status table seeding with correct IDs
+- Dashboard route uses safe dictionary access (chart_segments.get('done', 0))
+- Flask environment configured with BIND_ADDRESS and PORT variables
+- Project structure reorganized with docs/ folder for documentation
+- Defensive database queries prevent crashes during app initialization
+
 ## [1.3.0] - Project Rename (MySandbox → TodoBox) - 2025-11-26
 
 ### 1.3.0 - Changed

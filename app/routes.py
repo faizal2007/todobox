@@ -549,7 +549,7 @@ def view(todo):
         records = []
         all_todos = Todo.query.filter_by(user_id=current_user.id).order_by(Todo.modified.desc()).all()
         for t in all_todos:
-            latest_tracker = Tracker.query.filter_by(todo_id=t.id).order_by(Tracker.timestamp.desc()).first()
+            latest_tracker = Tracker.query.filter_by(todo_id=t.id).order_by(Tracker.timestamp.desc()).first() # pyright: ignore[reportAttributeAccessIssue]
             if latest_tracker and latest_tracker.status_id != 5:  # Not new
                 records.append(t)
     elif todo == 'done':
@@ -557,7 +557,7 @@ def view(todo):
         records = []
         all_todos = Todo.query.filter_by(user_id=current_user.id).order_by(Todo.modified.desc()).all()
         for t in all_todos:
-            latest_tracker = Tracker.query.filter_by(todo_id=t.id).order_by(Tracker.timestamp.desc()).first()
+            latest_tracker = Tracker.query.filter_by(todo_id=t.id).order_by(Tracker.timestamp.desc()).first() # pyright: ignore[reportAttributeAccessIssue]
             if latest_tracker and latest_tracker.status_id == 6:  # Done
                 records.append(t)
     else:
