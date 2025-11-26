@@ -392,7 +392,7 @@ def dashboard():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('list', id='today'))
+        return redirect(url_for('dashboard'))
     form = LoginForm()
     
     try:
@@ -404,7 +404,7 @@ def login():
             login_user(user, remember=form.remember_me.data)
             next_page = request.args.get('next')
             if not next_page or url_parse(next_page).netloc != '':
-                next_page = url_for('list', id='today')
+                next_page = url_for('dashboard')
             return redirect(next_page)
     except Exception as e:
         if 'csrf' in str(e).lower():
@@ -455,10 +455,10 @@ def oauth_callback_google():
         next_page = url_for('account')  # Redirect to account page to complete profile
     else:
         flash(f'Welcome back, {user.username}!', 'success')
-        next_page = request.args.get('next') or url_for('list', id='today')
+        next_page = request.args.get('next') or url_for('dashboard')
     
     if not next_page or url_parse(next_page).netloc != '':
-        next_page = url_for('list', id='today')
+        next_page = url_for('dashboard')
     
     return redirect(next_page)
 
@@ -472,11 +472,7 @@ def account():
             user = User.query.filter_by(id=current_user.id).first()
             updates = []
             
-            # Check and update username
-            if not user.check_username(form.username.data):
-                user.username = form.username.data
-                updates.append('Username')
-            
+            # Username changes are disabled
             # Check and update email
             if not user.check_email(form.email.data):
                 user.email = form.email.data

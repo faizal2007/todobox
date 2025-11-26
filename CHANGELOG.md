@@ -5,6 +5,41 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - UI/UX Enhancements & Account Security - 2025-11-27
+
+### 1.3.2 - Added
+
+- Loading indicators for all AJAX operations (done, edit, delete, create todo actions)
+- Visual feedback with spinning Material Design Icons during async operations
+- Button state management to prevent double-clicks during requests
+- Error handling for failed AJAX requests with loading state reversion
+
+### 1.3.2 - Changed
+
+- Login success redirect now goes to dashboard instead of today list (both regular login and OAuth)
+- Improved post-login user experience with comprehensive dashboard overview
+- Username field in account settings is now read-only (usernames cannot be changed)
+- Added informative message explaining username immutability
+
+### 1.3.2 - Fixed
+
+- Font loading issues with Lemon Tuesday font face declarations
+- Logo positioning and sizing in navigation header
+- UI styling enhancements with improved shadows and highlights
+- Cloudflare beacon script blocking investigation (confirmed browser-level blocking, not application issue)
+
+### 1.3.2 - Security
+
+- Disabled username changes to prevent potential account confusion and conflicts
+- Maintained immutable usernames for consistent user identification
+
+### 1.3.2 - User Experience
+
+- Enhanced loading states provide clear feedback during todo operations
+- Dashboard-first login experience gives users immediate productivity overview
+- Professional UI improvements with consistent styling and visual hierarchy
+- Prevented accidental multiple submissions with button disabling during requests
+
 ## [1.3.1] - Database Integrity & Deployment Fixes - 2025-11-26
 
 ### 1.3.1 - Fixed
