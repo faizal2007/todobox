@@ -1,4 +1,4 @@
-# MySandbox
+# TodoBox
 
 A Flask-based personal task management application with wisdom quotes, user authentication, and multi-database support.
 
