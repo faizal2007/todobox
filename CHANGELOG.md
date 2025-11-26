@@ -1,8 +1,13 @@
-# Changelog - TodoBox
+# Changelog
+
+All notable changes to TodoBox will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.3.0] - Project Rename (MySandbox → TodoBox) - 2025-11-26
 
-### Changed in 1.3.0
+### 1.3.0 - Changed
 
 - Renamed project from "MySandbox" to "TodoBox" for better clarity and brand alignment
 - Updated all documentation to reflect new project name
@@ -10,27 +15,25 @@
 - Updated configuration examples and database references
 - Updated project structure documentation
 
-### Notes in 1.3.0
+### 1.3.0 - Notes
 
 - All functionality remains unchanged
 - This is a naming/branding update only
 
----
-
 ## [1.2.0] - Performance & Font Optimization - 2025-11-26
 
-### Added in 1.2.0
+### 1.2.0 - Added
 
 - `.vscode/settings.json` - VSCode configuration to suppress harmless Jinja2 linting errors in HTML files
 
-### Changed in 1.2.0
+### 1.2.0 - Changed
 
 - Optimized font loading strategy with lazy-loading for Google Fonts
 - Replaced custom font dependencies with system fonts (Segoe UI fallback)
 - Updated script tag syntax for modern JavaScript compatibility
 - Removed font preload directives that were blocking page rendering
 
-### Fixed in 1.2.0
+### 1.2.0 - Fixed
 
 - **CRITICAL**: Slow network warnings from blocking font preload on `main.html`
 - Malformed `@font-face` CSS rules with duplicate font-family declarations
@@ -38,18 +41,16 @@
 - VSCode property assignment errors in base.html template
 - Font loading strategy now uses async loading with `media="print" onload`
 
-### Performance Improvements in 1.2.0
+### 1.2.0 - Performance Improvements
 
 - Eliminated render-blocking font resources
 - Page now renders instantly with system fonts while custom fonts load in background
 - Improved Largest Contentful Paint (LCP) Core Web Vital
 - No more "slow network detected" browser warnings
 
----
-
 ## [1.1.0] - API Authentication & CSRF Fixes - 2025-11-26
 
-### Added in 1.1.0
+### 1.1.0 - Added
 
 - API Token Authentication System for Bearer token-based requests
 - `/api/todo` endpoints for CRUD operations (GET, POST, PUT, DELETE) via API
@@ -58,13 +59,13 @@
 - Flask-Login `unauthorized_handler` to return JSON 401 for API requests instead of HTML redirects
 - CSRF exemption for all API endpoints (`@csrf.exempt` decorator)
 
-### Changed in 1.1.0
+### 1.1.0 - Changed
 
 - Simplified `/api/quote` route to use only local quotes (removed external ZenQuotes API calls that caused server crashes)
 - API routes now return proper JSON responses for all authentication/authorization errors
 - CSRF validation errors now return JSON for API requests, HTML redirects for web routes
 
-### Fixed in 1.1.0
+### 1.1.0 - Fixed
 
 - **CRITICAL**: Flask server crashing when POST requests came to `/api/quote` endpoint
 - CSRF protection preventing valid API token-authenticated requests from working
@@ -72,7 +73,7 @@
 - Bearer token authentication not working for POST/PUT/DELETE API methods
 - `Connection refused` errors due to server crashes during CSRF validation on API routes
 
-### Technical Implementation in 1.1.0
+### 1.1.0 - Technical Implementation
 
 - Added `@csrf.exempt` decorator to all API routes to skip CSRF token validation
 - Implemented Flask-Login's `unauthorized_handler` to differentiate API vs web authentication errors
@@ -80,11 +81,9 @@
 - User model now includes `api_token` field and `generate_api_token()` method
 - All API responses use `jsonify()` for proper JSON formatting
 
----
-
 ## [1.0.0] - Initial Release with Quotes & UI - 2025-11-26
 
-### Initial Features
+### 1.0.0 - Added
 
 - Wisdom Quotes Integration with ZenQuotes API and local fallback
 - Gravatar user avatars with identicon fallback
@@ -101,7 +100,7 @@
 - Todo cards reorganized into responsive grid (col-md-4 col-lg-3)
 - Removed `.env.example` to eliminate config duplication
 
-### Initial Bug Fixes
+### 1.0.0 - Fixed
 
 - CORS policy errors by moving API calls to server-side
 - JavaScript null reference errors for current-date element
