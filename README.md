@@ -2,20 +2,6 @@
 
 A Flask-based personal task management application with wisdom quotes, user authentication, and multi-database support.
 
-## Screenshots
-
-### Login
-![Login](docs/screenshots/login.png)
-
-### Dashboard
-![Dashboard](docs/screenshots/dashboard.png)
-
-### Save Todo
-![Save Todo](docs/screenshots/save-todo.png)
-
-### Delete Todo
-![Delete Todo](docs/screenshots/delete-todo.png)
-
 ## Quick Start
 
 ```bash
@@ -73,6 +59,19 @@ python3 -c "from app.config import generate_salt; print(generate_salt())"  # Gen
 # Production
 gunicorn -w 4 todobox:app  # Start with Gunicorn
 ```
+
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[OVERVIEW.md](docs/OVERVIEW.md)** - Project overview, features, and architecture
+- **[SETUP.md](docs/SETUP.md)** - Complete installation and configuration guide
+- **[QUICKSTART.md](docs/QUICKSTART.md)** - Quick reference with commands and API examples
+- **[API.md](docs/API.md)** - Full API reference with all endpoints and parameters
+- **[MODELS.md](docs/MODELS.md)** - Database schema and model documentation
+- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Deployment options and maintenance guide
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture and design patterns
+- **[SECURITY_PATCHES.md](docs/SECURITY_PATCHES.md)** - Security improvements and patches applied
 
 ## Project Structure
 
