@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers creating users for the MySandbox application on first-time
+This guide covers creating users for the TodoBox application on first-time
 setup. There are **three methods** available:
 
 1. **Interactive Python Script** (Recommended for first-time setup)
@@ -46,7 +46,7 @@ python3 create_user.py
 $ python3 create_user.py
 
 ============================================================
-  MySandbox - First Time User Creation
+  TodoBox - First Time User Creation
 ============================================================
 
 Creating ADMIN user (first-time setup)
@@ -153,7 +153,7 @@ flask create-user
 $ flask create-user
 
 ============================================================
-  MySandbox - User Creation
+  TodoBox - User Creation
 ============================================================
 
 Username: alice
@@ -249,7 +249,7 @@ Username: bob
 
 ```bash
 # Open database
-sqlite3 instance/mysandbox.db
+sqlite3 instance/todobox.db
 
 # Create user
 sqlite> INSERT INTO "user" (username, email, password_hash) 
@@ -457,7 +457,7 @@ python3 create_user.py
 # Check file permissions
 ls -la instance/
 chmod 755 instance/
-chmod 644 instance/mysandbox.db
+chmod 644 instance/todobox.db
 
 # Or for directory:
 chmod 755 migrations/versions/

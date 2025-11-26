@@ -140,13 +140,13 @@ elif app.config['DATABASE_DEFAULT'] == 'postgres':
     connect_db('postgres', app)        # Use PostgreSQL
 else:
     # SQLite fallback (default if DATABASE_DEFAULT not set)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/mysandbox.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/todobox.db'
 ```
 
 ### SQLite Configuration
 
 - **Default** choice for development
-- Database file: `instance/mysandbox.db`
+- Database file: `instance/todobox.db`
 - **No setup required** - database created automatically on first migration
 - Ideal for: Learning, testing, single-user development
 - Instance folder created automatically when using SQLite
@@ -179,9 +179,9 @@ DB_NAME=shimasu_db
 ```bash
 DATABASE_DEFAULT=postgres
 DB_URL=localhost
-DB_USER=mysandbox
+DB_USER=todobox
 DB_PASSWORD=password
-DB_NAME=mysandbox
+DB_NAME=todobox
 ```
 
 ### Instance Folder Status
@@ -204,7 +204,7 @@ DB_NAME=mysandbox
 ## File Structure & Responsibilities
 
 ```text
-mysandbox/
+todobox/
 ├── app/
 │   ├── __init__.py              # App factory, configuration
 │   │   ├── Create Flask app instance
@@ -259,7 +259,7 @@ mysandbox/
 │   ├── env.py                  # Migration environment
 │   └── versions/               # Migration scripts
 │
-├── mysandbox.py                 # Application entry point
+├── todobox.py                   # Application entry point
 ├── requirements.txt             # Python dependencies
 ├── .flaskenv.example            # Environment template
 └── docs/                        # Documentation
@@ -445,7 +445,7 @@ Final Configuration
    │     └─ lib/database.py builds PostgreSQL URI
    │
    └─ If 'sqlite':
-      └─ Build SQLite URI to instance/mysandbox.db
+      └─ Build SQLite URI to instance/todobox.db
 
 2. SQLAlchemy initializes connection pool
 

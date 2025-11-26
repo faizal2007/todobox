@@ -60,14 +60,14 @@ sudo apt-get install python3 python3-pip python3-venv mysql-server nginx
 1. **Create Application User**
 
    ```bash
-   sudo useradd -m -s /bin/bash mysandbox
-   sudo -u mysandbox mkdir -p /var/www/mysandbox
+   sudo useradd -m -s /bin/bash todobox
+   sudo -u todobox mkdir -p /var/www/todobox
    ```
 
 2. **Clone Repository**
 
    ```bash
-   cd /var/www/mysandbox
+   cd /var/www/todobox
    git clone <repository-url> .
    ```
 
@@ -90,17 +90,17 @@ sudo apt-get install python3 python3-pip python3-venv mysql-server nginx
 5. **Create Systemd Service**
 
    ```bash
-   sudo tee /etc/systemd/system/mysandbox.service > /dev/null << EOF
+   sudo tee /etc/systemd/system/todobox.service > /dev/null << EOF
    [Unit]
-   Description=MySandbox Flask Application
+   Description=TodoBox Flask Application
    After=network.target
 
    [Service]
    Type=notify
-   User=mysandbox
-   WorkingDirectory=/var/www/mysandbox
-   Environment="PATH=/var/www/mysandbox/venv/bin"
-   ExecStart=/var/www/mysandbox/venv/bin/gunicorn -w 4 -b 127.0.0.1:9191 mysandbox:app
+   User=todobox
+   WorkingDirectory=/var/www/todobox
+   Environment="PATH=/var/www/todobox/venv/bin"
+   ExecStart=/var/www/todobox/venv/bin/gunicorn -w 4 -b 127.0.0.1:9191 todobox:app
    Restart=always
    RestartSec=5s
 
@@ -109,14 +109,14 @@ sudo apt-get install python3 python3-pip python3-venv mysql-server nginx
    EOF
 
    sudo systemctl daemon-reload
-   sudo systemctl enable mysandbox
-   sudo systemctl start mysandbox
+   sudo systemctl enable todobox
+   sudo systemctl start todobox
    ```
 
 6. **Configure Nginx**
 
    ```bash
-   sudo tee /etc/nginx/sites-available/mysandbox > /dev/null << 'EOF'
+   sudo tee /etc/nginx/sites-available/todobox > /dev/null << 'EOF'
    server {
        listen 80;
        server_name yourdomain.com;
@@ -130,12 +130,12 @@ sudo apt-get install python3 python3-pip python3-venv mysql-server nginx
        }
 
        location /static/ {
-           alias /var/www/mysandbox/app/static/;
+           alias /var/www/todobox/app/static/;
        }
    }
    EOF
 
-   sudo ln -s /etc/nginx/sites-available/mysandbox /etc/nginx/sites-enabled/
+   sudo ln -s /etc/nginx/sites-available/todobox /etc/nginx/sites-enabled/
    sudo nginx -t
    sudo systemctl restart nginx
    ```
@@ -150,7 +150,7 @@ sudo apt-get install python3 python3-pip python3-venv mysql-server nginx
 8. **Initialize Database**
 
    ```bash
-   cd /var/www/mysandbox
+   cd /var/www/todobox
    source venv/bin/activate
    flask db upgrade
    ```
@@ -183,11 +183,11 @@ RUN mkdir -p instance
 EXPOSE 9191
 
 # Set environment variables
-ENV FLASK_APP=mysandbox.py
+ENV FLASK_APP=todobox.py
 ENV FLASK_ENV=production
 
 # Run application
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:9191", "mysandbox:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:9191", "todobox:app"]
 ```
 
 #### docker-compose.yml
@@ -200,8 +200,8 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: mysandbox
-      MYSQL_USER: mysandbox
+      MYSQL_DATABASE: todobox
+      MYSQL_USER: todobox
       MYSQL_PASSWORD: dbpassword
     volumes:
       - db_data:/var/lib/mysql
@@ -213,9 +213,9 @@ services:
     environment:
       DATABASE_DEFAULT: mysql
       DB_URL: db
-      DB_USER: mysandbox
+      DB_USER: todobox
       DB_PW: dbpassword
-      DB_NAME: mysandbox
+      DB_NAME: todobox
       SECRET_KEY: your-secret-key
     ports:
       - "9191:9191"
@@ -225,7 +225,7 @@ services:
       - ./instance:/app/instance
     command: >
       sh -c "flask db upgrade &&
-             gunicorn -w 4 -b 0.0.0.0:9191 mysandbox:app"
+             gunicorn -w 4 -b 0.0.0.0:9191 todobox:app"
 
 volumes:
   db_data:
@@ -253,7 +253,7 @@ docker-compose up -d
 
 ```bash
 # Create Procfile
-echo "web: gunicorn mysandbox:app" > Procfile
+echo "web: gunicorn todobox:app" > Procfile
 
 # Create runtime.txt
 echo "python-3.9.10" > runtime.txt
@@ -326,7 +326,7 @@ if not app.debug and not app.testing:
     if not os.path.exists('logs'):
         os.mkdir('logs')
     file_handler = RotatingFileHandler(
-        'logs/mysandbox.log', maxBytes=10240000, backupCount=10
+        'logs/todobox.log', maxBytes=10240000, backupCount=10
     )
     file_handler.setFormatter(logging.Formatter(
         '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
@@ -334,7 +334,7 @@ if not app.debug and not app.testing:
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
-    app.logger.info('MySandbox startup')
+    app.logger.info('TodoBox startup')
 ```
 
 ### Key Metrics to Monitor
@@ -374,30 +374,30 @@ Setup alerts for:
 
 ```bash
 # Full backup
-mysqldump -u mysandbox -p mysandbox > backup_$(date +%Y%m%d).sql
+mysqldump -u todobox -p todobox > backup_$(date +%Y%m%d).sql
 
 # Compressed backup
-mysqldump -u mysandbox -p mysandbox | gzip > backup_$(date +%Y%m%d).sql.gz
+mysqldump -u todobox -p todobox | gzip > backup_$(date +%Y%m%d).sql.gz
 
 # Automated daily backup
-0 2 * * * mysqldump -u mysandbox -p'password' mysandbox | \
-    gzip > /backups/mysandbox_$(date +\%Y\%m\%d).sql.gz
+0 2 * * * mysqldump -u todobox -p'password' todobox | \
+    gzip > /backups/todobox_$(date +\%Y\%m\%d).sql.gz
 ```
 
 **Database Restore:**
 
 ```bash
-mysql -u mysandbox -p mysandbox < backup_20240115.sql
+mysql -u todobox -p todobox < backup_20240115.sql
 ```
 
 ### Application Backup
 
 ```bash
 # Backup application code
-tar -czf app_backup_$(date +%Y%m%d).tar.gz /var/www/mysandbox
+tar -czf app_backup_$(date +%Y%m%d).tar.gz /var/www/todobox
 
 # Backup instance data
-tar -czf instance_backup_$(date +%Y%m%d).tar.gz /var/www/mysandbox/instance
+tar -czf instance_backup_$(date +%Y%m%d).tar.gz /var/www/todobox/instance
 ```
 
 ### Backup Schedule
@@ -411,16 +411,16 @@ tar -czf instance_backup_$(date +%Y%m%d).tar.gz /var/www/mysandbox/instance
 
 ```bash
 # 1. Restore database
-mysql -u mysandbox -p mysandbox < backup_20240115.sql.gz
+mysql -u todobox -p todobox < backup_20240115.sql.gz
 
 # 2. Restore application
-tar -xzf app_backup_20240115.tar.gz -C /var/www/mysandbox
+tar -xzf app_backup_20240115.tar.gz -C /var/www/todobox
 
 # 3. Verify application
-systemctl restart mysandbox
+systemctl restart todobox
 
 # 4. Check logs
-tail -f /var/log/syslog | grep mysandbox
+tail -f /var/log/syslog | grep todobox
 ```
 
 ## Performance Optimization
@@ -489,28 +489,28 @@ Database
 
 ```bash
 # Check systemd status
-sudo systemctl status mysandbox
+sudo systemctl status todobox
 
 # View logs
-sudo journalctl -u mysandbox -n 50
+sudo journalctl -u todobox -n 50
 
 # Manual start for errors
-cd /var/www/mysandbox
+cd /var/www/todobox
 source venv/bin/activate
-python mysandbox.py
+python todobox.py
 ```
 
 ### Database Connection Error
 
 ```bash
 # Test connection
-mysql -u mysandbox -p -h localhost mysandbox
+mysql -u todobox -p -h localhost todobox
 
 # Check environment variables
 grep DATABASE .flaskenv
 
 # Verify database user permissions
-SHOW GRANTS FOR 'mysandbox'@'localhost';
+SHOW GRANTS FOR 'todobox'@'localhost';
 ```
 
 ### High Memory Usage
@@ -557,10 +557,10 @@ pip install --upgrade package-name
 
 ```bash
 # Check for failed logins
-grep "Invalid username" /var/log/mysandbox.log
+grep "Invalid username" /var/log/todobox.log
 
 # Check for brute force attempts
-grep "login" /var/log/mysandbox.log | grep -c failed
+grep "login" /var/log/todobox.log | grep -c failed
 ```
 
 ## Upgrade Procedure
@@ -576,13 +576,13 @@ grep "login" /var/log/mysandbox.log | grep -c failed
 
 ```bash
 # 1. Stop application
-sudo systemctl stop mysandbox
+sudo systemctl stop todobox
 
 # 2. Backup
-tar -czf backup_$(date +%Y%m%d).tar.gz /var/www/mysandbox
+tar -czf backup_$(date +%Y%m%d).tar.gz /var/www/todobox
 
 # 3. Pull latest code
-cd /var/www/mysandbox
+cd /var/www/todobox
 git pull origin main
 
 # 4. Update dependencies
@@ -593,7 +593,7 @@ pip install -r requirements.txt
 flask db upgrade
 
 # 6. Restart application
-sudo systemctl start mysandbox
+sudo systemctl start todobox
 
 # 7. Verify
 curl http://127.0.0.1:9191

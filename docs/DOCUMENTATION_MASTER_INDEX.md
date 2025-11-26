@@ -1,4 +1,4 @@
-# MySandbox Complete Documentation Index
+# TodoBox Complete Documentation Index
 
 **Last Updated:** November 26, 2025  
 **Version:** 1.1  
@@ -8,7 +8,7 @@
 
 ## 📚 Documentation Complete
 
-This documentation suite provides **comprehensive coverage** of the MySandbox Flask application, including:
+This documentation suite provides **comprehensive coverage** of the TodoBox Flask application, including:
 
 - ✅ Setup and installation guides
 - ✅ API reference and endpoint documentation
@@ -594,4 +594,4 @@ docs/
 
 👉 **Start with:** `README.md`
 
-Good luck with MySandbox! 🚀
+Good luck with TodoBox! 🚀

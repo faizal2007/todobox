@@ -1,6 +1,6 @@
-# MySandbox Documentation
+# TodoBox Documentation
 
-This documentation provides comprehensive information about the MySandbox
+This documentation provides comprehensive information about the TodoBox
 Flask application - a todo management system with user authentication
 and task tracking capabilities.
 

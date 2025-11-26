@@ -19,7 +19,7 @@ def create_cli(app):
         """Create a new user (interactive prompt)"""
         
         click.echo("\n" + "="*60)
-        click.echo("  MySandbox - User Creation".center(60))
+        click.echo("  TodoBox - User Creation".center(60))
         click.echo("="*60 + "\n")
         
         # Get username if not provided

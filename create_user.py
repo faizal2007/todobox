@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Interactive user creation script for MySandbox first-time setup
+Interactive user creation script for TodoBox first-time setup
 Usage: python3 create_user.py
 """
 
@@ -16,7 +16,7 @@ def main():
     """Interactive first-time user creation"""
     
     print("\n" + "="*60)
-    print("  MySandbox - First Time User Creation".center(60))
+    print("  TodoBox - First Time User Creation".center(60))
     print("="*60 + "\n")
     
     # Import Flask app here to ensure environment is loaded

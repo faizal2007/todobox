@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-MySandbox is a well-structured Flask learning project demonstrating good fundamentals in MVC architecture, user authentication, and database management. However, there are several areas for improvement regarding code quality, security, and maintainability.
+TodoBox is a well-structured Flask learning project demonstrating good fundamentals in MVC architecture, user authentication, and database management. However, there are several areas for improvement regarding code quality, security, and maintainability.
 
 ## Identified Issues
 
@@ -114,6 +114,7 @@ t.name = getTitle  # Could fail if todo doesn't exist
 ```
 
 **Recommendation:**
+
 ```python
 todo = Todo.query.filter_by(id=todo_id).first()
 if not todo:
@@ -163,6 +164,7 @@ def add(todo_id, status_id, timestamp=datetime.now()):
 **Issue:** Methods lack `@staticmethod` decorator, causing them to fail when called on class.
 
 **Recommendation:**
+
 ```python
 @staticmethod
 def add(todo_id, status_id, timestamp=None):
@@ -186,6 +188,7 @@ def add(todo_id, status_id, timestamp=datetime.now()):
 **Issue:** `datetime.now()` is evaluated once at function definition, not at each call.
 
 **Recommendation:**
+
 ```python
 @staticmethod
 def add(todo_id, status_id, timestamp=None):
@@ -209,9 +212,9 @@ def add(todo_id, status_id, timestamp=None):
 
 ---
 
-### 🟡 Minor Issues
+## 🟡 Minor Issues
 
-#### 10. Inconsistent String Formatting
+### 10. Inconsistent String Formatting
 
 **Location:** Throughout `app/routes.py`
 
@@ -227,13 +230,14 @@ f'{query_date} 00:00'  # f-string style
 
 ---
 
-#### 11. No Logging
+### 11. No Logging
 
 **Location:** Entire application
 
 **Issue:** No logging configured for debugging or monitoring.
 
 **Recommendation:**
+
 ```python
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -245,7 +249,7 @@ logger.info(f'User {user_id} logged in')
 
 ---
 
-#### 12. No Exception Handling in Route Handlers
+### 12. No Exception Handling in Route Handlers
 
 **Location:** `app/routes.py` - All route functions
 
@@ -300,7 +304,7 @@ Tracker.add(t.id, STATUS_NEW, tomorrow)
 
 ```python
 TITLE = 'My Sandbox'
-DATABASE_NAME = 'mysandbox.db'
+DATABASE_NAME = 'todobox.db'
 ```
 
 **Recommendation:** Move to environment variables for multi-environment support.
@@ -318,6 +322,7 @@ def getList(type, start, end):  # No type hints
 ```
 
 **Recommendation:**
+
 ```python
 from typing import List, Optional, Query as SQLQuery
 
@@ -344,24 +349,28 @@ def getList(type: str, start: str, end: str) -> SQLQuery:
 ## Recommended Fixes (Priority Order)
 
 ### Phase 1: Security (Immediate)
+
 1. Remove hardcoded secrets
 2. Add HTML sanitization for Markdown
 3. Validate unique username/email
 4. Add error handling for missing records
 
 ### Phase 2: Reliability (Short-term)
+
 1. Add @staticmethod decorators
 2. Fix mutable default arguments
 3. Add logging
 4. Add exception handling
 
 ### Phase 3: Code Quality (Medium-term)
+
 1. Add type hints
 2. Use constants for status IDs
 3. Add unit tests
 4. Consistent string formatting
 
 ### Phase 4: Enhancements (Long-term)
+
 1. Add logging framework
 2. Add caching
 3. API versioning
@@ -370,21 +379,25 @@ def getList(type: str, start: str, end: str) -> SQLQuery:
 ## Testing Recommendations
 
 ### Unit Tests Needed
+
 - User model methods (set_password, check_password)
 - Form validation (UpdateAccount, ChangePassword)
 - Todo retrieval logic (getList)
 
 ### Integration Tests Needed
+
 - Full login flow
 - Todo CRUD operations
 - Account management workflows
 
 ### Security Tests
+
 - CSRF token validation
 - SQL injection attempts
 - XSS payload handling
 
-### Example Test:
+### Example Test
+
 ```python
 import pytest
 from app import app, db
@@ -400,12 +413,14 @@ def test_user_set_password():
 ## Dependencies to Update
 
 ### Security Updates
+
 - `Werkzeug`: 2.3.6 → Latest
 - `Flask`: 2.3.2 → Latest
 - `SQLAlchemy`: 1.4.17 → 2.x (if compatible)
 
 ### Recommended Additions
-```
+
+```text
 bleach==6.0.0          # HTML sanitization
 python-validators==1.0 # Better validation
 gunicorn==21.0.0       # Production server
@@ -415,6 +430,7 @@ python-dotenv==1.0.0   # Environment variables
 ## Best Practices Applied
 
 ✅ **Good:**
+
 - MVC architecture pattern
 - SQLAlchemy ORM usage
 - Flask-Login for authentication
@@ -426,6 +442,7 @@ python-dotenv==1.0.0   # Environment variables
 ## Best Practices Missing
 
 ❌ **Improve:**
+
 - Input sanitization (especially HTML)
 - Type hints
 - Logging
@@ -437,4 +454,4 @@ python-dotenv==1.0.0   # Environment variables
 
 ## Conclusion
 
-MySandbox is a solid learning project with proper fundamentals. The main areas requiring attention are security (secrets, input sanitization) and code hygiene (type hints, logging, exception handling). The recommended fixes are prioritized by security impact and ease of implementation.
+TodoBox is a solid learning project with proper fundamentals. The main areas requiring attention are security (secrets, input sanitization) and code hygiene (type hints, logging, exception handling). The recommended fixes are prioritized by security impact and ease of implementation.

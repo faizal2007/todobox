@@ -48,7 +48,7 @@ Edit `.flaskenv` with your settings:
 
 ```bash
 # Flask Settings
-FLASK_APP=mysandbox.py
+FLASK_APP=todobox.py
 FLASK_ENV=development
 SECRET_KEY=your-secure-key-here
 SALT=your-secure-salt-here
@@ -92,7 +92,7 @@ flask run
 Or using the entry point:
 
 ```bash
-python mysandbox.py
+python todobox.py
 ```
 
 The application will be available at `http://127.0.0.1:9191`
@@ -104,7 +104,7 @@ The application will be available at `http://127.0.0.1:9191`
 No additional configuration needed. Database file will be created at:
 
 ```text
-instance/mysandbox.db
+instance/todobox.db
 ```
 
 ### MySQL
@@ -112,9 +112,9 @@ instance/mysandbox.db
 1. Create database and user:
 
    ```sql
-   CREATE DATABASE mysandbox;
-   CREATE USER 'mysandbox'@'localhost' IDENTIFIED BY 'password';
-   GRANT ALL PRIVILEGES ON mysandbox.* TO 'mysandbox'@'localhost';
+   CREATE DATABASE todobox;
+   CREATE USER 'todobox'@'localhost' IDENTIFIED BY 'password';
+   GRANT ALL PRIVILEGES ON todobox.* TO 'todobox'@'localhost';
    FLUSH PRIVILEGES;
    ```
 
@@ -123,9 +123,9 @@ instance/mysandbox.db
    ```bash
    DATABASE_DEFAULT=mysql
    DB_URL=localhost
-   DB_USER=mysandbox
+   DB_USER=todobox
    DB_PW=password
-   DB_NAME=mysandbox
+   DB_NAME=todobox
    ```
 
 1. Initialize database:
@@ -139,8 +139,8 @@ instance/mysandbox.db
 1. Create database and user:
 
    ```sql
-   CREATE USER mysandbox WITH PASSWORD 'password';
-   CREATE DATABASE mysandbox OWNER mysandbox;
+   CREATE USER todobox WITH PASSWORD 'password';
+   CREATE DATABASE todobox OWNER todobox;
    ```
 
 1. Configure `.flaskenv`:
@@ -148,9 +148,9 @@ instance/mysandbox.db
    ```bash
    DATABASE_DEFAULT=postgres
    DB_URL=localhost
-   DB_USER=mysandbox
+   DB_USER=todobox
    DB_PW=password
-   DB_NAME=mysandbox
+   DB_NAME=todobox
    ```
 
 1. Initialize database:
@@ -164,7 +164,7 @@ instance/mysandbox.db
 ### Using Gunicorn
 
 ```bash
-gunicorn -w 4 -b 0.0.0.0:9191 mysandbox:app
+gunicorn -w 4 -b 0.0.0.0:9191 todobox:app
 ```
 
 ### Configuration Options
@@ -227,7 +227,7 @@ flask db history
 
 ## Troubleshooting
 
-### "No such file or directory: instance/mysandbox.db"
+### "No such file or directory: instance/todobox.db"
 
 The instance directory is only needed for SQLite. If using MySQL/PostgreSQL:
 
@@ -248,10 +248,10 @@ Verify `.flaskenv` settings and database server is running:
 
 ```bash
 # For MySQL
-mysql -u mysandbox -p -h localhost mysandbox
+mysql -u todobox -p -h localhost todobox
 
 # For PostgreSQL
-psql -U mysandbox -h localhost mysandbox
+psql -U todobox -h localhost todobox
 ```
 
 ### Module Import Errors
@@ -300,7 +300,7 @@ If you need to reset the admin password, you can modify it in the database:
 
 ```bash
 # For SQLite
-sqlite3 instance/mysandbox.db
+sqlite3 instance/todobox.db
 SELECT * FROM "user" WHERE username='admin';
 
 # To reset, delete the admin user and let the app recreate it

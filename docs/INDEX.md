@@ -2,7 +2,7 @@
 
 ## Code Review & Documentation Complete ✅
 
-Comprehensive documentation for the MySandbox Flask application has been successfully created in the `/docs` folder.
+Comprehensive documentation for the TodoBox Flask application has been successfully created in the `/docs` folder.
 
 ---
 
@@ -524,7 +524,7 @@ A: Try [QUICKSTART.md](QUICKSTART.md)
 
 This documentation provides everything needed to:
 
-- Understand the MySandbox application
+- Understand the TodoBox application
 - Set it up for development and production
 - Deploy it to various environments
 - Maintain and monitor it

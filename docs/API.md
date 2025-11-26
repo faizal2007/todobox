@@ -2,11 +2,12 @@
 
 ## Overview
 
-MySandbox is a server-rendered Flask application that uses HTML forms and HTTP redirects for most operations. This document describes all available routes and endpoints.
+TodoBox is a server-rendered Flask application that uses HTML forms and HTTP redirects for most operations. This document describes all available routes and endpoints.
 
 ## Authentication Routes
 
 ### Login
+
 - **Route**: `GET/POST /login`
 - **Authentication**: None
 - **Description**: User login page and authentication
@@ -14,12 +15,13 @@ MySandbox is a server-rendered Flask application that uses HTML forms and HTTP r
   - `username` (required): User login username
   - `password` (required): User login password
   - `remember_me` (optional): Checkbox to remember login
-- **Response**: 
+- **Response**:
   - Success: Redirect to requested page or todo list
   - Failure: Flash message and redirect to login
 - **Status Code**: 302 (redirect)
 
 ### Logout
+
 - **Route**: `GET /logout`
 - **Authentication**: Required
 - **Description**: Logout current user and clear session
@@ -29,6 +31,7 @@ MySandbox is a server-rendered Flask application that uses HTML forms and HTTP r
 ## Todo Management Routes
 
 ### Index Page
+
 - **Route**: `GET /` or `GET /index`
 - **Authentication**: None
 - **Description**: Redirect to today's todo list
@@ -36,6 +39,7 @@ MySandbox is a server-rendered Flask application that uses HTML forms and HTTP r
 - **Status Code**: 302 (redirect)
 
 ### Main Todo View
+
 - **Route**: `GET /todo`
 - **Authentication**: Required
 - **Description**: Display today's todo items
@@ -43,15 +47,17 @@ MySandbox is a server-rendered Flask application that uses HTML forms and HTTP r
 - **Status Code**: 200
 
 ### List Todos by Date
+
 - **Route**: `GET /<id>/list`
 - **Authentication**: Required
-- **Parameters**: 
+- **Parameters**:
   - `id` (required): 'today' or 'tomorrow'
 - **Description**: Display todo list for specific date
 - **Response**: Rendered HTML with filtered todo items
 - **Status Code**: 200 (valid id) or 404 (invalid id)
 
 ### View Todo Item
+
 - **Route**: `GET /<path>/view`
 - **Authentication**: Required
 - **Parameters**:
@@ -61,6 +67,7 @@ MySandbox is a server-rendered Flask application that uses HTML forms and HTTP r
 - **Status Code**: 200 (valid path) or 404 (invalid path)
 
 ### Get Todo Details (AJAX)
+
 - **Route**: `POST /<id>/todo`
 - **Authentication**: Required
 - **Parameters**:
@@ -68,6 +75,7 @@ MySandbox is a server-rendered Flask application that uses HTML forms and HTTP r
   - `tbl_save` (optional): Save flag to determine button rendering
 - **Description**: Fetch specific todo item details for editing
 - **Response**: JSON with todo details
+
 ```json
 {
   "status": "Success",
@@ -78,9 +86,11 @@ MySandbox is a server-rendered Flask application that uses HTML forms and HTTP r
   "button": "<button>Save</button>"
 }
 ```
+
 - **Status Code**: 200
 
 ### Add or Update Todo
+
 - **Route**: `POST /add`
 - **Authentication**: Required
 - **Parameters**:
@@ -93,14 +103,16 @@ MySandbox is a server-rendered Flask application that uses HTML forms and HTTP r
 - **Response**: JSON response with status
 - **Status Code**: 200
 
-#### Success Response:
+#### Success Response
+
 ```json
 {
   "status": "success"
 }
 ```
 
-#### Error Response:
+#### Error Response
+
 ```json
 {
   "status": "failed",
@@ -109,6 +121,7 @@ MySandbox is a server-rendered Flask application that uses HTML forms and HTTP r
 ```
 
 ### Mark Todo as Done
+
 - **Route**: `POST /<id>/<todo_id>/done`
 - **Authentication**: Required
 - **Parameters**:
@@ -116,15 +129,18 @@ MySandbox is a server-rendered Flask application that uses HTML forms and HTTP r
   - `todo_id` (required): Todo item ID
 - **Description**: Mark a todo item as completed
 - **Response**: JSON with success status
+
 ```json
 {
   "status": "Success",
   "todo_id": 1
 }
 ```
+
 - **Status Code**: 200
 
 ### Delete Todo
+
 - **Route**: `POST /<todo_id>/delete`
 - **Authentication**: Required
 - **Parameters**:
@@ -136,18 +152,20 @@ MySandbox is a server-rendered Flask application that uses HTML forms and HTTP r
 ## User Account Routes
 
 ### Account Settings
+
 - **Route**: `GET/POST /account`
 - **Authentication**: Required
 - **Description**: View and update user account details
 - **Parameters** (POST):
   - `username` (required): New username
   - `email` (required): New email address
-- **Response**: 
+- **Response**:
   - GET: Rendered HTML form
   - POST: Flash message and form reload
 - **Status Code**: 200
 
 ### Security Settings
+
 - **Route**: `GET/POST /security`
 - **Authentication**: Required
 - **Description**: Change user password
@@ -155,7 +173,7 @@ MySandbox is a server-rendered Flask application that uses HTML forms and HTTP r
   - `oldPassword` (required): Current password for verification
   - `password` (required): New password
   - `confirm` (required): Password confirmation (must match)
-- **Response**: 
+- **Response**:
   - GET: Rendered HTML form
   - POST: Flash message and form reload
 - **Status Code**: 200
@@ -174,16 +192,19 @@ MySandbox is a server-rendered Flask application that uses HTML forms and HTTP r
 ## Data Validation Rules
 
 ### Todo Item
+
 - **Title**: Required, non-empty after strip
 - **Activities**: Required, supports Markdown formatting
 - **Date**: Future dates allowed (tomorrow parameter)
 
 ### User Account
+
 - **Username**: Required, must be unique
 - **Email**: Required, must be valid email format and unique
 - **Password**: Minimum 8 characters recommended, must be confirmed on change
 
 ### Login Credentials
+
 - **Username**: Must exist in database
 - **Password**: Must match hashed password
 
@@ -223,6 +244,7 @@ No rate limiting currently implemented. Consider adding for production use.
 ## API Usage Examples
 
 ### Create a New Todo (HTML Form)
+
 ```html
 <form method="post" action="/add">
   {{ csrf_token() }}
@@ -234,6 +256,7 @@ No rate limiting currently implemented. Consider adding for production use.
 ```
 
 ### Fetch Todo via AJAX
+
 ```javascript
 fetch('/' + todoId + '/todo', {
   method: 'POST',
@@ -247,6 +270,7 @@ fetch('/' + todoId + '/todo', {
 ```
 
 ### Mark Todo as Done via AJAX
+
 ```javascript
 fetch('/today/' + todoId + '/done', {
   method: 'POST',

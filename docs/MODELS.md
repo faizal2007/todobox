@@ -2,13 +2,13 @@
 
 ## Overview
 
-MySandbox uses SQLAlchemy ORM with support for SQLite, MySQL, and PostgreSQL. All models are defined in `app/models.py`.
+TodoBox uses SQLAlchemy ORM with support for SQLite, MySQL, and PostgreSQL. All models are defined in `app/models.py`.
 
 ## Database Schema
 
 ### Entity Relationship Diagram
 
-```
+```text
 User (1) -----> (Many) Todo
                     |
                     v
@@ -24,7 +24,7 @@ User (1) -----> (Many) Todo
 
 Stores user account information and authentication credentials.
 
-#### Columns
+### User Columns
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
@@ -34,15 +34,18 @@ Stores user account information and authentication credentials.
 | fullname | String(100) | NULL | User's full name |
 | password_hash | String(128) | NULL | Hashed password (bcrypt) |
 
-#### Relationships
+### User Relationships
+
 - `todo`: One-to-many relationship with Todo model
 
-#### Methods
+### User Methods
 
 ```python
 User.seed()
 ```
+
 Creates default admin user:
+
 - Username: `admin`
 - Email: `admin@examples.com`
 - Password: `admin1234` (hashed)
@@ -50,24 +53,28 @@ Creates default admin user:
 ```python
 set_password(password: str)
 ```
+
 Hashes password using Werkzeug and stores in `password_hash`
 
 ```python
 check_password(password: str) -> bool
 ```
+
 Verifies password against stored hash
 
 ```python
 check_username(username: str) -> bool
 ```
+
 Checks if provided username matches user's username
 
 ```python
 check_email(email: str) -> bool
 ```
+
 Checks if provided email matches user's email
 
-#### Example Usage
+### User Usage Example
 
 ```python
 # Create user
@@ -89,7 +96,7 @@ if user and user.check_password('securepassword'):
 
 Stores individual todo/task items.
 
-#### Columns
+### Todo Columns
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
@@ -101,43 +108,39 @@ Stores individual todo/task items.
 | modified | DateTime | INDEX, DEFAULT(now) | Last modification timestamp |
 | user_id | Integer | FOREIGN KEY(user.id) | Owner user reference |
 
-#### Relationships
+### Todo Relationships
+
 - `user`: Many-to-one relationship with User model
 - `tracker`: Many-to-many relationship with Status model via Tracker junction table
 
-#### Static Methods
+### Todo Static Methods
 
 ```python
 Todo.getList(type: str, start: str, end: str) -> Query
 ```
+
 Retrieves todo items for specified date range.
 
 **Parameters:**
+
 - `type`: Filter type (e.g., 'today', 'tomorrow')
 - `start`: Start datetime string (e.g., '2024-01-15 00:00')
 - `end`: End datetime string (e.g., '2024-01-15 23:59')
 
 **Returns:** Query object filtered by:
+
 - Timestamp between start and end
 - Status not equal to 'done' (status_id != 2)
 - Only latest tracker entry per todo
 
-**Example:**
-```python
-from datetime import date
-query_date = date.today()
-start = f'{query_date} 00:00'
-end = f'{query_date} 23:59'
-todos = Todo.getList('today', start, end).order_by(Todo.timestamp.desc())
-```
+### Todo String Representation
 
-#### String Representation
 ```python
 def __repr__(self):
     return f'<Todo {self.name}'
 ```
 
-#### Example Usage
+### Todo Usage Example
 
 ```python
 # Create todo
@@ -161,14 +164,14 @@ today_todos = Todo.getList('today', start, end)
 
 Defines todo item status types.
 
-#### Columns
+### Status Columns
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | Integer | PRIMARY KEY | Unique status identifier |
 | name | String(50) | NOT NULL, INDEX | Status name |
 
-#### Default Status Types
+### Default Status Types
 
 | ID | Name | Description |
 |----|------|-------------|
@@ -177,20 +180,22 @@ Defines todo item status types.
 | 3 | failed | Failed task |
 | 4 | re-assign | Reassigned task |
 
-#### Methods
+### Status Methods
 
 ```python
 Status.seed()
 ```
+
 Populates the status table with default status types.
 
-#### String Representation
+### Status String Representation
+
 ```python
 def __repr__(self):
     return f'<Todo {self.name}'
 ```
 
-#### Example Usage
+### Status Usage Example
 
 ```python
 # Seed default statuses
@@ -207,7 +212,7 @@ print(done_status.id)  # Output: 2
 
 Many-to-many relationship table tracking todo status changes over time.
 
-#### Columns
+### Tracker Columns
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
@@ -216,21 +221,23 @@ Many-to-many relationship table tracking todo status changes over time.
 | status_id | Integer | FOREIGN KEY(status.id) | Reference to status |
 | timestamp | DateTime | INDEX, DEFAULT(now) | When status changed |
 
-#### Attributes
+### Tracker Attributes
 
 ```python
 class Tracker(object):
     def __init__(self, todo_id, status_id, timestamp=datetime.now())
 ```
 
-#### Static Methods
+### Tracker Static Methods
 
 ```python
 Tracker.add(todo_id: int, status_id: int, timestamp=datetime.now())
 ```
+
 Creates new tracker entry and commits to database.
 
 **Example:**
+
 ```python
 # Mark todo as done
 Tracker.add(todo_id=1, status_id=2, timestamp=datetime.now())
@@ -239,6 +246,7 @@ Tracker.add(todo_id=1, status_id=2, timestamp=datetime.now())
 ```python
 Tracker.getId(todo_id: int) -> int
 ```
+
 Gets the tracker ID for the latest status change of a todo item.
 
 **Returns:** Tracker ID of most recent entry
@@ -246,17 +254,19 @@ Gets the tracker ID for the latest status change of a todo item.
 ```python
 Tracker.delete(todo_id: int)
 ```
+
 Deletes all tracker entries and the todo item itself.
 
 **Caution:** Permanently deletes the todo and all history
 
 **Example:**
+
 ```python
 # Delete todo and its history
 Tracker.delete(todo_id=1)
 ```
 
-#### Example Usage
+### Tracker Usage Example
 
 ```python
 # Create tracker entry for new todo
@@ -275,11 +285,13 @@ latest_id = Tracker.getId(todo.id)
 ## Foreign Key Relationships
 
 ### User → Todo (One-to-Many)
+
 - A user can have many todo items
 - Each todo belongs to exactly one user
 - Foreign Key: `todo.user_id → user.id`
 
 ### Todo → Status (Many-to-Many via Tracker)
+
 - A todo can have multiple status changes
 - Each status can be applied to many todos
 - Junction Table: `tracker`
@@ -313,7 +325,7 @@ The following columns are indexed for query performance:
 
 ```python
 # Automatic creation in instance directory
-instance/mysandbox.db
+instance/todobox.db
 ```
 
 ### MySQL/PostgreSQL
@@ -329,10 +341,12 @@ This runs Alembic migrations to create tables and indexes.
 ### Cascading Deletes
 
 When a user is deleted:
+
 - All associated todo items are NOT automatically deleted
 - Must manually delete todos first
 
 When a todo is deleted via `Tracker.delete()`:
+
 - All tracker entries are deleted
 - The todo item is deleted
 

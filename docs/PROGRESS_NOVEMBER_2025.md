@@ -23,7 +23,7 @@
 
 ```bash
 FLASK_ENV=development
-FLASK_APP=mysandbox.py
+FLASK_APP=todobox.py
 DATABASE_DEFAULT=mysql
 DB_URL=192.168.1.112
 DB_USER=freakie

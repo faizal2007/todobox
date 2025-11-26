@@ -57,13 +57,13 @@ flask db upgrade            # Run migrations
 python3 -c "from app.config import generate_salt; print(generate_salt())"  # Generate secure salt
 
 # Production
-gunicorn -w 4 mysandbox:app  # Start with Gunicorn
+gunicorn -w 4 todobox:app  # Start with Gunicorn
 ```
 
 ## Project Structure
 
 ```bash
-mysandbox/
+todobox/
 ├── app/
 │   ├── __init__.py         # Flask app factory
 │   ├── config.py           # Configuration & salt generator
@@ -83,7 +83,7 @@ mysandbox/
 ├── lib/
 │   └── database.py         # Database connection utilities
 ├── migrations/             # Database migration files
-├── mysandbox.py            # App entry point
+├── todobox.py            # App entry point
 ├── .flaskenv               # Environment variables (create from .flaskenv.example)
 ├── .flaskenv.example       # Configuration template
 ├── requirements.txt        # Python dependencies
@@ -237,7 +237,7 @@ Copy `.flaskenv.example` to `.flaskenv` and configure:
 ```bash
 # Flask Settings
 FLASK_ENV=development
-FLASK_APP=mysandbox.py
+FLASK_APP=todobox.py
 SECRET_KEY=your-secret-key-here
 SALT=your-salt-here
 
@@ -261,9 +261,9 @@ Auto-created on first run - no additional setup needed.
 ### MySQL
 
 ```bash
-CREATE DATABASE mysandbox_db;
+CREATE DATABASE todobox_db;
 CREATE USER 'user'@'localhost' IDENTIFIED BY 'password';
-GRANT ALL PRIVILEGES ON mysandbox_db.* TO 'user'@'localhost';
+GRANT ALL PRIVILEGES ON todobox_db.* TO 'user'@'localhost';
 ```
 
 ### PostgreSQL

@@ -55,26 +55,26 @@ python3 -c "from app.config import generate_salt; print(generate_salt())"
 
 ```bash
 # Access SQLite database
-sqlite3 instance/mysandbox.db
+sqlite3 instance/todobox.db
 
 # Access MySQL database
-mysql -u mysandbox -p -h localhost mysandbox
+mysql -u todobox -p -h localhost todobox
 
 # Access PostgreSQL database
-psql -U mysandbox -h localhost mysandbox
+psql -U todobox -h localhost todobox
 ```
 
 ### Gunicorn Commands
 
 ```bash
 # Run with Gunicorn (production)
-gunicorn -w 4 -b 0.0.0.0:5000 mysandbox:app
+gunicorn -w 4 -b 0.0.0.0:5000 todobox:app
 
 # Run with worker auto-reload
-gunicorn -w 4 -b 0.0.0.0:5000 --reload mysandbox:app
+gunicorn -w 4 -b 0.0.0.0:5000 --reload todobox:app
 
 # Run with access logging
-gunicorn -w 4 -b 0.0.0.0:5000 --access-logfile - mysandbox:app
+gunicorn -w 4 -b 0.0.0.0:5000 --access-logfile - todobox:app
 ```
 
 ---
@@ -140,7 +140,7 @@ gunicorn -w 4 -b 0.0.0.0:5000 --access-logfile - mysandbox:app
 ### Required
 
 ```bash
-FLASK_APP=mysandbox.py
+FLASK_APP=todobox.py
 DATABASE_DEFAULT=mysql   # or sqlite (default), postgres
 ```
 
@@ -160,7 +160,7 @@ PORT=9191                # Server port
 DB_URL=localhost         # Database host/IP
 DB_USER=username         # Database user
 DB_PASSWORD=password     # Database password (or use DB_PW)
-DB_NAME=mysandbox        # Database name
+DB_NAME=todobox        # Database name
 ```
 
 **Note:** When using SQLite, `instance/` folder is created automatically. When using MySQL/PostgreSQL, `instance/` is not needed.
@@ -174,7 +174,7 @@ DB_NAME=mysandbox        # Database name
 | SECRET_KEY | app/config.py | 'you-will-never-guess' | Change for production |
 | SALT | app/config.py | (hardcoded) | Change for production |
 | Session Timeout | app/**init__.py | 120 minutes | User logged out after timeout |
-| Database Name | app/config.py | mysandbox.db | SQLite database filename |
+| Database Name | app/config.py | todobox.db | SQLite database filename |
 | Database Default | app/config.py | sqlite | Which database to use |
 
 ---
@@ -193,7 +193,7 @@ flask run
 
 ```bash
 # View logs
-tail -f /var/log/syslog | grep mysandbox
+tail -f /var/log/syslog | grep todobox
 
 # Check response
 curl http://127.0.0.1:9191/

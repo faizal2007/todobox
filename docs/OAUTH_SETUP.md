@@ -68,7 +68,7 @@ For fresh installations, the columns will be created automatically.
 ### 1. Start the Flask development server
 
 ```bash
-python mysandbox.py
+python todobox.py
 ```
 
 #### 2. Navigate to the login page: `http://localhost:5000/login`

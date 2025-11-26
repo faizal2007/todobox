@@ -85,7 +85,7 @@ After applying the fixes, all components work correctly:
 ```bash
 ✓ App imports successfully
 ✓ Database migrations run successfully
-✓ Database file created: instance/mysandbox.db
+✓ Database file created: instance/todobox.db
 ```
 
 ## Files Modified

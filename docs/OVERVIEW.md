@@ -1,12 +1,13 @@
-# MySandbox - Project Overview
+# TodoBox - Project Overview
 
 ## Description
 
-MySandbox is a Flask-based web application for managing personal todo lists. It's designed as a learning project that demonstrates Flask best practices, user authentication, database management, and task tracking functionality.
+TodoBox (formerly MySandbox) is a Flask-based web application for managing personal todo lists. It's designed as a learning project that demonstrates Flask best practices, user authentication, database management, and task tracking functionality.
 
 ## Key Features
 
 ### Authentication & User Management
+
 - User registration and login system
 - Password hashing with Werkzeug security
 - Session management with 2-hour timeout
@@ -14,6 +15,7 @@ MySandbox is a Flask-based web application for managing personal todo lists. It'
 - Secure password change functionality
 
 ### Todo Management
+
 - Create and edit todo items
 - Organize tasks by status (new, done, failed, re-assign)
 - Markdown support for task descriptions
@@ -21,12 +23,14 @@ MySandbox is a Flask-based web application for managing personal todo lists. It'
 - Task deletion
 
 ### Task Tracking
+
 - Track task status changes over time
 - View pending and completed tasks
 - Filter tasks by date (today/tomorrow)
 - Timestamp-based task history
 
 ### User Account
+
 - Update username and email
 - Change password with verification
 - View account settings
@@ -46,8 +50,8 @@ MySandbox is a Flask-based web application for managing personal todo lists. It'
 
 ## Project Structure
 
-```
-mysandbox/
+```text
+todobox/
 ├── app/                          # Main application package
 │   ├── __init__.py              # App initialization and configuration
 │   ├── config.py                # Configuration settings
@@ -73,7 +77,7 @@ mysandbox/
 ├── lib/
 │   └── database.py              # Database connection utilities
 ├── migrations/                  # Alembic database migrations
-├── mysandbox.py                 # Application entry point
+├── todobox.py                   # Application entry point
 ├── requirements.txt             # Python dependencies
 ├── .flaskenv.example            # Environment variables template
 └── docs/                        # Documentation (this directory)
@@ -90,21 +94,25 @@ The application follows the **MVC (Model-View-Controller)** pattern:
 ## Database Models
 
 ### User Model
+
 - Manages user accounts and authentication
 - Stores username, email, fullname, and password hash
 - One-to-many relationship with Todo items
 
 ### Todo Model
+
 - Represents a task/todo item
 - Stores task name, description (markdown), and HTML-rendered version
 - Linked to User through foreign key
 - Connected to Status through Tracker relationship
 
 ### Status Model
+
 - Defines task status types (new, done, failed, re-assign)
 - Provides static seed data
 
 ### Tracker Model
+
 - Tracks status changes and history of todo items
 - Many-to-many junction table between Todo and Status
 - Stores timestamp of each status change
@@ -129,11 +137,13 @@ The application follows the **MVC (Model-View-Controller)** pattern:
 ## Configuration Options
 
 The application supports configuration through:
+
 - `app/config.py`: Default configuration
 - `.flaskenv`: Environment-specific variables
 - Instance-specific `config.py`: Runtime overrides
 
 ### Supported Databases
+
 - SQLite (default)
 - MySQL
 - PostgreSQL

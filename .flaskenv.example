@@ -1,5 +1,5 @@
 # FLASK_ENV=development
-FLASK_APP=mysandbox.py
+FLASK_APP=todobox.py
 TITLE=Shimasu
 
 # Security - CHANGE THESE IN PRODUCTION!
@@ -8,7 +8,7 @@ SALT=change-me-to-a-secure-salt
 
 # Database Configuration
 DATABASE_DEFAULT=sqlite
-DATABASE_NAME=mysandbox.db
+DATABASE_NAME=todobox.db
 
 # Optional: For PostgreSQL (uncomment and configure)
 # DATABASE_DEFAULT=postgres
@@ -20,9 +20,9 @@ DATABASE_NAME=mysandbox.db
 # Optional: For MySQL (uncomment and configure)
 # DATABASE_DEFAULT=mysql
 # DB_URL=localhost
-# DB_USER=mysandbox
+# DB_USER=todobox
 # DB_PW=your-secure-password
-# DB_NAME=mysandbox
+# DB_NAME=todobox
 
 # Application Settings
 TITLE=My Sandbox
