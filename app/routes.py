@@ -381,8 +381,20 @@ def dashboard():
     else:
         reassignment_stats['avg_reassignments_before_completion'] = 0.0
     
-    # Get recent todos for activity feed
-    recent_todos = db.session.query(Todo).order_by(desc(Todo.timestamp)).limit(5).all()  # type: ignore
+    # Get recent undone todos for activity feed (filtered by current user and not completed)
+    undone_todos = []
+    all_user_todos = Todo.query.filter_by(user_id=current_user.id).order_by(desc(Todo.modified)).all()
+    
+    for todo in all_user_todos:
+        if len(undone_todos) >= 5:
+            break
+        # Get the latest tracker entry for this todo
+        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(desc(Tracker.timestamp)).first()
+        # Only include if the latest status is not completed (status_id != 6)
+        if latest_tracker and latest_tracker.status_id != 6:
+            undone_todos.append(todo)
+    
+    recent_todos = undone_todos
     
     return render_template('dashboard.html', 
                          chart_segments=chart_segments,
