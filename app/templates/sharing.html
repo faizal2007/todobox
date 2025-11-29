@@ -56,8 +56,8 @@
                 </div>
                 <div class="card-body">
                     <p class="text-muted mb-4">
-                        Enable todo sharing to allow other Gmail users to view your todos.
-                        This feature is only available for users who signed in with Google.
+                        Enable todo sharing to allow other users to view your todos.
+                        You can invite users by their email address.
                     </p>
                     
                     <div class="custom-control custom-switch mb-3">
@@ -69,7 +69,7 @@
                         <span id="sharing-status-indicator" class="ml-2 small"></span>
                     </div>
                     <p class="small text-muted mb-3">
-                        When enabled, you can invite other Gmail users to view your todos.
+                        When enabled, you can invite other users by email to view your todos.
                     </p>
                 </div>
             </div>
@@ -83,7 +83,7 @@
                 </div>
                 <div class="card-body">
                     <p class="text-muted mb-3">
-                        Invite another Gmail user to view your todos.
+                        Invite another user by email to view your todos.
                         {% if not email_configured %}
                         <br><small class="text-warning"><i class="mdi mdi-alert mr-1"></i>Email is not configured. You'll receive a link to share manually.</small>
                         {% endif %}

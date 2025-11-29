@@ -77,9 +77,13 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
         """Check if the user is a Gmail (OAuth) user"""
         return self.oauth_provider == 'google'
     
+    def is_direct_login_user(self):
+        """Check if the user is a direct login user (username/password authentication)"""
+        return self.oauth_provider is None or self.oauth_provider == ''
+    
     def can_share_todos(self):
-        """Check if the user can share todos (must be Gmail user with sharing enabled)"""
-        return self.is_gmail_user() and self.sharing_enabled
+        """Check if the user can share todos (any user with sharing enabled)"""
+        return self.sharing_enabled
 
 
 class ShareInvitation(db.Model): # type: ignore[attr-defined]

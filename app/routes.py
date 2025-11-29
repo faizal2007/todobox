@@ -819,9 +819,6 @@ def settings():
 @login_required
 def toggle_sharing():
     """AJAX endpoint to toggle sharing enabled/disabled"""
-    if not current_user.is_gmail_user():
-        return jsonify({'status': 'error', 'message': 'Todo sharing is only available for Google/Gmail account users.'}), 403
-    
     data = request.get_json()
     if data is None:
         return jsonify({'status': 'error', 'message': 'Invalid request'}), 400
@@ -840,12 +837,7 @@ def toggle_sharing():
 @app.route('/sharing', methods=['GET', 'POST'])
 @login_required
 def sharing():
-    """Sharing settings and invitation management page (Gmail users only)"""
-    # Check if user is a Gmail user
-    if not current_user.is_gmail_user():
-        flash('Todo sharing is only available for Google/Gmail account users.', 'warning')
-        return redirect(url_for('settings'))
-    
+    """Sharing settings and invitation management page"""
     settings_form = SharingSettingsForm()
     invitation_form = ShareInvitationForm()
     
@@ -956,18 +948,13 @@ def accept_share_invitation(token):
     if not current_user.is_authenticated:
         # Store invitation token in session for after login
         session['pending_share_token'] = token
-        flash('Please sign in with Google to accept this sharing invitation.', 'info')
+        flash('Please sign in to accept this sharing invitation.', 'info')
         return redirect(url_for('login'))
     
     # Check if the logged-in user's email matches the invitation
     if current_user.email.lower() != invitation.to_email.lower():
         flash(f'This invitation was sent to {invitation.to_email}. Please sign in with that account.', 'warning')
         return redirect(url_for('login'))
-    
-    # Check if user is a Gmail user
-    if not current_user.is_gmail_user():
-        flash('Todo sharing is only available for Google/Gmail account users.', 'warning')
-        return redirect(url_for('dashboard'))
     
     # Accept the invitation
     invitation.status = 'accepted'
@@ -1071,10 +1058,6 @@ def remove_share_access(share_id):
 @login_required
 def shared_todos():
     """View todos shared with the current user"""
-    if not current_user.is_gmail_user():
-        flash('Todo sharing is only available for Google/Gmail account users.', 'warning')
-        return redirect(url_for('dashboard'))
-    
     # Get users who share their todos with current user
     shared_users = TodoShare.get_shared_users(current_user.id)
     
