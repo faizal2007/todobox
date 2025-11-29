@@ -24,7 +24,7 @@ class TestEncryptionEdgeCases:
         # These should not raise exceptions even outside app context
         # is_encryption_enabled should return False
         result = is_encryption_enabled()
-        assert result == False, "is_encryption_enabled should return False outside app context"
+        assert result is False, "is_encryption_enabled should return False outside app context"
         
         # encrypt_text should return plaintext unchanged
         plaintext = "test message"

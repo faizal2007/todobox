@@ -16,14 +16,10 @@ def is_encryption_enabled():
     Returns False if called outside of an application context to ensure
     graceful degradation when the app context is not available.
     """
-    try:
-        from flask import current_app, has_app_context
-        if not has_app_context():
-            return False
-        return current_app.config.get('TODO_ENCRYPTION_ENABLED', False)
-    except RuntimeError:
-        # Return False if called outside of application context
+    from flask import current_app, has_app_context
+    if not has_app_context():
         return False
+    return current_app.config.get('TODO_ENCRYPTION_ENABLED', False)
 
 
 def _get_encryption_key():
