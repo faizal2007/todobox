@@ -4,7 +4,7 @@ Uses Fernet symmetric encryption with a key derived from the application's secre
 """
 import base64
 import os
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
@@ -74,8 +74,8 @@ def decrypt_text(ciphertext):
         
         decrypted = fernet.decrypt(ciphertext)
         return decrypted.decode('utf-8')
-    except Exception:
-        # Return original text if decryption fails
+    except (InvalidToken, ValueError, TypeError):
+        # Return original text if decryption fails due to invalid token or data format
         # This handles backward compatibility with existing unencrypted data
         if isinstance(ciphertext, bytes):
             return ciphertext.decode('utf-8')
