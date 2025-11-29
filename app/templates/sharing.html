@@ -32,6 +32,19 @@
     {% endif %}
     {% endwith %}
 
+    <!-- Alert container for AJAX messages -->
+    <div class="row" id="ajax-alert-container" style="display: none;">
+        <div class="col-12">
+            <div class="alert alert-dismissible fade show" role="alert" id="ajax-alert">
+                <i class="mdi mr-2" id="ajax-alert-icon"></i>
+                <span id="ajax-alert-message"></span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <!-- Sharing Settings -->
         <div class="col-lg-6">
@@ -47,28 +60,22 @@
                         This feature is only available for users who signed in with Google.
                     </p>
                     
-                    <form method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <div class="custom-control custom-switch mb-3">
-                            <input type="checkbox" class="custom-control-input" id="sharing_enabled" 
-                                   name="sharing_enabled" {% if current_user.sharing_enabled %}checked{% endif %}>
-                            <label class="custom-control-label" for="sharing_enabled">
-                                <strong>Enable Todo Sharing</strong>
-                            </label>
-                        </div>
-                        <p class="small text-muted mb-3">
-                            When enabled, you can invite other Gmail users to view your todos.
-                        </p>
-                        <button type="submit" name="save_settings" class="btn btn-primary">
-                            <i class="mdi mdi-content-save mr-1"></i>Save Settings
-                        </button>
-                    </form>
+                    <div class="custom-control custom-switch mb-3">
+                        <input type="checkbox" class="custom-control-input" id="sharing_enabled" 
+                               name="sharing_enabled" {% if current_user.sharing_enabled %}checked{% endif %}>
+                        <label class="custom-control-label" for="sharing_enabled">
+                            <strong>Enable Todo Sharing</strong>
+                        </label>
+                        <span id="sharing-status-indicator" class="ml-2 small"></span>
+                    </div>
+                    <p class="small text-muted mb-3">
+                        When enabled, you can invite other Gmail users to view your todos.
+                    </p>
                 </div>
             </div>
 
             <!-- Send Invitation -->
-            {% if current_user.sharing_enabled %}
-            <div class="card mt-4">
+            <div class="card mt-4" id="invitation-card" style="{% if not current_user.sharing_enabled %}display: none;{% endif %}">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">
                         <i class="mdi mdi-email-send mr-2"></i>Send Invitation
@@ -82,11 +89,14 @@
                         {% endif %}
                     </p>
                     
-                    <form method="POST">
+                    <form method="POST" id="invitation-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="form-group">
                             {{ invitation_form.email.label(class="font-weight-bold") }}
-                            {{ invitation_form.email(class="form-control", placeholder="Enter Gmail address") }}
+                            {{ invitation_form.email(class="form-control", placeholder="Enter Gmail address", id="invitation_email") }}
+                            <small class="form-text text-danger d-block mt-1" id="email-error" style="display: none;">
+                                <i class="mdi mdi-alert-circle mr-1"></i><span id="email-error-message"></span>
+                            </small>
                             {% for error in invitation_form.email.errors %}
                                 <small class="form-text text-danger d-block mt-1">
                                     <i class="mdi mdi-alert-circle mr-1"></i>{{ error }}
@@ -99,7 +109,6 @@
                     </form>
                 </div>
             </div>
-            {% endif %}
         </div>
 
         <!-- Current Sharing Status -->
@@ -275,4 +284,140 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_script_footer %}
+<script>
+(function() {
+    // Current user's email for self-invitation validation
+    var currentUserEmail = '{{ current_user.email | lower }}';
+    var csrfToken = '{{ csrf_token() }}';
+    
+    // Helper function to show AJAX alerts
+    function showAlert(message, type) {
+        var container = document.getElementById('ajax-alert-container');
+        var alert = document.getElementById('ajax-alert');
+        var icon = document.getElementById('ajax-alert-icon');
+        var messageEl = document.getElementById('ajax-alert-message');
+        
+        // Set alert type
+        alert.className = 'alert alert-dismissible fade show';
+        if (type === 'success') {
+            alert.classList.add('alert-success');
+            icon.className = 'mdi mdi-check-circle mr-2';
+        } else if (type === 'error') {
+            alert.classList.add('alert-danger');
+            icon.className = 'mdi mdi-alert-circle mr-2';
+        } else if (type === 'warning') {
+            alert.classList.add('alert-warning');
+            icon.className = 'mdi mdi-alert mr-2';
+        } else {
+            alert.classList.add('alert-info');
+            icon.className = 'mdi mdi-information mr-2';
+        }
+        
+        messageEl.textContent = message;
+        container.style.display = 'block';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(function() {
+            container.style.display = 'none';
+        }, 5000);
+    }
+    
+    // Toggle sharing enabled via AJAX
+    var sharingToggle = document.getElementById('sharing_enabled');
+    var invitationCard = document.getElementById('invitation-card');
+    var statusIndicator = document.getElementById('sharing-status-indicator');
+    
+    if (sharingToggle) {
+        sharingToggle.addEventListener('change', function() {
+            var isEnabled = this.checked;
+            
+            // Show loading indicator
+            statusIndicator.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Saving...';
+            
+            // Make AJAX request
+            fetch('{{ url_for("toggle_sharing") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    sharing_enabled: isEnabled
+                })
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.status === 'success') {
+                    // Show/hide invitation card based on new state
+                    if (isEnabled) {
+                        invitationCard.style.display = 'block';
+                    } else {
+                        invitationCard.style.display = 'none';
+                    }
+                    statusIndicator.innerHTML = '<span class="text-success"><i class="mdi mdi-check"></i> Saved</span>';
+                    showAlert(data.message, 'success');
+                } else {
+                    // Revert checkbox on error
+                    sharingToggle.checked = !isEnabled;
+                    statusIndicator.innerHTML = '<span class="text-danger"><i class="mdi mdi-alert"></i> Error</span>';
+                    showAlert(data.message || 'Failed to save settings', 'error');
+                }
+                
+                // Clear status indicator after 3 seconds
+                setTimeout(function() {
+                    statusIndicator.innerHTML = '';
+                }, 3000);
+            })
+            .catch(function(error) {
+                // Revert checkbox on error
+                sharingToggle.checked = !isEnabled;
+                statusIndicator.innerHTML = '<span class="text-danger"><i class="mdi mdi-alert"></i> Error</span>';
+                showAlert('Failed to save settings. Please try again.', 'error');
+                
+                // Clear status indicator after 3 seconds
+                setTimeout(function() {
+                    statusIndicator.innerHTML = '';
+                }, 3000);
+            });
+        });
+    }
+    
+    // Client-side validation for self-invitation
+    var invitationForm = document.getElementById('invitation-form');
+    var emailInput = document.getElementById('invitation_email');
+    var emailError = document.getElementById('email-error');
+    var emailErrorMessage = document.getElementById('email-error-message');
+    
+    if (invitationForm && emailInput) {
+        invitationForm.addEventListener('submit', function(e) {
+            var email = emailInput.value.trim().toLowerCase();
+            
+            // Check if user is trying to invite themselves
+            if (email === currentUserEmail) {
+                e.preventDefault();
+                emailError.style.display = 'block';
+                emailErrorMessage.textContent = 'You cannot invite yourself.';
+                emailInput.classList.add('is-invalid');
+                return false;
+            }
+            
+            // Clear any previous error
+            emailError.style.display = 'none';
+            emailInput.classList.remove('is-invalid');
+            return true;
+        });
+        
+        // Clear error on input change
+        emailInput.addEventListener('input', function() {
+            emailError.style.display = 'none';
+            emailInput.classList.remove('is-invalid');
+        });
+    }
+})();
+</script>
 {% endblock %}
