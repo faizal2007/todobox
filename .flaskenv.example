@@ -32,4 +32,7 @@ PORT=5000
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=your_client_id_here
 GOOGLE_CLIENT_SECRET=your_client_secret_here
+# IMPORTANT: When running behind a reverse proxy (e.g., haruka-tunnel, ngrok, cloudflare tunnel),
+# set this to your public URL to fix Google OAuth sign-in issues.
+# Example: OAUTH_REDIRECT_URI=https://your-public-domain.com/auth/callback/google
 OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google

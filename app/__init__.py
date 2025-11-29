@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager
+from werkzeug.middleware.proxy_fix import ProxyFix
 from datetime import timedelta 
 from app.utils import momentjs
 from lib.database import connect_db
@@ -12,6 +13,11 @@ import hashlib
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_object('app.config')
 app.config.from_pyfile('config.py', silent=True)
+
+# Add ProxyFix middleware to handle reverse proxy headers (X-Forwarded-*)
+# This enables proper URL generation when running behind a reverse proxy like haruka-tunnel
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)  # type: ignore[assignment]
+
 csrf = CSRFProtect(app)
 
 if app.config['DATABASE_DEFAULT'] == 'postgres':
