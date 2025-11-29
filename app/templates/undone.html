@@ -98,6 +98,7 @@
                </div>
           </div>
           {% include "todo_add.html" %}
+          {% include "confirm_modal.html" %}
      </div>
 {% endblock %}  
 
@@ -126,12 +127,25 @@
      })
 
      $('.close-todo').click(function() {
-          $.post('/' + $(this).data('id') + '/delete', {
-            '_csrf_token': '{{ csrf_token() }}'
-          },
-          function(data){
-               window.location.href = "{{ url_for('undone') }}";
-          });
+          var $button = $(this);
+          var todoId = $button.data('id');
+          var todoTitle = $button.closest('.card-body').find('.card-title').text().trim();
+          
+          showConfirmModal(
+               'Delete Todo',
+               'Are you sure you want to delete "' + todoTitle + '"? This action cannot be undone.',
+               function() {
+                    $.post('/' + todoId + '/delete', {
+                      '_csrf_token': '{{ csrf_token() }}'
+                    },
+                    function(data){
+                         window.location.href = "{{ url_for('undone') }}";
+                    });
+               },
+               'Delete',
+               'btn-danger',
+               'bg-danger text-white'
+          );
      })
 </script>
 {% endblock %}

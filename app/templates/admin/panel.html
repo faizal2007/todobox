@@ -134,10 +134,10 @@
                                             {% endif %}
                                             
                                             <!-- Delete Button -->
-                                            <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}" class="d-inline"
-                                                  onsubmit="return confirm('Are you sure you want to delete user {{ user.username }}? This action cannot be undone and will delete all their data.');">
+                                            <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}" class="d-inline delete-user-form">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                <button type="submit" class="btn btn-danger btn-sm" title="Delete User">
+                                                <button type="button" class="btn btn-danger btn-sm delete-user-btn" title="Delete User"
+                                                        data-username="{{ user.username }}">
                                                     <i class="mdi mdi-delete"></i>
                                                 </button>
                                             </form>
@@ -199,4 +199,31 @@
         </div>
     </div>
 </div>
+
+{% include "confirm_modal.html" %}
+
+{% endblock %}
+
+{% block extra_script_footer %}
+<script>
+$(document).ready(function() {
+    // Delete user button handler
+    $('.delete-user-btn').click(function() {
+        var $btn = $(this);
+        var $form = $btn.closest('form');
+        var username = $btn.data('username');
+        
+        showConfirmModal(
+            'Delete User',
+            'Are you sure you want to delete user "' + username + '"? This action cannot be undone and will delete all their data.',
+            function() {
+                $form.submit();
+            },
+            'Delete',
+            'btn-danger',
+            'bg-danger text-white'
+        );
+    });
+});
+</script>
 {% endblock %}

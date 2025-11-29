@@ -144,17 +144,17 @@
 
                     <!-- Token Actions -->
                     <div class="d-flex gap-2">
-                        <form method="POST" class="d-inline">
+                        <form method="POST" class="d-inline" id="generateTokenForm">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <button type="submit" name="generate_token" class="btn btn-warning"
-                                    onclick="return confirm('Are you sure you want to generate a new token? The old token will be invalidated.')">
+                            <input type="hidden" name="generate_token" value="1"/>
+                            <button type="button" class="btn btn-warning" id="generateTokenBtn">
                                 <i class="mdi mdi-refresh mr-1"></i>Generate New Token
                             </button>
                         </form>
-                        <form method="POST" class="d-inline">
+                        <form method="POST" class="d-inline" id="revokeTokenForm">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <button type="submit" name="revoke_token" class="btn btn-danger"
-                                    onclick="return confirm('Are you sure you want to revoke your API token? This will prevent all API access until you generate a new token.')">
+                            <input type="hidden" name="revoke_token" value="1"/>
+                            <button type="button" class="btn btn-danger" id="revokeTokenBtn">
                                 <i class="mdi mdi-delete mr-1"></i>Revoke Token
                             </button>
                         </form>
@@ -216,6 +216,8 @@
     </div>
 </div>
 
+{% include "confirm_modal.html" %}
+
 <script>
 function copyToClipboard() {
     const tokenElement = document.getElementById('apiToken');
@@ -253,4 +255,37 @@ function togglePassword(fieldId) {
 }
 </script>
 
+{% endblock %}
+
+{% block extra_script_footer %}
+<script>
+// Token confirmation handlers
+$(document).ready(function() {
+    $('#generateTokenBtn').click(function() {
+        showConfirmModal(
+            'Generate New Token',
+            'Are you sure you want to generate a new token? The old token will be invalidated.',
+            function() {
+                $('#generateTokenForm').submit();
+            },
+            'Generate',
+            'btn-warning',
+            'bg-warning text-dark'
+        );
+    });
+
+    $('#revokeTokenBtn').click(function() {
+        showConfirmModal(
+            'Revoke API Token',
+            'Are you sure you want to revoke your API token? This will prevent all API access until you generate a new token.',
+            function() {
+                $('#revokeTokenForm').submit();
+            },
+            'Revoke',
+            'btn-danger',
+            'bg-danger text-white'
+        );
+    });
+});
+</script>
 {% endblock %}

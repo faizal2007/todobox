@@ -85,6 +85,7 @@
                </div>
           </div>
           {% include "todo_add.html" %}
+          {% include "confirm_modal.html" %}
      </div>
 {% endblock %}  
 {% block extra_script_footer %}
@@ -167,29 +168,41 @@
 
      $('.close-todo').click(function() {
           var $button = $(this);
-          var $icon = $button.find('.delete-icon');
-          var $loading = $button.find('.delete-loading');
+          var todoId = $button.data('id');
+          var todoTitle = $button.closest('.card-body').find('.card-title').text().trim();
           
-          // Show loading state
-          $icon.hide();
-          $loading.show();
-          $button.prop('disabled', true);
-          
-          let title = '{{ title }}'
-          $.post('/' + $(this).data('id') + '/delete', {
-            '_csrf_token': '{{ csrf_token() }}'
-          },
-          function(data){
-               if(title == 'today')
-                    window.location.href = "{{ url_for('list', id='today') }}";
-               else
-                    window.location.href = "{{ url_for('list', id='tomorrow') }}";
-          }).fail(function() {
-               // Hide loading state on error
-               $icon.show();
-               $loading.hide();
-               $button.prop('disabled', false);
-          });
+          showConfirmModal(
+               'Delete Todo',
+               'Are you sure you want to delete "' + todoTitle + '"? This action cannot be undone.',
+               function() {
+                    var $icon = $button.find('.delete-icon');
+                    var $loading = $button.find('.delete-loading');
+                    
+                    // Show loading state
+                    $icon.hide();
+                    $loading.show();
+                    $button.prop('disabled', true);
+                    
+                    let title = '{{ title }}'
+                    $.post('/' + todoId + '/delete', {
+                      '_csrf_token': '{{ csrf_token() }}'
+                    },
+                    function(data){
+                         if(title == 'today')
+                              window.location.href = "{{ url_for('list', id='today') }}";
+                         else
+                              window.location.href = "{{ url_for('list', id='tomorrow') }}";
+                    }).fail(function() {
+                         // Hide loading state on error
+                         $icon.show();
+                         $loading.hide();
+                         $button.prop('disabled', false);
+                    });
+               },
+               'Delete',
+               'btn-danger',
+               'bg-danger text-white'
+          );
      })
      // reset value
      $('#create-todo-main').click(function() {
