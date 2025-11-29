@@ -4,6 +4,7 @@ Interactive user management script for TodoBox
 Usage: python3 todomanage.py
 """
 
+import re
 import sys
 import getpass
 import secrets
@@ -259,24 +260,104 @@ def generate_secrets():
     secret_key = secrets.token_hex(32)  # 64 character hex string (256 bits)
     salt = secrets.token_hex(16)  # 32 character hex string (128 bits)
     
-    print("\n⚠️  IMPORTANT: Store these values securely!")
-    print("   These values should be set in your .flaskenv file.")
-    print("   Never commit these values to version control.\n")
+    # Define paths
+    project_root = Path(__file__).parent
+    flaskenv_path = project_root / '.flaskenv'
+    flaskenv_example_path = project_root / '.flaskenv.example'
     
-    print("-" * 60)
+    # Placeholder values to detect (regex patterns for exact line matching)
+    placeholder_secret_pattern = r'^SECRET_KEY=change-me-to-a-secure-random-key\s*$'
+    placeholder_salt_pattern = r'^SALT=change-me-to-a-secure-salt\s*$'
+    
+    # Check if .flaskenv exists and has placeholder values
+    updated = False
+    if flaskenv_path.exists():
+        content = flaskenv_path.read_text(encoding='utf-8')
+        
+        # Check for placeholder values using regex (multiline mode)
+        has_placeholder_secret = re.search(placeholder_secret_pattern, content, re.MULTILINE) is not None
+        has_placeholder_salt = re.search(placeholder_salt_pattern, content, re.MULTILINE) is not None
+        
+        if has_placeholder_secret or has_placeholder_salt:
+            print("\n🔍 Detected placeholder values in .flaskenv")
+            
+            # Replace placeholder values using regex
+            if has_placeholder_secret:
+                content = re.sub(
+                    placeholder_secret_pattern,
+                    f'SECRET_KEY={secret_key}',
+                    content,
+                    flags=re.MULTILINE
+                )
+                print("   ✓ Updated SECRET_KEY")
+            
+            if has_placeholder_salt:
+                content = re.sub(
+                    placeholder_salt_pattern,
+                    f'SALT={salt}',
+                    content,
+                    flags=re.MULTILINE
+                )
+                print("   ✓ Updated SALT")
+            
+            # Write updated content back
+            flaskenv_path.write_text(content, encoding='utf-8')
+            updated = True
+            print("\n✅ .flaskenv has been updated with secure values!")
+        else:
+            print("\n⚠️  .flaskenv exists but does not contain placeholder values.")
+            print("   SECRET_KEY and SALT were not updated.")
+    else:
+        # .flaskenv doesn't exist - check if we can create from example
+        if flaskenv_example_path.exists():
+            print("\n⚠️  .flaskenv does not exist.")
+            create_env = input("   Create .flaskenv from .flaskenv.example? [Y/n]: ").strip().lower()
+            
+            if create_env != 'n':
+                content = flaskenv_example_path.read_text(encoding='utf-8')
+                
+                # Replace placeholder values in the example content using regex
+                content = re.sub(
+                    placeholder_secret_pattern,
+                    f'SECRET_KEY={secret_key}',
+                    content,
+                    flags=re.MULTILINE
+                )
+                content = re.sub(
+                    placeholder_salt_pattern,
+                    f'SALT={salt}',
+                    content,
+                    flags=re.MULTILINE
+                )
+                
+                flaskenv_path.write_text(content, encoding='utf-8')
+                updated = True
+                print("\n✅ .flaskenv created with secure SECRET_KEY and SALT!")
+            else:
+                print("\n⚠️  .flaskenv was not created.")
+        else:
+            print("\n⚠️  Neither .flaskenv nor .flaskenv.example exist.")
+    
+    # Always display the generated values
+    print("\n" + "-" * 60)
     print("Generated values:\n")
     print(f"SECRET_KEY={secret_key}")
     print(f"SALT={salt}")
     print("-" * 60)
     
-    # Ask if user wants to see the instructions
-    show_help = input("\nShow instructions for updating .flaskenv? [y/N]: ").strip().lower()
-    
-    if show_help == 'y':
-        print("\n" + "="*60)
-        print("  Instructions")
-        print("="*60)
-        print("""
+    if not updated:
+        print("\n⚠️  IMPORTANT: Store these values securely!")
+        print("   These values should be set in your .flaskenv file.")
+        print("   Never commit these values to version control.\n")
+        
+        # Ask if user wants to see the instructions
+        show_help = input("\nShow instructions for updating .flaskenv? [y/N]: ").strip().lower()
+        
+        if show_help == 'y':
+            print("\n" + "="*60)
+            print("  Instructions")
+            print("="*60)
+            print("""
 1. Open or create your .flaskenv file in the project root
 
 2. Copy and paste the SECRET_KEY and SALT values shown above
