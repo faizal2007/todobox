@@ -22,12 +22,12 @@
 <script>
 /**
  * Show a Bootstrap confirmation modal
- * @param {string} title - Modal title
- * @param {string} message - Confirmation message
+ * @param {string} title - Modal title (defaults to 'Confirm Action' if not provided)
+ * @param {string} message - Confirmation message (defaults to 'Are you sure you want to proceed?' if not provided)
  * @param {function} onConfirm - Callback function when confirmed
- * @param {string} confirmBtnText - Text for confirm button (default: 'Confirm')
- * @param {string} confirmBtnClass - CSS class for confirm button (default: 'btn-danger')
- * @param {string} headerClass - CSS class for modal header (default: 'bg-danger text-white')
+ * @param {string} confirmBtnText - Text for confirm button (defaults to 'Confirm' if not provided)
+ * @param {string} confirmBtnClass - CSS class for confirm button (defaults to 'btn-danger' if not provided)
+ * @param {string} headerClass - CSS class for modal header (defaults to 'bg-danger text-white' if not provided)
  */
 function showConfirmModal(title, message, onConfirm, confirmBtnText, confirmBtnClass, headerClass) {
     var modal = $('#confirmModal');
@@ -36,19 +36,19 @@ function showConfirmModal(title, message, onConfirm, confirmBtnText, confirmBtnC
     var messageEl = $('#confirmModalMessage');
     var confirmBtn = $('#confirmModalConfirmBtn');
     
-    // Set content
+    // Set content with defaults
     titleEl.text(title || 'Confirm Action');
     messageEl.text(message || 'Are you sure you want to proceed?');
     
-    // Set button text and class
+    // Set button text and class with defaults
     confirmBtn.text(confirmBtnText || 'Confirm');
     confirmBtn.removeClass().addClass('btn ' + (confirmBtnClass || 'btn-danger'));
     
-    // Set header class
+    // Set header class with default
     header.removeClass().addClass('modal-header ' + (headerClass || 'bg-danger text-white'));
     
-    // Remove any previous click handlers and add new one
-    confirmBtn.off('click').on('click', function() {
+    // Remove previous click handler (namespaced) and add new one to avoid interference
+    confirmBtn.off('click.confirmModal').on('click.confirmModal', function() {
         modal.modal('hide');
         if (typeof onConfirm === 'function') {
             onConfirm();
