@@ -75,7 +75,7 @@
             </div>
 
             <!-- Send Invitation -->
-            <div class="card mt-4" id="invitation-card" style="{% if not current_user.sharing_enabled %}display: none;{% endif %}">
+            <div class="card mt-4{% if not current_user.sharing_enabled %} d-none{% endif %}" id="invitation-card">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">
                         <i class="mdi mdi-email-send mr-2"></i>Send Invitation
@@ -289,9 +289,9 @@
 {% block extra_script_footer %}
 <script>
 (function() {
-    // Current user's email for self-invitation validation
-    var currentUserEmail = '{{ current_user.email | lower }}';
-    var csrfToken = '{{ csrf_token() }}';
+    // Current user's email for self-invitation validation (safely escaped)
+    var currentUserEmail = {{ (current_user.email | lower) | tojson }};
+    var csrfToken = {{ csrf_token() | tojson }};
     
     // Helper function to show AJAX alerts
     function showAlert(message, type) {
@@ -353,11 +353,11 @@
             })
             .then(function(data) {
                 if (data.status === 'success') {
-                    // Show/hide invitation card based on new state
+                    // Show/hide invitation card based on new state using Bootstrap class
                     if (isEnabled) {
-                        invitationCard.style.display = 'block';
+                        invitationCard.classList.remove('d-none');
                     } else {
-                        invitationCard.style.display = 'none';
+                        invitationCard.classList.add('d-none');
                     }
                     statusIndicator.innerHTML = '<span class="text-success"><i class="mdi mdi-check"></i> Saved</span>';
                     showAlert(data.message, 'success');
