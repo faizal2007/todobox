@@ -33,7 +33,7 @@
     {% endwith %}
 
     <!-- Alert container for AJAX messages -->
-    <div class="row" id="ajax-alert-container" style="display: none;">
+    <div class="row d-none" id="ajax-alert-container">
         <div class="col-12">
             <div class="alert alert-dismissible fade show" role="alert" id="ajax-alert">
                 <i class="mdi mr-2" id="ajax-alert-icon"></i>
@@ -94,7 +94,7 @@
                         <div class="form-group">
                             {{ invitation_form.email.label(class="font-weight-bold") }}
                             {{ invitation_form.email(class="form-control", placeholder="Enter Gmail address", id="invitation_email") }}
-                            <small class="form-text text-danger d-block mt-1" id="email-error" style="display: none;">
+                            <small class="form-text text-danger d-block mt-1 d-none" id="email-error">
                                 <i class="mdi mdi-alert-circle mr-1"></i><span id="email-error-message"></span>
                             </small>
                             {% for error in invitation_form.email.errors %}
@@ -317,11 +317,11 @@
         }
         
         messageEl.textContent = message;
-        container.style.display = 'block';
+        container.classList.remove('d-none');
         
         // Auto-hide after 5 seconds
         setTimeout(function() {
-            container.style.display = 'none';
+            container.classList.add('d-none');
         }, 5000);
     }
     
@@ -400,21 +400,21 @@
             // Check if user is trying to invite themselves
             if (email === currentUserEmail) {
                 e.preventDefault();
-                emailError.style.display = 'block';
+                emailError.classList.remove('d-none');
                 emailErrorMessage.textContent = 'You cannot invite yourself.';
                 emailInput.classList.add('is-invalid');
                 return false;
             }
             
             // Clear any previous error
-            emailError.style.display = 'none';
+            emailError.classList.add('d-none');
             emailInput.classList.remove('is-invalid');
             return true;
         });
         
         // Clear error on input change
         emailInput.addEventListener('input', function() {
-            emailError.style.display = 'none';
+            emailError.classList.add('d-none');
             emailInput.classList.remove('is-invalid');
         });
     }
