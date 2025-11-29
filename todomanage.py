@@ -6,6 +6,7 @@ Usage: python3 todomanage.py
 
 import sys
 import getpass
+import secrets
 from pathlib import Path
 
 # Add the project root to the path
@@ -24,9 +25,10 @@ def main():
         print("  2) List users")
         print("  3) Assign user to admin")
         print("  4) Delete user")
-        print("  5) Exit")
+        print("  5) Generate SECRET_KEY and SALT")
+        print("  6) Exit")
         
-        choice = input("\nSelect option (1-5): ").strip()
+        choice = input("\nSelect option (1-6): ").strip()
         
         if choice == '1':
             create_user()
@@ -37,10 +39,12 @@ def main():
         elif choice == '4':
             delete_user()
         elif choice == '5':
+            generate_secrets()
+        elif choice == '6':
             print("\n✅ Exiting.\n")
             sys.exit(0)
         else:
-            print("\n❌ Invalid option. Please select 1-5.")
+            print("\n❌ Invalid option. Please select 1-6.")
 
 def create_user():
     """Create a new user with optional admin privileges"""
@@ -243,6 +247,56 @@ def delete_user():
             print(f"\n❌ Error deleting user: {e}")
             db.session.rollback()
             return False
+
+def generate_secrets():
+    """Generate cryptographically secure SECRET_KEY and SALT"""
+    
+    print("\n\n" + "-"*60)
+    print("  Generate SECRET_KEY and SALT")
+    print("-"*60)
+    
+    # Generate secure random values
+    secret_key = secrets.token_hex(32)  # 64 character hex string (256 bits)
+    salt = secrets.token_hex(16)  # 32 character hex string (128 bits)
+    
+    print("\n⚠️  IMPORTANT: Store these values securely!")
+    print("   These values should be set in your .flaskenv file.")
+    print("   Never commit these values to version control.\n")
+    
+    print("-" * 60)
+    print("Generated values:\n")
+    print(f"SECRET_KEY={secret_key}")
+    print(f"SALT={salt}")
+    print("-" * 60)
+    
+    # Ask if user wants to see the instructions
+    show_help = input("\nShow instructions for updating .flaskenv? [y/N]: ").strip().lower()
+    
+    if show_help == 'y':
+        print("\n" + "="*60)
+        print("  Instructions")
+        print("="*60)
+        print("""
+1. Open or create your .flaskenv file in the project root
+
+2. Add or update these lines:
+   SECRET_KEY=<your_generated_secret_key>
+   SALT=<your_generated_salt>
+
+3. Make sure .flaskenv is in your .gitignore file
+
+4. For production, use environment variables instead of .flaskenv
+
+Example .flaskenv:
+   FLASK_APP=todobox.py
+   SECRET_KEY={secret_key}
+   SALT={salt}
+   DATABASE_DEFAULT=sqlite
+   DATABASE_NAME=todobox.db
+""".format(secret_key=secret_key, salt=salt))
+    
+    print("\n✅ Secret generation complete!")
+    return True
 
 def get_valid_username():
     """Get and validate username"""
