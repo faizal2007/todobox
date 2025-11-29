@@ -5,6 +5,34 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.3] - Reverse Proxy Support & Dashboard Fix - 2025-11-29
+
+### 1.3.3 - Added
+
+- Werkzeug `ProxyFix` middleware to handle `X-Forwarded-*` headers for reverse proxy support
+- Configurable `PROXY_X_*` settings in config for multi-layer proxy environments
+- `get_oauth_redirect_uri()` helper function for proper OAuth URL generation behind proxies
+- `OAUTH_REDIRECT_URI` configuration option for explicit public OAuth callback URL
+
+### 1.3.3 - Fixed
+
+- **Google OAuth sign-in fails behind reverse proxy/SSH tunnel**: `url_for()` was generating internal server URLs (e.g., `http://127.0.0.1:5000`) instead of public tunnel URLs
+- **Dashboard "Recent Todos" showing completed todos**: Changed to display only undone (not completed) todos using efficient JOIN query
+- Replaced N+1 query pattern with optimized single JOIN query for recent todos
+
+### 1.3.3 - Changed
+
+- OAuth callback URL generation now uses `OAUTH_REDIRECT_URI` config when set, falling back to `url_for()` for local development
+- Recent todos query in dashboard now filters by status to exclude "done" todos (status_id = 6)
+
+### 1.3.3 - Technical Implementation
+
+- `app/oauth.py`: Added `get_oauth_redirect_uri()` function for proxy-aware URL generation
+- `app/__init__.py`: Added `ProxyFix` middleware initialization
+- `app/config.py`: Added `PROXY_X_FOR`, `PROXY_X_PROTO`, `PROXY_X_HOST`, `PROXY_X_PORT`, `PROXY_X_PREFIX` settings
+- `app/routes.py`: Optimized recent todos query with JOIN pattern matching `Tracker.timestamp == Todo.modified`
+- `.flaskenv.example`: Added reverse proxy configuration documentation
+
 ## [1.3.2] - UI/UX Enhancements & Account Security - 2025-11-27
 
 ### 1.3.2 - Added
