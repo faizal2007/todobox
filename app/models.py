@@ -16,6 +16,7 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
     api_token = db.Column(db.String(255), unique=True, index=True) # type: ignore[attr-defined]  # API token for external access
     oauth_provider = db.Column(db.String(50)) # type: ignore[attr-defined]  # 'google' or None for password auth
     oauth_id = db.Column(db.String(255), index=True) # type: ignore[attr-defined]  # Google subject ID
+    sharing_enabled = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Enable todo sharing (Gmail users only)
     todo = db.relationship('Todo', backref='user', lazy='dynamic') # type: ignore[attr-defined]
 
     def __init__(self, username, email, oauth_provider=None, oauth_id=None):
@@ -23,6 +24,7 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
         self.email = email
         self.oauth_provider = oauth_provider
         self.oauth_id = oauth_id
+        self.sharing_enabled = False
 
     @classmethod
     def seed(cls):
@@ -70,6 +72,89 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
             return True
         else:
             return False
+    
+    def is_gmail_user(self):
+        """Check if the user is a Gmail (OAuth) user"""
+        return self.oauth_provider == 'google'
+    
+    def can_share_todos(self):
+        """Check if the user can share todos (must be Gmail user with sharing enabled)"""
+        return self.is_gmail_user() and self.sharing_enabled
+
+
+class ShareInvitation(db.Model): # type: ignore[attr-defined]
+    """Model to store pending sharing invitations between Gmail users"""
+    id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
+    from_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # type: ignore[attr-defined]
+    to_email = db.Column(db.String(120), nullable=False) # type: ignore[attr-defined]  # Email of user to share with
+    token = db.Column(db.String(64), unique=True, index=True, nullable=False) # type: ignore[attr-defined]  # Unique token for approval link
+    status = db.Column(db.String(20), default='pending') # type: ignore[attr-defined]  # pending, accepted, declined, expired
+    created_at = db.Column(db.DateTime, default=datetime.now) # type: ignore[attr-defined]
+    expires_at = db.Column(db.DateTime) # type: ignore[attr-defined]
+    responded_at = db.Column(db.DateTime) # type: ignore[attr-defined]
+    
+    # Relationship to the sender
+    from_user = db.relationship('User', foreign_keys=[from_user_id], backref='sent_invitations') # type: ignore[attr-defined]
+    
+    def __init__(self, from_user_id, to_email, token=None, expires_in_days=7):
+        import secrets
+        self.from_user_id = from_user_id
+        self.to_email = to_email
+        self.token = token or secrets.token_urlsafe(32)
+        self.status = 'pending'
+        self.created_at = datetime.now()
+        self.expires_at = datetime.now() + timedelta(days=expires_in_days)
+    
+    def is_expired(self):
+        """Check if the invitation has expired"""
+        return datetime.now() > self.expires_at
+    
+    def is_pending(self):
+        """Check if the invitation is still pending"""
+        return self.status == 'pending' and not self.is_expired()
+    
+    @classmethod
+    def get_by_token(cls, token):
+        """Get invitation by token"""
+        return cls.query.filter_by(token=token).first()
+
+
+class TodoShare(db.Model): # type: ignore[attr-defined]
+    """Model to track todo sharing relationships between Gmail users"""
+    id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # type: ignore[attr-defined]  # User who owns the todos
+    shared_with_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # type: ignore[attr-defined]  # User who can see the todos
+    created_at = db.Column(db.DateTime, default=datetime.now) # type: ignore[attr-defined]
+    
+    # Relationships
+    owner = db.relationship('User', foreign_keys=[owner_id], backref='shared_by_me') # type: ignore[attr-defined]
+    shared_with = db.relationship('User', foreign_keys=[shared_with_id], backref='shared_with_me') # type: ignore[attr-defined]
+    
+    # Unique constraint - each pair of users can only have one sharing relationship
+    __table_args__ = (db.UniqueConstraint('owner_id', 'shared_with_id', name='unique_share'),) # type: ignore[attr-defined]
+    
+    def __init__(self, owner_id, shared_with_id):
+        self.owner_id = owner_id
+        self.shared_with_id = shared_with_id
+        self.created_at = datetime.now()
+    
+    @classmethod
+    def get_shared_users(cls, user_id):
+        """Get list of users who have shared their todos with this user"""
+        shares = cls.query.filter_by(shared_with_id=user_id).all()
+        return [share.owner for share in shares]
+    
+    @classmethod
+    def get_users_i_share_with(cls, user_id):
+        """Get list of users this user shares their todos with"""
+        shares = cls.query.filter_by(owner_id=user_id).all()
+        return [share.shared_with for share in shares]
+    
+    @classmethod
+    def is_sharing_with(cls, owner_id, shared_with_id):
+        """Check if owner is sharing with the specified user"""
+        return cls.query.filter_by(owner_id=owner_id, shared_with_id=shared_with_id).first() is not None
+
 
 class Tracker(db.Model): # type: ignore[attr-defined]
     id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]

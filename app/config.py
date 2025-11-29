@@ -20,6 +20,13 @@ GOOGLE_DISCOVERY_URL = 'https://accounts.google.com/.well-known/openid-configura
 # OAuth redirect URL
 OAUTH_REDIRECT_URI = os.environ.get('OAUTH_REDIRECT_URI', 'http://localhost:5000/auth/callback/google')
 
+# Email/SMTP Configuration (for sharing invitations)
+SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
+SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
+SMTP_USERNAME = os.environ.get('SMTP_USERNAME', '')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')  # App-specific password for Gmail
+SMTP_FROM_EMAIL = os.environ.get('SMTP_FROM_EMAIL', '')
+
 # Reverse Proxy Configuration (for running behind load balancers, tunnels, etc.)
 # Set these values to the number of trusted proxy layers for each header type
 PROXY_X_FOR = int(os.environ.get('PROXY_X_FOR', '1'))  # X-Forwarded-For header trust level

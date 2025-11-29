@@ -1,0 +1,121 @@
+{% extends "main.html" %}
+{% set active_page = title %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h1 class="page-title">
+                    <i class="mdi mdi-share-variant mr-2"></i>{{ active_page|title }}
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            {% set alert_type = 'alert-success' if category == 'success' else 'alert-danger' if category == 'error' else 'alert-warning' if category == 'warning' else 'alert-info' %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert {{ alert_type }} alert-dismissible fade show" role="alert">
+                        <i class="mdi mdi-{{ 'check-circle' if category == 'success' else 'alert-circle' }} mr-2"></i>
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Navigation -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <a href="{{ url_for('sharing') }}" class="btn btn-outline-secondary">
+                <i class="mdi mdi-arrow-left mr-1"></i>Back to Sharing Settings
+            </a>
+        </div>
+    </div>
+
+    {% if shared_users %}
+    <!-- Filter by User -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body py-2">
+                    <span class="mr-2"><strong>Showing todos from:</strong></span>
+                    {% for user in shared_users %}
+                    <span class="badge badge-info mr-2">
+                        <i class="mdi mdi-account mr-1"></i>{{ user.fullname or user.username }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if shared_todos %}
+    <!-- Shared Todos Grid -->
+    <div class="row">
+        {% for item in shared_todos %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 {% if item.status == 'done' %}border-success{% elif item.status == 'failed' %}border-danger{% elif item.status == 're-assign' %}border-warning{% else %}border-primary{% endif %}">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="badge {% if item.status == 'done' %}badge-success{% elif item.status == 'failed' %}badge-danger{% elif item.status == 're-assign' %}badge-warning{% else %}badge-primary{% endif %}">
+                        {{ item.status|title }}
+                    </span>
+                    <small class="text-muted">
+                        <i class="mdi mdi-account mr-1"></i>{{ item.owner.fullname or item.owner.username }}
+                    </small>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ item.todo.name }}</h5>
+                    {% if item.todo.details_html %}
+                    <div class="card-text small">{{ item.todo.details_html|safe }}</div>
+                    {% elif item.todo.details %}
+                    <p class="card-text small text-muted">{{ item.todo.details }}</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="mdi mdi-calendar mr-1"></i>
+                    {{ item.todo.modified.strftime('%Y-%m-%d %H:%M') }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="mdi mdi-information-outline mr-2"></i>
+                The users sharing with you don't have any todos yet.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="mdi mdi-share-off mdi-48px text-muted mb-3"></i>
+                    <h4 class="text-muted">No Shared Todos</h4>
+                    <p class="text-muted mb-4">
+                        No one is sharing their todos with you yet.<br>
+                        Ask your friends or colleagues to send you a sharing invitation!
+                    </p>
+                    <a href="{{ url_for('sharing') }}" class="btn btn-primary">
+                        <i class="mdi mdi-cog mr-1"></i>Manage Sharing Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

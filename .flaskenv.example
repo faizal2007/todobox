@@ -37,6 +37,15 @@ GOOGLE_CLIENT_SECRET=your_client_secret_here
 # Example: OAUTH_REDIRECT_URI=https://your-public-domain.com/auth/callback/google
 OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google
 
+# Email/SMTP Configuration (for sharing invitations)
+# Required for sending sharing invitations via email
+# For Gmail, use an App-specific password: https://support.google.com/accounts/answer/185833
+# SMTP_SERVER=smtp.gmail.com
+# SMTP_PORT=587
+# SMTP_USERNAME=your_gmail@gmail.com
+# SMTP_PASSWORD=your_app_specific_password
+# SMTP_FROM_EMAIL=your_gmail@gmail.com
+
 # Reverse Proxy Configuration (optional)
 # Set these when running behind multiple proxy layers (e.g., load balancer + tunnel)
 # Values indicate how many proxies to trust for each X-Forwarded-* header

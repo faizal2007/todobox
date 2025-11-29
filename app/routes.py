@@ -4,12 +4,13 @@ from unittest.mock import patch
 from flask import render_template, request, redirect, url_for, make_response, jsonify, abort, flash, redirect, session, g
 from app import app, db, csrf
 from flask_login import current_user, login_user, login_required, logout_user
-from app.models import Todo, User, Status, Tracker
-from app.forms import LoginForm, ChangePassword, UpdateAccount
+from app.models import Todo, User, Status, Tracker, ShareInvitation, TodoShare
+from app.forms import LoginForm, ChangePassword, UpdateAccount, ShareInvitationForm, SharingSettingsForm
 from app.oauth import generate_google_auth_url, process_google_callback
+from app.email_service import send_sharing_invitation, get_invitation_link, is_email_configured
 from urllib.parse import urlparse as url_parse
 from datetime import datetime, date, timedelta
-from sqlalchemy import asc, desc
+from sqlalchemy import asc, desc, or_
 import markdown
 from bleach import clean
 from wtforms.csrf.core import CSRF
@@ -810,3 +811,252 @@ def settings():
             return redirect(url_for('settings'))
     
     return render_template('settings.html', title='Settings', password_form=password_form)
+
+
+# ==================== Todo Sharing Routes ====================
+
+@app.route('/sharing', methods=['GET', 'POST'])
+@login_required
+def sharing():
+    """Sharing settings and invitation management page (Gmail users only)"""
+    # Check if user is a Gmail user
+    if not current_user.is_gmail_user():
+        flash('Todo sharing is only available for Google/Gmail account users.', 'warning')
+        return redirect(url_for('settings'))
+    
+    settings_form = SharingSettingsForm()
+    invitation_form = ShareInvitationForm()
+    
+    # Handle sharing settings update
+    if request.method == 'POST' and 'save_settings' in request.form:
+        current_user.sharing_enabled = 'sharing_enabled' in request.form
+        db.session.commit()  # type: ignore[attr-defined]
+        flash('Sharing settings updated successfully.', 'success')
+        return redirect(url_for('sharing'))
+    
+    # Handle sending invitation
+    if request.method == 'POST' and 'send_invitation' in request.form:
+        if not current_user.sharing_enabled:
+            flash('Please enable sharing first before sending invitations.', 'warning')
+            return redirect(url_for('sharing'))
+        
+        if invitation_form.validate():
+            to_email = invitation_form.email.data.lower().strip()
+            
+            # Check if already sharing with this user
+            existing_user = User.query.filter_by(email=to_email).first()
+            if existing_user and TodoShare.is_sharing_with(current_user.id, existing_user.id):
+                flash(f'You are already sharing todos with {to_email}.', 'info')
+                return redirect(url_for('sharing'))
+            
+            # Check for pending invitation
+            pending = ShareInvitation.query.filter_by(
+                from_user_id=current_user.id,
+                to_email=to_email,
+                status='pending'
+            ).first()
+            
+            if pending and not pending.is_expired():
+                flash(f'An invitation to {to_email} is already pending.', 'info')
+                return redirect(url_for('sharing'))
+            
+            # Create new invitation
+            invitation = ShareInvitation(from_user_id=current_user.id, to_email=to_email)
+            db.session.add(invitation)  # type: ignore[attr-defined]
+            db.session.commit()  # type: ignore[attr-defined]
+            
+            # Try to send email
+            if is_email_configured():
+                success, error = send_sharing_invitation(invitation, current_user)
+                if success:
+                    flash(f'Invitation sent to {to_email}!', 'success')
+                else:
+                    # Email failed but invitation created - show link
+                    invitation_link = get_invitation_link(invitation)
+                    flash(f'Could not send email ({error}). Share this link manually: {invitation_link}', 'warning')
+            else:
+                # Email not configured - show link
+                invitation_link = get_invitation_link(invitation)
+                flash(f'Email not configured. Share this link with {to_email}: {invitation_link}', 'info')
+            
+            return redirect(url_for('sharing'))
+    
+    # Get current user's sent invitations (pending ones)
+    sent_invitations = ShareInvitation.query.filter_by(
+        from_user_id=current_user.id
+    ).order_by(ShareInvitation.created_at.desc()).limit(10).all()
+    
+    # Get received invitations (pending)
+    received_invitations = ShareInvitation.query.filter_by(
+        to_email=current_user.email,
+        status='pending'
+    ).all()
+    # Filter out expired ones
+    received_invitations = [inv for inv in received_invitations if not inv.is_expired()]
+    
+    # Get current sharing relationships
+    shared_with_me = TodoShare.get_shared_users(current_user.id)
+    i_share_with = TodoShare.get_users_i_share_with(current_user.id)
+    
+    # Pre-set the checkbox value
+    settings_form.sharing_enabled.data = current_user.sharing_enabled
+    
+    return render_template('sharing.html', 
+                          title='Sharing Settings',
+                          settings_form=settings_form,
+                          invitation_form=invitation_form,
+                          sent_invitations=sent_invitations,
+                          received_invitations=received_invitations,
+                          shared_with_me=shared_with_me,
+                          i_share_with=i_share_with,
+                          email_configured=is_email_configured())
+
+
+@app.route('/share/accept/<token>')
+def accept_share_invitation(token):
+    """Accept a sharing invitation"""
+    invitation = ShareInvitation.get_by_token(token)
+    
+    if not invitation:
+        flash('Invalid invitation link.', 'error')
+        return redirect(url_for('login'))
+    
+    if invitation.is_expired():
+        invitation.status = 'expired'
+        db.session.commit()  # type: ignore[attr-defined]
+        flash('This invitation has expired.', 'warning')
+        return redirect(url_for('login'))
+    
+    if invitation.status != 'pending':
+        flash(f'This invitation has already been {invitation.status}.', 'info')
+        return redirect(url_for('login'))
+    
+    # User must be logged in to accept
+    if not current_user.is_authenticated:
+        # Store invitation token in session for after login
+        session['pending_share_token'] = token
+        flash('Please sign in with Google to accept this sharing invitation.', 'info')
+        return redirect(url_for('login'))
+    
+    # Check if the logged-in user's email matches the invitation
+    if current_user.email.lower() != invitation.to_email.lower():
+        flash(f'This invitation was sent to {invitation.to_email}. Please sign in with that account.', 'warning')
+        return redirect(url_for('login'))
+    
+    # Check if user is a Gmail user
+    if not current_user.is_gmail_user():
+        flash('Todo sharing is only available for Google/Gmail account users.', 'warning')
+        return redirect(url_for('dashboard'))
+    
+    # Accept the invitation
+    invitation.status = 'accepted'
+    invitation.responded_at = datetime.now()
+    
+    # Create the sharing relationship
+    existing_share = TodoShare.query.filter_by(
+        owner_id=invitation.from_user_id,
+        shared_with_id=current_user.id
+    ).first()
+    
+    if not existing_share:
+        share = TodoShare(owner_id=invitation.from_user_id, shared_with_id=current_user.id)
+        db.session.add(share)  # type: ignore[attr-defined]
+    
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    from_user = User.query.get(invitation.from_user_id)
+    flash(f'You can now see todos shared by {from_user.fullname or from_user.username}!', 'success')
+    return redirect(url_for('shared_todos'))
+
+
+@app.route('/share/decline/<token>')
+def decline_share_invitation(token):
+    """Decline a sharing invitation"""
+    invitation = ShareInvitation.get_by_token(token)
+    
+    if not invitation:
+        flash('Invalid invitation link.', 'error')
+        return redirect(url_for('login'))
+    
+    if invitation.status != 'pending':
+        flash(f'This invitation has already been {invitation.status}.', 'info')
+        return redirect(url_for('login'))
+    
+    # Decline the invitation
+    invitation.status = 'declined'
+    invitation.responded_at = datetime.now()
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    flash('Invitation declined.', 'info')
+    if current_user.is_authenticated:
+        return redirect(url_for('sharing'))
+    return redirect(url_for('login'))
+
+
+@app.route('/share/revoke/<int:share_id>', methods=['POST'])
+@login_required
+def revoke_share(share_id):
+    """Revoke a sharing relationship (stop sharing with someone)"""
+    share = TodoShare.query.filter_by(id=share_id, owner_id=current_user.id).first()
+    
+    if not share:
+        flash('Sharing relationship not found.', 'error')
+        return redirect(url_for('sharing'))
+    
+    shared_user = share.shared_with
+    db.session.delete(share)  # type: ignore[attr-defined]
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    flash(f'Stopped sharing todos with {shared_user.fullname or shared_user.username}.', 'success')
+    return redirect(url_for('sharing'))
+
+
+@app.route('/share/remove/<int:share_id>', methods=['POST'])
+@login_required
+def remove_share_access(share_id):
+    """Remove someone's shared access to your view (they shared with you, you remove it)"""
+    share = TodoShare.query.filter_by(id=share_id, shared_with_id=current_user.id).first()
+    
+    if not share:
+        flash('Sharing relationship not found.', 'error')
+        return redirect(url_for('sharing'))
+    
+    owner = share.owner
+    db.session.delete(share)  # type: ignore[attr-defined]
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    flash(f'Removed shared access from {owner.fullname or owner.username}.', 'success')
+    return redirect(url_for('sharing'))
+
+
+@app.route('/shared')
+@login_required
+def shared_todos():
+    """View todos shared with the current user"""
+    if not current_user.is_gmail_user():
+        flash('Todo sharing is only available for Google/Gmail account users.', 'warning')
+        return redirect(url_for('dashboard'))
+    
+    # Get users who share their todos with current user
+    shared_users = TodoShare.get_shared_users(current_user.id)
+    
+    # Get all todos from users who share with current user
+    shared_todos_list = []
+    for user in shared_users:
+        user_todos = Todo.query.filter_by(user_id=user.id).order_by(Todo.modified.desc()).all()
+        for todo in user_todos:
+            # Get latest tracker for status
+            latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc()).first()
+            if latest_tracker:
+                status = Status.query.get(latest_tracker.status_id)
+                shared_todos_list.append({
+                    'todo': todo,
+                    'owner': user,
+                    'status': status.name if status else 'unknown',
+                    'tracker': latest_tracker
+                })
+    
+    return render_template('shared_todos.html', 
+                          title='Shared Todos',
+                          shared_todos=shared_todos_list,
+                          shared_users=shared_users)
