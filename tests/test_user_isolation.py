@@ -10,6 +10,51 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
+class TestEncryptionEdgeCases:
+    """Test encryption functions handle edge cases gracefully."""
+    
+    def test_encryption_functions_outside_app_context(self):
+        """Test that encryption functions work gracefully outside of app context.
+        
+        This is important for scenarios like running behind reverse proxies
+        where the app context might not be available in edge cases.
+        """
+        from app.encryption import is_encryption_enabled, encrypt_text, decrypt_text
+        
+        # These should not raise exceptions even outside app context
+        # is_encryption_enabled should return False
+        result = is_encryption_enabled()
+        assert result is False, "is_encryption_enabled should return False outside app context"
+        
+        # encrypt_text should return plaintext unchanged
+        plaintext = "test message"
+        result = encrypt_text(plaintext)
+        assert result == plaintext, "encrypt_text should return plaintext outside app context"
+        
+        # decrypt_text should return ciphertext unchanged
+        ciphertext = "some text"
+        result = decrypt_text(ciphertext)
+        assert result == ciphertext, "decrypt_text should return input unchanged outside app context"
+    
+    def test_encryption_functions_with_none_values(self, app):
+        """Test that encryption functions handle None values correctly."""
+        from app.encryption import encrypt_text, decrypt_text
+        
+        with app.app_context():
+            # None should be returned as None
+            assert encrypt_text(None) is None
+            assert decrypt_text(None) is None
+    
+    def test_encryption_functions_with_empty_strings(self, app):
+        """Test that encryption functions handle empty strings correctly."""
+        from app.encryption import encrypt_text, decrypt_text
+        
+        with app.app_context():
+            # Empty string should be returned as empty string
+            assert encrypt_text('') == ''
+            assert decrypt_text('') == ''
+
+
 @pytest.fixture
 def app():
     """Create and configure a test application instance."""
