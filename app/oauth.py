@@ -15,6 +15,20 @@ def get_google_provider_config():
     """Fetch Google OAuth configuration"""
     return requests.get(current_app.config['GOOGLE_DISCOVERY_URL']).json()
 
+def get_oauth_redirect_uri():
+    """Get the OAuth redirect URI from config or generate dynamically"""
+    # Use explicitly configured redirect URI if available (for reverse proxy scenarios)
+    configured_uri = current_app.config.get('OAUTH_REDIRECT_URI')
+    # Use configured URI if it's set and not a localhost/127.0.0.1 address (HTTP or HTTPS)
+    local_prefixes = (
+        'http://localhost', 'https://localhost',
+        'http://127.0.0.1', 'https://127.0.0.1'
+    )
+    if configured_uri and not configured_uri.startswith(local_prefixes):
+        return configured_uri
+    # Fall back to dynamically generated URL
+    return url_for("oauth_callback_google", _external=True)
+
 def generate_google_auth_url():
     """Generate Google OAuth authentication URL"""
     google_provider_cfg = get_google_provider_config()
@@ -27,7 +41,7 @@ def generate_google_auth_url():
             current_app.config['GOOGLE_CLIENT_ID'],
             "code",
             "openid email profile",
-            url_for("oauth_callback_google", _external=True),
+            get_oauth_redirect_uri(),
             "offline"
         )
     )
@@ -47,7 +61,7 @@ def process_google_callback(code):
             "code": code,
             "client_id": current_app.config['GOOGLE_CLIENT_ID'],
             "client_secret": current_app.config['GOOGLE_CLIENT_SECRET'],
-            "redirect_uri": url_for("oauth_callback_google", _external=True),
+            "redirect_uri": get_oauth_redirect_uri(),
             "grant_type": "authorization_code",
         }
         
