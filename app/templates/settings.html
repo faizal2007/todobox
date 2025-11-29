@@ -210,6 +210,83 @@
                             </ul>
                         </div>
                     </div>
+
+                    <!-- Sample Curl Commands Section -->
+                    <hr class="my-4">
+                    <h6><i class="mdi mdi-console mr-2"></i>Sample Curl Commands</h6>
+                    <p class="small text-muted mb-3">
+                        Copy-paste ready commands to test the API. {% if current_user.api_token %}Your API token is pre-filled.{% else %}Generate an API token first to use these commands.{% endif %}
+                    </p>
+
+                    <!-- Get All Todos -->
+                    <div class="mb-3">
+                        <label class="small font-weight-bold text-muted">Get All Todos</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-sm bg-light text-monospace" id="curlGetTodos" readonly
+                                   value="curl -X GET {{ request.url_root }}api/todo -H &quot;Authorization: Bearer {% if current_user.api_token %}{{ current_user.api_token }}{% else %}YOUR_API_TOKEN{% endif %}&quot;">
+                            <div class="input-group-append">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlGetTodos')">
+                                    <i class="mdi mdi-content-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Create Todo -->
+                    <div class="mb-3">
+                        <label class="small font-weight-bold text-muted">Create Todo</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-sm bg-light text-monospace" id="curlCreateTodo" readonly
+                                   value="curl -X POST {{ request.url_root }}api/todo -H &quot;Authorization: Bearer {% if current_user.api_token %}{{ current_user.api_token }}{% else %}YOUR_API_TOKEN{% endif %}&quot; -H &quot;Content-Type: application/json&quot; -d '{&quot;title&quot;:&quot;My Task&quot;,&quot;details&quot;:&quot;Task description&quot;}'">
+                            <div class="input-group-append">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlCreateTodo')">
+                                    <i class="mdi mdi-content-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Update Todo -->
+                    <div class="mb-3">
+                        <label class="small font-weight-bold text-muted">Update Todo (replace 1 with todo ID)</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-sm bg-light text-monospace" id="curlUpdateTodo" readonly
+                                   value="curl -X PUT {{ request.url_root }}api/todo/1 -H &quot;Authorization: Bearer {% if current_user.api_token %}{{ current_user.api_token }}{% else %}YOUR_API_TOKEN{% endif %}&quot; -H &quot;Content-Type: application/json&quot; -d '{&quot;title&quot;:&quot;Updated Task&quot;,&quot;details&quot;:&quot;Updated description&quot;}'">
+                            <div class="input-group-append">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlUpdateTodo')">
+                                    <i class="mdi mdi-content-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete Todo -->
+                    <div class="mb-3">
+                        <label class="small font-weight-bold text-muted">Delete Todo (replace 1 with todo ID)</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-sm bg-light text-monospace" id="curlDeleteTodo" readonly
+                                   value="curl -X DELETE {{ request.url_root }}api/todo/1 -H &quot;Authorization: Bearer {% if current_user.api_token %}{{ current_user.api_token }}{% else %}YOUR_API_TOKEN{% endif %}&quot;">
+                            <div class="input-group-append">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlDeleteTodo')">
+                                    <i class="mdi mdi-content-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Get Quote -->
+                    <div class="mb-3">
+                        <label class="small font-weight-bold text-muted">Get Random Quote (no auth required)</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-sm bg-light text-monospace" id="curlGetQuote" readonly
+                                   value="curl -X GET {{ request.url_root }}api/quote">
+                            <div class="input-group-append">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlGetQuote')">
+                                    <i class="mdi mdi-content-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -233,6 +310,32 @@ function copyToClipboard() {
     }).catch(function(err) {
         console.error('Failed to copy: ', err);
         alert('Failed to copy token to clipboard');
+    });
+}
+
+function copyCurlCommand(inputId) {
+    const inputElement = document.getElementById(inputId);
+    const command = inputElement.value;
+    
+    navigator.clipboard.writeText(command).then(function() {
+        // Show temporary success message by changing the button
+        // Use nextElementSibling to get the button container, then find the button
+        const buttonContainer = inputElement.nextElementSibling;
+        const button = buttonContainer ? buttonContainer.querySelector('button') : null;
+        if (button) {
+            const originalIcon = button.innerHTML;
+            button.innerHTML = '<i class="mdi mdi-check text-success"></i>';
+            button.classList.add('btn-success');
+            button.classList.remove('btn-outline-secondary');
+            setTimeout(function() {
+                button.innerHTML = originalIcon;
+                button.classList.remove('btn-success');
+                button.classList.add('btn-outline-secondary');
+            }, 2000);
+        }
+    }).catch(function(err) {
+        console.error('Failed to copy: ', err);
+        alert('Failed to copy command to clipboard');
     });
 }
 
