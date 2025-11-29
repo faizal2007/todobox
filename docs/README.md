@@ -4,18 +4,52 @@ This documentation provides comprehensive information about the TodoBox
 Flask application - a todo management system with user authentication
 and task tracking capabilities.
 
+**Last Updated:** November 29, 2025
+
 ## Contents
 
-- **[OVERVIEW.md](OVERVIEW.md)** - Project overview, architecture, and feature description
-- **[SETUP.md](SETUP.md)** - Installation, configuration, and deployment instructions
-- **[API.md](API.md)** - Complete API reference and endpoint documentation
-- **[MODELS.md](MODELS.md)** - Database models and data structure
-- **[CODE_REVIEW.md](CODE_REVIEW.md)** - Code review findings, best practices, and recommendations
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Project structure and architectural patterns
-- **[USER_CREATION.md](USER_CREATION.md)** - User creation and CLI commands
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment and maintenance guide
+### Getting Started
+
+- **[OVERVIEW.md](OVERVIEW.md)** - Project overview and feature description
+- **[SETUP.md](SETUP.md)** - Installation and configuration guide
 - **[QUICKSTART.md](QUICKSTART.md)** - Quick reference guide
+- **[USER_CREATION.md](USER_CREATION.md)** - User creation and CLI commands
+
+### Reference Documentation
+
+- **[API.md](API.md)** - Complete API reference and endpoints
+- **[MODELS.md](MODELS.md)** - Database models and data structure
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Project structure and patterns
+
+### Operations & Deployment
+
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment and maintenance guide
+- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Production deployment checklist
 - **[OAUTH_SETUP.md](OAUTH_SETUP.md)** - Google OAuth2 setup guide
+
+### Code Quality & Security
+
+- **[CODE_REVIEW.md](CODE_REVIEW.md)** - Code review findings and recommendations
+- **[SECURITY_PATCHES.md](SECURITY_PATCHES.md)** - Security improvements applied
+- **[AXE_LINTER_BEST_PRACTICES.md](AXE_LINTER_BEST_PRACTICES.md)** - Accessibility guidelines
+
+### Migration Guides
+
+- **[README_MIGRATIONS.md](README_MIGRATIONS.md)** - Migration quick reference
+- **[MIGRATION_FIX_GUIDE.md](MIGRATION_FIX_GUIDE.md)** - Migration troubleshooting
+- **[MIGRATION_FIX_SUMMARY.md](MIGRATION_FIX_SUMMARY.md)** - Migration fix summary
+- **[MIGRATION_ANALYSIS.md](MIGRATION_ANALYSIS.md)** - Migration chain analysis
+- **[MIGRATION_TEST_RESULTS.md](MIGRATION_TEST_RESULTS.md)** - Migration test results
+
+### Technical Notes
+
+- **[WERKZEUG_FIX.md](WERKZEUG_FIX.md)** - Werkzeug 3.0 compatibility fixes
+- **[PROGRESS_NOVEMBER_2025.md](PROGRESS_NOVEMBER_2025.md)** - November 2025 progress
+
+### Documentation Index
+
+- **[INDEX.md](INDEX.md)** - Documentation summary and navigation
+- **[DOCUMENTATION_MASTER_INDEX.md](DOCUMENTATION_MASTER_INDEX.md)** - Complete index
 
 ## Quick Links
 
@@ -39,11 +73,22 @@ and task tracking capabilities.
 
 - User authentication and login management
 - Google OAuth2 authentication support
+- RESTful API with token-based authentication
 - Create, read, and manage todo items
 - Mark tasks as complete
 - Task scheduling (today/tomorrow/custom date)
+- Dashboard with statistics
 - Change password and account management
 - Markdown support for task descriptions
 - HTML sanitization for XSS prevention
 - Session management with timeout
 - CSRF protection
+
+## Screenshots
+
+Screenshots are available in the [screenshots](screenshots/) folder:
+
+- `dashboard.png` - Dashboard overview
+- `login.png` - Login page
+- `save-todo.png` - Todo creation
+- `delete-todo.png` - Todo deletion

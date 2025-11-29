@@ -202,13 +202,13 @@ Comprehensive documentation for the TodoBox Flask application has been successfu
 
 | Metric | Value |
 |--------|-------|
-| Total files | 14 |
-| Total documentation | ~60 KB |
-| Code examples | 50+ |
-| Diagrams | 5+ |
-| Tables | 20+ |
+| Total files | 23 |
+| Total documentation | ~180 KB |
+| Code examples | 100+ |
+| Diagrams | 10+ |
+| Tables | 30+ |
 | Issues identified | 15 |
-| Sections | 100+ |
+| Sections | 150+ |
 
 ---
 
@@ -317,22 +317,32 @@ All documented with recommendations for fixes.
 
 ## Documentation Architecture
 
-```bash
+```text
 docs/
-├── README.md                 ← Start here
-├── QUICKSTART.md            ← Quick reference
-├── OVERVIEW.md              ← What is this?
-├── SETUP.md                 ← How to install?
-├── API.md                   ← What endpoints?
-├── MODELS.md                ← Database schema?
-├── ARCHITECTURE.md          ← How it works?
-├── CODE_REVIEW.md           ← What's wrong?
-├── DEPLOYMENT.md            ← How to deploy?
-├── USER_CREATION.md         ← User management
-├── PROGRESS_NOVEMBER_2025.md ← Current status
-├── WERKZEUG_FIX.md          ← Compatibility fix
-├── SECURITY_PATCHES.md      ← Security documentation
-└── INDEX.md                 ← This file
+├── README.md                         ← Start here
+├── QUICKSTART.md                     ← Quick reference
+├── OVERVIEW.md                       ← What is this?
+├── SETUP.md                          ← How to install?
+├── API.md                            ← What endpoints?
+├── MODELS.md                         ← Database schema?
+├── ARCHITECTURE.md                   ← How it works?
+├── CODE_REVIEW.md                    ← What's wrong?
+├── DEPLOYMENT.md                     ← How to deploy?
+├── DEPLOYMENT_CHECKLIST.md           ← Production checklist
+├── USER_CREATION.md                  ← User management
+├── OAUTH_SETUP.md                    ← Google OAuth guide
+├── SECURITY_PATCHES.md               ← Security documentation
+├── AXE_LINTER_BEST_PRACTICES.md      ← Accessibility guide
+├── README_MIGRATIONS.md              ← Migration quick ref
+├── MIGRATION_FIX_GUIDE.md            ← Migration troubleshooting
+├── MIGRATION_FIX_SUMMARY.md          ← Migration fix summary
+├── MIGRATION_ANALYSIS.md             ← Migration analysis
+├── MIGRATION_TEST_RESULTS.md         ← Migration test results
+├── PROGRESS_NOVEMBER_2025.md         ← Current status
+├── WERKZEUG_FIX.md                   ← Compatibility fix
+├── DOCUMENTATION_MASTER_INDEX.md     ← Complete index
+├── INDEX.md                          ← This file
+└── screenshots/                      ← Application screenshots
 ```
 
 **Navigation:**
@@ -448,7 +458,7 @@ docs/
 
 ## Documentation Location
 
-All documentation is in: `/storage/linux/Projects/mysandbox/docs/`
+All documentation is in the `docs/` folder.
 
 Files can be viewed in:
 
@@ -532,9 +542,10 @@ This documentation provides everything needed to:
 - Troubleshoot issues
 - Scale and optimize performance
 
-**All documentation is version 1.0 and was created in January 2025.**
+**Documentation updated November 2025.**
 
-For questions or updates, refer to the appropriate documentation file or review the [QUICKSTART.md](QUICKSTART.md) troubleshooting section.
+For questions or updates, refer to the appropriate documentation file
+or review the [QUICKSTART.md](QUICKSTART.md) troubleshooting section.
 
 ---
 
