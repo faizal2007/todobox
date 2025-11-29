@@ -382,19 +382,15 @@ def dashboard():
         reassignment_stats['avg_reassignments_before_completion'] = 0.0
     
     # Get recent undone todos for activity feed (filtered by current user and not completed)
-    undone_todos = []
-    all_user_todos = Todo.query.filter_by(user_id=current_user.id).order_by(Todo.modified.desc()).all()
-    
-    for todo in all_user_todos:
-        if len(undone_todos) >= 5:
-            break
-        # Get the latest tracker entry for this todo
-        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc()).first()  # type: ignore[attr-defined]
-        # Only include if the latest status is not completed (status_id != 6)
-        if latest_tracker and latest_tracker.status_id != 6:
-            undone_todos.append(todo)
-    
-    recent_todos = undone_todos
+    # Using a similar pattern to getList() in models.py - matching tracker timestamp to todo modified time
+    # Status 6 = 'done' (see Status.seed() in models.py)
+    recent_todos = db.session.query(Todo).join(
+        Tracker, Todo.id == Tracker.todo_id
+    ).filter(
+        Todo.user_id == current_user.id,
+        Tracker.timestamp == Todo.modified,  # Match the latest tracker (same pattern as getList)
+        Tracker.status_id != 6  # Status 6 = 'done'
+    ).order_by(Todo.modified.desc()).limit(5).all()
     
     return render_template('dashboard.html', 
                          chart_segments=chart_segments,
