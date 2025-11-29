@@ -46,8 +46,7 @@ flask db upgrade
 
 # Or: Use existing database
 flask db upgrade
-
-```text
+```
 
 ### For Production
 
@@ -60,8 +59,7 @@ flask db upgrade
 
 # 3. Verify (all should show ✅)
 python check_migrations.py check
-
-```text
+```
 
 ---
 
@@ -87,19 +85,16 @@ When app queries user:
     MySQL: "Unknown column 'user.api_token'"
     ↓
     ❌ Application Error
-
-```text
+```
 
 ## ✅ The Fix
 
 Added a new migration that:
+
 1. Ensures `api_token` column exists
-
-1. Creates the unique index
-
-1. Works regardless of previous migration state
-
-1. Prevents this error from happening again
+2. Creates the unique index
+3. Works regardless of previous migration state
+4. Prevents this error from happening again
 
 ---
 
@@ -113,8 +108,7 @@ mysql -u user -p db -e "DESCRIBE user" | grep api_token
 
 # Does index exist?
 mysql -u user -p db -e "SHOW INDEX FROM user" | grep api_token
-
-```text
+```
 
 ### Detailed Check
 
@@ -123,16 +117,14 @@ mysql -u user -p db -e "SHOW INDEX FROM user" | grep api_token
 python check_migrations.py check
 
 # Should output: ✅ Schema is aligned with models
-
-```text
+```
 
 ### Full Report
 
 ```bash
 # Generate comprehensive report
 python check_migrations.py report
-
-```text
+```
 
 ---
 
@@ -146,8 +138,7 @@ python check_migrations.py report
 #3: 3e5106ee570c → Add api_token + token_created_at
 #4: c682ef478e45 → Remove token_created_at
 #5: d1f2e3c4b5a6 → Ensure api_token exists ✅ NEW
-
-```text
+```
 
 ### How to View
 
@@ -161,8 +152,7 @@ flask db history
 # Jump to specific migration (for testing)
 flask db upgrade 366e5694a9ad  # Go to migration 2
 flask db upgrade                # Continue from current
-
-```text
+```
 
 ---
 
@@ -184,8 +174,7 @@ python check_migrations.py schema
 
 # Full diagnostic report
 python check_migrations.py report
-
-```text
+```
 
 ### fix_production_migration.sh
 
@@ -194,8 +183,7 @@ Automated script for Linux/Mac production fix.
 ```bash
 chmod +x fix_production_migration.sh
 ./fix_production_migration.sh
-
-```text
+```
 
 ---
 
@@ -262,8 +250,7 @@ flask db upgrade
 
 # 3. Restart application
 systemctl restart todobox
-
-```text
+```
 
 ### Error: "Column already exists"
 
@@ -272,8 +259,7 @@ This is expected if column already existed. The migration handles this gracefull
 ```bash
 # Continue deployment, it will work fine
 flask db upgrade
-
-```text
+```
 
 ### Error: "Migration conflicts"
 
@@ -283,8 +269,7 @@ flask db current
 flask db history --verbose
 
 # Contact support with output
-
-```text
+```
 
 ---
 
