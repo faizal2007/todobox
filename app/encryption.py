@@ -11,17 +11,32 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
 def is_encryption_enabled():
-    """Check if todo encryption is enabled in the configuration."""
-    from flask import current_app
-    return current_app.config.get('TODO_ENCRYPTION_ENABLED', False)
+    """Check if todo encryption is enabled in the configuration.
+    
+    Returns False if called outside of an application context to ensure
+    graceful degradation when the app context is not available.
+    """
+    try:
+        from flask import current_app, has_app_context
+        if not has_app_context():
+            return False
+        return current_app.config.get('TODO_ENCRYPTION_ENABLED', False)
+    except RuntimeError:
+        # Return False if called outside of application context
+        return False
 
 
 def _get_encryption_key():
     """
     Derive a Fernet-compatible encryption key from the app's SECRET_KEY and SALT.
     The key is derived using PBKDF2 to ensure it's cryptographically strong.
+    
+    Raises RuntimeError if called outside of an application context.
     """
-    from flask import current_app
+    from flask import current_app, has_app_context
+    
+    if not has_app_context():
+        raise RuntimeError("Cannot derive encryption key outside of application context")
     
     secret_key = current_app.config.get('SECRET_KEY', 'change-me-in-production')
     salt = current_app.config.get('SALT', 'default-salt-change-in-production')
@@ -52,7 +67,7 @@ def get_fernet():
 def encrypt_text(plaintext):
     """
     Encrypt plaintext string and return base64-encoded ciphertext.
-    Returns the plaintext unchanged if encryption is disabled.
+    Returns the plaintext unchanged if encryption is disabled or if an error occurs.
     Returns None if plaintext is None or empty.
     """
     if not plaintext:
@@ -62,12 +77,19 @@ def encrypt_text(plaintext):
     if not is_encryption_enabled():
         return plaintext
     
-    fernet = get_fernet()
-    if isinstance(plaintext, str):
-        plaintext = plaintext.encode('utf-8')
-    
-    encrypted = fernet.encrypt(plaintext)
-    return encrypted.decode('utf-8')
+    try:
+        fernet = get_fernet()
+        if isinstance(plaintext, str):
+            plaintext = plaintext.encode('utf-8')
+        
+        encrypted = fernet.encrypt(plaintext)
+        return encrypted.decode('utf-8')
+    except RuntimeError:
+        # Return plaintext if called outside of application context
+        # This ensures graceful degradation
+        if isinstance(plaintext, bytes):
+            return plaintext.decode('utf-8')
+        return plaintext
 
 
 def decrypt_text(ciphertext):
@@ -96,8 +118,12 @@ def decrypt_text(ciphertext):
         
         decrypted = fernet.decrypt(ciphertext)
         return decrypted.decode('utf-8')
-    except (InvalidToken, ValueError, TypeError, UnicodeDecodeError, UnicodeEncodeError):
-        # Return original text if decryption fails due to invalid token or data format
+    except (InvalidToken, ValueError, TypeError, UnicodeDecodeError, UnicodeEncodeError, RuntimeError):
+        # Return original text if decryption fails due to:
+        # - InvalidToken: invalid encrypted data
+        # - ValueError/TypeError: data format issues
+        # - UnicodeDecodeError/UnicodeEncodeError: encoding issues
+        # - RuntimeError: no app context available
         # This handles backward compatibility with existing unencrypted data
         # Use original_ciphertext to avoid returning modified bytes
         if isinstance(original_ciphertext, bytes):
