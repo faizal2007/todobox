@@ -47,10 +47,13 @@ class ShareInvitationForm(FlaskForm):
         if email.data.lower() == current_user.email.lower():
             raise ValidationError('You cannot invite yourself')
         
-        # Check if email belongs to a Gmail user
+        # Check if email belongs to an existing user
         user = User.query.filter_by(email=email.data).first()
-        if user and not user.is_gmail_user():
-            raise ValidationError('This email does not belong to a Gmail/Google account user')
+        if user:
+            # If user exists, they must be a Gmail/OAuth user (not a direct login user)
+            # Direct login users cannot be invited through sharing
+            if user.is_direct_login_user():
+                raise ValidationError('This email belongs to a direct login user. You can only invite users with email-based (Google/OAuth) accounts')
 
 
 class SharingSettingsForm(FlaskForm):

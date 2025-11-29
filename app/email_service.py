@@ -45,7 +45,7 @@ INVITATION_TEMPLATE = """
                 <a href="{{ decline_url }}" class="button decline">Decline</a>
             </p>
             <p><small>This invitation will expire in 7 days.</small></p>
-            <p><small>If you don't have a TodoBox account, you'll need to sign in with Google first.</small></p>
+            <p><small>If you don't have a TodoBox account, you'll need to sign in first.</small></p>
         </div>
         <div class="footer">
             <p>This email was sent from TodoBox. If you didn't expect this invitation, you can safely ignore it.</p>
@@ -70,7 +70,7 @@ Decline: {{ decline_url }}
 
 This invitation will expire in 7 days.
 
-If you don't have a TodoBox account, you'll need to sign in with Google first.
+If you don't have a TodoBox account, you'll need to sign in first.
 
 ---
 This email was sent from TodoBox. If you didn't expect this invitation, you can safely ignore it.

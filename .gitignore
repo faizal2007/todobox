@@ -4,4 +4,4 @@ __pycache__/
 /instance/
 .vscode/
 .flaskenv
-
+/database/
