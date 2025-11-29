@@ -10,6 +10,12 @@ SALT=change-me-to-a-secure-salt
 DATABASE_DEFAULT=sqlite
 DATABASE_NAME=todobox.db
 
+# Todo Encryption (optional)
+# Set to 'true' to enable encryption of todo data (name, details)
+# When enabled, database administrators cannot read todo content in raw database
+# Default: false (disabled)
+TODO_ENCRYPTION_ENABLED=false
+
 # Optional: For PostgreSQL (uncomment and configure)
 # DATABASE_DEFAULT=postgres
 # POSTGRES_URL=192.168.1.25:5432

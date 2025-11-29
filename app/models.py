@@ -219,14 +219,51 @@ class Tracker(db.Model): # type: ignore[attr-defined]
 
 class Todo(db.Model): # type: ignore[attr-defined]
     id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
-    name = db.Column(db.String(80), index=True, nullable=False) # type: ignore[attr-defined]
-    details = db.Column(db.String(250)) # type: ignore[attr-defined]
-    details_html = db.Column(db.String(500)) # type: ignore[attr-defined]
+    # Encrypted fields - use Text to accommodate encrypted data (larger than plaintext)
+    _name = db.Column('name', db.Text, index=False, nullable=False) # type: ignore[attr-defined]
+    _details = db.Column('details', db.Text) # type: ignore[attr-defined]
+    _details_html = db.Column('details_html', db.Text) # type: ignore[attr-defined]
     timestamp = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
     modified = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
     target_date = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
     user_id = db.Column(db.Integer, db.ForeignKey('user.id')) # type: ignore[attr-defined]
     tracker_entries = db.relationship('Tracker', backref='todo', lazy='dynamic') # type: ignore[attr-defined]
+
+    @property
+    def name(self):
+        """Decrypt and return the todo name."""
+        from app.encryption import decrypt_text
+        return decrypt_text(self._name)
+    
+    @name.setter
+    def name(self, value):
+        """Encrypt and store the todo name."""
+        from app.encryption import encrypt_text
+        self._name = encrypt_text(value)
+    
+    @property
+    def details(self):
+        """Decrypt and return the todo details."""
+        from app.encryption import decrypt_text
+        return decrypt_text(self._details)
+    
+    @details.setter
+    def details(self, value):
+        """Encrypt and store the todo details."""
+        from app.encryption import encrypt_text
+        self._details = encrypt_text(value)
+    
+    @property
+    def details_html(self):
+        """Decrypt and return the todo details HTML."""
+        from app.encryption import decrypt_text
+        return decrypt_text(self._details_html)
+    
+    @details_html.setter
+    def details_html(self, value):
+        """Encrypt and store the todo details HTML."""
+        from app.encryption import encrypt_text
+        self._details_html = encrypt_text(value)
 
     def __repr__(self):
         return '<Todo {}>'.format(self.name)

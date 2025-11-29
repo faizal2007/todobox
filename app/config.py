@@ -12,6 +12,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'change-me-in-production')
 DATABASE_NAME = os.environ.get('DATABASE_NAME', 'todobox.db')
 DATABASE_DEFAULT = os.environ.get('DATABASE_DEFAULT', 'sqlite') # sqlite, mysql, or postgres
 
+# Todo Encryption Configuration
+# Set to 'true' to enable encryption of todo data (name, details, details_html)
+# When enabled, database administrators cannot read todo content in raw database
+TODO_ENCRYPTION_ENABLED = os.environ.get('TODO_ENCRYPTION_ENABLED', 'false').lower() == 'true'
+
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')

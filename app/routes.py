@@ -582,7 +582,11 @@ def view(todo):
 @app.route('/<path:todo_id>/delete', methods=['POST'])
 @login_required
 def delete(todo_id):
-
+    # Verify todo belongs to current user before deleting
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        abort(404)
+    
     Tracker.delete(todo_id)
 
     return redirect(url_for('list', id='today'))
@@ -668,7 +672,15 @@ def add():
             # Updating existing todo
             todo_id = request.form.get("todo_id")
             byPass = request.form.get("byPass")
-            t = Todo.query.filter_by(id=todo_id).first()
+            # Filter by user_id to ensure user can only update their own todos
+            t = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+            if not t:
+                return make_response(
+                    jsonify({
+                        'status': 'failed',
+                        'msg': 'Todo not found or access denied.'
+                    })
+                )
             title = t.name
             activites = t.details
 
@@ -719,18 +731,43 @@ def add():
 def getTodo(id):
     if request.method == "POST":
         req = request.form
-        t = Todo.query.filter_by(id=id).first()
-        button = '<button type="button" class="btn btn-primary" id="save"> Save </button>\
-                <button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>'
+        # First try to get the todo owned by the current user
+        t = Todo.query.filter_by(id=id, user_id=current_user.id).first()
+        is_shared = False
+        
+        # If not found, check if it's a shared todo
+        if not t:
+            t = Todo.query.filter_by(id=id).first()
+            if t:
+                # Check if the todo owner has shared with the current user
+                if TodoShare.is_sharing_with(t.user_id, current_user.id):
+                    is_shared = True
+                else:
+                    t = None  # Reset - user doesn't have access
+        
+        if not t:
+            return make_response(
+                jsonify({
+                    'status': 'Error',
+                    'message': 'Todo not found'
+                }), 404
+            )
+        
+        # For shared todos, show read-only view (no edit/delete buttons)
+        if is_shared:
+            button = ''  # No action buttons for shared todos
+        else:
+            button = '<button type="button" class="btn btn-primary" id="save"> Save </button>\
+                    <button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>'
 
-        if req.get('tbl_save') == '1':
-            todoBtn = '<button type="button" class="btn btn-primary" id="todo"> Todo </button>'
-            delBtn = '<button type="button" class="btn btn-warning" id="delete">Delete</button>'
-            saveBtn = '<button type="button" class="btn btn-primary" id="save">Save</button>'
-            if t.modified.date() == datetime.now().date():
-                button = saveBtn + delBtn
-            else:
-                button = todoBtn + delBtn
+            if req.get('tbl_save') == '1':
+                todoBtn = '<button type="button" class="btn btn-primary" id="todo"> Todo </button>'
+                delBtn = '<button type="button" class="btn btn-warning" id="delete">Delete</button>'
+                saveBtn = '<button type="button" class="btn btn-primary" id="save">Save</button>'
+                if t.modified.date() == datetime.now().date():
+                    button = saveBtn + delBtn
+                else:
+                    button = todoBtn + delBtn
 
         return make_response(
             jsonify({
@@ -766,7 +803,15 @@ def list(id):
 @app.route('/<path:id>/<path:todo_id>/done', methods=['POST'])
 @login_required
 def done(id, todo_id):
-    todo = Todo.query.filter_by(id=todo_id).first()
+    # Filter by user_id to ensure user can only mark their own todos as done
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return make_response(
+            jsonify({
+                'status': 'Error',
+                'message': 'Todo not found'
+            }), 404
+        )
     date_entry = datetime.now()
 
     if id == 'today':
