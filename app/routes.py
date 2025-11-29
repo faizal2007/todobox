@@ -381,8 +381,16 @@ def dashboard():
     else:
         reassignment_stats['avg_reassignments_before_completion'] = 0.0
     
-    # Get recent todos for activity feed
-    recent_todos = db.session.query(Todo).order_by(desc(Todo.timestamp)).limit(5).all()  # type: ignore
+    # Get recent undone todos for activity feed (filtered by current user and not completed)
+    # Using a similar pattern to getList() in models.py - matching tracker timestamp to todo modified time
+    # Status 6 = 'done' (see Status.seed() in models.py)
+    recent_todos = db.session.query(Todo).join(
+        Tracker, Todo.id == Tracker.todo_id
+    ).filter(
+        Todo.user_id == current_user.id,
+        Tracker.timestamp == Todo.modified,  # Match the latest tracker (same pattern as getList)
+        Tracker.status_id != 6  # Status 6 = 'done'
+    ).order_by(Todo.modified.desc()).limit(5).all()
     
     return render_template('dashboard.html', 
                          chart_segments=chart_segments,
