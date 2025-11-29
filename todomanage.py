@@ -162,7 +162,7 @@ def assign_admin():
             new_admin = action != 'n'
         
         # No change needed
-        if new_admin == user.is_admin:
+        if new_admin == user.is_system_admin():
             print("\n⚠️  No change needed.")
             return False
         
@@ -246,7 +246,6 @@ def delete_user():
 
 def get_valid_username():
     """Get and validate username"""
-    from app import app, db
     from app.models import User
     
     while True:
@@ -270,18 +269,16 @@ def get_valid_username():
             continue
         
         # Check uniqueness
-        with app.app_context():
-            existing = User.query.filter_by(username=username).first()
-            if existing:
-                print(f"❌ Username '{username}' already exists")
-                continue
+        existing = User.query.filter_by(username=username).first()
+        if existing:
+            print(f"❌ Username '{username}' already exists")
+            continue
         
         print(f"✓ Username '{username}' is valid")
         return username
 
 def get_valid_email():
     """Get and validate email"""
-    from app import app, db
     from app.models import User
     import re
     
@@ -304,11 +301,10 @@ def get_valid_email():
             continue
         
         # Check uniqueness
-        with app.app_context():
-            existing = User.query.filter_by(email=email).first()
-            if existing:
-                print(f"❌ Email '{email}' is already registered")
-                continue
+        existing = User.query.filter_by(email=email).first()
+        if existing:
+            print(f"❌ Email '{email}' is already registered")
+            continue
         
         print(f"✓ Email '{email}' is valid")
         return email
@@ -337,7 +333,7 @@ def get_valid_password():
             print("❌ Passwords do not match")
             continue
         
-        print("✓ Password is valid")
+        print("✓ Password is valid (strength: moderate)")
         return password
 
 if __name__ == '__main__':
