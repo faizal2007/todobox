@@ -10,25 +10,31 @@ from flask_login import UserMixin
 class User(UserMixin, db.Model): # type: ignore[attr-defined]
     id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
     username = db.Column(db.String(64), index=True, unique=True) # type: ignore[attr-defined]
-    email = db.Column(db.String(120), index=True, unique=True) # type: ignore[attr-defined]
+    email = db.Column(db.String(120), index=True, unique=True, nullable=True) # type: ignore[attr-defined]  # NULL emails allowed for system admins (NULL values are distinct in SQLite)
     fullname = db.Column(db.String(100)) # type: ignore[attr-defined]
     password_hash = db.Column(db.String(255)) # type: ignore[attr-defined]
     api_token = db.Column(db.String(255), unique=True, index=True) # type: ignore[attr-defined]  # API token for external access
     oauth_provider = db.Column(db.String(50)) # type: ignore[attr-defined]  # 'google' or None for password auth
     oauth_id = db.Column(db.String(255), index=True) # type: ignore[attr-defined]  # Google subject ID
     sharing_enabled = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Enable todo sharing (Gmail users only)
+    is_admin = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Admin flag
+    is_blocked = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Blocked user flag
     todo = db.relationship('Todo', backref='user', lazy='dynamic') # type: ignore[attr-defined]
 
-    def __init__(self, username, email, oauth_provider=None, oauth_id=None):
+    def __init__(self, username, email=None, oauth_provider=None, oauth_id=None):
         self.username = username
         self.email = email
         self.oauth_provider = oauth_provider
         self.oauth_id = oauth_id
         self.sharing_enabled = False
+        # Users without email are considered system admin
+        self.is_admin = (email is None or email == '')
+        self.is_blocked = False
 
     @classmethod
     def seed(cls):
-        u = User(username='admin', email='admin@examples.com')
+        # Admin user without email is considered system admin
+        u = User(username='admin', email=None)
         u.set_password('admin1234')
         db.session.add(u) # type: ignore[attr-defined]
         db.session.commit() # type: ignore[attr-defined]
@@ -84,6 +90,15 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
     def can_share_todos(self):
         """Check if the user can share todos (any user with sharing enabled)"""
         return self.sharing_enabled
+    
+    def is_system_admin(self):
+        """Check if the user is a system admin.
+        
+        Returns True if:
+        - User has is_admin flag set to True, OR
+        - User has no email (users without email are always considered system admins)
+        """
+        return self.is_admin or (self.email is None or self.email == '')
 
 
 class ShareInvitation(db.Model): # type: ignore[attr-defined]
