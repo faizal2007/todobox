@@ -29,12 +29,10 @@
 **Result:** ✅ SUCCESS
 
 ```text
-
 INFO  [alembic.runtime.migration] Running upgrade c682ef478e45 -> d1f2e3c4b5a6, 
 
 Fix API token column - ensure api_token exists
-
-```text
+```
 
 **Verification:** Migration applied successfully without errors
 
@@ -47,12 +45,10 @@ Fix API token column - ensure api_token exists
 **Result:** ✅ SUCCESS
 
 The migration's upgrade function correctly:
+
 - Detects existing `api_token` column via SQL query
-
 - Skips adding column if it already exists
-
 - Skips creating index if it already exists
-
 - No duplicate column errors
 
 ---
@@ -65,12 +61,10 @@ The migration's upgrade function correctly:
 **Result:** ✅ SUCCESS
 
 ```text
-
 INFO  [alembic.runtime.migration] Running downgrade d1f2e3c4b5a6 -> c682ef478e45, 
 
 Fix API token column - ensure api_token exists
-
-```text
+```
 
 **Verification:** Migration downgraded successfully, column removed from database
 
@@ -84,12 +78,10 @@ Fix API token column - ensure api_token exists
 **Result:** ✅ EXACT ERROR REPRODUCED
 
 ```text
-
 MySQLdb.OperationalError: (1054, "Unknown column 'user.api_token' in 'SELECT'")
 [SQL: SELECT user.id AS user_id, user.username AS user_username, ... 
       user.api_token AS user_api_token, ...]
-
-```text
+```
 
 **Significance:** This confirms the migration fixes the exact issue reported in production
 
@@ -117,12 +109,10 @@ Migration correctly detected existing column and applied without errors
 **Result:** `d1f2e3c4b5a6 (head)`
 
 **Verification:**
+
 - ✅ At latest migration
-
 - ✅ Database schema correct
-
 - ✅ No model/database mismatch
-
 - ✅ Flask app loads successfully
 
 ---
@@ -140,7 +130,7 @@ Migration correctly detected existing column and applied without errors
   ↓
 ✅ d1f2e3c4b5a6 (Safety migration - ensure api_token exists) ← NEW
 
-```text
+```
 
 **Status:** All 5 migrations properly linked with correct down_revision dependencies
 
@@ -162,7 +152,7 @@ def downgrade():
     batch_op.drop_index(...)
     batch_op.drop_column('api_token')
 
-```text
+```
 
 ### After (Fixed)
 
@@ -177,7 +167,7 @@ def downgrade():
     # Use try/except for safe operations
     # Gracefully handle missing index/column
 
-```text
+```
 
 ---
 
@@ -200,30 +190,22 @@ def downgrade():
 ### Prerequisites
 
 - Backup production database before deployment
-
 - Test on staging environment (if available)
 - Have rollback procedure ready
 
 ### Deployment Steps
 
 1. Deploy new code with migration
-
 2. Run: `flask db upgrade`
-
 3. Verify: `flask db current` shows d1f2e3c4b5a6
-
 4. Verify: App loads without "Unknown column" errors
-
 5. Monitor logs for any issues
 
 ### Rollback Procedure (if needed)
 
 1. Stop application
-
 2. Restore database from backup: `mysql -u user -p db < backup.sql`
-
 3. Redeploy previous code version
-
 4. Restart application
 
 ---
@@ -231,20 +213,14 @@ def downgrade():
 ## Test Execution Details
 
 **Environment:**
+
 - OS: Linux
-
 - Python: 3.10
-
 - Flask: Latest
-
 - Flask-Migrate: Latest
-
 - SQLAlchemy: 1.4.17
-
 - Database: MySQL
-
 - Database Host: 192.168.1.112
-
 - Database Name: shimasu_db
 
 **Test Duration:** ~5 minutes  
@@ -257,15 +233,10 @@ def downgrade():
 The migration `d1f2e3c4b5a6` is **production-ready**. It successfully:
 
 1. ✅ Adds the `api_token` column if missing
-
 2. ✅ Handles cases where column already exists
-
 3. ✅ Creates unique index safely
-
 4. ✅ Supports rollback without data loss
-
 5. ✅ Reproduces and fixes the production error
-
 6. ✅ Completes full migration chain successfully
 
 **Deployment Status:** 🟢 **GO FOR PRODUCTION**

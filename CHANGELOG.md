@@ -5,6 +5,31 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.4] - Documentation Update - 2025-11-29
+
+### 1.3.4 - Fixed
+
+- Fixed markdown code block issues across multiple documentation files
+- Corrected improper use of `text` language specifier as code fence closures
+- Fixed blank lines around code fences in migration documentation
+- Fixed ordered list numbering in `DEPLOYMENT_CHECKLIST.md`
+- Fixed list formatting in `MIGRATION_TEST_RESULTS.md`
+
+### 1.3.4 - Changed
+
+- Updated documentation to follow markdown best practices
+- Improved code block formatting with proper language specifiers
+- Standardized list formatting in documentation files
+
+### 1.3.4 - Documentation
+
+- `docs/DEPLOYMENT_CHECKLIST.md`: Fixed markdown code fences and list formatting
+- `docs/MIGRATION_ANALYSIS.md`: Added language specifiers to code blocks
+- `docs/MIGRATION_FIX_GUIDE.md`: Fixed code fence closures
+- `docs/MIGRATION_FIX_SUMMARY.md`: Fixed code fence formatting
+- `docs/MIGRATION_TEST_RESULTS.md`: Fixed list formatting and code blocks
+- All documentation files now pass markdownlint validation
+
 ## [1.3.3] - Reverse Proxy Support & Dashboard Fix - 2025-11-29
 
 ### 1.3.3 - Added
