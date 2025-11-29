@@ -19,6 +19,7 @@ def app():
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    app.config['TODO_ENCRYPTION_ENABLED'] = False  # Default: encryption disabled
     
     with app.app_context():
         db.create_all()
@@ -43,6 +44,48 @@ def app():
         
         db.session.remove()
         db.drop_all()
+
+
+@pytest.fixture
+def app_with_encryption():
+    """Create a test application instance with encryption enabled."""
+    from app import app, db
+    
+    # Configure for testing with encryption enabled
+    app.config['TESTING'] = True
+    app.config['WTF_CSRF_ENABLED'] = False
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    app.config['TODO_ENCRYPTION_ENABLED'] = True  # Enable encryption for these tests
+    
+    with app.app_context():
+        db.create_all()
+        
+        # Seed required data
+        from app.models import Status
+        
+        # Add status records manually (Status.__init__ only accepts name)
+        if Status.query.count() == 0:
+            status_new = Status(name='new')
+            status_new.id = 5
+            status_done = Status(name='done')
+            status_done.id = 6
+            status_failed = Status(name='failed')
+            status_failed.id = 7
+            status_reassign = Status(name='re-assign')
+            status_reassign.id = 8
+            db.session.add_all([status_new, status_done, status_failed, status_reassign])
+            db.session.commit()
+        
+        yield app
+        
+        db.session.remove()
+        db.drop_all()
+
+
+@pytest.fixture
+def client_with_encryption(app_with_encryption):
+    """Create a test client with encryption enabled."""
+    return app_with_encryption.test_client()
 
 
 @pytest.fixture
@@ -502,15 +545,15 @@ class TestSharedTodoAccess:
 
 
 class TestTodoEncryption:
-    """Test that todo data is encrypted in the database."""
+    """Test that todo data is encrypted in the database when encryption is enabled."""
     
-    def test_todo_data_is_encrypted_in_database(self, app, client):
+    def test_todo_data_is_encrypted_in_database(self, app_with_encryption, client_with_encryption):
         """Test that todo name and details are stored encrypted in the database."""
         from app import db
         from app.models import Todo
         from sqlalchemy import text
         
-        with app.app_context():
+        with app_with_encryption.app_context():
             user1, _ = create_test_users(db)
             
             # Create a todo with known content
@@ -541,11 +584,11 @@ class TestTodoEncryption:
             assert todo_check.name == plaintext_name, "Todo name should be decrypted when accessed"
             assert todo_check.details == plaintext_details, "Todo details should be decrypted when accessed"
     
-    def test_encrypted_todo_readable_after_retrieval(self, app, client):
+    def test_encrypted_todo_readable_after_retrieval(self, app_with_encryption, client_with_encryption):
         """Test that encrypted todos can be read correctly through the application."""
         from app import db
         
-        with app.app_context():
+        with app_with_encryption.app_context():
             user1, _ = create_test_users(db)
             
             # Create a todo
@@ -553,10 +596,10 @@ class TestTodoEncryption:
             todo_id = todo.id
             
             # Login as user1
-            login_user(client, 'user1', 'password1')
+            login_user(client_with_encryption, 'user1', 'password1')
             
             # Get the todo through the API
-            response = client.post(f'/{todo_id}/todo')
+            response = client_with_encryption.post(f'/{todo_id}/todo')
             
             assert response.status_code == 200
             
@@ -564,3 +607,34 @@ class TestTodoEncryption:
             data = json.loads(response.data)
             assert data['status'] == 'Success'
             assert data['title'] == 'Encrypted Test Todo'
+    
+    def test_todo_data_is_not_encrypted_when_disabled(self, app, client):
+        """Test that todo data is stored as plaintext when encryption is disabled."""
+        from app import db
+        from app.models import Todo
+        from sqlalchemy import text
+        
+        with app.app_context():
+            user1, _ = create_test_users(db)
+            
+            # Create a todo with known content
+            plaintext_name = 'My Plaintext Todo'
+            plaintext_details = 'These are my plaintext details'
+            
+            todo = Todo(name=plaintext_name, details=plaintext_details, user_id=user1.id)
+            db.session.add(todo)
+            db.session.commit()
+            todo_id = todo.id
+            
+            # Query the raw database to see what's actually stored
+            result = db.session.execute(
+                text('SELECT name, details FROM todo WHERE id = :id'),
+                {'id': todo_id}
+            ).fetchone()
+            
+            raw_name = result[0]
+            raw_details = result[1]
+            
+            # The raw values should BE the plaintext (encryption disabled)
+            assert raw_name == plaintext_name, "Todo name should be plaintext when encryption disabled"
+            assert raw_details == plaintext_details, "Todo details should be plaintext when encryption disabled"

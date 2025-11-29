@@ -1,12 +1,19 @@
 """
 Encryption utilities for protecting sensitive todo data from database administrators.
 Uses Fernet symmetric encryption with a key derived from the application's secret key.
+Encryption can be enabled/disabled via TODO_ENCRYPTION_ENABLED in .flaskenv
 """
 import base64
 import os
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+
+def is_encryption_enabled():
+    """Check if todo encryption is enabled in the configuration."""
+    from flask import current_app
+    return current_app.config.get('TODO_ENCRYPTION_ENABLED', False)
 
 
 def _get_encryption_key():
@@ -45,9 +52,14 @@ def get_fernet():
 def encrypt_text(plaintext):
     """
     Encrypt plaintext string and return base64-encoded ciphertext.
+    Returns the plaintext unchanged if encryption is disabled.
     Returns None if plaintext is None or empty.
     """
     if not plaintext:
+        return plaintext
+    
+    # If encryption is disabled, return plaintext as-is
+    if not is_encryption_enabled():
         return plaintext
     
     fernet = get_fernet()
@@ -61,10 +73,15 @@ def encrypt_text(plaintext):
 def decrypt_text(ciphertext):
     """
     Decrypt base64-encoded ciphertext and return plaintext string.
+    Returns the ciphertext unchanged if encryption is disabled.
     Returns None if ciphertext is None or empty.
     Returns the original text if decryption fails (for backward compatibility with unencrypted data).
     """
     if not ciphertext:
+        return ciphertext
+    
+    # If encryption is disabled, return ciphertext as-is (it's actually plaintext)
+    if not is_encryption_enabled():
         return ciphertext
     
     try:
