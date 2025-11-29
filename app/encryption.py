@@ -84,6 +84,11 @@ def decrypt_text(ciphertext):
     if not is_encryption_enabled():
         return ciphertext
     
+    # Store original value before any modifications because ciphertext may be
+    # converted to bytes during decryption attempt, and we need the original
+    # value to return in case of decryption failure (backward compatibility)
+    original_ciphertext = ciphertext
+    
     try:
         fernet = get_fernet()
         if isinstance(ciphertext, str):
@@ -91,9 +96,10 @@ def decrypt_text(ciphertext):
         
         decrypted = fernet.decrypt(ciphertext)
         return decrypted.decode('utf-8')
-    except (InvalidToken, ValueError, TypeError):
+    except (InvalidToken, ValueError, TypeError, UnicodeDecodeError, UnicodeEncodeError):
         # Return original text if decryption fails due to invalid token or data format
         # This handles backward compatibility with existing unencrypted data
-        if isinstance(ciphertext, bytes):
-            return ciphertext.decode('utf-8')
-        return ciphertext
+        # Use original_ciphertext to avoid returning modified bytes
+        if isinstance(original_ciphertext, bytes):
+            return original_ciphertext.decode('utf-8')
+        return original_ciphertext
