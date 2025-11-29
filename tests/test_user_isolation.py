@@ -377,3 +377,125 @@ class TestAPIUserIsolation:
             # Verify todo still exists
             todo_check = Todo.query.get(todo_id)
             assert todo_check is not None
+
+
+class TestSharedTodoAccess:
+    """Test that shared todos can be accessed by shared users."""
+    
+    def test_shared_user_can_read_shared_todo(self, app, client):
+        """Test that a user can read a todo shared with them."""
+        from app import db
+        from app.models import TodoShare
+        
+        with app.app_context():
+            user1, user2 = create_test_users(db)
+            
+            # Create a todo for user1
+            todo = create_todo_for_user(db, user1, 'Shared Todo')
+            todo_id = todo.id
+            
+            # Create sharing relationship: user1 shares with user2
+            share = TodoShare(owner_id=user1.id, shared_with_id=user2.id)
+            db.session.add(share)
+            db.session.commit()
+            
+            # Login as user2
+            login_user(client, 'user2', 'password2')
+            
+            # Try to read the shared todo
+            response = client.post(f'/{todo_id}/todo')
+            
+            # Should succeed
+            assert response.status_code == 200
+            
+            import json
+            data = json.loads(response.data)
+            assert data['status'] == 'Success'
+            assert data['title'] == 'Shared Todo'
+    
+    def test_unshared_user_cannot_read_others_todo(self, app, client):
+        """Test that a user cannot read a todo NOT shared with them."""
+        from app import db
+        
+        with app.app_context():
+            user1, user2 = create_test_users(db)
+            
+            # Create a todo for user1 (no sharing relationship)
+            todo = create_todo_for_user(db, user1, 'Private Todo')
+            todo_id = todo.id
+            
+            # Login as user2
+            login_user(client, 'user2', 'password2')
+            
+            # Try to read the non-shared todo
+            response = client.post(f'/{todo_id}/todo')
+            
+            # Should return 404
+            assert response.status_code == 404
+    
+    def test_shared_user_cannot_delete_shared_todo(self, app, client):
+        """Test that a user cannot delete a todo shared with them (read-only)."""
+        from app import db
+        from app.models import Todo, TodoShare
+        
+        with app.app_context():
+            user1, user2 = create_test_users(db)
+            
+            # Create a todo for user1
+            todo = create_todo_for_user(db, user1, 'Shared Todo')
+            todo_id = todo.id
+            
+            # Create sharing relationship: user1 shares with user2
+            share = TodoShare(owner_id=user1.id, shared_with_id=user2.id)
+            db.session.add(share)
+            db.session.commit()
+            
+            # Login as user2
+            login_user(client, 'user2', 'password2')
+            
+            # Try to delete the shared todo
+            response = client.post(f'/{todo_id}/delete', follow_redirects=False)
+            
+            # Should return 404 (user2 can read but not delete)
+            assert response.status_code == 404
+            
+            # Verify todo still exists
+            todo_check = Todo.query.get(todo_id)
+            assert todo_check is not None
+    
+    def test_shared_user_cannot_update_shared_todo(self, app, client):
+        """Test that a user cannot update a todo shared with them (read-only)."""
+        from app import db
+        from app.models import Todo, TodoShare
+        
+        with app.app_context():
+            user1, user2 = create_test_users(db)
+            
+            # Create a todo for user1
+            todo = create_todo_for_user(db, user1, 'Original Title')
+            todo_id = todo.id
+            original_title = todo.name
+            
+            # Create sharing relationship: user1 shares with user2
+            share = TodoShare(owner_id=user1.id, shared_with_id=user2.id)
+            db.session.add(share)
+            db.session.commit()
+            
+            # Login as user2
+            login_user(client, 'user2', 'password2')
+            
+            # Try to update the shared todo
+            response = client.post('/add', data={
+                'todo_id': todo_id,
+                'title': 'Hacked Title',
+                'activities': 'Hacked content'
+            })
+            
+            # Check response indicates failure
+            import json
+            data = json.loads(response.data)
+            assert data['status'] == 'failed'
+            
+            # Verify todo was not modified
+            todo_check = Todo.query.get(todo_id)
+            assert todo_check.name == original_title

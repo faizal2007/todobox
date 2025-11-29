@@ -731,8 +731,20 @@ def add():
 def getTodo(id):
     if request.method == "POST":
         req = request.form
-        # Filter by user_id to ensure user can only access their own todos
+        # First try to get the todo owned by the current user
         t = Todo.query.filter_by(id=id, user_id=current_user.id).first()
+        is_shared = False
+        
+        # If not found, check if it's a shared todo
+        if not t:
+            t = Todo.query.filter_by(id=id).first()
+            if t:
+                # Check if the todo owner has shared with the current user
+                if TodoShare.is_sharing_with(t.user_id, current_user.id):
+                    is_shared = True
+                else:
+                    t = None  # Reset - user doesn't have access
+        
         if not t:
             return make_response(
                 jsonify({
@@ -740,17 +752,22 @@ def getTodo(id):
                     'message': 'Todo not found'
                 }), 404
             )
-        button = '<button type="button" class="btn btn-primary" id="save"> Save </button>\
-                <button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>'
+        
+        # For shared todos, show read-only view (no edit/delete buttons)
+        if is_shared:
+            button = ''  # No action buttons for shared todos
+        else:
+            button = '<button type="button" class="btn btn-primary" id="save"> Save </button>\
+                    <button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>'
 
-        if req.get('tbl_save') == '1':
-            todoBtn = '<button type="button" class="btn btn-primary" id="todo"> Todo </button>'
-            delBtn = '<button type="button" class="btn btn-warning" id="delete">Delete</button>'
-            saveBtn = '<button type="button" class="btn btn-primary" id="save">Save</button>'
-            if t.modified.date() == datetime.now().date():
-                button = saveBtn + delBtn
-            else:
-                button = todoBtn + delBtn
+            if req.get('tbl_save') == '1':
+                todoBtn = '<button type="button" class="btn btn-primary" id="todo"> Todo </button>'
+                delBtn = '<button type="button" class="btn btn-warning" id="delete">Delete</button>'
+                saveBtn = '<button type="button" class="btn btn-primary" id="save">Save</button>'
+                if t.modified.date() == datetime.now().date():
+                    button = saveBtn + delBtn
+                else:
+                    button = todoBtn + delBtn
 
         return make_response(
             jsonify({
