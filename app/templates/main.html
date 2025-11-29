@@ -86,6 +86,14 @@
 														<i class="mdi mdi-account-edit mr-1"></i>
 														<span>Settings</span>
 													</a>
+
+													{% if current_user.is_gmail_user() %}
+													<!-- item - sharing (Gmail users only) -->
+													<a href="{{ url_for('sharing') }}" class="dropdown-item notify-item">
+														<i class="mdi mdi-share-variant mr-1"></i>
+														<span>Sharing</span>
+													</a>
+													{% endif %}
 				
 													<!-- item-->
 													<a href="{{ url_for('logout')}}" class="dropdown-item notify-item">
@@ -134,6 +142,15 @@
 													</a>
 												</li>
 											</ul>
+											{% if current_user.is_gmail_user() %}
+											<ul class="navbar-nav">
+												<li class="nav-item dropdown">
+													<a class="nav-link dropdown-toggle arrow-none" href="{{ url_for('shared_todos') }}" id="topnav-shared">
+														<i class="mdi mdi-share-variant mr-1"></i>Shared
+													</a>
+												</li>
+											</ul>
+											{% endif %}
 											{% endif %}
 										</div>
 								</nav>
