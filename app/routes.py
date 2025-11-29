@@ -1212,10 +1212,13 @@ def admin_delete_user(user_id):
         or_(TodoShare.owner_id == user.id, TodoShare.shared_with_id == user.id)
     ).delete(synchronize_session=False)
     
-    # Delete share invitations
-    ShareInvitation.query.filter(
-        or_(ShareInvitation.from_user_id == user.id, ShareInvitation.to_email == user.email)
-    ).delete(synchronize_session=False)
+    # Delete share invitations (only include email condition if user has email)
+    if user.email:
+        ShareInvitation.query.filter(
+            or_(ShareInvitation.from_user_id == user.id, ShareInvitation.to_email == user.email)
+        ).delete(synchronize_session=False)
+    else:
+        ShareInvitation.query.filter(ShareInvitation.from_user_id == user.id).delete(synchronize_session=False)
     
     # Delete the user
     db.session.delete(user)  # type: ignore[attr-defined]

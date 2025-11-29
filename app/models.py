@@ -10,7 +10,7 @@ from flask_login import UserMixin
 class User(UserMixin, db.Model): # type: ignore[attr-defined]
     id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
     username = db.Column(db.String(64), index=True, unique=True) # type: ignore[attr-defined]
-    email = db.Column(db.String(120), index=True, unique=True, nullable=True) # type: ignore[attr-defined]
+    email = db.Column(db.String(120), index=True, unique=True, nullable=True) # type: ignore[attr-defined]  # NULL emails allowed for system admins (NULL values are distinct in SQLite)
     fullname = db.Column(db.String(100)) # type: ignore[attr-defined]
     password_hash = db.Column(db.String(255)) # type: ignore[attr-defined]
     api_token = db.Column(db.String(255), unique=True, index=True) # type: ignore[attr-defined]  # API token for external access
@@ -92,7 +92,12 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
         return self.sharing_enabled
     
     def is_system_admin(self):
-        """Check if the user is a system admin (users without email or explicitly marked as admin)"""
+        """Check if the user is a system admin.
+        
+        Returns True if:
+        - User has is_admin flag set to True, OR
+        - User has no email (users without email are always considered system admins)
+        """
         return self.is_admin or (self.email is None or self.email == '')
 
 
