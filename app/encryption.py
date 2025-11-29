@@ -84,7 +84,9 @@ def decrypt_text(ciphertext):
     if not is_encryption_enabled():
         return ciphertext
     
-    # Store original value before any modifications
+    # Store original value before any modifications because ciphertext may be
+    # converted to bytes during decryption attempt, and we need the original
+    # value to return in case of decryption failure (backward compatibility)
     original_ciphertext = ciphertext
     
     try:
