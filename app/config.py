@@ -19,3 +19,10 @@ GOOGLE_DISCOVERY_URL = 'https://accounts.google.com/.well-known/openid-configura
 
 # OAuth redirect URL
 OAUTH_REDIRECT_URI = os.environ.get('OAUTH_REDIRECT_URI', 'http://localhost:5000/auth/callback/google')
+
+# Reverse Proxy Configuration (for running behind load balancers, tunnels, etc.)
+# Set these values to the number of trusted proxy layers for each header type
+PROXY_X_FOR = int(os.environ.get('PROXY_X_FOR', '1'))  # X-Forwarded-For header trust level
+PROXY_X_PROTO = int(os.environ.get('PROXY_X_PROTO', '1'))  # X-Forwarded-Proto header trust level
+PROXY_X_HOST = int(os.environ.get('PROXY_X_HOST', '1'))  # X-Forwarded-Host header trust level
+PROXY_X_PREFIX = int(os.environ.get('PROXY_X_PREFIX', '1'))  # X-Forwarded-Prefix header trust level

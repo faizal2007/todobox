@@ -36,3 +36,11 @@ GOOGLE_CLIENT_SECRET=your_client_secret_here
 # set this to your public URL to fix Google OAuth sign-in issues.
 # Example: OAUTH_REDIRECT_URI=https://your-public-domain.com/auth/callback/google
 OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google
+
+# Reverse Proxy Configuration (optional)
+# Set these when running behind multiple proxy layers (e.g., load balancer + tunnel)
+# Values indicate how many proxies to trust for each X-Forwarded-* header
+# PROXY_X_FOR=1
+# PROXY_X_PROTO=1
+# PROXY_X_HOST=1
+# PROXY_X_PREFIX=1

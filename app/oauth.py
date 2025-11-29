@@ -19,7 +19,8 @@ def get_oauth_redirect_uri():
     """Get the OAuth redirect URI from config or generate dynamically"""
     # Use explicitly configured redirect URI if available (for reverse proxy scenarios)
     configured_uri = current_app.config.get('OAUTH_REDIRECT_URI')
-    if configured_uri and configured_uri != 'http://localhost:5000/auth/callback/google':
+    # Use configured URI if it's set and not a localhost/127.0.0.1 address
+    if configured_uri and not configured_uri.startswith(('http://localhost', 'http://127.0.0.1')):
         return configured_uri
     # Fall back to dynamically generated URL
     return url_for("oauth_callback_google", _external=True)

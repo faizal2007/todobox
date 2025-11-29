@@ -16,7 +16,14 @@ app.config.from_pyfile('config.py', silent=True)
 
 # Add ProxyFix middleware to handle reverse proxy headers (X-Forwarded-*)
 # This enables proper URL generation when running behind a reverse proxy like haruka-tunnel
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)  # type: ignore[assignment]
+# Trust levels are configurable via PROXY_X_* environment variables in config.py
+app.wsgi_app = ProxyFix(  # type: ignore[assignment]
+    app.wsgi_app,
+    x_for=app.config.get('PROXY_X_FOR', 1),
+    x_proto=app.config.get('PROXY_X_PROTO', 1),
+    x_host=app.config.get('PROXY_X_HOST', 1),
+    x_prefix=app.config.get('PROXY_X_PREFIX', 1)
+)
 
 csrf = CSRFProtect(app)
 
