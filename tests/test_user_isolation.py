@@ -638,3 +638,50 @@ class TestTodoEncryption:
             # The raw values should BE the plaintext (encryption disabled)
             assert raw_name == plaintext_name, "Todo name should be plaintext when encryption disabled"
             assert raw_details == plaintext_details, "Todo details should be plaintext when encryption disabled"
+    
+    def test_unencrypted_data_readable_when_encryption_enabled(self, app_with_encryption):
+        """Test backward compatibility: unencrypted data can be read when encryption is enabled.
+        
+        This tests the scenario where:
+        1. Data was stored before encryption was enabled (plaintext in DB)
+        2. Encryption is later enabled
+        3. The existing plaintext data should still be readable
+        """
+        from app import db
+        from app.models import Todo, User
+        from sqlalchemy import text
+        
+        with app_with_encryption.app_context():
+            # Create a test user
+            user = User(username='test_backward', email='backward@test.com')
+            user.set_password('password')
+            db.session.add(user)
+            db.session.commit()
+            
+            # Insert unencrypted data directly into database (simulating pre-encryption data)
+            plaintext_name = 'Unencrypted Todo Name'
+            plaintext_details = 'Unencrypted todo details'
+            plaintext_html = '<p>Unencrypted HTML</p>'
+            
+            db.session.execute(
+                text('INSERT INTO todo (name, details, details_html, timestamp, modified, target_date, user_id) '
+                     'VALUES (:name, :details, :html, datetime("now"), datetime("now"), datetime("now"), :user_id)'),
+                {'name': plaintext_name, 'details': plaintext_details, 'html': plaintext_html, 'user_id': user.id}
+            )
+            db.session.commit()
+            
+            # Get the todo ID
+            result = db.session.execute(
+                text('SELECT id FROM todo WHERE name = :name'),
+                {'name': plaintext_name}
+            ).fetchone()
+            todo_id = result[0]
+            
+            # Now retrieve the todo through the model (which uses decrypt_text)
+            # This should NOT raise an exception - it should return the plaintext
+            todo = Todo.query.get(todo_id)
+            
+            # Verify the unencrypted data is returned correctly
+            assert todo.name == plaintext_name, "Unencrypted name should be readable"
+            assert todo.details == plaintext_details, "Unencrypted details should be readable"
+            assert todo.details_html == plaintext_html, "Unencrypted HTML should be readable"
