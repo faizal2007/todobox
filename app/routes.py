@@ -582,7 +582,11 @@ def view(todo):
 @app.route('/<path:todo_id>/delete', methods=['POST'])
 @login_required
 def delete(todo_id):
-
+    # Verify todo belongs to current user before deleting
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        abort(404)
+    
     Tracker.delete(todo_id)
 
     return redirect(url_for('list', id='today'))
@@ -668,7 +672,15 @@ def add():
             # Updating existing todo
             todo_id = request.form.get("todo_id")
             byPass = request.form.get("byPass")
-            t = Todo.query.filter_by(id=todo_id).first()
+            # Filter by user_id to ensure user can only update their own todos
+            t = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+            if not t:
+                return make_response(
+                    jsonify({
+                        'status': 'failed',
+                        'msg': 'Todo not found or access denied.'
+                    })
+                )
             title = t.name
             activites = t.details
 
@@ -719,7 +731,15 @@ def add():
 def getTodo(id):
     if request.method == "POST":
         req = request.form
-        t = Todo.query.filter_by(id=id).first()
+        # Filter by user_id to ensure user can only access their own todos
+        t = Todo.query.filter_by(id=id, user_id=current_user.id).first()
+        if not t:
+            return make_response(
+                jsonify({
+                    'status': 'Error',
+                    'message': 'Todo not found'
+                }), 404
+            )
         button = '<button type="button" class="btn btn-primary" id="save"> Save </button>\
                 <button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>'
 
@@ -766,7 +786,15 @@ def list(id):
 @app.route('/<path:id>/<path:todo_id>/done', methods=['POST'])
 @login_required
 def done(id, todo_id):
-    todo = Todo.query.filter_by(id=todo_id).first()
+    # Filter by user_id to ensure user can only mark their own todos as done
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return make_response(
+            jsonify({
+                'status': 'Error',
+                'message': 'Todo not found'
+            }), 404
+        )
     date_entry = datetime.now()
 
     if id == 'today':
