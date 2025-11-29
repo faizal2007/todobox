@@ -410,6 +410,10 @@ def login():
             if user is None or not user.check_password(form.password.data):
                 flash('Invalid username or password')
                 return redirect(url_for('login'))
+            # Check if user is blocked
+            if user.is_blocked:
+                flash('Your account has been blocked. Please contact an administrator.', 'error')
+                return redirect(url_for('login'))
             login_user(user, remember=form.remember_me.data)
             next_page = request.args.get('next')
             if not next_page or url_parse(next_page).netloc != '':
@@ -454,6 +458,11 @@ def oauth_callback_google():
     
     if not user:
         flash('Google authentication failed. Please try again or use password login.', 'warning')
+        return redirect(url_for('login'))
+    
+    # Check if user is blocked
+    if user.is_blocked:
+        flash('Your account has been blocked. Please contact an administrator.', 'error')
         return redirect(url_for('login'))
     
     # Log in the user
@@ -1111,3 +1120,131 @@ def shared_todos():
                           title='Shared Todos',
                           shared_todos=shared_todos_list,
                           shared_users=shared_users)
+
+
+# ==================== Admin Routes ====================
+
+def require_admin(f):
+    """Decorator to require admin privileges for a route"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash('Please login to access this page.', 'warning')
+            return redirect(url_for('login'))
+        if not current_user.is_system_admin():
+            flash('You do not have permission to access this page.', 'error')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@app.route('/admin')
+@login_required
+@require_admin
+def admin_panel():
+    """Admin panel - list all users"""
+    users = User.query.all()
+    return render_template('admin/panel.html', 
+                          title='Admin Panel',
+                          users=users)
+
+
+def is_protected_admin(user):
+    """Check if user is a protected admin (user without email - cannot be blocked/deleted)"""
+    return user.email is None or user.email == ''
+
+
+@app.route('/admin/user/<int:user_id>/block', methods=['POST'])
+@login_required
+@require_admin
+def admin_block_user(user_id):
+    """Block or unblock a user"""
+    user = User.query.get_or_404(user_id)
+    
+    # Cannot block yourself
+    if user.id == current_user.id:
+        flash('You cannot block yourself.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    # Cannot block protected admins (users without email)
+    if is_protected_admin(user):
+        flash('You cannot block system administrators without email.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    user.is_blocked = not user.is_blocked
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    action = 'blocked' if user.is_blocked else 'unblocked'
+    flash(f'User "{user.username}" has been {action}.', 'success')
+    return redirect(url_for('admin_panel'))
+
+
+@app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
+@login_required
+@require_admin
+def admin_delete_user(user_id):
+    """Delete a user"""
+    user = User.query.get_or_404(user_id)
+    
+    # Cannot delete yourself
+    if user.id == current_user.id:
+        flash('You cannot delete yourself.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    # Cannot delete protected admins (users without email)
+    if is_protected_admin(user):
+        flash('You cannot delete system administrators without email.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    username = user.username
+    
+    # Delete user's todos and related data
+    # First delete trackers for user's todos
+    user_todo_ids = [t.id for t in user.todo.all()]
+    if user_todo_ids:
+        Tracker.query.filter(Tracker.todo_id.in_(user_todo_ids)).delete(synchronize_session=False)
+    
+    # Delete user's todos
+    Todo.query.filter_by(user_id=user.id).delete()
+    
+    # Delete sharing relationships
+    TodoShare.query.filter(
+        or_(TodoShare.owner_id == user.id, TodoShare.shared_with_id == user.id)
+    ).delete(synchronize_session=False)
+    
+    # Delete share invitations
+    ShareInvitation.query.filter(
+        or_(ShareInvitation.from_user_id == user.id, ShareInvitation.to_email == user.email)
+    ).delete(synchronize_session=False)
+    
+    # Delete the user
+    db.session.delete(user)  # type: ignore[attr-defined]
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    flash(f'User "{username}" and all their data have been deleted.', 'success')
+    return redirect(url_for('admin_panel'))
+
+
+@app.route('/admin/user/<int:user_id>/toggle-admin', methods=['POST'])
+@login_required
+@require_admin
+def admin_toggle_admin(user_id):
+    """Toggle admin status for a user with email"""
+    user = User.query.get_or_404(user_id)
+    
+    # Cannot change your own admin status
+    if user.id == current_user.id:
+        flash('You cannot change your own admin status.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    # Only users with email can have their admin status toggled
+    if user.email is None or user.email == '':
+        flash('Users without email are always administrators and cannot be demoted.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    user.is_admin = not user.is_admin
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    action = 'granted admin privileges' if user.is_admin else 'removed from administrators'
+    flash(f'User "{user.username}" has been {action}.', 'success')
+    return redirect(url_for('admin_panel'))

@@ -1,0 +1,202 @@
+{% extends "main.html" %}
+{% set active_page = title %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h1 class="page-title">
+                    <i class="mdi mdi-shield-account mr-2"></i>{{ active_page|title }}
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            {% set alert_type = 'alert-success' if category == 'success' else 'alert-danger' if category == 'error' else 'alert-warning' if category == 'warning' else 'alert-info' %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert {{ alert_type }} alert-dismissible fade show" role="alert">
+                        <i class="mdi mdi-{{ 'check-circle' if category == 'success' else 'alert-circle' }} mr-2"></i>
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- User Management Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-account-group mr-2"></i>User Management
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Manage all users in the system. You can block users to prevent login, delete users, or grant admin privileges.
+                    </p>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Full Name</th>
+                                    <th>Status</th>
+                                    <th>Role</th>
+                                    <th>Auth Type</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr class="{{ 'table-danger' if user.is_blocked else '' }}">
+                                    <td>{{ user.id }}</td>
+                                    <td>
+                                        <strong>{{ user.username }}</strong>
+                                        {% if user.id == current_user.id %}
+                                        <span class="badge badge-info ml-1">You</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.email %}
+                                        {{ user.email }}
+                                        {% else %}
+                                        <span class="text-muted"><em>No email (System Admin)</em></span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.fullname or '-' }}</td>
+                                    <td>
+                                        {% if user.is_blocked %}
+                                        <span class="badge badge-danger">Blocked</span>
+                                        {% else %}
+                                        <span class="badge badge-success">Active</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.is_system_admin() %}
+                                        <span class="badge badge-warning">Admin</span>
+                                        {% else %}
+                                        <span class="badge badge-secondary">User</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.oauth_provider == 'google' %}
+                                        <span class="badge badge-info"><i class="mdi mdi-google mr-1"></i>Google</span>
+                                        {% else %}
+                                        <span class="badge badge-secondary"><i class="mdi mdi-account-key mr-1"></i>Password</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% set is_protected_admin = (user.email is none or user.email == '') %}
+                                        {% if user.id != current_user.id and not is_protected_admin %}
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <!-- Block/Unblock Button -->
+                                            <form method="POST" action="{{ url_for('admin_block_user', user_id=user.id) }}" class="d-inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                {% if user.is_blocked %}
+                                                <button type="submit" class="btn btn-success btn-sm" title="Unblock User">
+                                                    <i class="mdi mdi-account-check"></i>
+                                                </button>
+                                                {% else %}
+                                                <button type="submit" class="btn btn-warning btn-sm" title="Block User">
+                                                    <i class="mdi mdi-account-off"></i>
+                                                </button>
+                                                {% endif %}
+                                            </form>
+                                            
+                                            <!-- Toggle Admin Button (only for users with email) -->
+                                            {% if user.email %}
+                                            <form method="POST" action="{{ url_for('admin_toggle_admin', user_id=user.id) }}" class="d-inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                {% if user.is_admin %}
+                                                <button type="submit" class="btn btn-secondary btn-sm" title="Remove Admin">
+                                                    <i class="mdi mdi-shield-off"></i>
+                                                </button>
+                                                {% else %}
+                                                <button type="submit" class="btn btn-info btn-sm" title="Make Admin">
+                                                    <i class="mdi mdi-shield-account"></i>
+                                                </button>
+                                                {% endif %}
+                                            </form>
+                                            {% endif %}
+                                            
+                                            <!-- Delete Button -->
+                                            <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}" class="d-inline"
+                                                  onsubmit="return confirm('Are you sure you want to delete user {{ user.username }}? This action cannot be undone and will delete all their data.');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <button type="submit" class="btn btn-danger btn-sm" title="Delete User">
+                                                    <i class="mdi mdi-delete"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% elif user.id == current_user.id %}
+                                        <span class="text-muted"><em>Current user</em></span>
+                                        {% else %}
+                                        <span class="text-muted"><em>Protected admin</em></span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if not users %}
+                    <div class="alert alert-info">
+                        <i class="mdi mdi-information mr-2"></i>
+                        No users found in the system.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-help-circle mr-2"></i>Actions Legend
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <p><button class="btn btn-warning btn-sm"><i class="mdi mdi-account-off"></i></button> Block user - Prevents login</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><button class="btn btn-success btn-sm"><i class="mdi mdi-account-check"></i></button> Unblock user - Allows login</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><button class="btn btn-info btn-sm"><i class="mdi mdi-shield-account"></i></button> Make admin - Grant admin privileges</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><button class="btn btn-danger btn-sm"><i class="mdi mdi-delete"></i></button> Delete user - Remove permanently</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <p class="mb-0 text-muted">
+                        <strong>Note:</strong> Users without an email address are considered system administrators and cannot be blocked, deleted, or demoted.
+                        Any user with an email can be granted admin privileges by using the shield button.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

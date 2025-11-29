@@ -125,17 +125,20 @@ def create_cli(app):
             click.echo('No users found')
             return
         
-        click.echo("\n" + "="*60)
-        click.echo("  Users".center(60))
-        click.echo("="*60)
-        click.echo(f"{'ID':<5} {'Username':<20} {'Email':<25} {'Full Name':<15}")
-        click.echo("-"*60)
+        click.echo("\n" + "="*80)
+        click.echo("  Users".center(80))
+        click.echo("="*80)
+        click.echo(f"{'ID':<5} {'Username':<15} {'Email':<25} {'Full Name':<15} {'Admin':<6} {'Blocked':<8}")
+        click.echo("-"*80)
         
         for user in users:
             fullname = user.fullname or '(not set)'
-            click.echo(f"{user.id:<5} {user.username:<20} {user.email:<25} {fullname:<15}")
+            email = user.email or '(no email - sys admin)'
+            is_admin = 'Yes' if user.is_system_admin() else 'No'
+            is_blocked = 'Yes' if user.is_blocked else 'No'
+            click.echo(f"{user.id:<5} {user.username:<15} {email:<25} {fullname:<15} {is_admin:<6} {is_blocked:<8}")
         
-        click.echo("="*60 + "\n")
+        click.echo("="*80 + "\n")
     
     @app.cli.command()
     @click.option('--username', prompt=True, help='Username to delete')
