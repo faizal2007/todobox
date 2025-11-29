@@ -135,10 +135,10 @@
                                     {% set share.id = s.id %}
                                 {% endif %}
                             {% endfor %}
-                            <form method="POST" action="{{ url_for('revoke_share', share_id=share.id) }}" class="d-inline">
+                            <form method="POST" action="{{ url_for('revoke_share', share_id=share.id) }}" class="d-inline share-form">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                        onclick="return confirm('Stop sharing with {{ user.fullname or user.username }}?')">
+                                <button type="button" class="btn btn-sm btn-outline-danger revoke-share-btn"
+                                        data-username="{{ user.fullname or user.username }}">
                                     <i class="mdi mdi-close"></i> Revoke
                                 </button>
                             </form>
@@ -176,10 +176,10 @@
                                     {% set share.id = s.id %}
                                 {% endif %}
                             {% endfor %}
-                            <form method="POST" action="{{ url_for('remove_share_access', share_id=share.id) }}" class="d-inline">
+                            <form method="POST" action="{{ url_for('remove_share_access', share_id=share.id) }}" class="d-inline share-form">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                <button type="submit" class="btn btn-sm btn-outline-secondary"
-                                        onclick="return confirm('Remove shared access from {{ user.fullname or user.username }}?')">
+                                <button type="button" class="btn btn-sm btn-outline-secondary remove-share-btn"
+                                        data-username="{{ user.fullname or user.username }}">
                                     <i class="mdi mdi-close"></i> Remove
                                 </button>
                             </form>
@@ -284,6 +284,9 @@
         {% endif %}
     </div>
 </div>
+
+{% include "confirm_modal.html" %}
+
 {% endblock %}
 
 {% block extra_script_footer %}
@@ -418,6 +421,45 @@
             emailInput.classList.remove('is-invalid');
         });
     }
+    
+    // Share confirmation handlers using jQuery for DOM manipulation
+    $(document).ready(function() {
+        // Revoke share button handler
+        $('.revoke-share-btn').click(function() {
+            var $btn = $(this);
+            var $form = $btn.closest('form');
+            var username = $btn.data('username');
+            
+            showConfirmModal(
+                'Revoke Sharing',
+                'Are you sure you want to stop sharing with ' + username + '?',
+                function() {
+                    $form.submit();
+                },
+                'Revoke',
+                'btn-danger',
+                'bg-danger text-white'
+            );
+        });
+        
+        // Remove share access button handler
+        $('.remove-share-btn').click(function() {
+            var $btn = $(this);
+            var $form = $btn.closest('form');
+            var username = $btn.data('username');
+            
+            showConfirmModal(
+                'Remove Shared Access',
+                'Are you sure you want to remove shared access from ' + username + '?',
+                function() {
+                    $form.submit();
+                },
+                'Remove',
+                'btn-secondary',
+                'bg-secondary text-white'
+            );
+        });
+    });
 })();
 </script>
 {% endblock %}
