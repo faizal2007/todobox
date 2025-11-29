@@ -19,8 +19,12 @@ def get_oauth_redirect_uri():
     """Get the OAuth redirect URI from config or generate dynamically"""
     # Use explicitly configured redirect URI if available (for reverse proxy scenarios)
     configured_uri = current_app.config.get('OAUTH_REDIRECT_URI')
-    # Use configured URI if it's set and not a localhost/127.0.0.1 address
-    if configured_uri and not configured_uri.startswith(('http://localhost', 'http://127.0.0.1')):
+    # Use configured URI if it's set and not a localhost/127.0.0.1 address (HTTP or HTTPS)
+    local_prefixes = (
+        'http://localhost', 'https://localhost',
+        'http://127.0.0.1', 'https://127.0.0.1'
+    )
+    if configured_uri and not configured_uri.startswith(local_prefixes):
         return configured_uri
     # Fall back to dynamically generated URL
     return url_for("oauth_callback_google", _external=True)
