@@ -815,6 +815,28 @@ def settings():
 
 # ==================== Todo Sharing Routes ====================
 
+@app.route('/sharing/toggle', methods=['POST'])
+@login_required
+def toggle_sharing():
+    """AJAX endpoint to toggle sharing enabled/disabled"""
+    if not current_user.is_gmail_user():
+        return jsonify({'status': 'error', 'message': 'Todo sharing is only available for Google/Gmail account users.'}), 403
+    
+    data = request.get_json()
+    if data is None:
+        return jsonify({'status': 'error', 'message': 'Invalid request'}), 400
+    
+    sharing_enabled = data.get('sharing_enabled', False)
+    current_user.sharing_enabled = sharing_enabled
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    return jsonify({
+        'status': 'success',
+        'message': 'Sharing settings updated successfully.',
+        'sharing_enabled': current_user.sharing_enabled
+    })
+
+
 @app.route('/sharing', methods=['GET', 'POST'])
 @login_required
 def sharing():
