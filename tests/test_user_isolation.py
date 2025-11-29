@@ -499,3 +499,68 @@ class TestSharedTodoAccess:
             # Verify todo was not modified
             todo_check = Todo.query.get(todo_id)
             assert todo_check.name == original_title
+
+
+class TestTodoEncryption:
+    """Test that todo data is encrypted in the database."""
+    
+    def test_todo_data_is_encrypted_in_database(self, app, client):
+        """Test that todo name and details are stored encrypted in the database."""
+        from app import db
+        from app.models import Todo
+        from sqlalchemy import text
+        
+        with app.app_context():
+            user1, _ = create_test_users(db)
+            
+            # Create a todo with known content
+            plaintext_name = 'My Secret Todo'
+            plaintext_details = 'These are my secret details'
+            
+            todo = Todo(name=plaintext_name, details=plaintext_details, user_id=user1.id)
+            db.session.add(todo)
+            db.session.commit()
+            todo_id = todo.id
+            
+            # Query the raw database to see what's actually stored
+            result = db.session.execute(
+                text('SELECT name, details FROM todo WHERE id = :id'),
+                {'id': todo_id}
+            ).fetchone()
+            
+            raw_name = result[0]
+            raw_details = result[1]
+            
+            # The raw values should NOT be the plaintext
+            # (they should be encrypted/encoded)
+            assert raw_name != plaintext_name, "Todo name should be encrypted in database"
+            assert raw_details != plaintext_details, "Todo details should be encrypted in database"
+            
+            # But when accessed through the model, they should be decrypted
+            todo_check = Todo.query.get(todo_id)
+            assert todo_check.name == plaintext_name, "Todo name should be decrypted when accessed"
+            assert todo_check.details == plaintext_details, "Todo details should be decrypted when accessed"
+    
+    def test_encrypted_todo_readable_after_retrieval(self, app, client):
+        """Test that encrypted todos can be read correctly through the application."""
+        from app import db
+        
+        with app.app_context():
+            user1, _ = create_test_users(db)
+            
+            # Create a todo
+            todo = create_todo_for_user(db, user1, 'Encrypted Test Todo')
+            todo_id = todo.id
+            
+            # Login as user1
+            login_user(client, 'user1', 'password1')
+            
+            # Get the todo through the API
+            response = client.post(f'/{todo_id}/todo')
+            
+            assert response.status_code == 200
+            
+            import json
+            data = json.loads(response.data)
+            assert data['status'] == 'Success'
+            assert data['title'] == 'Encrypted Test Todo'
