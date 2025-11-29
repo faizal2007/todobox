@@ -279,21 +279,19 @@ def generate_secrets():
         print("""
 1. Open or create your .flaskenv file in the project root
 
-2. Add or update these lines:
-   SECRET_KEY=<your_generated_secret_key>
-   SALT=<your_generated_salt>
+2. Copy and paste the SECRET_KEY and SALT values shown above
 
 3. Make sure .flaskenv is in your .gitignore file
 
 4. For production, use environment variables instead of .flaskenv
 
-Example .flaskenv:
+Example .flaskenv structure:
    FLASK_APP=todobox.py
-   SECRET_KEY={secret_key}
-   SALT={salt}
+   SECRET_KEY=your_generated_secret_key_here
+   SALT=your_generated_salt_here
    DATABASE_DEFAULT=sqlite
    DATABASE_NAME=todobox.db
-""".format(secret_key=secret_key, salt=salt))
+""")
     
     print("\n✅ Secret generation complete!")
     return True
