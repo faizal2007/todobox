@@ -77,12 +77,17 @@ def create_first_admin_user():
         # Get password
         password = get_valid_password()
         
+        # Ask about admin privileges (default to Yes for first-time admin setup)
+        make_admin = input("\nAssign admin privileges? [Y/n]: ").strip().lower()
+        is_admin = make_admin != 'n'
+        
         # Confirm
         print("\n" + "-" * 60)
         print("Confirm user details:")
         print(f"  Username: {username}")
         print(f"  Email: {email}")
         print(f"  Password: {'*' * len(password)}")
+        print(f"  Admin: {'Yes' if is_admin else 'No'}")
         print("-" * 60)
         
         confirm = input("\nCreate this user? [Y/n]: ").strip().lower()
@@ -94,11 +99,13 @@ def create_first_admin_user():
         # Create user
         try:
             user = User(username=username, email=email)
+            user.is_admin = is_admin
             user.set_password(password)
             db.session.add(user)
             db.session.commit()
             
-            print(f"\n✅ Admin user '{username}' created successfully!")
+            admin_status = " (admin)" if is_admin else ""
+            print(f"\n✅ Admin user '{username}'{admin_status} created successfully!")
             return True
         except Exception as e:
             print(f"\n❌ Error creating user: {e}")
@@ -106,7 +113,7 @@ def create_first_admin_user():
             return False
 
 def create_new_user():
-    """Create a new user (not admin)"""
+    """Create a new user with optional admin privileges"""
     from app import app, db
     from app.models import User
     
@@ -119,6 +126,10 @@ def create_new_user():
         password = get_valid_password()
         fullname = input("\nFull name (optional) []: ").strip()
         
+        # Ask about admin privileges
+        make_admin = input("\nAssign admin privileges? [y/N]: ").strip().lower()
+        is_admin = make_admin == 'y'
+        
         # Confirm
         print("\n" + "-" * 60)
         print("Confirm user details:")
@@ -126,6 +137,7 @@ def create_new_user():
         print(f"  Email: {email}")
         print(f"  Full Name: {fullname if fullname else '(not set)'}")
         print(f"  Password: {'*' * len(password)}")
+        print(f"  Admin: {'Yes' if is_admin else 'No'}")
         print("-" * 60)
         
         confirm = input("\nCreate this user? [Y/n]: ").strip().lower()
@@ -139,11 +151,13 @@ def create_new_user():
             user = User(username=username, email=email)
             if fullname:
                 user.fullname = fullname
+            user.is_admin = is_admin
             user.set_password(password)
             db.session.add(user)
             db.session.commit()
             
-            print(f"\n✅ User '{username}' created successfully!")
+            admin_status = " (admin)" if is_admin else ""
+            print(f"\n✅ User '{username}'{admin_status} created successfully!")
             return True
         except Exception as e:
             print(f"\n❌ Error creating user: {e}")
