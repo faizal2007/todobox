@@ -120,21 +120,18 @@
                                 <strong>{{ user.fullname or user.username }}</strong>
                                 <br><small class="text-muted">{{ user.email }}</small>
                             </div>
-                            <form method="POST" action="{{ url_for('revoke_share', share_id=loop.index) }}" class="d-inline">
+                            {% set share = namespace(id=None) %}
+                            {% for s in current_user.shared_by_me %}
+                                {% if s.shared_with_id == user.id %}
+                                    {% set share.id = s.id %}
+                                {% endif %}
+                            {% endfor %}
+                            <form method="POST" action="{{ url_for('revoke_share', share_id=share.id) }}" class="d-inline">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                {% set share = namespace(id=None) %}
-                                {% for s in current_user.shared_by_me %}
-                                    {% if s.shared_with_id == user.id %}
-                                        {% set share.id = s.id %}
-                                    {% endif %}
-                                {% endfor %}
-                                <form method="POST" action="{{ url_for('revoke_share', share_id=share.id) }}" class="d-inline">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                                            onclick="return confirm('Stop sharing with {{ user.fullname or user.username }}?')">
-                                        <i class="mdi mdi-close"></i> Revoke
-                                    </button>
-                                </form>
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Stop sharing with {{ user.fullname or user.username }}?')">
+                                    <i class="mdi mdi-close"></i> Revoke
+                                </button>
                             </form>
                         </li>
                         {% endfor %}
@@ -258,13 +255,13 @@
                                     </small>
                                 </div>
                                 <div>
-                                    {% if inv.status == 'pending' and not inv.is_expired() %}
+                                    {% if inv.display_status == 'pending' %}
                                         <span class="badge badge-warning">Pending</span>
-                                    {% elif inv.status == 'accepted' %}
+                                    {% elif inv.display_status == 'accepted' %}
                                         <span class="badge badge-success">Accepted</span>
-                                    {% elif inv.status == 'declined' %}
+                                    {% elif inv.display_status == 'declined' %}
                                         <span class="badge badge-danger">Declined</span>
-                                    {% elif inv.is_expired() %}
+                                    {% elif inv.display_status == 'expired' %}
                                         <span class="badge badge-secondary">Expired</span>
                                     {% endif %}
                                 </div>

@@ -113,6 +113,13 @@ class ShareInvitation(db.Model): # type: ignore[attr-defined]
         """Check if the invitation is still pending"""
         return self.status == 'pending' and not self.is_expired()
     
+    @property
+    def display_status(self):
+        """Get the display status for the invitation (handles expired pending invitations)"""
+        if self.status == 'pending' and self.is_expired():
+            return 'expired'
+        return self.status
+    
     @classmethod
     def get_by_token(cls, token):
         """Get invitation by token"""

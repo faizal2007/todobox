@@ -886,13 +886,12 @@ def sharing():
         from_user_id=current_user.id
     ).order_by(ShareInvitation.created_at.desc()).limit(10).all()
     
-    # Get received invitations (pending)
-    received_invitations = ShareInvitation.query.filter_by(
-        to_email=current_user.email,
-        status='pending'
+    # Get received invitations (pending and not expired) - use database filter for efficiency
+    received_invitations = ShareInvitation.query.filter(
+        ShareInvitation.to_email == current_user.email,
+        ShareInvitation.status == 'pending',
+        ShareInvitation.expires_at > datetime.now()
     ).all()
-    # Filter out expired ones
-    received_invitations = [inv for inv in received_invitations if not inv.is_expired()]
     
     # Get current sharing relationships
     shared_with_me = TodoShare.get_shared_users(current_user.id)
@@ -952,17 +951,34 @@ def accept_share_invitation(token):
     invitation.status = 'accepted'
     invitation.responded_at = datetime.now()
     
-    # Create the sharing relationship
-    existing_share = TodoShare.query.filter_by(
-        owner_id=invitation.from_user_id,
-        shared_with_id=current_user.id
-    ).first()
-    
-    if not existing_share:
-        share = TodoShare(owner_id=invitation.from_user_id, shared_with_id=current_user.id)
-        db.session.add(share)  # type: ignore[attr-defined]
-    
-    db.session.commit()  # type: ignore[attr-defined]
+    # Create the sharing relationship with race condition handling
+    from sqlalchemy.exc import IntegrityError
+    try:
+        existing_share = TodoShare.query.filter_by(
+            owner_id=invitation.from_user_id,
+            shared_with_id=current_user.id
+        ).first()
+        
+        if not existing_share:
+            share = TodoShare(owner_id=invitation.from_user_id, shared_with_id=current_user.id)
+            db.session.add(share)  # type: ignore[attr-defined]
+        
+        db.session.commit()  # type: ignore[attr-defined]
+    except IntegrityError:
+        # Handle potential race condition - unique constraint violation
+        db.session.rollback()  # type: ignore[attr-defined]
+        # Re-check if share exists (created by concurrent request)
+        existing_share = TodoShare.query.filter_by(
+            owner_id=invitation.from_user_id,
+            shared_with_id=current_user.id
+        ).first()
+        if not existing_share:
+            # If share still doesn't exist, re-raise the exception
+            raise
+        # Update invitation status separately
+        invitation.status = 'accepted'
+        invitation.responded_at = datetime.now()
+        db.session.commit()  # type: ignore[attr-defined]
     
     from_user = User.query.get(invitation.from_user_id)
     flash(f'You can now see todos shared by {from_user.fullname or from_user.username}!', 'success')
@@ -1040,21 +1056,51 @@ def shared_todos():
     # Get users who share their todos with current user
     shared_users = TodoShare.get_shared_users(current_user.id)
     
-    # Get all todos from users who share with current user
+    if not shared_users:
+        return render_template('shared_todos.html', 
+                              title='Shared Todos',
+                              shared_todos=[],
+                              shared_users=[])
+    
+    # Get shared user IDs for efficient query
+    shared_user_ids = [u.id for u in shared_users]
+    
+    # Get all todos from shared users with their latest tracker in one optimized query
+    # This uses a subquery to get the latest tracker timestamp for each todo
+    from sqlalchemy import func
+    
+    # Subquery to get latest tracker timestamp for each todo
+    latest_tracker_subq = db.session.query(  # type: ignore[attr-defined]
+        Tracker.todo_id,
+        func.max(Tracker.timestamp).label('max_timestamp')
+    ).group_by(Tracker.todo_id).subquery()
+    
+    # Main query joining todos with their latest tracker and status
+    results = db.session.query(Todo, Tracker, Status, User).join(  # type: ignore[attr-defined]
+        latest_tracker_subq,
+        Todo.id == latest_tracker_subq.c.todo_id
+    ).join(
+        Tracker,
+        (Tracker.todo_id == Todo.id) & (Tracker.timestamp == latest_tracker_subq.c.max_timestamp)
+    ).join(
+        Status,
+        Tracker.status_id == Status.id
+    ).join(
+        User,
+        Todo.user_id == User.id
+    ).filter(
+        Todo.user_id.in_(shared_user_ids)
+    ).order_by(Todo.modified.desc()).all()
+    
+    # Build the list from results
     shared_todos_list = []
-    for user in shared_users:
-        user_todos = Todo.query.filter_by(user_id=user.id).order_by(Todo.modified.desc()).all()
-        for todo in user_todos:
-            # Get latest tracker for status
-            latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc()).first()
-            if latest_tracker:
-                status = Status.query.get(latest_tracker.status_id)
-                shared_todos_list.append({
-                    'todo': todo,
-                    'owner': user,
-                    'status': status.name if status else 'unknown',
-                    'tracker': latest_tracker
-                })
+    for todo, tracker, status, owner in results:
+        shared_todos_list.append({
+            'todo': todo,
+            'owner': owner,
+            'status': status.name if status else 'unknown',
+            'tracker': tracker
+        })
     
     return render_template('shared_todos.html', 
                           title='Shared Todos',
