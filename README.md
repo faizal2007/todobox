@@ -64,14 +64,35 @@ gunicorn -w 4 todobox:app  # Start with Gunicorn
 
 Comprehensive documentation is available in the `docs/` directory:
 
-- **[OVERVIEW.md](docs/OVERVIEW.md)** - Project overview, features, and architecture
+### Getting Started
+
+- **[README.md](docs/README.md)** - Documentation index and quick links
 - **[SETUP.md](docs/SETUP.md)** - Complete installation and configuration guide
 - **[QUICKSTART.md](docs/QUICKSTART.md)** - Quick reference with commands and API examples
+- **[USER_CREATION.md](docs/USER_CREATION.md)** - First-time user setup and management
+
+### Reference Documentation
+
 - **[API.md](docs/API.md)** - Full API reference with all endpoints and parameters
 - **[MODELS.md](docs/MODELS.md)** - Database schema and model documentation
-- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Deployment options and maintenance guide
 - **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture and design patterns
+- **[OVERVIEW.md](docs/OVERVIEW.md)** - Project overview, features, and architecture
+
+### Operations & Security
+
+- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Deployment options and maintenance guide
+- **[DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md)** - Production deployment checklist
 - **[SECURITY_PATCHES.md](docs/SECURITY_PATCHES.md)** - Security improvements and patches applied
+- **[CODE_REVIEW.md](docs/CODE_REVIEW.md)** - Code review findings and best practices
+
+### OAuth & Authentication
+
+- **[OAUTH_SETUP.md](docs/OAUTH_SETUP.md)** - Google OAuth2 setup and configuration
+
+### Migration Guides
+
+- **[README_MIGRATIONS.md](docs/README_MIGRATIONS.md)** - Database migration documentation
+- **[MIGRATION_FIX_GUIDE.md](docs/MIGRATION_FIX_GUIDE.md)** - Migration troubleshooting guide
 
 ## Project Structure
 

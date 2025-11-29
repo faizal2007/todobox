@@ -48,7 +48,7 @@ sqlalchemy.exc.OperationalError: (MySQLdb.OperationalError)
 4. c682ef478e45 ← Clean up (remove token_created_at)
 5. d1f2e3c4b5a6 ← FINAL: Ensure api_token exists ✅ NEW
 
-```text
+```
 
 ## How to Apply Fix
 
@@ -65,7 +65,7 @@ flask db upgrade
 flask db upgrade
 flask seed-db
 
-```text
+```
 
 ### For Production
 
@@ -85,7 +85,7 @@ flask shell
 >>> inspector = inspect(db.engine)
 >>> [col['name'] for col in inspector.get_columns('user')]
 # Should include 'api_token'
-```text
+```
 
 ### Automated Fix Script
 
@@ -96,7 +96,7 @@ chmod +x fix_production_migration.sh
 # Run the fix
 ./fix_production_migration.sh
 
-```text
+```
 
 ## Verification Checklist
 
@@ -128,7 +128,7 @@ DESCRIBE user;
 | oauth_provider  | varchar(50)  | YES  |     | NULL    |
 | oauth_id        | varchar(255) | YES  |     | NULL    |
 +-----------------+--------------+------+-----+---------+
-```text
+```
 
 ## Files Modified
 

@@ -26,7 +26,7 @@ Migration c682ef478e45
 
 PROBLEM: On production databases where migrations didn't run 
          cleanly, api_token might not exist!
-```text
+```
 
 ## The Solution: Fixed Chain
 
@@ -59,21 +59,23 @@ Migration d1f2e3c4b5a6 (NEW - SAFETY MIGRATION)
      Depends on: c682ef478e45 ✅
 
 BENEFIT: Guarantees api_token exists regardless of migration history!
-```text
+```
 
 ## Side-by-Side Comparison
 
 ### Migration c682ef478e45 Changes
 
 **BEFORE (Ambiguous):**
+
 ```python
 def upgrade():
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.drop_column('token_created_at')
     # What about api_token? Is it supposed to exist already?
-```text
+```
 
 **AFTER (Clarified):**
+
 ```python
 def upgrade():
     # Remove the token_created_at column which is no longer needed
@@ -81,12 +83,12 @@ def upgrade():
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.drop_column('token_created_at')
     # Clear: api_token was already added, we're just cleaning up
-
-```text
+```
 
 ### New Migration d1f2e3c4b5a6
 
 **ADDED (Safety Assurance):**
+
 ```python
 def upgrade():
     # Add api_token column if it doesn't exist
@@ -94,7 +96,7 @@ def upgrade():
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.add_column(sa.Column('api_token', sa.String(length=255), nullable=True))
         batch_op.create_index(batch_op.f('ix_user_api_token'), ['api_token'], unique=True)
-```text
+```
 
 ## Error Reproduction
 
@@ -125,7 +127,7 @@ Scenario 3: With new migration d1f2e3c4b5a6 (Fixed)
   Query: SELECT user.api_token FROM user ...
   Result: ✅ Always works, regardless of migration history
 
-```text
+```
 
 ## User Model Expectations
 
@@ -143,13 +145,13 @@ class User(UserMixin, db.Model):
     
     oauth_provider = db.Column(db.String(50))
     oauth_id = db.Column(db.String(255), index=True)
-```text
+```
 
 **Problem:** If database doesn't have `api_token`, any operation triggers:
-```text
-SELECT user.id, user.username, ..., user.api_token, ...  ← ❌ Column not found
 
 ```text
+SELECT user.id, user.username, ..., user.api_token, ...  ← ❌ Column not found
+```
 
 **Solution:** New migration ensures column always exists before application runs.
 
@@ -180,7 +182,7 @@ Production Deployment:
    - BEFORE: Could skip migrations, api_token missing ❌
    - AFTER: Migration 5 guarantees it exists ✅
 4. App starts without errors ✅
-```text
+```
 
 ## Database State Comparison
 
@@ -210,7 +212,7 @@ Application Code:
   ↓
   ❌ Application crashes
 
-```text
+```
 
 ### AFTER FIX
 
@@ -238,7 +240,7 @@ Application Code:
   ↓
   ✅ Application works perfectly
 
-```text
+```
 
 ## Summary
 

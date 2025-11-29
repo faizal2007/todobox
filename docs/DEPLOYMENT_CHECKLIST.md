@@ -28,7 +28,7 @@ supervisorctl stop todobox
 # If using gunicorn manually
 # gracefully stop the process
 
-```text
+```
 
 ### 2. Deploy New Code
 
@@ -42,7 +42,7 @@ git pull origin master
 # Copy the new migration file:
 # migrations/versions/d1f2e3c4b5a6_fix_api_token_column_ensure_api_token.py
 
-```text
+```
 
 ### 3. Verify Migration Files
 
@@ -57,7 +57,7 @@ ls -la migrations/versions/
 # ✅ c682ef478e45_add_api_token_field_to_user_model.py
 # ✅ d1f2e3c4b5a6_fix_api_token_column_ensure_api_token.py  ← NEW
 
-```text
+```
 
 ### 4. Check Database Before Migration
 
@@ -76,7 +76,7 @@ WHERE TABLE_NAME='user' AND COLUMN_NAME='api_token';
 # (From Flask):
 # flask db history
 
-```text
+```
 
 ### 5. Run Database Migrations
 
@@ -99,7 +99,7 @@ flask db upgrade
 # INFO [alembic.migration] Running upgrade 3e5106ee570c -> c682ef478e45
 # INFO [alembic.migration] Running upgrade c682ef478e45 -> d1f2e3c4b5a6  ← NEW
 
-```text
+```
 
 ### 6. Verify Migration Completed
 
@@ -115,7 +115,7 @@ mysql -u username -p database_name \
 # Verify index exists
 mysql -u username -p database_name \
   -e "SHOW INDEX FROM user WHERE Column_name='api_token';"
-```text
+```
 
 ### 7. Start Application
 
@@ -129,7 +129,7 @@ supervisorctl start todobox
 # Or manually (for testing)
 flask run --host=0.0.0.0 --port=5000
 
-```text
+```
 
 ### 8. Post-Deployment Verification
 
@@ -189,7 +189,7 @@ with app.app_context():
         exit(1)
 EOF
 
-```text
+```
 
 ## Monitoring Post-Deployment
 
@@ -205,7 +205,7 @@ tail -f /var/log/mysql/error.log
 # System logs
 journalctl -u todobox -f
 
-```text
+```
 
 ### Common Issues & Solutions
 
@@ -236,7 +236,7 @@ systemctl start todobox
 
 # 6. Verify it works
 curl http://your-domain/
-```text
+```
 
 ## Post-Deployment Checklist
 
@@ -268,7 +268,7 @@ mysql -u user -p db -e "SHOW INDEX FROM user;" | grep api_token
 
 # Check for any SQL errors
 mysql -u user -p db -e "SELECT * FROM alembic_version;"
-```text
+```
 
 ## Support Contact
 
@@ -277,8 +277,7 @@ If you encounter issues:
 1. **Check logs first**: `tail -f /var/log/todobox/app.log`
 2. **Read troubleshooting section** in `MIGRATION_FIX_GUIDE.md`
 3. **Restore from backup** if critical
-
-1. **Contact support** with error details and logs
+4. **Contact support** with error details and logs
 
 ## Success Criteria
 
