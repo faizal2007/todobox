@@ -79,7 +79,7 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
     
     def is_direct_login_user(self):
         """Check if the user is a direct login user (username/password authentication)"""
-        return self.oauth_provider is None or self.oauth_provider == ''
+        return not self.oauth_provider
     
     def can_share_todos(self):
         """Check if the user can share todos (any user with sharing enabled)"""
