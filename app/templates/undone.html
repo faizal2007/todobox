@@ -1,4 +1,7 @@
 {% extends "main.html" %}
+{% block extra_css %}
+	<link href='{{ url_for('static', filename='assets/css/vendor/simplemde.min.css') }}' rel="stylesheet" type="text/css" />
+{% endblock %}
 {% block content %}
      {% set active_page = title %}
                <!-- Start Content-->
@@ -103,6 +106,25 @@
 {% endblock %}  
 
 {% block extra_script_footer %}
+<!-- SimpleMDE js -->
+<script src='{{ url_for('static', filename='assets/js/vendor/simplemde.min.js') }}'></script>
+<script>
+     let simplemde = new SimpleMDE({ 
+        spellChecker: false,
+        toolbarTips: true,
+        toolbar: [
+                        "bold", 
+                        "italic", 
+                        "unordered-list", 
+                        "ordered-list", "|", 
+                        "quote",
+                        "link",
+                        "preview"
+                    ],
+        element: $("#details-textarea")[0] });
+        simplemde.render();
+</script>
+
 <script>
      $('.done').click(function() {
           $.post('/' + $(this).data('id') + '/done', {
@@ -121,7 +143,7 @@
                $('#info-header-modal').modal('show');
                $('#title-input-normal').val(data['title']);
                $("input[name='todo_id']").val(data['id']);
-               // Note: simplemde would need to be initialized for editing to work
+               simplemde.value(data['activities']);
                console.log(data)
           });
      })
@@ -147,5 +169,102 @@
                'bg-danger text-white'
           );
      })
+
+     /** Script for html modal - Save Todo **/
+     $('.create-todo').click(function() {
+          
+          let title = $('#title-input-normal').val();
+          let activities = simplemde.value();
+          let todo_id = $("input[name='todo_id']").val();
+          let schedule_day = $('input[name="schedule_day"]:checked').val();
+          let custom_date = $('#custom_date').val();
+          
+          if(title) {
+               var $button = $(this);
+               var $icon = $button.find('.create-icon');
+               var $loading = $button.find('.create-loading');
+               
+               // Show loading state
+               $icon.hide();
+               $loading.show();
+               $button.prop('disabled', true);
+               
+               $.post('/add', {
+                    '_csrf_token': '{{ csrf_token() }}',
+                    'todo_id': todo_id ? todo_id:'',
+                    'title': title,
+                    'activities': activities,
+                    'schedule_day': schedule_day,
+                    'custom_date': custom_date
+               },
+               function(data){
+                    console.log('Server response:', data);
+                    // Redirect back to undone page after saving
+                    window.location.href = "{{ url_for('undone') }}";
+               }).fail(function() {
+                    // Hide loading state on error
+                    $icon.show();
+                    $loading.hide();
+                    $button.prop('disabled', false);
+               });
+          }
+          else
+               $('#title-input-normal').last().addClass('is-invalid')
+          
+     })
+
+     // Handle schedule day selection
+     $('input[name="schedule_day"]').change(function() {
+          console.log('Schedule changed to:', $(this).val());
+          if ($(this).val() === 'custom') {
+               $('#custom-date-picker').show();
+          } else {
+               $('#custom-date-picker').hide();
+          }
+     });
+
+     // Handle label clicks for button group
+     $('label[for="today"], label[for="tomorrow"], label[for="custom_day"]').click(function() {
+          const targetInput = $(this).attr('for');
+          const inputValue = $('#' + targetInput).val();
+          
+          // Remove active class from all labels
+          $('label[for="today"], label[for="tomorrow"], label[for="custom_day"]').removeClass('active');
+          // Add active class to clicked label
+          $(this).addClass('active');
+          
+          console.log('Button clicked:', inputValue);
+          
+          if (inputValue === 'custom') {
+               $('#custom-date-picker').show();
+          } else {
+               $('#custom-date-picker').hide();
+          }
+     });
+
+     $('#info-header-modal').on('shown.bs.modal', function() {
+          $(this).find('[autofocus]').focus();
+          simplemde.codemirror.refresh();
+     });
+
+     $(document).ready(function() {
+   
+          $(document).keydown(function(event) {
+               // Only if modal is visible
+               if ($('#info-header-modal').hasClass('show')) {
+                    // Detect Ctrl + Enter to save
+                    if ((event.ctrlKey || event.metaKey) && event.which === 13) {
+                         event.preventDefault();
+                         $('.create-todo').click();
+                    }
+                    
+                    // Detect Ctrl + S to save
+                    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+                         event.preventDefault();
+                         $('.create-todo').click();
+                    }
+               }
+          });
+     });
 </script>
 {% endblock %}
