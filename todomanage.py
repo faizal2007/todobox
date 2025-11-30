@@ -27,9 +27,11 @@ def main():
         print("  3) Assign user to admin")
         print("  4) Delete user")
         print("  5) Generate SECRET_KEY and SALT")
-        print("  6) Exit")
+        print("  6) Install")
+        print("  7) Run")
+        print("  8) Exit")
         
-        choice = input("\nSelect option (1-6): ").strip()
+        choice = input("\nSelect option (1-8): ").strip()
         
         if choice == '1':
             create_user()
@@ -42,10 +44,724 @@ def main():
         elif choice == '5':
             generate_secrets()
         elif choice == '6':
+            install_database()
+        elif choice == '7':
+            run_todobox()
+        elif choice == '8':
             print("\n✅ Exiting.\n")
             sys.exit(0)
         else:
-            print("\n❌ Invalid option. Please select 1-6.")
+            print("\n❌ Invalid option. Please select 1-8.")
+
+def run_todobox():
+    """Run the TodoBox Flask application"""
+    import subprocess
+    import os
+    
+    print("\n\n" + "="*60)
+    print("  Starting TodoBox Application".center(60))
+    print("="*60 + "\n")
+    
+    project_dir = os.path.dirname(__file__)
+    
+    # Check if .flaskenv exists
+    flaskenv_file = os.path.join(project_dir, '.flaskenv')
+    if not os.path.exists(flaskenv_file):
+        print("❌ .flaskenv not found. Please run the Install option first.")
+        return False
+    
+    # Check if database is initialized
+    db_type_result = subprocess.run(
+        ["grep", "DATABASE_DEFAULT", flaskenv_file],
+        capture_output=True,
+        text=True
+    )
+    
+    if "sqlite" in db_type_result.stdout:
+        db_file = os.path.join(project_dir, 'instance', 'todobox.db')
+        if not os.path.exists(db_file):
+            print("❌ SQLite database not found. Please run the Install option first.")
+            return False
+    
+    print("📝 Configuration loaded from .flaskenv")
+    print("🗄️  Database connection verified")
+    
+    print("\n" + "-"*60)
+    print("Starting Flask development server...")
+    print("-"*60 + "\n")
+    
+    print("ℹ️  Press Ctrl+C to stop the server\n")
+    
+    try:
+        # Run Flask app
+        subprocess.run(
+            ["python", "todobox.py"],
+            cwd=project_dir
+        )
+    except KeyboardInterrupt:
+        print("\n\n✅ Server stopped by user.")
+        return True
+    except Exception as e:
+        print(f"\n❌ Error running application: {e}")
+        return False
+
+def install_database():
+    """Install and initialize complete TodoBox system with database selection"""
+    import subprocess
+    import os
+    import shutil
+    
+    print("\n\n" + "="*60)
+    print("  TodoBox Installation Method".center(60))
+    print("="*60)
+    
+    print("\nSelect installation method:")
+    print("  1) Manual Installation (configure database yourself)")
+    print("  2) Docker Installation (automated setup)")
+    
+    install_choice = input("\nSelect method (1-2) [1]: ").strip() or "1"
+    
+    if install_choice == "1":
+        return install_manual()
+    elif install_choice == "2":
+        return install_docker()
+    else:
+        print("\n❌ Invalid selection. Please select 1 or 2.")
+        return False
+
+def install_manual():
+    """Manual installation - user sets up database themselves"""
+    import subprocess
+    import os
+    import shutil
+    
+    print("\n\n" + "="*60)
+    print("  TodoBox Manual Installation".center(60))
+    print("="*60)
+    
+    print("\n📚 For detailed installation instructions, see:")
+    print("   - docs/README.md       (documentation index)")
+    print("   - docs/SETUP.md        (complete setup guide)")
+    print("   - docs/QUICKSTART.md   (quick reference)")
+    print("   - README.md            (quick start guide)")
+    
+    # Database selection
+    print("\n" + "-"*60)
+    print("Database Selection")
+    print("-"*60)
+    print("\nSelect database type:")
+    print("  1) SQLite (default)")
+    print("  2) MariaDB")
+    print("  3) PostgreSQL")
+    
+    db_choice = input("\nSelect database (1-3) [1]: ").strip() or "1"
+    
+    db_config = {
+        "1": ("sqlite", "SQLite"),
+        "2": ("mysql", "MariaDB"),
+        "3": ("postgres", "PostgreSQL")
+    }
+    
+    if db_choice not in db_config:
+        print("\n❌ Invalid selection. Please select 1-3.")
+        return False
+    
+    db_type, db_name = db_config[db_choice]
+    
+    print(f"\n✓ Selected: {db_name}")
+    
+    # For non-SQLite databases, collect connection details
+    if db_type != "sqlite":
+        print("\n" + "-"*60)
+        print(f"  {db_name} Configuration")
+        print("-"*60)
+        
+        db_url = input("\nDatabase URL/Host [localhost]: ").strip() or "localhost"
+        db_user = input("Database User [root]: ").strip() or "root"
+        db_password = getpass.getpass("Database Password: ")
+        db_database = input("Database Name [todobox]: ").strip() or "todobox"
+        
+        # Store configuration temporarily
+        os.environ['DB_URL'] = db_url
+        os.environ['DB_USER'] = db_user
+        os.environ['DB_PW'] = db_password
+        os.environ['DB_NAME'] = db_database
+    
+    project_dir = os.path.dirname(__file__)
+    
+    # Step 1: Install dependencies
+    print("\n" + "-"*60)
+    print("Step 1: Installing Python dependencies...")
+    print("-"*60)
+    
+    requirements_file = os.path.join(project_dir, 'requirements.txt')
+    if not os.path.exists(requirements_file):
+        print("❌ requirements.txt not found")
+        return False
+    
+    try:
+        result = subprocess.run(
+            ["pip", "install", "-r", "requirements.txt"],
+            cwd=project_dir,
+            capture_output=True,
+            text=True,
+            timeout=120
+        )
+        
+        if result.returncode == 0:
+            print("✅ Python dependencies installed successfully")
+        else:
+            print(f"❌ Dependency installation failed: {result.stderr}")
+            return False
+    except subprocess.TimeoutExpired:
+        print("❌ Dependency installation timed out")
+        return False
+    except Exception as e:
+        print(f"❌ Error installing dependencies: {e}")
+        return False
+    
+    # Step 2: Setup environment variables
+    print("\n" + "-"*60)
+    print("Step 2: Setting up environment variables...")
+    print("-"*60)
+    
+    flaskenv_file = os.path.join(project_dir, '.flaskenv')
+    flaskenv_example = os.path.join(project_dir, '.flaskenv.example')
+    
+    if os.path.exists(flaskenv_file):
+        print("✓ .flaskenv already exists")
+        update_flaskenv(flaskenv_file, db_type, db_url if db_type != "sqlite" else None, 
+                       db_user if db_type != "sqlite" else None,
+                       db_password if db_type != "sqlite" else None,
+                       db_database if db_type != "sqlite" else None)
+    elif os.path.exists(flaskenv_example):
+        try:
+            shutil.copy2(flaskenv_example, flaskenv_file)
+            print("✅ .flaskenv created from .flaskenv.example")
+            update_flaskenv(flaskenv_file, db_type, db_url if db_type != "sqlite" else None,
+                           db_user if db_type != "sqlite" else None,
+                           db_password if db_type != "sqlite" else None,
+                           db_database if db_type != "sqlite" else None)
+        except Exception as e:
+            print(f"❌ Error copying .flaskenv: {e}")
+            return False
+    else:
+        print("⚠️  .flaskenv.example not found, skipping environment setup")
+    
+    # Step 3: Create instance directory (for SQLite)
+    if db_type == "sqlite":
+        print("\n" + "-"*60)
+        print("Step 3: Creating instance directory...")
+        print("-"*60)
+        
+        instance_dir = os.path.join(project_dir, 'instance')
+        if not os.path.exists(instance_dir):
+            try:
+                os.makedirs(instance_dir, exist_ok=True)
+                print("✅ Instance directory created")
+            except Exception as e:
+                print(f"❌ Error creating instance directory: {e}")
+                return False
+        else:
+            print("✓ Instance directory exists")
+    
+    # Step 4: Run database migrations
+    print("\n" + "-"*60)
+    print("Step 4: Running database migrations...")
+    print("-"*60)
+    
+    env = os.environ.copy()
+    env['DATABASE_DEFAULT'] = db_type
+    if db_type != "sqlite":
+        env['DB_URL'] = db_url
+        env['DB_USER'] = db_user
+        env['DB_PW'] = db_password
+        env['DB_NAME'] = db_database
+    
+    try:
+        result = subprocess.run(
+            ["python", "-m", "flask", "db", "upgrade"],
+            cwd=project_dir,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            env=env
+        )
+        
+        if result.returncode == 0:
+            print(f"✅ Database migrations completed successfully ({db_name})")
+            
+            if db_type == "sqlite":
+                db_file = os.path.join(project_dir, 'instance', 'todobox.db')
+                if os.path.exists(db_file):
+                    size_kb = os.path.getsize(db_file) / 1024
+                    print(f"✅ Database file created: {db_file} ({size_kb:.1f} KB)")
+            
+            print("\n" + "="*60)
+            print("Installation Summary".center(60))
+            print("="*60)
+            print(f"""
+✅ TodoBox manual installation completed successfully!
+
+Database: {db_name}
+""")
+            if db_type != "sqlite":
+                print(f"Host: {db_url}")
+                print(f"User: {db_user}")
+                print(f"Database: {db_database}")
+            
+            print("""
+Next steps:
+
+1. CREATE FIRST ADMIN USER
+   Select option 1 from main menu and create your first admin user
+   
+2. RUN THE APPLICATION
+   Select option 6 (Run) from main menu
+   or
+   python todobox.py
+   or
+   flask run
+   
+3. ACCESS THE APPLICATION
+   Open your browser: http://localhost:9191
+   
+4. LOGIN
+   Use the admin credentials you just created
+
+Configuration:
+   - Edit .flaskenv for custom settings
+""")
+            if db_type != "sqlite":
+                print("   - Database credentials saved in .flaskenv")
+            
+            print("""
+For more information:
+   - docs/USER_CREATION.md    (user creation guide)
+   - docs/OAUTH_SETUP.md      (Google OAuth configuration)
+   - docs/DEPLOYMENT.md       (deployment options)
+   - README.md                (quick reference)
+""")
+            print("="*60)
+            return True
+        else:
+            print(f"❌ Migration failed:")
+            print(result.stderr)
+            return False
+    except subprocess.TimeoutExpired:
+        print("❌ Migration process timed out")
+        return False
+    except Exception as e:
+        print(f"❌ Error running migrations: {e}")
+        return False
+
+def install_docker():
+    """Docker installation - create docker-compose setup"""
+    import os
+    
+    print("\n\n" + "="*60)
+    print("  TodoBox Docker Installation".center(60))
+    print("="*60)
+    
+    print("\nSelect database type:")
+    print("  1) SQLite (default - no container needed)")
+    print("  2) MariaDB (with Docker container)")
+    print("  3) PostgreSQL (with Docker container)")
+    
+    db_choice = input("\nSelect database (1-3) [1]: ").strip() or "1"
+    
+    db_config = {
+        "1": ("sqlite", "SQLite"),
+        "2": ("mysql", "MariaDB"),
+        "3": ("postgres", "PostgreSQL")
+    }
+    
+    if db_choice not in db_config:
+        print("\n❌ Invalid selection. Please select 1-3.")
+        return False
+    
+    db_type, db_name = db_config[db_choice]
+    
+    print(f"\n✓ Selected: {db_name}")
+    
+    project_dir = os.path.dirname(__file__)
+    
+    if db_type == "sqlite":
+        return setup_sqlite_docker(project_dir)
+    elif db_type == "mysql":
+        return setup_mariadb_docker(project_dir)
+    elif db_type == "postgres":
+        return setup_postgres_docker(project_dir)
+    
+    return False
+
+def setup_sqlite_docker(project_dir):
+    """Setup SQLite with Docker"""
+    import subprocess
+    import os
+    
+    print("\n" + "-"*60)
+    print("SQLite Docker Setup")
+    print("-"*60)
+    
+    # Create .flaskenv
+    flaskenv_file = os.path.join(project_dir, '.flaskenv')
+    flaskenv_example = os.path.join(project_dir, '.flaskenv.example')
+    
+    if not os.path.exists(flaskenv_file) and os.path.exists(flaskenv_example):
+        import shutil
+        try:
+            shutil.copy2(flaskenv_example, flaskenv_file)
+            print("✅ .flaskenv created from .flaskenv.example")
+            update_flaskenv(flaskenv_file, "sqlite")
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            return False
+    
+    # Create instance directory
+    instance_dir = os.path.join(project_dir, 'instance')
+    os.makedirs(instance_dir, exist_ok=True)
+    
+    # Run migrations
+    print("\nRunning database migrations...")
+    try:
+        result = subprocess.run(
+            ["python", "-m", "flask", "db", "upgrade"],
+            cwd=project_dir,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            env={**os.environ, 'DATABASE_DEFAULT': 'sqlite'}
+        )
+        
+        if result.returncode == 0:
+            print("✅ SQLite database initialized")
+            return show_docker_summary("SQLite")
+        else:
+            print(f"❌ Migration failed: {result.stderr}")
+            return False
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return False
+
+def setup_mariadb_docker(project_dir):
+    """Setup MariaDB with Docker"""
+    import subprocess
+    import os
+    
+    print("\n" + "-"*60)
+    print("MariaDB Docker Configuration")
+    print("-"*60)
+    
+    # Get configuration
+    db_user = input("\nDatabase User [todobox]: ").strip() or "todobox"
+    db_password = getpass.getpass("Database Password [todobox123]: ") or "todobox123"
+    db_name = input("Database Name [todobox]: ").strip() or "todobox"
+    container_name = input("Container Name [todobox-mariadb]: ").strip() or "todobox-mariadb"
+    port = input("Port [3306]: ").strip() or "3306"
+    
+    # Create docker-compose.yml
+    docker_compose = f"""version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: {container_name}
+    environment:
+      MYSQL_ROOT_PASSWORD: {db_password}
+      MYSQL_USER: {db_user}
+      MYSQL_PASSWORD: {db_password}
+      MYSQL_DATABASE: {db_name}
+    ports:
+      - "{port}:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    restart: unless-stopped
+
+volumes:
+  mariadb_data:
+"""
+    
+    docker_compose_file = os.path.join(project_dir, 'docker-compose.yml')
+    try:
+        with open(docker_compose_file, 'w') as f:
+            f.write(docker_compose)
+        print(f"✅ docker-compose.yml created")
+    except Exception as e:
+        print(f"❌ Error creating docker-compose.yml: {e}")
+        return False
+    
+    # Create .flaskenv
+    flaskenv_file = os.path.join(project_dir, '.flaskenv')
+    flaskenv_example = os.path.join(project_dir, '.flaskenv.example')
+    
+    if not os.path.exists(flaskenv_file) and os.path.exists(flaskenv_example):
+        import shutil
+        try:
+            shutil.copy2(flaskenv_example, flaskenv_file)
+            print("✅ .flaskenv created from .flaskenv.example")
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            return False
+    
+    # Update .flaskenv
+    update_flaskenv(flaskenv_file, "mysql", "localhost", db_user, db_password, db_name)
+    
+    # Start Docker container
+    print("\n" + "-"*60)
+    print("Starting MariaDB container...")
+    print("-"*60)
+    
+    try:
+        result = subprocess.run(
+            ["docker-compose", "up", "-d"],
+            cwd=project_dir,
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+        
+        if result.returncode == 0:
+            print("✅ MariaDB container started")
+            
+            # Wait for database to be ready
+            print("⏳ Waiting for database to be ready...")
+            import time
+            time.sleep(5)
+            
+            # Run migrations
+            print("Running database migrations...")
+            env = os.environ.copy()
+            env['DATABASE_DEFAULT'] = 'mysql'
+            env['DB_URL'] = 'localhost'
+            env['DB_USER'] = db_user
+            env['DB_PW'] = db_password
+            env['DB_NAME'] = db_name
+            
+            result = subprocess.run(
+                ["python", "-m", "flask", "db", "upgrade"],
+                cwd=project_dir,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                env=env
+            )
+            
+            if result.returncode == 0:
+                print("✅ Database migrations completed")
+                return show_docker_summary("MariaDB", container_name, db_user, db_password, db_name)
+            else:
+                print(f"❌ Migration failed: {result.stderr}")
+                return False
+        else:
+            print(f"❌ Failed to start container: {result.stderr}")
+            return False
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return False
+
+def setup_postgres_docker(project_dir):
+    """Setup PostgreSQL with Docker"""
+    import subprocess
+    import os
+    
+    print("\n" + "-"*60)
+    print("PostgreSQL Docker Configuration")
+    print("-"*60)
+    
+    # Get configuration
+    db_user = input("\nDatabase User [todobox]: ").strip() or "todobox"
+    db_password = getpass.getpass("Database Password [todobox123]: ") or "todobox123"
+    db_name = input("Database Name [todobox]: ").strip() or "todobox"
+    container_name = input("Container Name [todobox-postgres]: ").strip() or "todobox-postgres"
+    port = input("Port [5432]: ").strip() or "5432"
+    
+    # Create docker-compose.yml
+    docker_compose = f"""version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: {container_name}
+    environment:
+      POSTGRES_USER: {db_user}
+      POSTGRES_PASSWORD: {db_password}
+      POSTGRES_DB: {db_name}
+    ports:
+      - "{port}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+"""
+    
+    docker_compose_file = os.path.join(project_dir, 'docker-compose.yml')
+    try:
+        with open(docker_compose_file, 'w') as f:
+            f.write(docker_compose)
+        print(f"✅ docker-compose.yml created")
+    except Exception as e:
+        print(f"❌ Error creating docker-compose.yml: {e}")
+        return False
+    
+    # Create .flaskenv
+    flaskenv_file = os.path.join(project_dir, '.flaskenv')
+    flaskenv_example = os.path.join(project_dir, '.flaskenv.example')
+    
+    if not os.path.exists(flaskenv_file) and os.path.exists(flaskenv_example):
+        import shutil
+        try:
+            shutil.copy2(flaskenv_example, flaskenv_file)
+            print("✅ .flaskenv created from .flaskenv.example")
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            return False
+    
+    # Update .flaskenv
+    update_flaskenv(flaskenv_file, "postgres", "localhost", db_user, db_password, db_name)
+    
+    # Install psycopg2 if needed
+    print("\nEnsuring psycopg2 is installed...")
+    subprocess.run(["pip", "install", "-q", "psycopg2-binary"], timeout=60)
+    
+    # Start Docker container
+    print("\n" + "-"*60)
+    print("Starting PostgreSQL container...")
+    print("-"*60)
+    
+    try:
+        result = subprocess.run(
+            ["docker-compose", "up", "-d"],
+            cwd=project_dir,
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+        
+        if result.returncode == 0:
+            print("✅ PostgreSQL container started")
+            
+            # Wait for database to be ready
+            print("⏳ Waiting for database to be ready...")
+            import time
+            time.sleep(5)
+            
+            # Run migrations
+            print("Running database migrations...")
+            env = os.environ.copy()
+            env['DATABASE_DEFAULT'] = 'postgres'
+            env['DB_URL'] = 'localhost'
+            env['DB_USER'] = db_user
+            env['DB_PW'] = db_password
+            env['DB_NAME'] = db_name
+            
+            result = subprocess.run(
+                ["python", "-m", "flask", "db", "upgrade"],
+                cwd=project_dir,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                env=env
+            )
+            
+            if result.returncode == 0:
+                print("✅ Database migrations completed")
+                return show_docker_summary("PostgreSQL", container_name, db_user, db_password, db_name)
+            else:
+                print(f"❌ Migration failed: {result.stderr}")
+                return False
+        else:
+            print(f"❌ Failed to start container: {result.stderr}")
+            return False
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return False
+
+def show_docker_summary(db_name, container_name=None, db_user=None, db_password=None, db_database=None):
+    """Show Docker installation summary"""
+    print("\n" + "="*60)
+    print("Installation Summary".center(60))
+    print("="*60)
+    
+    print(f"""
+✅ TodoBox Docker installation completed successfully!
+
+Database: {db_name}
+""")
+    if container_name:
+        print(f"Container: {container_name}")
+        print(f"User: {db_user}")
+        print(f"Database: {db_database}")
+        print("\nUseful Docker commands:")
+        print(f"  docker-compose up -d      # Start services")
+        print(f"  docker-compose down       # Stop services")
+        print(f"  docker-compose logs       # View logs")
+        print(f"  docker exec {container_name} bash  # Enter container")
+    
+    print("""
+Next steps:
+
+1. CREATE FIRST ADMIN USER
+   Select option 1 from main menu and create your first admin user
+   
+2. RUN THE APPLICATION
+   Select option 6 (Run) from main menu
+   
+3. ACCESS THE APPLICATION
+   Open your browser: http://localhost:9191
+   
+4. LOGIN
+   Use the admin credentials you just created
+
+For more information:
+   - docs/USER_CREATION.md    (user creation guide)
+   - docs/OAUTH_SETUP.md      (Google OAuth configuration)
+   - docs/DEPLOYMENT.md       (deployment options)
+   - README.md                (quick reference)
+""")
+    print("="*60)
+    return True
+
+def update_flaskenv(flaskenv_file, db_type, db_url=None, db_user=None, db_password=None, db_name=None):
+    """Update .flaskenv with database configuration"""
+    try:
+        with open(flaskenv_file, 'r') as f:
+            content = f.read()
+        
+        # Update DATABASE_DEFAULT
+        import re
+        content = re.sub(r'DATABASE_DEFAULT=.*', f'DATABASE_DEFAULT={db_type}', content)
+        
+        if db_type != "sqlite":
+            # For non-SQLite databases, add or update connection parameters
+            if not re.search(r'^DB_URL=', content, re.MULTILINE):
+                content += f'\nDB_URL={db_url}'
+            else:
+                content = re.sub(r'^DB_URL=.*', f'DB_URL={db_url}', content, flags=re.MULTILINE)
+            
+            if not re.search(r'^DB_USER=', content, re.MULTILINE):
+                content += f'\nDB_USER={db_user}'
+            else:
+                content = re.sub(r'^DB_USER=.*', f'DB_USER={db_user}', content, flags=re.MULTILINE)
+            
+            if not re.search(r'^DB_PW=', content, re.MULTILINE):
+                content += f'\nDB_PW={db_password}'
+            else:
+                content = re.sub(r'^DB_PW=.*', f'DB_PW={db_password}', content, flags=re.MULTILINE)
+            
+            if not re.search(r'^DB_NAME=', content, re.MULTILINE):
+                content += f'\nDB_NAME={db_name}'
+            else:
+                content = re.sub(r'^DB_NAME=.*', f'DB_NAME={db_name}', content, flags=re.MULTILINE)
+        
+        with open(flaskenv_file, 'w') as f:
+            f.write(content)
+        
+        print(f"✅ .flaskenv updated with {db_type} configuration")
+    except Exception as e:
+        print(f"⚠️  Could not update .flaskenv: {e}")
 
 def create_user():
     """Create a new user with optional admin privileges"""
@@ -89,15 +805,15 @@ def create_user():
                 user.fullname = fullname
             user.is_admin = is_admin
             user.set_password(password)
-            db.session.add(user)
-            db.session.commit()
+            db.session.add(user)  # type: ignore[union-attr]
+            db.session.commit()  # type: ignore[union-attr]
             
             admin_status = " (admin)" if is_admin else ""
             print(f"\n✅ User '{username}'{admin_status} created successfully!")
             return True
         except Exception as e:
             print(f"\n❌ Error creating user: {e}")
-            db.session.rollback()
+            db.session.rollback()  # type: ignore[union-attr]
             return False
 
 def list_users():
@@ -177,14 +893,14 @@ def assign_admin():
             # Update user
             try:
                 user.is_admin = new_admin
-                db.session.commit()
+                db.session.commit()  # type: ignore[union-attr]
                 
                 status = "assigned" if new_admin else "removed"
                 print(f"\n✅ Admin privileges {status} for user '{username}'!")
                 return True
             except Exception as e:
                 print(f"\n❌ Error updating user: {e}")
-                db.session.rollback()
+                db.session.rollback()  # type: ignore[union-attr]
                 return False
         else:
             print("\n❌ Operation cancelled.")
@@ -240,13 +956,13 @@ def delete_user():
         
         # Delete user
         try:
-            db.session.delete(user)
-            db.session.commit()
+            db.session.delete(user)  # type: ignore[union-attr]
+            db.session.commit()  # type: ignore[union-attr]
             print(f"\n✅ User '{username}' deleted successfully!")
             return True
         except Exception as e:
             print(f"\n❌ Error deleting user: {e}")
-            db.session.rollback()
+            db.session.rollback()  # type: ignore[union-attr]
             return False
 
 def generate_secrets():
