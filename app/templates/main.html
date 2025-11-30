@@ -5,6 +5,13 @@
         <title>{{ config.TITLE }} - {{ title }}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta content="Todo application to track down our daily activity" name="description" />
+		<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+		<meta name="theme-color" content="#ff5555">
+		<!-- PWA & platform icons -->
+		<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='assets/icons/icon-192x192.png') }}">
+		<link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='assets/icons/icon-512x512.png') }}">
+		<link rel="apple-touch-icon" sizes="192x192" href="{{ url_for('static', filename='assets/icons/icon-192x192.png') }}">
+		<link rel="mask-icon" href="{{ url_for('static', filename='assets/images/logo.svg') }}" color="#ff5555">
         <!-- App favicon -->
 		
 		<link rel="shortcut icon" href='{{ url_for('static', filename='assets/images/favicon.ico') }}'>
@@ -50,6 +57,24 @@
         </style>
     		<script type=text/javascript>
     			$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+				// Register service worker
+				if ('serviceWorker' in navigator) {
+					window.addEventListener('load', () => {
+						navigator.serviceWorker.register('/service-worker.js');
+					});
+				}
+				let deferredPrompt; 
+				window.addEventListener('beforeinstallprompt', (e) => {
+					e.preventDefault();
+					deferredPrompt = e;
+					const btn = document.getElementById('pwa-install-btn');
+					if (btn) btn.style.display = 'inline-flex';
+				});
+				function installPWA() {
+					if (!deferredPrompt) return;
+					deferredPrompt.prompt();
+					deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+				}
     		</script>
 		{% block extra_css %}{% endblock %}
 		{% block extra_script_header %}{% endblock %}
@@ -86,6 +111,7 @@
 										{% if not current_user.is_anonymous %}
 										<ul class="list-unstyled topbar-right-menu float-right mb-0">
 											<li class="dropdown notification-list">
+												<button id="pwa-install-btn" onclick="installPWA()" style="display:none;align-items:center;gap:4px;border:1px solid #ff5555;background:#ff5555;color:#fff;font-size:12px;padding:4px 8px;border-radius:4px;cursor:pointer;">Install App</button>
 												<a class="nav-link dropdown-toggle nav-user arrow-none mr-0" data-toggle="dropdown" id="topbar-userdrop" href="#" role="button" aria-haspopup="true"
 													aria-expanded="false">
 													<span class="account-user-avatar">

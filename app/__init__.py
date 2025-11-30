@@ -54,7 +54,7 @@ login.needs_refresh_message = (u"Session timedout, please re-login")
 login.needs_refresh_message_category = "info"
 
 # Return JSON 401 for API requests, redirect for others
-from flask import jsonify, request, url_for, redirect
+from flask import jsonify, request, url_for, redirect, send_from_directory
 @login.unauthorized_handler
 def unauthorized():
     if request.path.startswith('/api/'):
@@ -75,6 +75,11 @@ from app import cli
 cli.create_cli(app)
 
 from app import routes, models, utils
+
+# Serve service worker at root scope
+@app.route('/service-worker.js')
+def service_worker():
+    return send_from_directory('static', 'service-worker.js')
 
 # Initialize default data when app starts (not during import)
 _initialized = False
