@@ -36,10 +36,6 @@
   </script>
   {% block extra_css %}
   <style>
-    .account-user-name {
-      font-weight: 500;
-      margin-left: 0.25rem;
-    }
     .account-user-avatar img {
       border-radius: 50%;
     }
@@ -51,8 +47,22 @@
     .nav-user .account-user-avatar {
       margin-right: 0.5rem;
     }
+    /* Force email and date to show on all screen sizes */
+    .nav-user .account-user-name {
+      display: block !important;
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .nav-user .account-position {
+      display: block !important;
+      font-size: 12px;
+    }
+    .nav-user > span:last-child {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
     .account-position {
-      display: block;
       font-size: 0.75rem;
       color: #6c757d;
       margin-top: 0.125rem;
@@ -117,10 +127,8 @@
                   <span class="account-user-avatar">
                     <img src="https://www.gravatar.com/avatar/e4f36b24bbefaf33264699d4be5e1d0a?s=32&amp;d=identicon" alt="user-avatar" class="rounded-circle" style="width: 32px; height: 32px;" referrerpolicy="no-referrer">
                   </span>
-                  <span>
-                    <span class="account-user-name">{{ current_user.email }}</span>
-                    <span class="account-position" id="current-date"></span>
-                  </span>
+                  <span class="account-user-name">{{ current_user.email }}</span>
+                  <span class="account-position" id="current-date"></span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-right dropdown-menu-animated topbar-dropdown-menu profile-dropdown" aria-labelledby="topbar-userdrop">
                   <div class="dropdown-header noti-title">

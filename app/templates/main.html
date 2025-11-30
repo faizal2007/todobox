@@ -20,10 +20,26 @@
 			div .topnav-logo {
 				font-family: 'Lemon Tuesday.otf';
 			}
+            /* Ensure email above date (stacked) */
+            .nav-user .account-user-name { display: block; font-weight: 600; }
+            .nav-user .account-position { display: block; font-size: 12px; margin-top: -3px; }
+			/* Mobile polish: keep email/date visible and readable */
+			@media (max-width: 767.98px) {
+				.nav-user { padding: 17px 5px 17px 57px !important; }
+				.nav-user .account-user-name,
+				.nav-user .account-position { display: block !important; }
+				.nav-user .account-user-name { 
+					max-width: 60vw; 
+					white-space: nowrap; 
+					overflow: hidden; 
+					text-overflow: ellipsis; 
+				}
+			}
+            
         </style>
-		<script type=text/javascript>
-			$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-		</script>
+    		<script type=text/javascript>
+    			$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    		</script>
 		{% block extra_css %}{% endblock %}
 		{% block extra_script_header %}{% endblock %}
 		<script 
@@ -65,7 +81,7 @@
 														<img src="https://www.gravatar.com/avatar/{{ current_user.email|lower|replace(' ', '')|md5 }}?s=32&d=identicon" alt="user-avatar" class="rounded-circle" style="width: 32px; height: 32px;" referrerpolicy="no-referrer">
 													</span>
 													<span>
-														<span class="account-user-name">{{ current_user.username }}</span>
+														<span class="account-user-name" title="{{ current_user.email }}">{{ current_user.email }}</span>
 														<span class="account-position" id="current-date"></span>
 													</span>
 												</a>
