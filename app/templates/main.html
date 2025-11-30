@@ -23,17 +23,11 @@
             /* Ensure email above date (stacked) */
             .nav-user .account-user-name { display: block; font-weight: 600; }
             .nav-user .account-position { display: block; font-size: 12px; margin-top: -3px; }
-			/* Mobile polish: keep email/date visible and readable */
-			@media (max-width: 767.98px) {
+			/* Mobile polish: hide email and date on mobile for compact topbar */
+			@media (max-width: 640px) {
 				.nav-user { padding: 17px 5px 17px 57px !important; }
-				.nav-user .account-user-name,
-				.nav-user .account-position { display: block !important; }
-				.nav-user .account-user-name { 
-					max-width: 60vw; 
-					white-space: nowrap; 
-					overflow: hidden; 
-					text-overflow: ellipsis; 
-				}
+				.nav-user .account-user-name { display: none !important; }
+				.nav-user .account-position { display: none !important; }
 				/* Card grid adjustments */
 				.page-title { font-size: 1.6rem; }
 				.row.justify-content-center > [class*='col-'] { padding-left: 8px; padding-right: 8px; }
