@@ -5,6 +5,18 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.5] - Documentation Recheck - 2025-11-30
+
+### 1.3.5 - Fixed
+
+- Fixed trailing punctuation in heading in `docs/README_MIGRATIONS.md`
+- Fixed emphasis used as heading in `docs/README_MIGRATIONS.md`
+
+### 1.3.5 - Changed
+
+- Updated heading "I need to..." to "Quick Navigation" in migration docs
+- Updated heading "🚀 You're Ready!" to "You're Ready" for markdown compliance
+
 ## [1.3.4] - Documentation Update - 2025-11-29
 
 ### 1.3.4 - Fixed
