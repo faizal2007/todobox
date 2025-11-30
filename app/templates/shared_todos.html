@@ -50,7 +50,7 @@
                     <span class="mr-2"><strong>Showing todos from:</strong></span>
                     {% for user in shared_users %}
                     <span class="badge badge-info mr-2">
-                        <i class="mdi mdi-account mr-1"></i>{{ user.fullname or user.username }}
+                        <i class="mdi mdi-account mr-1"></i>{{ user.fullname or user.email }}
                     </span>
                     {% endfor %}
                 </div>
@@ -69,7 +69,7 @@
                         {{ item.status|title }}
                     </span>
                     <small class="text-muted">
-                        <i class="mdi mdi-account mr-1"></i>{{ item.owner.fullname or item.owner.username }}
+                        <i class="mdi mdi-account mr-1"></i>{{ item.owner.fullname or item.owner.email }}
                     </small>
                 </div>
                 <div class="card-body">

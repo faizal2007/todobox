@@ -126,7 +126,7 @@
                         {% for user in i_share_with %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <strong>{{ user.fullname or user.username }}</strong>
+                                <strong>{{ user.fullname or user.email }}</strong>
                                 <br><small class="text-muted">{{ user.email }}</small>
                             </div>
                             {% set share = namespace(id=None) %}
@@ -138,7 +138,7 @@
                             <form method="POST" action="{{ url_for('revoke_share', share_id=share.id) }}" class="d-inline share-form">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                 <button type="button" class="btn btn-sm btn-outline-danger revoke-share-btn"
-                                        data-username="{{ user.fullname or user.username }}">
+                                        data-email="{{ user.fullname or user.email }}">
                                     <i class="mdi mdi-close"></i> Revoke
                                 </button>
                             </form>
@@ -167,7 +167,7 @@
                         {% for user in shared_with_me %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <strong>{{ user.fullname or user.username }}</strong>
+                                <strong>{{ user.fullname or user.email }}</strong>
                                 <br><small class="text-muted">{{ user.email }}</small>
                             </div>
                             {% set share = namespace(id=None) %}
@@ -179,7 +179,7 @@
                             <form method="POST" action="{{ url_for('remove_share_access', share_id=share.id) }}" class="d-inline share-form">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                 <button type="button" class="btn btn-sm btn-outline-secondary remove-share-btn"
-                                        data-username="{{ user.fullname or user.username }}">
+                                        data-email="{{ user.fullname or user.email }}">
                                     <i class="mdi mdi-close"></i> Remove
                                 </button>
                             </form>
@@ -219,7 +219,7 @@
                         <li class="list-group-item">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <strong>{{ inv.from_user.fullname or inv.from_user.username }}</strong>
+                                    <strong>{{ inv.from_user.fullname or inv.from_user.email }}</strong>
                                     wants to share their todos with you
                                     <br><small class="text-muted">Sent {{ inv.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
                                 </div>

@@ -37,6 +37,7 @@ packaging==25.0
 pip==25.3
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
+psycopg2-binary==2.9.9
 pylint==2.8.3
 pylint-flask==0.6
 pylint-flask-sqlalchemy==0.2.0

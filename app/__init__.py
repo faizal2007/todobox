@@ -100,8 +100,9 @@ def initialize_default_data():
             return
 
         # Check and seed users if none exist
-        if user_count == 0:
-            models.User.seed()
+        # DISABLED: User creation moved to frontend setup
+        # if user_count == 0:
+        #     models.User.seed()
 
         # Always check and seed status records - be more robust
         if status_count == 0:

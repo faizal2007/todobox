@@ -51,7 +51,6 @@
                             <thead class="thead-dark">
                                 <tr>
                                     <th>ID</th>
-                                    <th>Username</th>
                                     <th>Email</th>
                                     <th>Full Name</th>
                                     <th>Status</th>
@@ -65,16 +64,9 @@
                                 <tr class="{{ 'table-danger' if user.is_blocked else '' }}">
                                     <td>{{ user.id }}</td>
                                     <td>
-                                        <strong>{{ user.username }}</strong>
+                                        <strong>{{ user.email }}</strong>
                                         {% if user.id == current_user.id %}
                                         <span class="badge badge-info ml-1">You</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if user.email %}
-                                        {{ user.email }}
-                                        {% else %}
-                                        <span class="text-muted"><em>No email (System Admin)</em></span>
                                         {% endif %}
                                     </td>
                                     <td>{{ user.fullname or '-' }}</td>
@@ -137,7 +129,7 @@
                                             <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}" class="d-inline delete-user-form">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                 <button type="button" class="btn btn-danger btn-sm delete-user-btn" title="Delete User"
-                                                        data-username="{{ user.username }}">
+                                                        data-email="{{ user.email }}">
                                                     <i class="mdi mdi-delete"></i>
                                                 </button>
                                             </form>
@@ -211,11 +203,11 @@ $(document).ready(function() {
     $('.delete-user-btn').click(function() {
         var $btn = $(this);
         var $form = $btn.closest('form');
-        var username = $btn.data('username');
+        var email = $btn.data('email');
         
         showConfirmModal(
             'Delete User',
-            'Are you sure you want to delete user "' + username + '"? This action cannot be undone and will delete all their data.',
+            'Are you sure you want to delete user "' + email + '"? This action cannot be undone and will delete all their data.',
             function() {
                 $form.submit();
             },

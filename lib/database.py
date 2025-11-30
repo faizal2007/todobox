@@ -17,7 +17,9 @@ def connect_db(type, app):
     DB_PW = urllib.parse.quote(DB_PW)
 
     if type == 'mysql':
-        DB_URL = 'mysql://{user}:{pw}@{url}/{db}'.format(user=DB_USER, pw=DB_PW, url=DB_URL, db=DB_NAME)
+        # Use 127.0.0.1 instead of localhost to force TCP connection
+        url = DB_URL.replace('localhost', '127.0.0.1') if 'localhost' in DB_URL else DB_URL
+        DB_URL = 'mysql://{user}:{pw}@{url}/{db}'.format(user=DB_USER, pw=DB_PW, url=url, db=DB_NAME)
     elif type == 'postgres':
         DB_URL = 'postgresql://{user}:{pw}@{url}/{db}'.format(user=DB_USER, pw=DB_PW, url=DB_URL, db=DB_NAME)
     else:

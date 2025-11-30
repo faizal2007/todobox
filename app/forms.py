@@ -5,10 +5,33 @@ from app.models import User
 from flask_login import current_user
 
 class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Sign In')
+    
+class SetupAccountForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', [
+        validators.DataRequired(),
+        validators.Length(min=6, message='Password must be at least 6 characters long')
+    ])
+    confirm_password = PasswordField('Confirm Password', [
+        validators.DataRequired(),
+        validators.EqualTo('password', message='Passwords must match')
+    ])
+    fullname = StringField('Full Name')
+    submit = SubmitField('Create Account')
+    
+    def validate_email(self, email):
+        try:
+            user = User.query.filter_by(email=email.data).first()
+            if user is not None:
+                raise ValidationError('Email already in use')
+        except Exception:
+            # If database is not accessible, skip email uniqueness validation
+            # The route will handle database connection errors appropriately
+            pass
     
 class ChangePassword(FlaskForm):
     oldPassword = PasswordField('Old Password', validators=[DataRequired()])
@@ -19,17 +42,10 @@ class ChangePassword(FlaskForm):
     confirm = PasswordField('Repeat Password')
         
 class UpdateAccount(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     fullname = StringField('Full Name')
     submit = SubmitField('Update Account')
 
-    def validate_username(self, username):
-        # Allow current username, but prevent duplicates
-        user = User.query.filter_by(username=username.data).first()
-        if user is not None and user.id != current_user.id:
-            raise ValidationError('Username already taken')
-        
     def validate_email(self, email):
         # Allow current email, but prevent duplicates
         user = User.query.filter_by(email=email.data).first()

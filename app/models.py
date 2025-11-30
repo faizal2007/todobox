@@ -9,8 +9,7 @@ from flask_login import UserMixin
 
 class User(UserMixin, db.Model): # type: ignore[attr-defined]
     id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
-    username = db.Column(db.String(64), index=True, unique=True) # type: ignore[attr-defined]
-    email = db.Column(db.String(120), index=True, unique=True, nullable=True) # type: ignore[attr-defined]  # NULL emails allowed for system admins (NULL values are distinct in SQLite)
+    email = db.Column(db.String(120), index=True, unique=True, nullable=False) # type: ignore[attr-defined]
     fullname = db.Column(db.String(100)) # type: ignore[attr-defined]
     password_hash = db.Column(db.String(255)) # type: ignore[attr-defined]
     api_token = db.Column(db.String(255), unique=True, index=True) # type: ignore[attr-defined]  # API token for external access
@@ -21,26 +20,27 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
     is_blocked = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Blocked user flag
     todo = db.relationship('Todo', backref='user', lazy='dynamic') # type: ignore[attr-defined]
 
-    def __init__(self, username, email=None, oauth_provider=None, oauth_id=None):
-        self.username = username
+    def __init__(self, email, oauth_provider=None, oauth_id=None, fullname=None):
         self.email = email
         self.oauth_provider = oauth_provider
         self.oauth_id = oauth_id
+        self.fullname = fullname
         self.sharing_enabled = False
-        # Users without email are considered system admin
-        self.is_admin = (email is None or email == '')
+        # Users without email are considered system admin (though now email is required)
+        self.is_admin = False
         self.is_blocked = False
 
     @classmethod
     def seed(cls):
-        # Admin user without email is considered system admin
-        u = User(username='admin', email=None)
+        # Admin user - for now we'll use a dummy email, but this might need adjustment
+        u = User(email='admin@local.local')
         u.set_password('admin1234')
+        u.is_admin = True
         db.session.add(u) # type: ignore[attr-defined]
         db.session.commit() # type: ignore[attr-defined]
 
     def __repr__(self):
-        return '<User {}>'.format(self.username)
+        return '<User {}>'.format(self.email)
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -67,12 +67,6 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
         """Get user by API token"""
         return cls.query.filter_by(api_token=token).first()
     
-    def check_username(self, username):
-        if self.username == username:
-            return True
-        else:
-            return False
-        
     def check_email(self, email):
         if self.email == email:
             return True
@@ -305,10 +299,15 @@ class Status(db.Model): # type: ignore[attr-defined]
 
     @classmethod
     def seed(cls):
-        db.session.add(Status(id=5, name='new')) # type: ignore[attr-defined]
-        db.session.add(Status(id=6, name='done')) # type: ignore[attr-defined]
-        db.session.add(Status(id=7, name='failed')) # type: ignore[attr-defined]
-        db.session.add(Status(id=8, name='re-assign')) # type: ignore[attr-defined]
+        statuses = [
+            Status(name='new'),
+            Status(name='done'),
+            Status(name='failed'),
+            Status(name='re-assign')
+        ]
+        for i, status in enumerate(statuses, start=5):
+            status.id = i
+        db.session.add_all(statuses)
         db.session.commit() # type: ignore[attr-defined]
 
     def __repr__(self):

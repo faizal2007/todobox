@@ -18,6 +18,7 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"></noscript>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@5.9.55/css/materialdesignicons.min.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     /* Server-side rendered variable from Flask */
@@ -33,7 +34,48 @@
     integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ==" 
     crossorigin="anonymous">
   </script>
-  {% block extra_css %}{% endblock %}
+  {% block extra_css %}
+  <style>
+    .account-user-name {
+      font-weight: 500;
+      margin-left: 0.25rem;
+    }
+    .account-user-avatar img {
+      border-radius: 50%;
+    }
+    .nav-user {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+    }
+    .nav-user .account-user-avatar {
+      margin-right: 0.5rem;
+    }
+    .account-position {
+      display: block;
+      font-size: 0.75rem;
+      color: #6c757d;
+      margin-top: 0.125rem;
+    }
+    .topbar-dropdown-menu {
+      min-width: 180px;
+    }
+    .noti-title h6 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0;
+    }
+    .notify-item {
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+    }
+    .notify-item i {
+      font-size: 1rem;
+      margin-right: 0.5rem;
+    }
+  </style>
+  {% endblock %}
 </head>
 <body>
     <nav role="navigation" class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
@@ -64,27 +106,45 @@
         </div>
           <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto nav-flex-icons w-auto">
-              <li class="nav-item dropdown">
+              <li class="nav-item dropdown notification-list">
                 {% if current_user.is_anonymous %}
                 <a class="nav-link" href="{{ url_for('login') }}">
                   <i class="fas fa-user p-2"></i>
                   Sign In
                 </a>
                 {% else %}
-                <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  <i class="fas fa-user p-2"></i>
-                  Profile
+                <a class="nav-link dropdown-toggle nav-user arrow-none mr-0" href="#" id="topbar-userdrop" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                  <span class="account-user-avatar">
+                    <img src="https://www.gravatar.com/avatar/e4f36b24bbefaf33264699d4be5e1d0a?s=32&amp;d=identicon" alt="user-avatar" class="rounded-circle" style="width: 32px; height: 32px;" referrerpolicy="no-referrer">
+                  </span>
+                  <span>
+                    <span class="account-user-name">{{ current_user.email }}</span>
+                    <span class="account-position" id="current-date"></span>
+                  </span>
                 </a>
-                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
-                  <a class="dropdown-item" href="{{ url_for('account') }}">
-                    <i class="fas fa-user-cog mr-2"></i>My Account
+                <div class="dropdown-menu dropdown-menu-right dropdown-menu-animated topbar-dropdown-menu profile-dropdown" aria-labelledby="topbar-userdrop">
+                  <div class="dropdown-header noti-title">
+                    <h6 class="text-overflow m-0">Welcome !</h6>
+                  </div>
+                  <a href="{{ url_for('account') }}" class="dropdown-item notify-item">
+                    <i class="mdi mdi-account-circle mr-1"></i>
+                    <span>My Account</span>
                   </a>
-                  <a class="dropdown-item" href="{{ url_for('settings') }}">
-                    <i class="fas fa-cogs mr-2"></i>Settings
+                  <a href="{{ url_for('settings') }}" class="dropdown-item notify-item">
+                    <i class="mdi mdi-account-edit mr-1"></i>
+                    <span>Settings</span>
                   </a>
-                  <div class="dropdown-divider"></div>
-                  <a class="dropdown-item" href="{{ url_for('logout') }}">
-                    <i class="fas fa-sign-out-alt mr-2"></i>Log out
+                  
+                  <!-- item - sharing (Gmail users only) -->
+                  {% if current_user.is_gmail_user() %}
+                  <a href="{{ url_for('sharing') }}" class="dropdown-item notify-item">
+                    <i class="mdi mdi-share-variant mr-1"></i>
+                    <span>Sharing</span>
+                  </a>
+                  {% endif %}
+                  <a href="{{ url_for('logout') }}" class="dropdown-item notify-item">
+                    <i class="mdi mdi-logout mr-1"></i>
+                    <span>Logout</span>
                   </a>
                 </div>
                 {% endif %}
@@ -107,5 +167,25 @@
   crossorigin="anonymous">
 </script>
 
-{% block extra_script %}{% endblock %}
+{% block extra_script %}
+<script>
+  // Update current date display
+  function updateCurrentDate() {
+    const now = new Date();
+    const options = { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    };
+    const dateString = now.toLocaleDateString('en-US', options);
+    document.getElementById('current-date').textContent = dateString;
+  }
+  
+  // Update date on page load
+  updateCurrentDate();
+  
+  // Update date every minute
+  setInterval(updateCurrentDate, 60000);
+</script>
+{% endblock %}
 </html>

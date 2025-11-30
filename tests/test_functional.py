@@ -67,8 +67,15 @@ def db_session(app):
 class TestAuthentication:
     """Test user authentication flows."""
     
-    def test_login_page_accessible(self, client):
+    def test_login_page_accessible(self, client, db_session):
         """Test that login page loads successfully."""
+        # Create a test user first
+        from app.models import User
+        user = User(email='test@example.com')
+        user.set_password('password')
+        db_session.session.add(user)
+        db_session.session.commit()
+        
         response = client.get('/login')
         assert response.status_code == 200
         assert b'login' in response.data.lower() or b'password' in response.data.lower()
@@ -78,15 +85,15 @@ class TestAuthentication:
         from app.models import User
         
         # Attempt to register a new user
-        response = client.post('/register', data={
-            'username': 'testuser',
+        response = client.post('/setup/account', data={
             'email': 'test@example.com',
             'password': 'SecurePass123!',
-            'password_confirm': 'SecurePass123!'
+            'confirm_password': 'SecurePass123!',
+            'fullname': 'Test User'
         }, follow_redirects=True)
         
         # Verify user was created
-        user = User.query.filter_by(username='testuser').first()
+        user = User.query.filter_by(email='test@example.com').first()
         assert user is not None
         assert user.email == 'test@example.com'
     
@@ -95,14 +102,14 @@ class TestAuthentication:
         from app.models import User
         
         # Create a test user
-        user = User(username='logintest', email='login@example.com')
+        user = User(email='login@example.com')
         user.set_password('TestPassword123!')
         db_session.session.add(user)
         db_session.session.commit()
         
         # Attempt login
         response = client.post('/login', data={
-            'username': 'logintest',
+            'email': 'logintest',
             'password': 'TestPassword123!'
         }, follow_redirects=True)
         
@@ -113,14 +120,14 @@ class TestAuthentication:
         from app.models import User
         
         # Create a test user
-        user = User(username='invalidtest', email='invalid@example.com')
+        user = User(email='invalid@example.com')
         user.set_password('CorrectPassword123!')
         db_session.session.add(user)
         db_session.session.commit()
         
         # Attempt login with wrong password
         response = client.post('/login', data={
-            'username': 'invalidtest',
+            'email': 'invalid@example.com',
             'password': 'WrongPassword123!'
         }, follow_redirects=True)
         
@@ -132,13 +139,13 @@ class TestAuthentication:
         from app.models import User
         
         # Create and login user
-        user = User(username='logouttest', email='logout@example.com')
+        user = User(email='logout@example.com')
         user.set_password('LogoutPass123!')
         db_session.session.add(user)
         db_session.session.commit()
         
         client.post('/login', data={
-            'username': 'logouttest',
+            'email': 'logouttest',
             'password': 'LogoutPass123!'
         })
         
@@ -162,13 +169,13 @@ class TestTodoManagement:
         """Return a logged-in test client."""
         from app.models import User
         
-        user = User(username='todouser', email='todo@example.com')
+        user = User(email='todo@example.com')
         user.set_password('TodoPass123!')
         db_session.session.add(user)
         db_session.session.commit()
         
         client.post('/login', data={
-            'username': 'todouser',
+            'email': 'todouser',
             'password': 'TodoPass123!'
         })
         
@@ -195,7 +202,7 @@ class TestTodoManagement:
         """Test viewing list of todos."""
         from app.models import Todo, User
         
-        user = User.query.filter_by(username='todouser').first()
+        user = User.query.filter_by(email='todouser').first()
         
         # Create a few todos
         for i in range(3):
@@ -215,7 +222,7 @@ class TestTodoManagement:
         """Test marking todo as done."""
         from app.models import Todo, User, Status
         
-        user = User.query.filter_by(username='todouser').first()
+        user = User.query.filter_by(email='todouser').first()
         done_status = Status.query.filter_by(name='done').first()
         
         # Create a todo
@@ -242,7 +249,7 @@ class TestTodoManagement:
         """Test deleting a todo item."""
         from app.models import Todo, User
         
-        user = User.query.filter_by(username='todouser').first()
+        user = User.query.filter_by(email='todouser').first()
         
         # Create a todo
         todo = Todo(
@@ -266,7 +273,7 @@ class TestTodoManagement:
         """Test editing a todo item."""
         from app.models import Todo, User
         
-        user = User.query.filter_by(username='todouser').first()
+        user = User.query.filter_by(email='todouser').first()
         
         # Create a todo
         todo = Todo(
@@ -304,9 +311,9 @@ class TestUserIsolation:
         """Create two users with todos each."""
         from app.models import User, Todo
         
-        user1 = User(username='user1', email='user1@example.com')
+        user1 = User(email='user1@example.com')
         user1.set_password('Pass123!')
-        user2 = User(username='user2', email='user2@example.com')
+        user2 = User(email='user2@example.com')
         user2.set_password('Pass123!')
         
         db_session.session.add_all([user1, user2])
@@ -328,7 +335,7 @@ class TestUserIsolation:
         
         # Login as user1
         client.post('/login', data={
-            'username': 'user1',
+            'email': 'user1',
             'password': 'Pass123!'
         })
         
@@ -344,7 +351,7 @@ class TestUserIsolation:
         
         # Login as user1
         client.post('/login', data={
-            'username': 'user1',
+            'email': 'user1',
             'password': 'Pass123!'
         })
         
@@ -369,9 +376,9 @@ class TestTodoSharing:
         """Set up two users for sharing tests."""
         from app.models import User, Todo
         
-        owner = User(username='owner', email='owner@example.com')
+        owner = User(email='owner@example.com')
         owner.set_password('Pass123!')
-        recipient = User(username='recipient', email='recipient@example.com')
+        recipient = User(email='recipient@example.com')
         recipient.set_password('Pass123!')
         
         db_session.session.add_all([owner, recipient])
@@ -396,13 +403,13 @@ class TestTodoSharing:
         
         # Login as owner
         client.post('/login', data={
-            'username': 'owner',
+            'email': 'owner',
             'password': 'Pass123!'
         })
         
         # Share todo with recipient
         response = client.post(f'/todo/{todo.id}/share', data={
-            'username': 'recipient'
+            'email': 'recipient'
         }, follow_redirects=True)
         
         assert response.status_code == 200
@@ -427,7 +434,7 @@ class TestTodoSharing:
         
         # Login as recipient
         client.post('/login', data={
-            'username': 'recipient',
+            'email': 'recipient',
             'password': 'Pass123!'
         })
         
@@ -449,7 +456,7 @@ class TestAdminFunctionality:
         """Create an admin user."""
         from app.models import User
         
-        admin = User(username='admin', email='admin@example.com')
+        admin = User(email='admin@example.com')
         admin.set_password('AdminPass123!')
         admin.is_admin = True
         db_session.session.add(admin)
@@ -461,7 +468,7 @@ class TestAdminFunctionality:
         """Test that admin can access admin panel."""
         # Login as admin
         client.post('/login', data={
-            'username': 'admin',
+            'email': 'admin',
             'password': 'AdminPass123!'
         })
         
@@ -473,14 +480,14 @@ class TestAdminFunctionality:
         from app.models import User
         
         # Create non-admin user
-        user = User(username='normaluser', email='normal@example.com')
+        user = User(email='normal@example.com')
         user.set_password('Pass123!')
         db_session.session.add(user)
         db_session.session.commit()
         
         # Login as non-admin
         client.post('/login', data={
-            'username': 'normaluser',
+            'email': 'normaluser',
             'password': 'Pass123!'
         })
         
@@ -493,14 +500,14 @@ class TestAdminFunctionality:
         from app.models import User
         
         # Create a user to block
-        user = User(username='toblock', email='toblock@example.com')
+        user = User(email='toblock@example.com')
         user.set_password('Pass123!')
         db_session.session.add(user)
         db_session.session.commit()
         
         # Login as admin
         client.post('/login', data={
-            'username': 'admin',
+            'email': 'admin',
             'password': 'AdminPass123!'
         })
         
@@ -525,13 +532,13 @@ class TestUserSettings:
         """Create and login a test user."""
         from app.models import User
         
-        user = User(username='settingsuser', email='settings@example.com')
+        user = User(email='settings@example.com')
         user.set_password('Pass123!')
         db_session.session.add(user)
         db_session.session.commit()
         
         client.post('/login', data={
-            'username': 'settingsuser',
+            'email': 'settingsuser',
             'password': 'Pass123!'
         })
         
@@ -577,7 +584,7 @@ class TestUserSettings:
         # Verify old password no longer works
         client.get('/logout')
         login_response = client.post('/login', data={
-            'username': 'settingsuser',
+            'email': 'settingsuser',
             'password': 'Pass123!'
         }, follow_redirects=True)
         
@@ -598,7 +605,7 @@ class TestEndToEndWorkflow:
         
         # Step 1: Register user
         client.post('/register', data={
-            'username': 'workflow_user',
+            'email': 'workflow_user',
             'email': 'workflow@example.com',
             'password': 'WorkflowPass123!',
             'password_confirm': 'WorkflowPass123!'
@@ -606,7 +613,7 @@ class TestEndToEndWorkflow:
         
         # Step 2: Login
         response = client.post('/login', data={
-            'username': 'workflow_user',
+            'email': 'workflow_user',
             'password': 'WorkflowPass123!'
         }, follow_redirects=True)
         assert response.status_code == 200
@@ -634,14 +641,14 @@ class TestEndToEndWorkflow:
         
         # Create two users
         user1_response = client.post('/register', data={
-            'username': 'collab_user1',
+            'email': 'collab_user1',
             'email': 'collab1@example.com',
             'password': 'Pass123!',
             'password_confirm': 'Pass123!'
         })
         
         user2_response = client.post('/register', data={
-            'username': 'collab_user2',
+            'email': 'collab_user2',
             'email': 'collab2@example.com',
             'password': 'Pass123!',
             'password_confirm': 'Pass123!'
@@ -649,7 +656,7 @@ class TestEndToEndWorkflow:
         
         # User1 creates a todo
         client.post('/login', data={
-            'username': 'collab_user1',
+            'email': 'collab_user1',
             'password': 'Pass123!'
         })
         
@@ -659,11 +666,11 @@ class TestEndToEndWorkflow:
             'priority': 'high'
         })
         
-        user1 = User.query.filter_by(username='collab_user1').first()
+        user1 = User.query.filter_by(email='collab_user1').first()
         todo = Todo.query.filter_by(title='Collaboration Todo').first()
         
         # User1 shares with User2
-        user2 = User.query.filter_by(username='collab_user2').first()
+        user2 = User.query.filter_by(email='collab_user2').first()
         share = TodoShare(todo_id=todo.id, shared_with_id=user2.id)
         db_session.session.add(share)
         db_session.session.commit()
@@ -671,7 +678,7 @@ class TestEndToEndWorkflow:
         # User2 logs in and accesses shared todo
         client.get('/logout')
         client.post('/login', data={
-            'username': 'collab_user2',
+            'email': 'collab_user2',
             'password': 'Pass123!'
         })
         
@@ -691,7 +698,7 @@ class TestTodomanageUserManagement:
         """Create app with a test user."""
         from app.models import User
         
-        user = User(username='managed_user', email='managed@example.com')
+        user = User(email='managed@example.com')
         user.set_password('ManagedPass123!')
         db_session.session.add(user)
         db_session.session.commit()
@@ -706,13 +713,13 @@ class TestTodomanageUserManagement:
             from app.models import User
             
             # Simulate what todomanage.py does
-            new_user = User(username='todomanage_test', email='todomanage@example.com')
+            new_user = User(email='todomanage@example.com')
             new_user.set_password('TestPass123!')
             db_session.session.add(new_user)
             db_session.session.commit()
             
             # Verify user was created
-            created = User.query.filter_by(username='todomanage_test').first()
+            created = User.query.filter_by(email='todomanage_test').first()
             assert created is not None
             assert created.email == 'todomanage@example.com'
     
@@ -739,7 +746,7 @@ class TestTodomanageUserManagement:
             from app.models import User
             
             # Simulate what assign_admin() does
-            target_user = User.query.filter_by(username='managed_user').first()
+            target_user = User.query.filter_by(email='managed_user').first()
             assert target_user is not None
             
             # Make user admin
@@ -827,14 +834,13 @@ class TestTodomanageIntegration:
         with app.app_context():
             # Simulate creating multiple users like todomanage does
             users_data = [
-                {'username': 'admin1', 'email': 'admin1@example.com', 'password': 'AdminPass1!'},
-                {'username': 'user1', 'email': 'user1@example.com', 'password': 'UserPass1!'},
-                {'username': 'user2', 'email': 'user2@example.com', 'password': 'UserPass2!'}
+                {'email': 'admin1@example.com', 'password': 'AdminPass1!'},
+                {'email': 'user1@example.com', 'password': 'UserPass1!'},
+                {'email': 'user2@example.com', 'password': 'UserPass2!'}
             ]
             
             for user_data in users_data:
                 user = User(
-                    username=user_data['username'],
                     email=user_data['email']
                 )
                 user.set_password(user_data['password'])
@@ -846,9 +852,9 @@ class TestTodomanageIntegration:
             all_users = User.query.all()
             assert len(all_users) == len(users_data)
             
-            created_usernames = [u.username for u in all_users]
+            created_emails = [u.email for u in all_users]
             for user_data in users_data:
-                assert user_data['username'] in created_usernames
+                assert user_data['email'] in created_emails
     
     def test_todomanage_admin_operations(self, app, db_session):
         """Test admin operations in todomanage workflow."""
@@ -856,13 +862,13 @@ class TestTodomanageIntegration:
         
         with app.app_context():
             # Create regular user
-            user = User(username='regularuser', email='regular@example.com')
+            user = User(email='regular@example.com')
             user.set_password('RegularPass1!')
             db_session.session.add(user)
             db_session.session.commit()
             
             # Simulate todomanage admin assignment
-            target_user = User.query.filter_by(username='regularuser').first()
+            target_user = User.query.filter_by(email='regularuser').first()
             assert target_user.is_admin == False
             
             # Promote to admin
@@ -885,7 +891,7 @@ class TestTodomanageIntegration:
         from app.models import User
         
         with app.app_context():
-            user = User(username='passuser', email='pass@example.com')
+            user = User(email='pass@example.com')
             user.set_password('OriginalPass123!')
             db_session.session.add(user)
             db_session.session.commit()
@@ -912,7 +918,6 @@ class TestTodomanageIntegration:
             users_to_create = []
             for i in range(10):
                 user = User(
-                    username=f'bulk_user_{i}',
                     email=f'bulk{i}@example.com'
                 )
                 user.set_password(f'BulkPass{i}!')
@@ -923,7 +928,7 @@ class TestTodomanageIntegration:
             
             # Verify all created
             from sqlalchemy import and_
-            bulk_users = [u for u in User.query.all() if u.username.startswith('bulk_user_')]
+            bulk_users = [u for u in User.query.all() if u.email.startswith('bulk')]
             assert len(bulk_users) == 10
             
             # Verify we can query them
@@ -998,48 +1003,34 @@ DB_NAME=todobox
 class TestTodomanageErrorHandling:
     """Test error handling in todomanage operations."""
     
-    def test_user_creation_duplicate_username(self, app, db_session):
-        """Test that todomanage handles duplicate usernames."""
-        from app.models import User
-        
-        with app.app_context():
-            # Create first user
-            user1 = User(username='duplicate_test', email='dup1@example.com')
-            user1.set_password('Pass1!')
-            db_session.session.add(user1)
-            db_session.session.commit()
-            
-            # Try to create duplicate
-            user2 = User(username='duplicate_test', email='dup2@example.com')
-            user2.set_password('Pass2!')
-            
-            try:
-                db_session.session.add(user2)
-                db_session.session.commit()
-                # If no exception, we should have caught it in todomanage
-                assert False, "Should have raised an error for duplicate username"
-            except Exception:
-                # Expected - todomanage would catch this
-                db_session.session.rollback()
-                
-                # Verify first user still exists
-                original = User.query.filter_by(username='duplicate_test').first()
-                assert original is not None
-                assert original.email == 'dup1@example.com'
-    
     def test_user_creation_duplicate_email(self, app, db_session):
         """Test that todomanage handles duplicate emails."""
         from app.models import User
         
         with app.app_context():
             # Create first user
-            user1 = User(username='user_dup1', email='duplicate@example.com')
+            user1 = User(email='dup1@example.com')
             user1.set_password('Pass1!')
             db_session.session.add(user1)
             db_session.session.commit()
             
             # Try to create duplicate email
-            user2 = User(username='user_dup2', email='duplicate@example.com')
+            user2 = User(email='dup1@example.com')
+            user2.set_password('Pass2!')
+            
+            try:
+                db_session.session.add(user2)
+                db_session.session.commit()
+                # If no exception, we should have caught it in todomanage
+                assert False, "Should have raised an error for duplicate email"
+            except Exception:
+                # Expected - todomanage would catch this
+                db_session.session.rollback()
+                
+                # Verify first user still exists
+                original = User.query.filter_by(email='dup1@example.com').first()
+                assert original is not None
+                assert original.email == 'dup1@example.com'
             user2.set_password('Pass2!')
             
             try:

@@ -1,0 +1,54 @@
+{% extends "main.html" %}
+
+{% block content %}
+<main role="main">
+    <div class="jumbotron">
+        <div class="container w-50 p-3" style="background-color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.15);">
+            <h2>Welcome to TodoBox</h2>
+            <p class="text-muted">Get started by creating your first account</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Setup Options -->
+            <div class="row" style="margin-top: 30px;">
+                <div class="col-md-6">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Create Account</h5>
+                            <p class="card-text">Set up a new account with email and password</p>
+                            <a href="{{ url_for('setup_account') }}" class="btn btn-primary btn-block">Create Account</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Sign in with Google</h5>
+                            <p class="card-text">Use your Google account to get started quickly</p>
+                            <a href="{{ url_for('oauth_login_google') }}" class="btn btn-danger btn-block" role="button">
+                                <i class="mdi mdi-google"></i> Continue with Google
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="text-center my-4">
+                <p class="text-muted">Choose how you'd like to set up your TodoBox account</p>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

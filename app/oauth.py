@@ -97,18 +97,7 @@ def process_google_callback(code):
             return existing_user, False
         
         # Create new user
-        # Extract username from email (part before @)
-        username = email.split('@')[0]
-        
-        # Ensure unique username
-        base_username = username
-        counter = 1
-        while User.query.filter_by(username=username).first():
-            username = f"{base_username}{counter}"
-            counter += 1
-        
         new_user = User(
-            username=username,
             email=email,
             oauth_provider="google",
             oauth_id=google_id

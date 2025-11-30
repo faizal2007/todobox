@@ -149,10 +149,10 @@ def create_test_users(db):
     """Create two test users for testing isolation."""
     from app.models import User
     
-    user1 = User(username='user1', email='user1@test.com')
+    user1 = User(email='user1@test.com')
     user1.set_password('password1')
     
-    user2 = User(username='user2', email='user2@test.com')
+    user2 = User(email='user2@test.com')
     user2.set_password('password2')
     
     db.session.add(user1)

@@ -9,9 +9,61 @@ import sys
 import getpass
 import secrets
 from pathlib import Path
+import time
+import psycopg2
+import pymysql
 
 # Add the project root to the path
 sys.path.insert(0, str(Path(__file__).parent))
+
+def wait_for_database(db_type, host, port, user, password, database, max_attempts=30):
+    """Wait for database to be ready to accept connections."""
+    print(f"⏳ Waiting for {db_type} database to be ready...")
+    
+    for attempt in range(max_attempts):
+        try:
+            if db_type == 'postgres':
+                conn = psycopg2.connect(
+                    host=host,
+                    port=port,
+                    user=user,
+                    password=password,
+                    database=database,
+                    connect_timeout=5
+                )
+                conn.close()
+            elif db_type == 'mysql':
+                # Try connecting as root first (MariaDB creates root user)
+                try:
+                    conn = pymysql.connect(
+                        host=host,
+                        port=port,
+                        user='root',
+                        password=password,
+                        connect_timeout=5
+                    )
+                    conn.close()
+                except Exception:
+                    # If root connection fails, try as the specified user
+                    conn = pymysql.connect(
+                        host=host,
+                        port=port,
+                        user=user,
+                        password=password,
+                        database=database,
+                        connect_timeout=5
+                    )
+                    conn.close()
+            
+            print("✅ Database is ready!")
+            return True
+            
+        except Exception as e:
+            print(f"  Attempt {attempt + 1}/{max_attempts}: Database not ready yet... ({str(e)[:50]}...)")
+            time.sleep(2)
+    
+    print(f"❌ Database failed to become ready after {max_attempts} attempts")
+    return False
 
 def main():
     """Main menu for user management"""
@@ -26,12 +78,13 @@ def main():
         print("  2) List users")
         print("  3) Assign user to admin")
         print("  4) Delete user")
-        print("  5) Generate SECRET_KEY and SALT")
-        print("  6) Install")
-        print("  7) Run")
-        print("  8) Exit")
+        print("  5) Install")
+        print("  6) Run")
+        print("  7) Generate SECRET_KEY and SALT")
+        print("  8) Uninstall and cleanup")
+        print("  9) Exit")
         
-        choice = input("\nSelect option (1-8): ").strip()
+        choice = input("\nSelect option (1-9): ").strip()
         
         if choice == '1':
             create_user()
@@ -42,16 +95,18 @@ def main():
         elif choice == '4':
             delete_user()
         elif choice == '5':
-            generate_secrets()
-        elif choice == '6':
             install_database()
-        elif choice == '7':
+        elif choice == '6':
             run_todobox()
+        elif choice == '7':
+            generate_secrets()
         elif choice == '8':
+            uninstall_and_cleanup()
+        elif choice == '9':
             print("\n✅ Exiting.\n")
             sys.exit(0)
         else:
-            print("\n❌ Invalid option. Please select 1-8.")
+            print("\n❌ Invalid option. Please select 1-9.")
 
 def run_todobox():
     """Run the TodoBox Flask application"""
@@ -117,7 +172,7 @@ def install_database():
     
     print("\nSelect installation method:")
     print("  1) Manual Installation (configure database yourself)")
-    print("  2) Docker Installation (automated setup)")
+    print("  2) Database Docker Installation (automated setup)")
     
     install_choice = input("\nSelect method (1-2) [1]: ").strip() or "1"
     
@@ -128,6 +183,101 @@ def install_database():
     else:
         print("\n❌ Invalid selection. Please select 1 or 2.")
         return False
+
+def uninstall_and_cleanup():
+    """Uninstall TodoBox and cleanup configuration"""
+    import subprocess
+    import os
+    import shutil
+    
+    print("\n\n" + "="*60)
+    print("  TodoBox Uninstall and Cleanup".center(60))
+    print("="*60)
+    
+    project_dir = os.path.dirname(__file__)
+    
+    # Check if docker-compose.yml exists (indicates Docker installation)
+    docker_compose_file = os.path.join(project_dir, 'docker-compose.yml')
+    if os.path.exists(docker_compose_file):
+        print("\n🐳 Docker installation detected. Stopping and removing containers...")
+        
+        # Stop and remove containers
+        try:
+            result = subprocess.run(
+                ["docker-compose", "down"],
+                cwd=project_dir,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            if result.returncode == 0:
+                print("✅ Docker containers stopped and removed")
+            else:
+                print(f"⚠️  Warning: Failed to stop containers: {result.stderr}")
+        except Exception as e:
+            print(f"⚠️  Warning: Error stopping containers: {e}")
+        
+        # Remove volumes
+        try:
+            result = subprocess.run(
+                ["docker", "volume", "ls", "-q"],
+                capture_output=True,
+                text=True
+            )
+            if result.returncode == 0:
+                volumes = [v for v in result.stdout.strip().split('\n') if v.startswith('todobox_')]
+                if volumes:
+                    print(f"Removing volumes: {', '.join(volumes)}")
+                    result = subprocess.run(
+                        ["docker", "volume", "rm"] + volumes,
+                        capture_output=True,
+                        text=True
+                    )
+                    if result.returncode == 0:
+                        print("✅ Docker volumes removed")
+                    else:
+                        print(f"⚠️  Warning: Failed to remove volumes: {result.stderr}")
+        except Exception as e:
+            print(f"⚠️  Warning: Error removing volumes: {e}")
+        
+        # Remove docker-compose.yml
+        try:
+            os.remove(docker_compose_file)
+            print("✅ docker-compose.yml removed")
+        except Exception as e:
+            print(f"⚠️  Warning: Failed to remove docker-compose.yml: {e}")
+    
+    # Remove .flaskenv
+    flaskenv_file = os.path.join(project_dir, '.flaskenv')
+    if os.path.exists(flaskenv_file):
+        try:
+            os.remove(flaskenv_file)
+            print("✅ .flaskenv removed")
+        except Exception as e:
+            print(f"⚠️  Warning: Failed to remove .flaskenv: {e}")
+    
+    # Remove instance directory
+    instance_dir = os.path.join(project_dir, 'instance')
+    if os.path.exists(instance_dir):
+        try:
+            shutil.rmtree(instance_dir)
+            print("✅ instance/ directory removed")
+        except Exception as e:
+            print(f"⚠️  Warning: Failed to remove instance/ directory: {e}")
+    
+    # Remove __pycache__ directories
+    for root, dirs, files in os.walk(project_dir):
+        if '__pycache__' in dirs:
+            pycache_dir = os.path.join(root, '__pycache__')
+            try:
+                shutil.rmtree(pycache_dir)
+                print(f"✅ Removed {os.path.relpath(pycache_dir, project_dir)}")
+            except Exception as e:
+                print(f"⚠️  Warning: Failed to remove {pycache_dir}: {e}")
+    
+    print("\n✅ TodoBox uninstall and cleanup completed!")
+    print("\nNote: Database data may still exist if using external databases.")
+    print("      Manual cleanup may be required for external databases.")
 
 def install_manual():
     """Manual installation - user sets up database themselves"""
@@ -187,6 +337,24 @@ def install_manual():
         os.environ['DB_PW'] = db_password
         os.environ['DB_NAME'] = db_database
     
+    # Encryption configuration
+    print("\n" + "-"*60)
+    print("Todo Encryption Configuration")
+    print("-"*60)
+    print("\nTodo encryption protects your todo data (names and details) from")
+    print("being readable by database administrators. When enabled, only you")
+    print("can read your todo content.")
+    print("\n⚠️  Note: Once enabled, encryption cannot be easily disabled.")
+    print("   Make sure you remember your SECRET_KEY and SALT values.")
+    
+    encryption_choice = input("\nEnable todo encryption? [y/N]: ").strip().lower()
+    enable_encryption = encryption_choice in ['y', 'yes']
+    
+    if enable_encryption:
+        print("✓ Todo encryption will be enabled")
+    else:
+        print("✓ Todo encryption will remain disabled (default)")
+    
     project_dir = os.path.dirname(__file__)
     
     # Step 1: Install dependencies
@@ -233,7 +401,8 @@ def install_manual():
         update_flaskenv(flaskenv_file, db_type, db_url if db_type != "sqlite" else None, 
                        db_user if db_type != "sqlite" else None,
                        db_password if db_type != "sqlite" else None,
-                       db_database if db_type != "sqlite" else None)
+                       db_database if db_type != "sqlite" else None,
+                       enable_encryption)
     elif os.path.exists(flaskenv_example):
         try:
             shutil.copy2(flaskenv_example, flaskenv_file)
@@ -241,7 +410,8 @@ def install_manual():
             update_flaskenv(flaskenv_file, db_type, db_url if db_type != "sqlite" else None,
                            db_user if db_type != "sqlite" else None,
                            db_password if db_type != "sqlite" else None,
-                           db_database if db_type != "sqlite" else None)
+                           db_database if db_type != "sqlite" else None,
+                           enable_encryption)
         except Exception as e:
             print(f"❌ Error copying .flaskenv: {e}")
             return False
@@ -343,6 +513,11 @@ For more information:
    - README.md                (quick reference)
 """)
             print("="*60)
+            
+            # Automatically generate SECRET_KEY and SALT after installation
+            print("\n🔐 Generating secure SECRET_KEY and SALT...")
+            generate_secrets()
+            
             return True
         else:
             print(f"❌ Migration failed:")
@@ -384,18 +559,36 @@ def install_docker():
     
     print(f"\n✓ Selected: {db_name}")
     
+    # Encryption configuration
+    print("\n" + "-"*60)
+    print("Todo Encryption Configuration")
+    print("-"*60)
+    print("\nTodo encryption protects your todo data (names and details) from")
+    print("being readable by database administrators. When enabled, only you")
+    print("can read your todo content.")
+    print("\n⚠️  Note: Once enabled, encryption cannot be easily disabled.")
+    print("   Make sure you remember your SECRET_KEY and SALT values.")
+    
+    encryption_choice = input("\nEnable todo encryption? [y/N]: ").strip().lower()
+    enable_encryption = encryption_choice in ['y', 'yes']
+    
+    if enable_encryption:
+        print("✓ Todo encryption will be enabled")
+    else:
+        print("✓ Todo encryption will remain disabled (default)")
+    
     project_dir = os.path.dirname(__file__)
     
     if db_type == "sqlite":
-        return setup_sqlite_docker(project_dir)
+        return setup_sqlite_docker(project_dir, enable_encryption)
     elif db_type == "mysql":
-        return setup_mariadb_docker(project_dir)
+        return setup_mariadb_docker(project_dir, enable_encryption)
     elif db_type == "postgres":
-        return setup_postgres_docker(project_dir)
+        return setup_postgres_docker(project_dir, enable_encryption)
     
     return False
 
-def setup_sqlite_docker(project_dir):
+def setup_sqlite_docker(project_dir, enable_encryption=False):
     """Setup SQLite with Docker"""
     import subprocess
     import os
@@ -413,7 +606,7 @@ def setup_sqlite_docker(project_dir):
         try:
             shutil.copy2(flaskenv_example, flaskenv_file)
             print("✅ .flaskenv created from .flaskenv.example")
-            update_flaskenv(flaskenv_file, "sqlite")
+            update_flaskenv(flaskenv_file, "sqlite", enable_encryption=enable_encryption)
         except Exception as e:
             print(f"❌ Error: {e}")
             return False
@@ -444,7 +637,7 @@ def setup_sqlite_docker(project_dir):
         print(f"❌ Error: {e}")
         return False
 
-def setup_mariadb_docker(project_dir):
+def setup_mariadb_docker(project_dir, enable_encryption=False):
     """Setup MariaDB with Docker"""
     import subprocess
     import os
@@ -505,7 +698,8 @@ volumes:
             return False
     
     # Update .flaskenv
-    update_flaskenv(flaskenv_file, "mysql", "localhost", db_user, db_password, db_name)
+    db_url = f"127.0.0.1:{port}" if port != "3306" else "127.0.0.1"
+    update_flaskenv(flaskenv_file, "mysql", db_url, db_user, db_password, db_name, enable_encryption)
     
     # Start Docker container
     print("\n" + "-"*60)
@@ -525,15 +719,15 @@ volumes:
             print("✅ MariaDB container started")
             
             # Wait for database to be ready
-            print("⏳ Waiting for database to be ready...")
-            import time
-            time.sleep(5)
+            if not wait_for_database('mysql', '127.0.0.1', int(port), db_user, db_password, db_name):
+                print("❌ Database failed to start properly")
+                return False
             
             # Run migrations
             print("Running database migrations...")
             env = os.environ.copy()
             env['DATABASE_DEFAULT'] = 'mysql'
-            env['DB_URL'] = 'localhost'
+            env['DB_URL'] = f'127.0.0.1:{port}' if port != '3306' else '127.0.0.1'
             env['DB_USER'] = db_user
             env['DB_PW'] = db_password
             env['DB_NAME'] = db_name
@@ -560,7 +754,7 @@ volumes:
         print(f"❌ Error: {e}")
         return False
 
-def setup_postgres_docker(project_dir):
+def setup_postgres_docker(project_dir, enable_encryption=False):
     """Setup PostgreSQL with Docker"""
     import subprocess
     import os
@@ -590,7 +784,7 @@ services:
     ports:
       - "{port}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     restart: unless-stopped
 
 volumes:
@@ -620,7 +814,8 @@ volumes:
             return False
     
     # Update .flaskenv
-    update_flaskenv(flaskenv_file, "postgres", "localhost", db_user, db_password, db_name)
+    db_url = f"localhost:{port}" if port != "5432" else "localhost"
+    update_flaskenv(flaskenv_file, "postgres", db_url, db_user, db_password, db_name, enable_encryption)
     
     # Install psycopg2 if needed
     print("\nEnsuring psycopg2 is installed...")
@@ -644,9 +839,9 @@ volumes:
             print("✅ PostgreSQL container started")
             
             # Wait for database to be ready
-            print("⏳ Waiting for database to be ready...")
-            import time
-            time.sleep(5)
+            if not wait_for_database('postgres', 'localhost', int(port), db_user, db_password, db_name):
+                print("❌ Database failed to start properly")
+                return False
             
             # Run migrations
             print("Running database migrations...")
@@ -722,10 +917,15 @@ For more information:
    - README.md                (quick reference)
 """)
     print("="*60)
+    
+    # Automatically generate SECRET_KEY and SALT after installation
+    print("\n🔐 Generating secure SECRET_KEY and SALT...")
+    generate_secrets()
+    
     return True
 
-def update_flaskenv(flaskenv_file, db_type, db_url=None, db_user=None, db_password=None, db_name=None):
-    """Update .flaskenv with database configuration"""
+def update_flaskenv(flaskenv_file, db_type, db_url=None, db_user=None, db_password=None, db_name=None, enable_encryption=False):
+    """Update .flaskenv with database configuration and encryption settings"""
     try:
         with open(flaskenv_file, 'r') as f:
             content = f.read()
@@ -733,6 +933,10 @@ def update_flaskenv(flaskenv_file, db_type, db_url=None, db_user=None, db_passwo
         # Update DATABASE_DEFAULT
         import re
         content = re.sub(r'DATABASE_DEFAULT=.*', f'DATABASE_DEFAULT={db_type}', content)
+        
+        # Update DATABASE_NAME for non-SQLite databases
+        if db_type != "sqlite" and db_name:
+            content = re.sub(r'DATABASE_NAME=.*', f'DATABASE_NAME={db_name}', content)
         
         if db_type != "sqlite":
             # For non-SQLite databases, add or update connection parameters
@@ -756,10 +960,21 @@ def update_flaskenv(flaskenv_file, db_type, db_url=None, db_user=None, db_passwo
             else:
                 content = re.sub(r'^DB_NAME=.*', f'DB_NAME={db_name}', content, flags=re.MULTILINE)
         
+        # Update TODO_ENCRYPTION_ENABLED
+        encryption_value = 'true' if enable_encryption else 'false'
+        if not re.search(r'^TODO_ENCRYPTION_ENABLED=', content, re.MULTILINE):
+            content += f'\nTODO_ENCRYPTION_ENABLED={encryption_value}'
+        else:
+            content = re.sub(r'^TODO_ENCRYPTION_ENABLED=.*', f'TODO_ENCRYPTION_ENABLED={encryption_value}', content, flags=re.MULTILINE)
+        
         with open(flaskenv_file, 'w') as f:
             f.write(content)
         
         print(f"✅ .flaskenv updated with {db_type} configuration")
+        if enable_encryption:
+            print("✅ Todo encryption enabled")
+        else:
+            print("✅ Todo encryption disabled (default)")
     except Exception as e:
         print(f"⚠️  Could not update .flaskenv: {e}")
 
@@ -773,7 +988,6 @@ def create_user():
         print("  Create New User")
         print("-"*60)
         
-        username = get_valid_username()
         email = get_valid_email()
         password = get_valid_password()
         fullname = input("\nFull name (optional) []: ").strip()
@@ -785,7 +999,6 @@ def create_user():
         # Confirm
         print("\n" + "-" * 60)
         print("Confirm user details:")
-        print(f"  Username: {username}")
         print(f"  Email: {email}")
         print(f"  Full Name: {fullname if fullname else '(not set)'}")
         print(f"  Password: {'*' * len(password)}")
@@ -800,7 +1013,7 @@ def create_user():
         
         # Create user
         try:
-            user = User(username=username, email=email)
+            user = User(email=email)
             if fullname:
                 user.fullname = fullname
             user.is_admin = is_admin
@@ -809,7 +1022,7 @@ def create_user():
             db.session.commit()  # type: ignore[union-attr]
             
             admin_status = " (admin)" if is_admin else ""
-            print(f"\n✅ User '{username}'{admin_status} created successfully!")
+            print(f"\n✅ User '{email}'{admin_status} created successfully!")
             return True
         except Exception as e:
             print(f"\n❌ Error creating user: {e}")
@@ -831,7 +1044,7 @@ def list_users():
         print("\n\n" + "="*80)
         print("  Users".center(80))
         print("="*80)
-        print(f"{'ID':<5} {'Username':<15} {'Email':<25} {'Full Name':<15} {'Admin':<6} {'Blocked':<8}")
+        print(f"{'ID':<5} {'Email':<30} {'Full Name':<20} {'Admin':<6} {'Blocked':<8}")
         print("-"*80)
         
         for user in users:
@@ -839,7 +1052,7 @@ def list_users():
             email = user.email or '(no email)'
             is_admin = 'Yes' if user.is_system_admin() else 'No'
             is_blocked = 'Yes' if user.is_blocked else 'No'
-            print(f"{user.id:<5} {user.username:<15} {email:<25} {fullname:<15} {is_admin:<6} {is_blocked:<8}")
+            print(f"{user.id:<5} {email:<30} {fullname:<20} {is_admin:<6} {is_blocked:<8}")
         
         print("="*80)
         print(f"\nTotal users: {len(users)}")
@@ -854,24 +1067,24 @@ def assign_admin():
         print("  Assign User to Admin")
         print("-"*60)
         
-        # Get username
-        username = input("\nEnter username: ").strip()
+        # Get email
+        email = input("\nEnter user email: ").strip()
         
-        if not username:
-            print("\n❌ Username cannot be empty.")
+        if not email:
+            print("\n❌ Email cannot be empty.")
             return False
         
         # Find user
-        user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(email=email).first()
         
         if not user:
-            print(f"\n❌ User '{username}' not found.")
+            print(f"\n❌ User with email '{email}' not found.")
             return False
         
         # Show current status
         current_admin = user.is_system_admin()
-        print(f"\nUser: {user.username}")
-        print(f"Email: {user.email or '(no email)'}")
+        print(f"\nUser: {user.email}")
+        print(f"Full Name: {user.fullname or '(not set)'}")
         print(f"Current admin status: {'Yes' if current_admin else 'No'}")
         
         # Ask for new status
@@ -889,14 +1102,14 @@ def assign_admin():
         
         # Confirm
         action_desc = "assign admin to" if new_admin else "remove admin from"
-        if not input(f"\nConfirm {action_desc} user '{username}'? [Y/n]: ").strip().lower() == 'n':
+        if not input(f"\nConfirm {action_desc} user '{email}'? [Y/n]: ").strip().lower() == 'n':
             # Update user
             try:
                 user.is_admin = new_admin
                 db.session.commit()  # type: ignore[union-attr]
                 
                 status = "assigned" if new_admin else "removed"
-                print(f"\n✅ Admin privileges {status} for user '{username}'!")
+                print(f"\n✅ Admin privileges {status} for user '{email}'!")
                 return True
             except Exception as e:
                 print(f"\n❌ Error updating user: {e}")
@@ -916,31 +1129,30 @@ def delete_user():
         print("  Delete User")
         print("-"*60)
         
-        # Get username
-        username = input("\nEnter username to delete: ").strip()
+        # Get email
+        email = input("\nEnter user email to delete: ").strip()
         
-        if not username:
-            print("\n❌ Username cannot be empty.")
+        if not email:
+            print("\n❌ Email cannot be empty.")
             return False
         
         # Find user
-        user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(email=email).first()
         
         if not user:
-            print(f"\n❌ User '{username}' not found.")
+            print(f"\n❌ User with email '{email}' not found.")
             return False
         
         # Show user details
         print(f"\nUser details:")
         print(f"  ID: {user.id}")
-        print(f"  Username: {user.username}")
         print(f"  Email: {user.email or '(no email)'}")
         print(f"  Full Name: {user.fullname or '(not set)'}")
         print(f"  Admin: {'Yes' if user.is_system_admin() else 'No'}")
         
         # Confirm deletion
         print("\n⚠️  WARNING: This action cannot be undone!")
-        confirm = input(f"\nAre you sure you want to delete user '{username}'? [y/N]: ").strip().lower()
+        confirm = input(f"\nAre you sure you want to delete user '{email}'? [y/N]: ").strip().lower()
         
         if confirm != 'y':
             print("\n❌ User deletion cancelled.")
@@ -958,7 +1170,7 @@ def delete_user():
         try:
             db.session.delete(user)  # type: ignore[union-attr]
             db.session.commit()  # type: ignore[union-attr]
-            print(f"\n✅ User '{username}' deleted successfully!")
+            print(f"\n✅ User '{email}' deleted successfully!")
             return True
         except Exception as e:
             print(f"\n❌ Error deleting user: {e}")

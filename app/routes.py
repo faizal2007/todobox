@@ -5,7 +5,7 @@ from flask import render_template, request, redirect, url_for, make_response, js
 from app import app, db, csrf
 from flask_login import current_user, login_user, login_required, logout_user
 from app.models import Todo, User, Status, Tracker, ShareInvitation, TodoShare
-from app.forms import LoginForm, ChangePassword, UpdateAccount, ShareInvitationForm, SharingSettingsForm
+from app.forms import LoginForm, SetupAccountForm, ChangePassword, UpdateAccount, ShareInvitationForm, SharingSettingsForm
 from app.oauth import generate_google_auth_url, process_google_callback
 from app.email_service import send_sharing_invitation, get_invitation_link, is_email_configured
 from urllib.parse import urlparse as url_parse
@@ -400,15 +400,24 @@ def dashboard():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # Check if any users exist - if not, redirect to setup
+    try:
+        user_count = User.query.count()
+        if user_count == 0:
+            return redirect(url_for('setup'))
+    except Exception:
+        # If database is not accessible, assume no users and redirect to setup
+        return redirect(url_for('setup'))
+    
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     form = LoginForm()
     
     try:
         if form.validate_on_submit():
-            user = User.query.filter_by(username=form.username.data).first()
+            user = User.query.filter_by(email=form.email.data).first()
             if user is None or not user.check_password(form.password.data):
-                flash('Invalid username or password')
+                flash('Invalid email or password')
                 return redirect(url_for('login'))
             # Check if user is blocked
             if user.is_blocked:
@@ -426,6 +435,81 @@ def login():
         raise
     
     return render_template('login.html', title='Sign In', form=form)
+
+@app.route('/setup')
+def setup():
+    """Setup page for first-time users"""
+    # Only show setup if no users exist
+    try:
+        user_count = User.query.count()
+        if user_count > 0:
+            return redirect(url_for('login'))
+    except Exception:
+        # If database is not accessible, still show setup
+        pass
+    
+    return render_template('setup.html', title='Setup TodoBox')
+
+@app.route('/setup/account', methods=['GET', 'POST'])
+def setup_account():
+    """Create first user account"""
+    # Check database connection first
+    db_error = None
+    try:
+        user_count = User.query.count()
+        if user_count > 0:
+            return redirect(url_for('login'))
+    except Exception as e:
+        db_error = str(e)
+        # Check if it's a connection error
+        if 'password authentication failed' in db_error or 'connection to server' in db_error:
+            db_error = "Database connection failed. Please check your database configuration."
+        elif 'connect' in db_error.lower():
+            db_error = "Cannot connect to database. Please verify your database is running and credentials are correct."
+        else:
+            db_error = "Database error occurred. Please check your database setup."
+    
+    form = SetupAccountForm()
+    
+    try:
+        if form.validate_on_submit():
+            # Check database connection again before creating user
+            if db_error:
+                flash('Database connection error: ' + db_error, 'danger')
+                return render_template('setup_account.html', title='Create Account', form=form, db_error=db_error)
+            
+            # Create the user
+            user = User(
+                email=form.email.data
+            )
+            user.set_password(form.password.data)
+            if form.fullname.data and form.fullname.data.strip():
+                user.fullname = form.fullname.data.strip()
+            
+            db.session.add(user)  # type: ignore[attr-defined]
+            db.session.commit()  # type: ignore[attr-defined]
+            
+            # Log in the user
+            login_user(user, remember=True)
+            
+            flash('Welcome to TodoBox! Your account has been created successfully.', 'success')
+            return redirect(url_for('dashboard'))
+    except Exception as e:
+        error_msg = str(e)
+        if 'password authentication failed' in error_msg or 'connection to server' in error_msg:
+            db_error = "Database connection failed. Please check your database configuration."
+            flash('Database connection error: ' + db_error, 'danger')
+        elif 'connect' in error_msg.lower():
+            db_error = "Cannot connect to database. Please verify your database is running and credentials are correct."
+            flash('Database connection error: ' + db_error, 'danger')
+        elif 'csrf' in error_msg.lower():
+            flash('Session expired. Please try again.', 'warning')
+            return redirect(url_for('setup_account'))
+        else:
+            flash('An error occurred while creating your account. Please try again.', 'danger')
+            app.logger.error(f"Account creation error: {error_msg}")
+    
+    return render_template('setup_account.html', title='Create Account', form=form, db_error=db_error)
 
 @app.route('/logout')
 @login_required

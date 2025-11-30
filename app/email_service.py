@@ -102,7 +102,7 @@ def send_sharing_invitation(invitation, from_user):
         decline_url = url_for('decline_share_invitation', token=invitation.token, _external=True)
         
         # Get sender's display name
-        from_user_name = from_user.fullname or from_user.username
+        from_user_name = from_user.fullname or from_user.email
         
         # Render email templates
         html_content = render_template_string(

@@ -4,11 +4,13 @@
 <main role="main">
     <div class="jumbotron">
         <div class="container w-50 p-3" style="background-color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.15);">
-            <h2>Sign In</h2>
+            <h2>Create Your Account</h2>
+            <p class="text-muted">Set up your TodoBox account to get started</p>
+
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+                        <div class="alert alert-{{ 'danger' if category == 'danger' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
                             {{ message }}
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
@@ -17,14 +19,35 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
-            
-            <!-- Traditional Login Form -->
-            <form action="" method="post" id="loginForm">
+
+            <!-- Database Error Alert -->
+            {% if db_error %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Configuration Error:</strong> {{ db_error }}
+                    <br><br>
+                    <em>Please contact your system administrator to resolve this database configuration issue.</em>
+                    <br><br>
+                    <a href="{{ url_for('setup') }}" class="btn btn-secondary btn-sm">← Back to Setup</a>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endif %}
+
+            <!-- Account Creation Form -->
+            <form action="" method="post" id="setupForm">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
-                    {{ form.email.label(for="loginInputEmail") }}
+                    {{ form.email.label }}
                     {{ form.email(size=32, class="form-control") }}
                     {% for error in form.email.errors %}
+                        <span style="color: red;">[{{ error }}]</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ form.fullname.label }}
+                    {{ form.fullname(size=32, class="form-control") }}
+                    {% for error in form.fullname.errors %}
                         <span style="color: red;">[{{ error }}]</span>
                     {% endfor %}
                 </div>
@@ -35,24 +58,25 @@
                         <span style="color: red;">[{{ error }}]</span>
                     {% endfor %}
                 </div>
-                <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
-                
-                <!-- Login Buttons Row -->
+                <div class="form-group">
+                    {{ form.confirm_password.label }}
+                    {{ form.confirm_password(size=32, class="form-control") }}
+                    {% for error in form.confirm_password.errors %}
+                        <span style="color: red;">[{{ error }}]</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Submit Button -->
                 <div class="row" style="margin-top: 20px;">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <p>{{ form.submit(class="btn btn-primary btn-block") }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <a href="{{ url_for('oauth_login_google') }}" class="btn btn-danger btn-block" role="button">
-                            <i class="mdi mdi-google"></i> Sign in with Google
-                        </a>
                     </div>
                 </div>
             </form>
-            
-            <!-- Divider -->
+
+            <!-- Back to Setup -->
             <div class="text-center my-4">
-                <p class="text-muted"></p>
+                <a href="{{ url_for('setup') }}" class="text-muted">← Back to setup options</a>
             </div>
         </div>
     </div>
@@ -62,18 +86,18 @@
     // Reload page every 10 minutes to refresh CSRF token
     setInterval(function() {
         // Only refresh if user hasn't interacted with the form
-        if (document.getElementById('loginForm').dataset.submitted !== 'true') {
+        if (document.getElementById('setupForm').dataset.submitted !== 'true') {
             location.reload();
         }
     }, 10 * 60 * 1000);
-    
+
     // Mark form as submitted when user clicks submit
-    document.getElementById('loginForm').addEventListener('submit', function() {
+    document.getElementById('setupForm').addEventListener('submit', function() {
         this.dataset.submitted = 'true';
     });
-    
+
     // Handle form submission with CSRF error handling
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    document.getElementById('setupForm').addEventListener('submit', function(e) {
         if (this.dataset.submitted === 'true') {
             // Prevent double submission
             setTimeout(function() {
