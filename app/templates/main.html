@@ -34,6 +34,23 @@
 					overflow: hidden; 
 					text-overflow: ellipsis; 
 				}
+				/* Card grid adjustments */
+				.page-title { font-size: 1.6rem; }
+				.row.justify-content-center > [class*='col-'] { padding-left: 8px; padding-right: 8px; }
+				.card { border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+				.card-body { padding: 0.9rem 0.9rem 1rem; }
+				.card-title { font-size: 1.05rem; line-height: 1.25; max-height: 2.5em; overflow: hidden; }
+				.card-text { font-size: 0.85rem; line-height: 1.2; max-height: 6.2rem; overflow: hidden; }
+				.card-text p { margin-bottom: 0.4rem; }
+				.card-widgets a { font-size: 1.05rem; }
+				.card-widgets { top: 6px; right: 6px; }
+				.divider hr { margin-top: 0.4rem; margin-bottom: 0.55rem; }
+				footer.blockquote-footer { font-size: 0.7rem; }
+				.card-wisdom { font-size: 10px; }
+				/* Line clamp (fallback to max-height + overflow) */
+				.card-title, .card-text { display: -webkit-box; -webkit-box-orient: vertical; }
+				.card-title { -webkit-line-clamp: 2; }
+				.card-text { -webkit-line-clamp: 5; }
 			}
             
         </style>
