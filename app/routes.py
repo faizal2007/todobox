@@ -569,8 +569,8 @@ def oauth_callback_google():
         flash('Your account has been blocked. Please contact an administrator.', 'error')
         return redirect(url_for('login'))
     
-    # Log in the user
-    login_user(user, remember=True)
+    # Log in the user with remember=True to ensure persistent session on mobile
+    login_user(user, remember=True, duration=timedelta(days=30))
     
     if is_new:
         flash(f'Welcome! Your account has been created with {user.email}', 'success')
@@ -582,7 +582,12 @@ def oauth_callback_google():
     if not next_page or url_parse(next_page).netloc != '':
         next_page = url_for('dashboard')
     
-    return redirect(next_page)
+    # Create response with explicit cache-control to ensure cookies are set properly on mobile
+    response = redirect(next_page)
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @app.route('/account', methods=['GET', 'POST'])
 @login_required

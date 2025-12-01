@@ -57,12 +57,12 @@
         </style>
     		<script type=text/javascript>
     			$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-				// Register service worker
-				if ('serviceWorker' in navigator) {
-					window.addEventListener('load', () => {
-						navigator.serviceWorker.register('/service-worker.js');
-					});
-				}
+				// Service worker disabled for mobile - all requests go directly online
+				// if ('serviceWorker' in navigator) {
+				// 	window.addEventListener('load', () => {
+				// 		navigator.serviceWorker.register('/service-worker.js');
+				// 	});
+				// }
 				let deferredPrompt; 
 				window.addEventListener('beforeinstallprompt', (e) => {
 					e.preventDefault();

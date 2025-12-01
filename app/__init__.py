@@ -61,6 +61,20 @@ def unauthorized():
         return jsonify({'error': 'Unauthorized'}), 401
     return redirect(url_for('login'))
 
+# Disable all caching for mobile - all requests go directly online
+@app.before_request
+def disable_cache():
+    """Disable caching on all responses to ensure direct online queries"""
+    pass
+
+@app.after_request
+def add_no_cache_headers(response):
+    """Add no-cache headers to prevent browser/mobile caching"""
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0, private'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
