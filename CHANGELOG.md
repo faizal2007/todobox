@@ -5,6 +5,21 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.7] - Revert OAuth Error Handling - 2025-12-01
+
+### 1.3.7 - Reverted
+
+- Reverted OAuth error handling changes from version 1.3.6 (PR #46) that caused issues
+- Removed `OAuthError` exception class from `app/oauth.py`
+- Removed `try/except` block from `oauth_login_google()` route in `app/routes.py`
+- Removed enhanced error handling, state parameter, and logging from OAuth functions
+- Deleted `tests/test_oauth.py` test file added in PR #46
+
+### 1.3.7 - Changed
+
+- `app/oauth.py`: Simplified to original implementation without custom exception handling
+- `app/routes.py`: `oauth_login_google()` now directly redirects without error handling wrapper
+
 ## [1.3.6] - OAuth Error Handling for Cloudflare Tunnel - 2025-12-01
 
 ### 1.3.6 - Fixed

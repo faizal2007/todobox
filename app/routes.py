@@ -6,7 +6,7 @@ from app import app, db, csrf
 from flask_login import current_user, login_user, login_required, logout_user
 from app.models import Todo, User, Status, Tracker, ShareInvitation, TodoShare
 from app.forms import LoginForm, SetupAccountForm, ChangePassword, UpdateAccount, ShareInvitationForm, SharingSettingsForm
-from app.oauth import generate_google_auth_url, process_google_callback, OAuthError
+from app.oauth import generate_google_auth_url, process_google_callback
 from app.email_service import send_sharing_invitation, get_invitation_link, is_email_configured
 from urllib.parse import urlparse as url_parse
 from datetime import datetime, date, timedelta
@@ -520,13 +520,8 @@ def logout():
 @app.route('/auth/login/google')
 def oauth_login_google():
     """Redirect user to Google for authentication"""
-    try:
-        auth_url = generate_google_auth_url()
-        return redirect(auth_url)
-    except OAuthError as e:
-        app.logger.error(f"OAuth error: {str(e)}")
-        flash('Unable to connect to Google authentication service. Please try again later or use password login.', 'warning')
-        return redirect(url_for('login'))
+    auth_url = generate_google_auth_url()
+    return redirect(auth_url)
 
 @app.route('/auth/callback/google')
 def oauth_callback_google():
