@@ -27,7 +27,7 @@ def get_google_provider_config():
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        raise OAuthError(f"Failed to fetch Google OAuth configuration: {str(e)}")
+        raise OAuthError(f"Failed to fetch Google OAuth configuration: {e}")
 
 
 def get_oauth_redirect_uri():
@@ -104,7 +104,7 @@ def generate_google_auth_url():
     except OAuthError:
         raise
     except Exception as e:
-        raise OAuthError(f"Failed to generate Google auth URL: {str(e)}")
+        raise OAuthError(f"Failed to generate Google auth URL: {e}")
 
 def process_google_callback(code):
     """
@@ -171,5 +171,5 @@ def process_google_callback(code):
         return new_user, True
         
     except Exception as e:
-        print(f"Error processing Google callback: {str(e)}")
+        current_app.logger.error(f"Error processing Google callback: {e}")
         return None, False

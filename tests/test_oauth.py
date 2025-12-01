@@ -161,7 +161,7 @@ class TestOAuthRedirectURI:
             uri = get_oauth_redirect_uri()
             
             # Should fall back to url_for() which generates localhost in test context
-            assert 'auth/callback/google' in uri
+            assert uri.endswith('/auth/callback/google')
     
     def test_get_oauth_redirect_uri_handles_127_0_0_1(self, app):
         """Test that url_for is used when OAUTH_REDIRECT_URI is 127.0.0.1."""
@@ -173,8 +173,8 @@ class TestOAuthRedirectURI:
             
             uri = get_oauth_redirect_uri()
             
-            # Should fall back to url_for()
-            assert 'auth/callback/google' in uri
+            # Should fall back to url_for() and end with the callback path
+            assert uri.endswith('/auth/callback/google')
     
     def test_get_oauth_redirect_uri_logs_warning_for_proxy_mismatch(self, app):
         """Test that a warning is logged when localhost URI is used but proxy headers are present."""
@@ -194,7 +194,7 @@ class TestOAuthRedirectURI:
             # We can't easily test logging here, but we verify the function works
             uri = get_oauth_redirect_uri()
             
-            assert 'auth/callback/google' in uri
+            assert uri.endswith('/auth/callback/google')
 
 
 class TestOAuthCallbackHandling:
@@ -233,7 +233,7 @@ class TestOAuthCallbackHandling:
 class TestProxyFixIntegration:
     """Test ProxyFix middleware integration with OAuth."""
     
-    def test_proxyfx_modifies_request_correctly(self, app):
+    def test_proxyfix_modifies_request_correctly(self, app):
         """Test that ProxyFix correctly modifies request based on X-Forwarded headers."""
         from werkzeug.test import EnvironBuilder
         from werkzeug.middleware.proxy_fix import ProxyFix
