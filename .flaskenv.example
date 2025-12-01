@@ -38,9 +38,23 @@ PORT=5000
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=your_client_id_here
 GOOGLE_CLIENT_SECRET=your_client_secret_here
-# IMPORTANT: When running behind a reverse proxy (e.g., haruka-tunnel, ngrok, cloudflare tunnel),
-# set this to your public URL to fix Google OAuth sign-in issues.
-# Example: OAUTH_REDIRECT_URI=https://your-public-domain.com/auth/callback/google
+
+# OAuth Redirect URI Configuration
+# CRITICAL: When running behind a reverse proxy (e.g., Cloudflare tunnel, ngrok, haruka-tunnel),
+# you MUST set this to your public URL. Otherwise, OAuth login will fail with "Internal Server Error".
+#
+# How to configure for Cloudflare Tunnel:
+# 1. Set OAUTH_REDIRECT_URI to your public tunnel URL (e.g., https://myapp.trycloudflare.com/auth/callback/google)
+# 2. Also add this URL to your Google Cloud Console OAuth 2.0 authorized redirect URIs
+# 3. Enable PROXY_X_* settings below
+#
+# Example for Cloudflare tunnel:
+# OAUTH_REDIRECT_URI=https://your-tunnel-domain.trycloudflare.com/auth/callback/google
+#
+# Example for custom domain:
+# OAUTH_REDIRECT_URI=https://your-domain.com/auth/callback/google
+#
+# For local development only (default):
 OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google
 
 # Email/SMTP Configuration (for sharing invitations)
@@ -52,10 +66,13 @@ OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google
 # SMTP_PASSWORD=your_app_specific_password
 # SMTP_FROM_EMAIL=your_gmail@gmail.com
 
-# Reverse Proxy Configuration (optional)
-# Set these when running behind multiple proxy layers (e.g., load balancer + tunnel)
-# Values indicate how many proxies to trust for each X-Forwarded-* header
-# PROXY_X_FOR=1
-# PROXY_X_PROTO=1
-# PROXY_X_HOST=1
-# PROXY_X_PREFIX=1
+# Reverse Proxy Configuration (required for tunnels)
+# Enable these when running behind a reverse proxy like Cloudflare Tunnel, ngrok, etc.
+# These settings tell Flask to trust X-Forwarded-* headers from the proxy.
+# Values indicate how many proxy layers to trust (1 = single proxy, 2 = two proxies, etc.)
+#
+# For Cloudflare Tunnel or similar services, uncomment and use these:
+PROXY_X_FOR=1
+PROXY_X_PROTO=1
+PROXY_X_HOST=1
+PROXY_X_PREFIX=1
