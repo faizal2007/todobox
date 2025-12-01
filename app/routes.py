@@ -527,19 +527,12 @@ def oauth_login_google():
 def oauth_callback_google():
     """Handle Google OAuth callback"""
     code = request.args.get("code")
-    returned_state = request.args.get("state")
     error = request.args.get("error")
     
     if error:
         flash('Google authentication failed. Please try again.', 'warning')
         return redirect(url_for('login'))
     
-    # Validate state to protect against CSRF
-    expected_state = session.pop('oauth_state', None)
-    if expected_state and returned_state != expected_state:
-        flash('Authentication failed: invalid session state.', 'warning')
-        return redirect(url_for('login'))
-
     if not code:
         flash('Authentication failed: no authorization code received.', 'warning')
         return redirect(url_for('login'))
@@ -563,44 +556,13 @@ def oauth_callback_google():
         flash(f'Welcome! Your account has been created with {user.email}', 'success')
         next_page = url_for('account')  # Redirect to account page to complete profile
     else:
-        display_name = user.fullname or user.email
-        flash(f'Welcome back, {display_name}!', 'success')
+        flash(f'Welcome back, {user.username}!', 'success')
         next_page = request.args.get('next') or url_for('dashboard')
     
     if not next_page or url_parse(next_page).netloc != '':
         next_page = url_for('dashboard')
     
     return redirect(next_page)
-
-
-@app.route('/diag/oauth')
-@login_required
-@require_admin
-def diag_oauth():
-    """Diagnostic endpoint for OAuth/Proxy setup (admin only)."""
-    try:
-        generated = url_for("oauth_callback_google", _external=True)
-    except Exception:
-        generated = None
-
-    info = {
-        "configured_redirect_uri": app.config.get("OAUTH_REDIRECT_URI"),
-        "generated_redirect_uri": generated,
-        "preferred_url_scheme": app.config.get("PREFERRED_URL_SCHEME"),
-        "proxy_trust": {
-            "x_for": app.config.get('PROXY_X_FOR'),
-            "x_proto": app.config.get('PROXY_X_PROTO'),
-            "x_host": app.config.get('PROXY_X_HOST'),
-            "x_prefix": app.config.get('PROXY_X_PREFIX')
-        },
-        "google_prompt": app.config.get("GOOGLE_OAUTH_PROMPT"),
-        "headers": {
-            "X-Forwarded-Host": request.headers.get('X-Forwarded-Host'),
-            "X-Forwarded-Proto": request.headers.get('X-Forwarded-Proto'),
-            "Host": request.headers.get('Host')
-        }
-    }
-    return jsonify(info)
 
 @app.route('/account', methods=['GET', 'POST'])
 @login_required

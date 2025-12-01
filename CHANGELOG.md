@@ -5,49 +5,6 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.3.7] - Revert OAuth Error Handling - 2025-12-01
-
-### 1.3.7 - Reverted
-
-- Reverted OAuth error handling changes from version 1.3.6 (PR #46) that caused issues
-- Removed `OAuthError` exception class from `app/oauth.py`
-- Removed `try/except` block from `oauth_login_google()` route in `app/routes.py`
-- Removed enhanced error handling, state parameter, and logging from OAuth functions
-- Deleted `tests/test_oauth.py` test file added in PR #46
-
-### 1.3.7 - Changed
-
-- `app/oauth.py`: Simplified to original implementation without custom exception handling
-- `app/routes.py`: `oauth_login_google()` now directly redirects without error handling wrapper
-
-## [1.3.6] - OAuth Error Handling for Cloudflare Tunnel - 2025-12-01
-
-### 1.3.6 - Fixed
-
-- **CRITICAL**: Fixed "Internal Server Error" when clicking "Login using Gmail" behind Cloudflare tunnel
-- Added proper error handling to `generate_google_auth_url()` to catch network errors and configuration issues
-- OAuth login route now gracefully handles errors and redirects to login page with user-friendly message
-
-### 1.3.6 - Added
-
-- `OAuthError` exception class for better OAuth error handling
-- Timeout parameter (10 seconds) to Google OAuth configuration fetches
-- Warning logs when OAuth redirect URI is localhost but proxy headers are detected
-- Debug logging for OAuth redirect URI generation
-
-### 1.3.6 - Changed
-
-- `get_google_provider_config()` now raises `OAuthError` on network failures instead of crashing
-- Improved documentation in `.flaskenv.example` for `OAUTH_REDIRECT_URI` configuration
-- Clarified Cloudflare Tunnel and reverse proxy setup instructions
-
-### 1.3.6 - Technical Implementation
-
-- `app/oauth.py`: Added `OAuthError` exception class and proper try-catch handling
-- `app/routes.py`: Updated `oauth_login_google` route to catch `OAuthError` and show user-friendly message
-- `.flaskenv.example`: Added detailed configuration instructions for Cloudflare Tunnel users
-- `tests/test_oauth.py`: Added comprehensive tests for OAuth error handling and proxy scenarios
-
 ## [1.3.5] - Documentation Recheck - 2025-11-30
 
 ### 1.3.5 - Fixed
