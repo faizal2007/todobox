@@ -129,3 +129,16 @@ def ensure_initialized():
     initialize_default_data()
 
 
+@app.route('/healthz')
+def healthz():
+    """Liveness/health endpoint for monitors and Cloudflare checks."""
+    try:
+        # Simple DB check: execute lightweight query if DB is configured
+        # For sqlite, this is fast; for other DBs, still minimal
+        db.session.execute('SELECT 1')  # type: ignore[attr-defined]
+        return jsonify({"status": "ok"}), 200
+    except Exception as e:
+        # Avoid leaking internal details; log server-side if needed
+        return jsonify({"status": "error"}), 500
+
+
