@@ -22,6 +22,10 @@ GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
 GOOGLE_DISCOVERY_URL = 'https://accounts.google.com/.well-known/openid-configuration'
 
+# Google OAuth UX and security
+# Default to showing the Google account chooser to avoid silent auto-login
+GOOGLE_OAUTH_PROMPT = os.environ.get('GOOGLE_OAUTH_PROMPT', 'select_account')  # e.g., 'select_account', 'consent', or 'select_account consent'
+
 # OAuth redirect URL
 OAUTH_REDIRECT_URI = os.environ.get('OAUTH_REDIRECT_URI', 'http://localhost:5000/auth/callback/google')
 
@@ -38,3 +42,16 @@ PROXY_X_FOR = int(os.environ.get('PROXY_X_FOR', '1'))  # X-Forwarded-For header 
 PROXY_X_PROTO = int(os.environ.get('PROXY_X_PROTO', '1'))  # X-Forwarded-Proto header trust level
 PROXY_X_HOST = int(os.environ.get('PROXY_X_HOST', '1'))  # X-Forwarded-Host header trust level
 PROXY_X_PREFIX = int(os.environ.get('PROXY_X_PREFIX', '1'))  # X-Forwarded-Prefix header trust level
+
+# Cookie & URL settings for HTTPS behind Cloudflare
+PREFERRED_URL_SCHEME = os.environ.get('PREFERRED_URL_SCHEME', 'https')
+
+SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'true').lower() == 'true'
+SESSION_COOKIE_HTTPONLY = os.environ.get('SESSION_COOKIE_HTTPONLY', 'true').lower() == 'true'
+SESSION_COOKIE_SAMESITE = os.environ.get('SESSION_COOKIE_SAMESITE', 'Lax')  # 'Lax' | 'Strict' | 'None'
+# Optional cookie domain (e.g., .example.com); leave unset unless needed
+SESSION_COOKIE_DOMAIN = os.environ.get('SESSION_COOKIE_DOMAIN') or None
+
+REMEMBER_COOKIE_SECURE = os.environ.get('REMEMBER_COOKIE_SECURE', 'true').lower() == 'true'
+REMEMBER_COOKIE_HTTPONLY = os.environ.get('REMEMBER_COOKIE_HTTPONLY', 'true').lower() == 'true'
+REMEMBER_COOKIE_SAMESITE = os.environ.get('REMEMBER_COOKIE_SAMESITE', 'Lax')

@@ -5,6 +5,8 @@ Google OAuth2 Authentication Handler
 import os
 import requests
 import json
+import secrets
+from urllib.parse import urlencode
 from flask import current_app, url_for, session, request as flask_request
 from google.auth.transport.requests import Request
 from google.oauth2.id_token import verify_oauth2_token
@@ -85,22 +87,27 @@ def generate_google_auth_url():
         
         authorization_endpoint = google_provider_cfg["authorization_endpoint"]
         redirect_uri = get_oauth_redirect_uri()
+        prompt = current_app.config.get('GOOGLE_OAUTH_PROMPT', 'select_account')
+        
+        # Generate and store state for CSRF protection
+        state = secrets.token_urlsafe(32)
+        session['oauth_state'] = state
         
         # Log the redirect URI for debugging
         current_app.logger.debug(f"OAuth redirect URI: {redirect_uri}")
-        
-        request_uri = (
-            authorization_endpoint
-            + "?"
-            + "client_id={}&response_type={}&scope={}&redirect_uri={}&access_type={}".format(
-                current_app.config['GOOGLE_CLIENT_ID'],
-                "code",
-                "openid email profile",
-                redirect_uri,
-                "offline"
-            )
-        )
-        return request_uri
+
+        params = {
+            "client_id": current_app.config['GOOGLE_CLIENT_ID'],
+            "response_type": "code",
+            "scope": "openid email profile",
+            "redirect_uri": redirect_uri,
+            "access_type": "offline",
+            "include_granted_scopes": "true",
+            "prompt": prompt,
+            "state": state,
+        }
+
+        return authorization_endpoint + "?" + urlencode(params)
     except OAuthError:
         raise
     except Exception as e:
@@ -124,7 +131,7 @@ def process_google_callback(code):
             "grant_type": "authorization_code",
         }
         
-        token_response = requests.post(token_endpoint, data=token_request_body)
+        token_response = requests.post(token_endpoint, data=token_request_body, timeout=10)
         tokens = token_response.json()
         
         if "error" in tokens:
