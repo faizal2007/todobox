@@ -5,18 +5,40 @@ Google OAuth2 Authentication Handler
 import os
 import requests
 import json
-from flask import current_app, url_for, session
+from flask import current_app, url_for, session, request as flask_request
 from google.auth.transport.requests import Request
 from google.oauth2.id_token import verify_oauth2_token
 from app.models import User
 from app import db
 
+
+class OAuthError(Exception):
+    """Custom exception for OAuth errors"""
+    pass
+
+
 def get_google_provider_config():
     """Fetch Google OAuth configuration"""
-    return requests.get(current_app.config['GOOGLE_DISCOVERY_URL']).json()
+    try:
+        response = requests.get(
+            current_app.config['GOOGLE_DISCOVERY_URL'],
+            timeout=10
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        raise OAuthError(f"Failed to fetch Google OAuth configuration: {str(e)}")
+
 
 def get_oauth_redirect_uri():
-    """Get the OAuth redirect URI from config or generate dynamically"""
+    """Get the OAuth redirect URI from config or generate dynamically.
+    
+    When running behind a reverse proxy (e.g., Cloudflare tunnel, ngrok, haruka-tunnel),
+    the OAUTH_REDIRECT_URI should be explicitly set to the public URL.
+    
+    Returns:
+        str: The OAuth callback redirect URI
+    """
     # Use explicitly configured redirect URI if available (for reverse proxy scenarios)
     configured_uri = current_app.config.get('OAUTH_REDIRECT_URI')
     # Use configured URI if it's set and not a localhost/127.0.0.1 address (HTTP or HTTPS)
@@ -26,26 +48,63 @@ def get_oauth_redirect_uri():
     )
     if configured_uri and not configured_uri.startswith(local_prefixes):
         return configured_uri
+    
     # Fall back to dynamically generated URL
-    return url_for("oauth_callback_google", _external=True)
+    # Note: This relies on ProxyFix middleware processing X-Forwarded-* headers
+    generated_uri = url_for("oauth_callback_google", _external=True)
+    
+    # Log a warning if the generated URI looks like it might be wrong (localhost when not expected)
+    if generated_uri.startswith(local_prefixes):
+        # Check if we're actually behind a proxy (X-Forwarded-* headers present)
+        x_forwarded_host = flask_request.headers.get('X-Forwarded-Host')
+        x_forwarded_proto = flask_request.headers.get('X-Forwarded-Proto')
+        if x_forwarded_host or x_forwarded_proto:
+            current_app.logger.warning(
+                f"OAuth redirect URI is localhost but X-Forwarded headers detected. "
+                f"Consider setting OAUTH_REDIRECT_URI explicitly. "
+                f"Generated: {generated_uri}, X-Forwarded-Host: {x_forwarded_host}"
+            )
+    
+    return generated_uri
+
 
 def generate_google_auth_url():
-    """Generate Google OAuth authentication URL"""
-    google_provider_cfg = get_google_provider_config()
-    authorization_endpoint = google_provider_cfg["authorization_endpoint"]
+    """Generate Google OAuth authentication URL.
     
-    request_uri = (
-        authorization_endpoint
-        + "?"
-        + "client_id={}&response_type={}&scope={}&redirect_uri={}&access_type={}".format(
-            current_app.config['GOOGLE_CLIENT_ID'],
-            "code",
-            "openid email profile",
-            get_oauth_redirect_uri(),
-            "offline"
+    Returns:
+        str: The Google OAuth authorization URL
+        
+    Raises:
+        OAuthError: If Google OAuth configuration cannot be fetched or is invalid
+    """
+    try:
+        google_provider_cfg = get_google_provider_config()
+        
+        if "authorization_endpoint" not in google_provider_cfg:
+            raise OAuthError("Invalid Google OAuth configuration: missing authorization_endpoint")
+        
+        authorization_endpoint = google_provider_cfg["authorization_endpoint"]
+        redirect_uri = get_oauth_redirect_uri()
+        
+        # Log the redirect URI for debugging
+        current_app.logger.debug(f"OAuth redirect URI: {redirect_uri}")
+        
+        request_uri = (
+            authorization_endpoint
+            + "?"
+            + "client_id={}&response_type={}&scope={}&redirect_uri={}&access_type={}".format(
+                current_app.config['GOOGLE_CLIENT_ID'],
+                "code",
+                "openid email profile",
+                redirect_uri,
+                "offline"
+            )
         )
-    )
-    return request_uri
+        return request_uri
+    except OAuthError:
+        raise
+    except Exception as e:
+        raise OAuthError(f"Failed to generate Google auth URL: {str(e)}")
 
 def process_google_callback(code):
     """
