@@ -561,7 +561,8 @@ def oauth_callback_google():
         flash(f'Welcome! Your account has been created with {user.email}', 'success')
         next_page = url_for('account')  # Redirect to account page to complete profile
     else:
-        flash(f'Welcome back, {user.username}!', 'success')
+        display_name = user.fullname or user.email
+        flash(f'Welcome back, {display_name}!', 'success')
         next_page = request.args.get('next') or url_for('dashboard')
     
     if not next_page or url_parse(next_page).netloc != '':
@@ -1309,7 +1310,8 @@ def admin_block_user(user_id):
     db.session.commit()  # type: ignore[attr-defined]
     
     action = 'blocked' if user.is_blocked else 'unblocked'
-    flash(f'User "{user.username}" has been {action}.', 'success')
+    label = user.fullname or user.email
+    flash(f'User "{label}" has been {action}.', 'success')
     return redirect(url_for('admin_panel'))
 
 
@@ -1330,7 +1332,7 @@ def admin_delete_user(user_id):
         flash('You cannot delete system administrators without email.', 'error')
         return redirect(url_for('admin_panel'))
     
-    username = user.username
+    label = user.fullname or user.email
     
     # Delete user's todos and related data
     # First delete trackers for user's todos
@@ -1358,7 +1360,7 @@ def admin_delete_user(user_id):
     db.session.delete(user)  # type: ignore[attr-defined]
     db.session.commit()  # type: ignore[attr-defined]
     
-    flash(f'User "{username}" and all their data have been deleted.', 'success')
+    flash(f'User "{label}" and all their data have been deleted.', 'success')
     return redirect(url_for('admin_panel'))
 
 
@@ -1383,5 +1385,6 @@ def admin_toggle_admin(user_id):
     db.session.commit()  # type: ignore[attr-defined]
     
     action = 'granted admin privileges' if user.is_admin else 'removed from administrators'
-    flash(f'User "{user.username}" has been {action}.', 'success')
+    label = user.fullname or user.email
+    flash(f'User "{label}" has been {action}.', 'success')
     return redirect(url_for('admin_panel'))
