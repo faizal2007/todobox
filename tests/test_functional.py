@@ -145,16 +145,16 @@ class TestAuthentication:
         db_session.session.commit()
         
         client.post('/login', data={
-            'email': 'logouttest',
+            'email': 'logout@example.com',
             'password': 'LogoutPass123!'
-        })
+        }, follow_redirects=True)
         
         # Logout
         response = client.get('/logout', follow_redirects=True)
         assert response.status_code == 200
         
-        # Verify redirected to login
-        assert b'login' in response.data.lower() or response.status_code == 200
+        # Verify redirected to login page (checking for login-related content)
+        assert b'login' in response.data.lower() or b'sign in' in response.data.lower()
 
 
 # ============================================================================

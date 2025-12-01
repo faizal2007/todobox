@@ -142,12 +142,15 @@
                     <i class="mdi mdi-account-edit mr-1"></i>
                     <span>Settings</span>
                   </a>
-                  
                   <!-- item - sharing (Gmail users only) -->
                   {% if current_user.is_gmail_user() %}
                   <a href="{{ url_for('sharing') }}" class="dropdown-item notify-item">
                     <i class="mdi mdi-share-variant mr-1"></i>
                     <span>Sharing</span>
+                  </a>
+                  <a href="{{ url_for('logout_google') }}" class="dropdown-item notify-item">
+                    <i class="mdi mdi-google mr-1"></i>
+                    <span>Logout (Google)</span>
                   </a>
                   {% endif %}
                   <a href="{{ url_for('logout') }}" class="dropdown-item notify-item">

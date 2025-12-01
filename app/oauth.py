@@ -34,6 +34,7 @@ def generate_google_auth_url():
     google_provider_cfg = get_google_provider_config()
     authorization_endpoint = google_provider_cfg["authorization_endpoint"]
     
+    # Base request URL without optional prompt
     request_uri = (
         authorization_endpoint
         + "?"
@@ -45,6 +46,12 @@ def generate_google_auth_url():
             "offline"
         )
     )
+
+    # Append prompt only if explicitly configured
+    prompt_value = current_app.config.get('GOOGLE_OAUTH_PROMPT')
+    if prompt_value:
+        request_uri += "&prompt={}".format(prompt_value)
+
     return request_uri
 
 def process_google_callback(code):

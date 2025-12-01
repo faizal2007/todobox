@@ -279,7 +279,11 @@ def root():
 
 @app.route('/index')
 def index():
-    return redirect(url_for('dashboard'))
+    """Index route - redirect to dashboard if logged in, otherwise to login"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    else:
+        return redirect(url_for('login'))
 
 @app.route('/dashboard')
 @login_required
@@ -514,14 +518,30 @@ def setup_account():
 @app.route('/logout')
 @login_required
 def logout():
+    """Logout the current user and clear session"""
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
+
+@app.route('/logout/google')
+@login_required
+def logout_google():
+    """Logout the current user and also sign out of Google account"""
+    # Log out from the app
+    logout_user()
+    # Redirect to Google logout which will then continue back to our login page
+    google_logout = 'https://accounts.google.com/Logout?continue=' + url_for('login', _external=True)
+    return redirect(google_logout)
 
 @app.route('/auth/login/google')
 def oauth_login_google():
     """Redirect user to Google for authentication"""
-    auth_url = generate_google_auth_url()
-    return redirect(auth_url)
+    try:
+        auth_url = generate_google_auth_url()
+        return redirect(auth_url)
+    except Exception as e:
+        app.logger.error(f"Error generating Google OAuth URL: {str(e)}")
+        flash('Google OAuth is not properly configured. Please try password login instead.', 'danger')
+        return redirect(url_for('login'))
 
 @app.route('/auth/callback/google')
 def oauth_callback_google():
@@ -556,7 +576,7 @@ def oauth_callback_google():
         flash(f'Welcome! Your account has been created with {user.email}', 'success')
         next_page = url_for('account')  # Redirect to account page to complete profile
     else:
-        flash(f'Welcome back, {user.username}!', 'success')
+        flash(f'Welcome back, {user.fullname or user.email}!', 'success')
         next_page = request.args.get('next') or url_for('dashboard')
     
     if not next_page or url_parse(next_page).netloc != '':
@@ -1128,7 +1148,7 @@ def accept_share_invitation(token):
         db.session.commit()  # type: ignore[attr-defined]
     
     from_user = User.query.get(invitation.from_user_id)
-    flash(f'You can now see todos shared by {from_user.fullname or from_user.username}!', 'success')
+    flash(f'You can now see todos shared by {from_user.fullname or from_user.email}!', 'success')
     return redirect(url_for('shared_todos'))
 
 
@@ -1170,7 +1190,7 @@ def revoke_share(share_id):
     db.session.delete(share)  # type: ignore[attr-defined]
     db.session.commit()  # type: ignore[attr-defined]
     
-    flash(f'Stopped sharing todos with {shared_user.fullname or shared_user.username}.', 'success')
+    flash(f'Stopped sharing todos with {shared_user.fullname or shared_user.email}.', 'success')
     return redirect(url_for('sharing'))
 
 
@@ -1188,7 +1208,7 @@ def remove_share_access(share_id):
     db.session.delete(share)  # type: ignore[attr-defined]
     db.session.commit()  # type: ignore[attr-defined]
     
-    flash(f'Removed shared access from {owner.fullname or owner.username}.', 'success')
+    flash(f'Removed shared access from {owner.fullname or owner.email}.', 'success')
     return redirect(url_for('sharing'))
 
 
