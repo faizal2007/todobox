@@ -63,6 +63,137 @@
 						deferredPrompt = null; 
 					});
 				}
+				
+				// Reminder checking system
+				function initReminderSystem() {
+					// Check for reminders every 30 seconds
+					setInterval(checkReminders, 30000);
+					// Also check on page load
+					checkReminders();
+				}
+				
+				async function checkReminders() {
+					try {
+						const response = await fetch('/api/reminders/check', {
+							method: 'GET',
+							headers: {
+								'Content-Type': 'application/json'
+							}
+						});
+						
+						if (response.ok) {
+							const data = await response.json();
+							
+							if (data.reminders && data.reminders.length > 0) {
+								// Process each pending reminder
+								data.reminders.forEach(reminder => {
+									showReminderNotification(reminder);
+									markReminderSent(reminder.todo_id);
+								});
+							}
+						}
+					} catch (error) {
+						console.error('Error checking reminders:', error);
+					}
+				}
+				
+				function showReminderNotification(reminder) {
+					// Show in-app notification
+					const notification = document.createElement('div');
+					notification.className = 'alert alert-info alert-dismissible fade show reminder-notification';
+					notification.setAttribute('role', 'alert');
+					notification.style.cssText = `
+						position: fixed;
+						top: 80px;
+						right: 20px;
+						width: 350px;
+						max-width: 90%;
+						z-index: 9999;
+						box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+						animation: slideIn 0.3s ease-out;
+					`;
+					
+					notification.innerHTML = `
+						<div style="display: flex; align-items: center; gap: 10px;">
+							<i class="mdi mdi-bell-ring" style="font-size: 24px; color: #ff5555;"></i>
+							<div>
+								<strong style="color: #ff5555;">Reminder</strong>
+								<div style="font-size: 14px; margin-top: 5px;">${reminder.title}</div>
+								<small style="color: #666; display: block; margin-top: 3px;">${reminder.details || 'Time to work on this task'}</small>
+							</div>
+						</div>
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					`;
+					
+					// Add animation
+					const style = document.createElement('style');
+					style.textContent = `
+						@keyframes slideIn {
+							from {
+								transform: translateX(400px);
+								opacity: 0;
+							}
+							to {
+								transform: translateX(0);
+								opacity: 1;
+							}
+						}
+						@keyframes slideOut {
+							from {
+								transform: translateX(0);
+								opacity: 1;
+							}
+							to {
+								transform: translateX(400px);
+								opacity: 0;
+							}
+						}
+					`;
+					document.head.appendChild(style);
+					
+					document.body.appendChild(notification);
+					
+					// Auto-dismiss after 8 seconds
+					setTimeout(() => {
+						notification.style.animation = 'slideOut 0.3s ease-out';
+						setTimeout(() => {
+							notification.remove();
+						}, 300);
+					}, 8000);
+					
+					// Browser notification if supported
+					if ('Notification' in window && Notification.permission === 'granted') {
+						new Notification(reminder.title, {
+							body: reminder.details || 'Time to work on this task',
+							icon: '/static/assets/icons/icon-192x192.png'
+						});
+					}
+				}
+				
+				async function markReminderSent(todoId) {
+					try {
+						await fetch('/api/reminders/process', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-CSRFToken': document.querySelector('input[name="csrf_token"]')?.value || ''
+							},
+							body: JSON.stringify({ todo_id: todoId })
+						});
+					} catch (error) {
+						console.error('Error marking reminder as sent:', error);
+					}
+				}
+				
+				// Request notification permission on page load
+				if ('Notification' in window && Notification.permission === 'default') {
+					Notification.requestPermission();
+				}
+				
+				// Initialize reminder system when page is ready
+				document.addEventListener('DOMContentLoaded', initReminderSystem);
     		</script>
 		{% block extra_css %}{% endblock %}
 		{% block extra_script_header %}{% endblock %}

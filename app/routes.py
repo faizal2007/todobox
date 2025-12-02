@@ -88,6 +88,52 @@ def get_quote():
     fallback_quote = random.choice(LOCAL_QUOTES)
     return jsonify({'quote': fallback_quote})
 
+@app.route('/api/reminders/check', methods=['GET'])
+@login_required
+def check_reminders():
+    """Check for pending reminders for the current user"""
+    from app.reminder_service import ReminderService
+    
+    reminders = ReminderService.get_pending_reminders(current_user.id)
+    
+    reminders_data = []
+    for todo in reminders:
+        reminders_data.append({
+            'todo_id': todo.id,
+            'title': todo.name,
+            'details': todo.details,
+            'reminder_time': todo.reminder_time.isoformat() if todo.reminder_time else None
+        })
+    
+    return jsonify({
+        'count': len(reminders_data),
+        'reminders': reminders_data
+    })
+
+@app.route('/api/reminders/process', methods=['POST'])
+@login_required
+def process_reminders():
+    """Process and send reminders for the current user"""
+    from app.reminder_service import ReminderService
+    
+    reminders = ReminderService.get_pending_reminders(current_user.id)
+    
+    notifications = []
+    for todo in reminders:
+        notification = {
+            'todo_id': todo.id,
+            'title': f"Reminder: {todo.name}",
+            'message': f"Your task '{todo.name}' is due!",
+            'reminder_time': todo.reminder_time.isoformat() if todo.reminder_time else None
+        }
+        notifications.append(notification)
+        ReminderService.mark_reminder_sent(todo.id)
+    
+    return jsonify({
+        'count': len(notifications),
+        'notifications': notifications
+    })
+
 @app.route('/api/auth/token', methods=['POST'])
 @csrf.exempt
 @login_required
