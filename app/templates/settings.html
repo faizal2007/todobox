@@ -181,6 +181,101 @@
         </div>
     </div>
 
+    <!-- Timezone Settings Section -->
+    <div class="row mt-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-clock-time-eight-box mr-2"></i>Timezone Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Set your local timezone to display reminders and todo times correctly.
+                    </p>
+                    
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <div class="form-group">
+                            <label for="timezone" class="font-weight-bold">
+                                <i class="mdi mdi-map-marker-radius mr-2"></i>Your Timezone
+                            </label>
+                            <select class="form-control" id="timezone" name="timezone" required>
+                                <optgroup label="UTC">
+                                    <option value="UTC" {% if current_user.timezone == 'UTC' %}selected{% endif %}>UTC (Coordinated Universal Time)</option>
+                                </optgroup>
+                                
+                                <optgroup label="Americas">
+                                    <option value="America/New_York" {% if current_user.timezone == 'America/New_York' %}selected{% endif %}>Eastern Time (US & Canada)</option>
+                                    <option value="America/Chicago" {% if current_user.timezone == 'America/Chicago' %}selected{% endif %}>Central Time (US & Canada)</option>
+                                    <option value="America/Denver" {% if current_user.timezone == 'America/Denver' %}selected{% endif %}>Mountain Time (US & Canada)</option>
+                                    <option value="America/Los_Angeles" {% if current_user.timezone == 'America/Los_Angeles' %}selected{% endif %}>Pacific Time (US & Canada)</option>
+                                    <option value="America/Anchorage" {% if current_user.timezone == 'America/Anchorage' %}selected{% endif %}>Alaska Time</option>
+                                    <option value="Pacific/Honolulu" {% if current_user.timezone == 'Pacific/Honolulu' %}selected{% endif %}>Hawaii-Aleutian Time</option>
+                                    <option value="America/Toronto" {% if current_user.timezone == 'America/Toronto' %}selected{% endif %}>Eastern Time (Canada)</option>
+                                    <option value="America/Mexico_City" {% if current_user.timezone == 'America/Mexico_City' %}selected{% endif %}>Mexico City</option>
+                                    <option value="America/Buenos_Aires" {% if current_user.timezone == 'America/Buenos_Aires' %}selected{% endif %}>Argentina (Buenos Aires)</option>
+                                    <option value="America/Sao_Paulo" {% if current_user.timezone == 'America/Sao_Paulo' %}selected{% endif %}>Brazil (São Paulo)</option>
+                                </optgroup>
+                                
+                                <optgroup label="Europe">
+                                    <option value="Europe/London" {% if current_user.timezone == 'Europe/London' %}selected{% endif %}>London (GMT)</option>
+                                    <option value="Europe/Paris" {% if current_user.timezone == 'Europe/Paris' %}selected{% endif %}>Central European Time</option>
+                                    <option value="Europe/Berlin" {% if current_user.timezone == 'Europe/Berlin' %}selected{% endif %}>Berlin</option>
+                                    <option value="Europe/Madrid" {% if current_user.timezone == 'Europe/Madrid' %}selected{% endif %}>Spain</option>
+                                    <option value="Europe/Rome" {% if current_user.timezone == 'Europe/Rome' %}selected{% endif %}>Italy</option>
+                                    <option value="Europe/Amsterdam" {% if current_user.timezone == 'Europe/Amsterdam' %}selected{% endif %}>Amsterdam</option>
+                                    <option value="Europe/Brussels" {% if current_user.timezone == 'Europe/Brussels' %}selected{% endif %}>Belgium</option>
+                                    <option value="Europe/Vienna" {% if current_user.timezone == 'Europe/Vienna' %}selected{% endif %}>Vienna</option>
+                                    <option value="Europe/Prague" {% if current_user.timezone == 'Europe/Prague' %}selected{% endif %}>Prague</option>
+                                    <option value="Europe/Budapest" {% if current_user.timezone == 'Europe/Budapest' %}selected{% endif %}>Budapest</option>
+                                    <option value="Europe/Istanbul" {% if current_user.timezone == 'Europe/Istanbul' %}selected{% endif %}>Istanbul</option>
+                                    <option value="Europe/Moscow" {% if current_user.timezone == 'Europe/Moscow' %}selected{% endif %}>Moscow</option>
+                                </optgroup>
+                                
+                                <optgroup label="Asia">
+                                    <option value="Asia/Dubai" {% if current_user.timezone == 'Asia/Dubai' %}selected{% endif %}>Dubai (UAE)</option>
+                                    <option value="Asia/Kolkata" {% if current_user.timezone == 'Asia/Kolkata' %}selected{% endif %}>India Standard Time</option>
+                                    <option value="Asia/Bangkok" {% if current_user.timezone == 'Asia/Bangkok' %}selected{% endif %}>Bangkok</option>
+                                    <option value="Asia/Singapore" {% if current_user.timezone == 'Asia/Singapore' %}selected{% endif %}>Singapore</option>
+                                    <option value="Asia/Hong_Kong" {% if current_user.timezone == 'Asia/Hong_Kong' %}selected{% endif %}>Hong Kong</option>
+                                    <option value="Asia/Shanghai" {% if current_user.timezone == 'Asia/Shanghai' %}selected{% endif %}>China Standard Time</option>
+                                    <option value="Asia/Tokyo" {% if current_user.timezone == 'Asia/Tokyo' %}selected{% endif %}>Japan Standard Time</option>
+                                    <option value="Asia/Seoul" {% if current_user.timezone == 'Asia/Seoul' %}selected{% endif %}>Korea Standard Time</option>
+                                    <option value="Australia/Sydney" {% if current_user.timezone == 'Australia/Sydney' %}selected{% endif %}>Sydney (Australia)</option>
+                                    <option value="Asia/Kuala_Lumpur" {% if current_user.timezone == 'Asia/Kuala_Lumpur' %}selected{% endif %}>Malaysia</option>
+                                </optgroup>
+                                
+                                <optgroup label="Africa">
+                                    <option value="Africa/Cairo" {% if current_user.timezone == 'Africa/Cairo' %}selected{% endif %}>Cairo</option>
+                                    <option value="Africa/Johannesburg" {% if current_user.timezone == 'Africa/Johannesburg' %}selected{% endif %}>Johannesburg</option>
+                                    <option value="Africa/Lagos" {% if current_user.timezone == 'Africa/Lagos' %}selected{% endif %}>Lagos</option>
+                                </optgroup>
+                                
+                                <optgroup label="Oceania">
+                                    <option value="Pacific/Auckland" {% if current_user.timezone == 'Pacific/Auckland' %}selected{% endif %}>Auckland (New Zealand)</option>
+                                    <option value="Pacific/Fiji" {% if current_user.timezone == 'Pacific/Fiji' %}selected{% endif %}>Fiji</option>
+                                </optgroup>
+                            </select>
+                            <small class="form-text text-muted mt-2">
+                                <i class="mdi mdi-information-outline mr-1"></i>
+                                Your reminders will be triggered based on this timezone.
+                            </small>
+                        </div>
+                        
+                        <div class="form-group mt-4">
+                            <button type="submit" name="update_timezone" class="btn btn-success btn-block">
+                                <i class="mdi mdi-content-save mr-1"></i>Save Timezone
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- API Documentation Section -->
     <div class="row mt-4">
         <div class="col-12">

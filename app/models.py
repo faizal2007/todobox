@@ -18,6 +18,7 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
     sharing_enabled = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Enable todo sharing (Gmail users only)
     is_admin = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Admin flag
     is_blocked = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Blocked user flag
+    timezone = db.Column(db.String(50), default='UTC') # type: ignore[attr-defined]  # User's timezone (e.g., 'America/New_York')
     todo = db.relationship('Todo', backref='user', lazy='dynamic') # type: ignore[attr-defined]
 
     def __init__(self, email, oauth_provider=None, oauth_id=None, fullname=None):
@@ -26,6 +27,7 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
         self.oauth_id = oauth_id
         self.fullname = fullname
         self.sharing_enabled = False
+        self.timezone = 'UTC'
         # Users without email are considered system admin (though now email is required)
         self.is_admin = False
         self.is_blocked = False

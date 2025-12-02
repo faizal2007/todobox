@@ -93,16 +93,25 @@ def get_quote():
 def check_reminders():
     """Check for pending reminders for the current user"""
     from app.reminder_service import ReminderService
+    from app.timezone_utils import convert_to_user_timezone
     
     reminders = ReminderService.get_pending_reminders(current_user.id)
     
     reminders_data = []
     for todo in reminders:
+        # Convert reminder time to user's timezone
+        reminder_time = todo.reminder_time
+        if reminder_time:
+            reminder_time = convert_to_user_timezone(reminder_time, current_user.timezone)
+            reminder_time_str = reminder_time.isoformat() if reminder_time else None
+        else:
+            reminder_time_str = None
+            
         reminders_data.append({
             'todo_id': todo.id,
             'title': todo.name,
             'details': todo.details,
-            'reminder_time': todo.reminder_time.isoformat() if todo.reminder_time else None
+            'reminder_time': reminder_time_str
         })
     
     return jsonify({
@@ -115,16 +124,25 @@ def check_reminders():
 def process_reminders():
     """Process and send reminders for the current user"""
     from app.reminder_service import ReminderService
+    from app.timezone_utils import convert_to_user_timezone
     
     reminders = ReminderService.get_pending_reminders(current_user.id)
     
     notifications = []
     for todo in reminders:
+        # Convert reminder time to user's timezone for display
+        reminder_time = todo.reminder_time
+        if reminder_time:
+            reminder_time = convert_to_user_timezone(reminder_time, current_user.timezone)
+            reminder_time_str = reminder_time.isoformat() if reminder_time else None
+        else:
+            reminder_time_str = None
+            
         notification = {
             'todo_id': todo.id,
             'title': f"Reminder: {todo.name}",
             'message': f"Your task '{todo.name}' is due!",
-            'reminder_time': todo.reminder_time.isoformat() if todo.reminder_time else None
+            'reminder_time': reminder_time_str
         }
         notifications.append(notification)
         ReminderService.mark_reminder_sent(todo.id)
@@ -1075,6 +1093,31 @@ def settings():
                 flash('Session expired. Please login again.', 'warning')
                 return redirect(url_for('login'))
             raise
+    
+    # Handle timezone update
+    if request.method == 'POST' and 'update_timezone' in request.form:
+        timezone = request.form.get('timezone', 'UTC')
+        # Validate timezone is in a reasonable format (prevent injection)
+        valid_timezones = [
+            'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 
+            'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu',
+            'America/Toronto', 'America/Mexico_City', 'America/Buenos_Aires',
+            'America/Sao_Paulo', 'Europe/London', 'Europe/Paris', 'Europe/Berlin',
+            'Europe/Madrid', 'Europe/Rome', 'Europe/Amsterdam', 'Europe/Brussels',
+            'Europe/Vienna', 'Europe/Prague', 'Europe/Budapest', 'Europe/Istanbul',
+            'Europe/Moscow', 'Asia/Dubai', 'Asia/Kolkata', 'Asia/Bangkok',
+            'Asia/Singapore', 'Asia/Hong_Kong', 'Asia/Shanghai', 'Asia/Tokyo',
+            'Asia/Seoul', 'Australia/Sydney', 'Asia/Kuala_Lumpur', 'Africa/Cairo',
+            'Africa/Johannesburg', 'Africa/Lagos', 'Pacific/Auckland', 'Pacific/Fiji'
+        ]
+        
+        if timezone in valid_timezones:
+            current_user.timezone = timezone
+            db.session.commit()  # type: ignore[attr-defined]
+            flash(f'Timezone updated to {timezone}', 'success')
+        else:
+            flash('Invalid timezone selected.', 'error')
+        return redirect(url_for('settings'))
     
     # Handle API token actions
     if request.method == 'POST':
