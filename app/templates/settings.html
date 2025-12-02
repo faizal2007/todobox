@@ -321,7 +321,7 @@
                             <input type="text" class="form-control form-control-sm bg-light text-monospace" id="curlGetTodos" readonly
                                    value="curl -X GET {{ request.url_root }}api/todo -H &quot;Authorization: Bearer {% if current_user.api_token %}{{ current_user.api_token }}{% else %}YOUR_API_TOKEN{% endif %}&quot;">
                             <div class="input-group-append">
-                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlGetTodos')">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlGetTodos')" aria-label="Copy Get Todos curl command">
                                     <i class="mdi mdi-content-copy"></i>
                                 </button>
                             </div>
@@ -335,7 +335,7 @@
                             <input type="text" class="form-control form-control-sm bg-light text-monospace" id="curlCreateTodo" readonly
                                    value="curl -X POST {{ request.url_root }}api/todo -H &quot;Authorization: Bearer {% if current_user.api_token %}{{ current_user.api_token }}{% else %}YOUR_API_TOKEN{% endif %}&quot; -H &quot;Content-Type: application/json&quot; -d '{&quot;title&quot;:&quot;My Task&quot;,&quot;details&quot;:&quot;Task description&quot;}'">
                             <div class="input-group-append">
-                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlCreateTodo')">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlCreateTodo')" aria-label="Copy Create Todo curl command">
                                     <i class="mdi mdi-content-copy"></i>
                                 </button>
                             </div>
@@ -349,7 +349,7 @@
                             <input type="text" class="form-control form-control-sm bg-light text-monospace" id="curlUpdateTodo" readonly
                                    value="curl -X PUT {{ request.url_root }}api/todo/1 -H &quot;Authorization: Bearer {% if current_user.api_token %}{{ current_user.api_token }}{% else %}YOUR_API_TOKEN{% endif %}&quot; -H &quot;Content-Type: application/json&quot; -d '{&quot;title&quot;:&quot;Updated Task&quot;,&quot;details&quot;:&quot;Updated description&quot;}'">
                             <div class="input-group-append">
-                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlUpdateTodo')">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlUpdateTodo')" aria-label="Copy Update Todo curl command">
                                     <i class="mdi mdi-content-copy"></i>
                                 </button>
                             </div>
@@ -363,7 +363,7 @@
                             <input type="text" class="form-control form-control-sm bg-light text-monospace" id="curlDeleteTodo" readonly
                                    value="curl -X DELETE {{ request.url_root }}api/todo/1 -H &quot;Authorization: Bearer {% if current_user.api_token %}{{ current_user.api_token }}{% else %}YOUR_API_TOKEN{% endif %}&quot;">
                             <div class="input-group-append">
-                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlDeleteTodo')">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlDeleteTodo')" aria-label="Copy Delete Todo curl command">
                                     <i class="mdi mdi-content-copy"></i>
                                 </button>
                             </div>
@@ -377,7 +377,7 @@
                             <input type="text" class="form-control form-control-sm bg-light text-monospace" id="curlGetQuote" readonly
                                    value="curl -X GET {{ request.url_root }}api/quote">
                             <div class="input-group-append">
-                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlGetQuote')">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCurlCommand('curlGetQuote')" aria-label="Copy Get Quote curl command">
                                     <i class="mdi mdi-content-copy"></i>
                                 </button>
                             </div>

@@ -453,12 +453,12 @@ def dashboard():
     # Get recent undone todos for activity feed (filtered by current user and not completed)
     # Using a similar pattern to getList() in models.py - matching tracker timestamp to todo modified time
     # Status 6 = 'done' (see Status.seed() in models.py)
-    recent_todos = db.session.query(Todo).join(
-        Tracker, Todo.id == Tracker.todo_id
+    recent_todos = db.session.query(Todo).join(  # type: ignore[attr-defined]
+        Tracker, Todo.id == Tracker.todo_id  # type: ignore[attr-defined]
     ).filter(
         Todo.user_id == current_user.id,
-        Tracker.timestamp == Todo.modified,  # Match the latest tracker (same pattern as getList)
-        Tracker.status_id != 6  # Status 6 = 'done'
+        Tracker.timestamp == Todo.modified,  # type: ignore[attr-defined]  # Match the latest tracker (same pattern as getList)
+        Tracker.status_id != 6  # type: ignore[attr-defined]  # Status 6 = 'done'
     ).order_by(Todo.modified.desc()).limit(5).all()
     
     return render_template('dashboard.html', 
@@ -729,6 +729,11 @@ def mark_done(todo_id):
             'status': 'Success',
             'todo_id': todo.id if todo else None
         }), 200
+    else:
+        return jsonify({
+            'status': 'Error',
+            'message': 'Todo not found'
+        }), 404
 
 @app.route('/<path:todo>/view')
 @login_required
@@ -1061,7 +1066,7 @@ def list(id):
     else:
         abort(404)
         
-    return render_template('list.html', title=id, todo=Todo.getList(id, start, end, user_id=current_user.id).order_by(desc(Tracker.timestamp)))
+    return render_template('list.html', title=id, todo=Todo.getList(id, start, end, user_id=current_user.id).order_by(desc(Tracker.timestamp)))  # type: ignore[arg-type]
 
 @app.route('/<path:id>/<path:todo_id>/done', methods=['POST'])
 @login_required
@@ -1085,6 +1090,11 @@ def done(id, todo_id):
             'status': 'Success',
             'todo_id': todo.id
         }), 200
+    else:
+        return jsonify({
+            'status': 'Error',
+            'message': 'Invalid list type'
+        }), 400
 
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
@@ -1195,7 +1205,7 @@ def sharing():
             return redirect(url_for('sharing'))
         
         if invitation_form.validate():
-            to_email = invitation_form.email.data.lower().strip()
+            to_email = (invitation_form.email.data or '').lower().strip()  # type: ignore[union-attr]
             
             # Check if already sharing with this user
             existing_user = User.query.filter_by(email=to_email).first()
@@ -1238,13 +1248,13 @@ def sharing():
     # Get current user's sent invitations (pending ones)
     sent_invitations = ShareInvitation.query.filter_by(
         from_user_id=current_user.id
-    ).order_by(ShareInvitation.created_at.desc()).limit(10).all()
+    ).order_by(desc(ShareInvitation.created_at)).limit(10).all()  # type: ignore[arg-type]
     
     # Get received invitations (pending and not expired) - use database filter for efficiency
     received_invitations = ShareInvitation.query.filter(
-        ShareInvitation.to_email == current_user.email,
-        ShareInvitation.status == 'pending',
-        ShareInvitation.expires_at > datetime.now()
+        ShareInvitation.to_email == current_user.email,  # type: ignore[assignment]
+        ShareInvitation.status == 'pending',  # type: ignore[assignment]
+        ShareInvitation.expires_at > datetime.now()  # type: ignore[assignment]
     ).all()
     
     # Get current sharing relationships
@@ -1416,9 +1426,9 @@ def shared_todos():
     
     # Subquery to get latest tracker timestamp for each todo
     latest_tracker_subq = db.session.query(  # type: ignore[attr-defined]
-        Tracker.todo_id,
-        func.max(Tracker.timestamp).label('max_timestamp')
-    ).group_by(Tracker.todo_id).subquery()
+        Tracker.todo_id,  # type: ignore[attr-defined]
+        func.max(Tracker.timestamp).label('max_timestamp')  # type: ignore[attr-defined]
+    ).group_by(Tracker.todo_id).subquery()  # type: ignore[attr-defined]
     
     # Main query joining todos with their latest tracker and status
     results = db.session.query(Todo, Tracker, Status, User).join(  # type: ignore[attr-defined]
@@ -1426,10 +1436,10 @@ def shared_todos():
         Todo.id == latest_tracker_subq.c.todo_id
     ).join(
         Tracker,
-        (Tracker.todo_id == Todo.id) & (Tracker.timestamp == latest_tracker_subq.c.max_timestamp)
+        (Tracker.todo_id == Todo.id) & (Tracker.timestamp == latest_tracker_subq.c.max_timestamp)  # type: ignore[attr-defined]
     ).join(
         Status,
-        Tracker.status_id == Status.id
+        Tracker.status_id == Status.id  # type: ignore[attr-defined]
     ).join(
         User,
         Todo.user_id == User.id
@@ -1534,23 +1544,23 @@ def admin_delete_user(user_id):
     # First delete trackers for user's todos
     user_todo_ids = [t.id for t in user.todo.all()]
     if user_todo_ids:
-        Tracker.query.filter(Tracker.todo_id.in_(user_todo_ids)).delete(synchronize_session=False)
+        Tracker.query.filter(Tracker.todo_id.in_(user_todo_ids)).delete(synchronize_session=False)  # type: ignore[attr-defined]
     
     # Delete user's todos
     Todo.query.filter_by(user_id=user.id).delete()
     
     # Delete sharing relationships
     TodoShare.query.filter(
-        or_(TodoShare.owner_id == user.id, TodoShare.shared_with_id == user.id)
+        or_(TodoShare.owner_id == user.id, TodoShare.shared_with_id == user.id)  # type: ignore[attr-defined]
     ).delete(synchronize_session=False)
     
     # Delete share invitations (only include email condition if user has email)
     if user.email:
         ShareInvitation.query.filter(
-            or_(ShareInvitation.from_user_id == user.id, ShareInvitation.to_email == user.email)
+            or_(ShareInvitation.from_user_id == user.id, ShareInvitation.to_email == user.email)  # type: ignore[attr-defined]
         ).delete(synchronize_session=False)
     else:
-        ShareInvitation.query.filter(ShareInvitation.from_user_id == user.id).delete(synchronize_session=False)
+        ShareInvitation.query.filter(ShareInvitation.from_user_id == user.id).delete(synchronize_session=False)  # type: ignore[attr-defined]
     
     # Delete the user
     db.session.delete(user)  # type: ignore[attr-defined]

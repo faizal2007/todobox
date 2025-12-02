@@ -39,13 +39,16 @@ COUNTRY_TO_TIMEZONE = {
 def get_client_ip() -> str:
     """Get the client's IP address from the request, accounting for proxies"""
     # Check for IP from proxy headers first (for use behind reverse proxy)
-    if request.headers.get('X-Forwarded-For'):
+    x_forwarded = request.headers.get('X-Forwarded-For')
+    if x_forwarded:
         # X-Forwarded-For can contain multiple IPs, take the first one
-        return request.headers.get('X-Forwarded-For').split(',')[0].strip()
-    elif request.headers.get('X-Real-IP'):
-        return request.headers.get('X-Real-IP')
-    else:
-        return request.remote_addr or '127.0.0.1'
+        return x_forwarded.split(',')[0].strip()
+    
+    x_real_ip = request.headers.get('X-Real-IP')
+    if x_real_ip:
+        return x_real_ip
+    
+    return request.remote_addr or '127.0.0.1'
 
 
 def detect_timezone_from_ip() -> Optional[str]:
