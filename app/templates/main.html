@@ -19,42 +19,7 @@
         <link href='{{ url_for('static', filename='assets/css/icons.min.css') }}' rel="stylesheet" type="text/css" />
         <link href='{{ url_for('static', filename='assets/css/app-modern.min.css') }}' rel="stylesheet" type="text/css" id="light-style" />
         <link href='{{ url_for('static', filename='assets/css/app-modern-dark.min.css') }}' rel="stylesheet" type="text/css" id="dark-style" />
-        <style>
-			@font-face {
-				font-family: 'Lemon Tuesday.otf';
-				src: url('/static/fonts/Lemon Tuesday.otf');
-			}
-			div .topnav-logo {
-				font-family: 'Lemon Tuesday.otf';
-			}
-            /* Ensure email above date (stacked) */
-            .nav-user .account-user-name { display: block; font-weight: 600; }
-            .nav-user .account-position { display: block; font-size: 12px; margin-top: -3px; }
-			/* Mobile polish: hide email and date on mobile for compact topbar */
-			@media (max-width: 640px) {
-				.nav-user { padding: 17px 5px 17px 57px !important; }
-				.nav-user .account-user-name { display: none !important; }
-				.nav-user .account-position { display: none !important; }
-				/* Card grid adjustments */
-				.page-title { font-size: 1.6rem; }
-				.row.justify-content-center > [class*='col-'] { padding-left: 8px; padding-right: 8px; }
-				.card { border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-				.card-body { padding: 0.9rem 0.9rem 1rem; }
-				.card-title { font-size: 1.05rem; line-height: 1.25; max-height: 2.5em; overflow: hidden; }
-				.card-text { font-size: 0.85rem; line-height: 1.2; max-height: 6.2rem; overflow: hidden; }
-				.card-text p { margin-bottom: 0.4rem; }
-				.card-widgets a { font-size: 1.05rem; }
-				.card-widgets { top: 6px; right: 6px; }
-				.divider hr { margin-top: 0.4rem; margin-bottom: 0.55rem; }
-				footer.blockquote-footer { font-size: 0.7rem; }
-				.card-wisdom { font-size: 10px; }
-				/* Line clamp (fallback to max-height + overflow) */
-				.card-title, .card-text { display: -webkit-box; -webkit-box-orient: vertical; }
-				.card-title { -webkit-line-clamp: 2; }
-				.card-text { -webkit-line-clamp: 5; }
-			}
-            
-        </style>
+        <link href='{{ url_for('static', filename='css/style.css') }}' rel="stylesheet" type="text/css" />
     		<script type=text/javascript>
     			$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 				// Register service worker for PWA install prompt
@@ -64,16 +29,39 @@
 					});
 				}
 				let deferredPrompt; 
+				const btn = document.getElementById('pwa-install-btn');
+				
+				// Show install button when beforeinstallprompt event fires
 				window.addEventListener('beforeinstallprompt', (e) => {
 					e.preventDefault();
 					deferredPrompt = e;
-					const btn = document.getElementById('pwa-install-btn');
 					if (btn) btn.style.display = 'inline-flex';
 				});
+				
+				// Hide install button when app is installed
+				window.addEventListener('appinstalled', () => {
+					if (btn) btn.style.display = 'none';
+					deferredPrompt = null;
+				});
+				
+				// Hide button if app is already installed (on page load)
+				if (window.navigator.getInstalledRelatedApps) {
+					window.navigator.getInstalledRelatedApps().then(apps => {
+						if (apps.length > 0) {
+							if (btn) btn.style.display = 'none';
+						}
+					});
+				}
+				
 				function installPWA() {
 					if (!deferredPrompt) return;
 					deferredPrompt.prompt();
-					deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+					deferredPrompt.userChoice.then((result) => { 
+						if (result.outcome === 'accepted') {
+							if (btn) btn.style.display = 'none';
+						}
+						deferredPrompt = null; 
+					});
 				}
     		</script>
 		{% block extra_css %}{% endblock %}
@@ -98,9 +86,9 @@
 					<div class="content">
 							<div class="navbar-custom topnav-navbar">
 								<div class="container-fluid">
-										<a href="{{ url_for('index') }}" class="topnav-logo">
-											<p class="h3 text-muted" style="display: inline-block; margin: 0; background-color: #ccffcc; padding: 2px 4px;">{{ config.TITLE }}</p>
-										</a>
+									<a href="{{ url_for('index') }}" class="topnav-logo">
+										<p class="h3 text-muted app-title">{{ config.TITLE }}</p>
+									</a>
 										<a class="navbar-toggle" href="#" role="button" data-toggle="collapse" data-target="#topnav-menu-content" aria-controls="topnav-menu-content" aria-expanded="false" aria-label="Toggle navigation">
 											<div class="lines">
 												<span></span>
@@ -111,11 +99,11 @@
 										{% if not current_user.is_anonymous %}
 										<ul class="list-unstyled topbar-right-menu float-right mb-0">
 											<li class="dropdown notification-list">
-												<button id="pwa-install-btn" onclick="installPWA()" style="display:none;align-items:center;gap:4px;border:1px solid #ff5555;background:#ff5555;color:#fff;font-size:12px;padding:4px 8px;border-radius:4px;cursor:pointer;">Install App</button>
+												<button id="pwa-install-btn" onclick="installPWA()">Install App</button>
 												<a class="nav-link dropdown-toggle nav-user arrow-none mr-0" data-toggle="dropdown" id="topbar-userdrop" href="#" role="button" aria-haspopup="true"
 													aria-expanded="false">
 													<span class="account-user-avatar">
-														<img src="https://www.gravatar.com/avatar/{{ current_user.email|lower|replace(' ', '')|md5 }}?s=32&d=identicon" alt="user-avatar" class="rounded-circle" style="width: 32px; height: 32px;" referrerpolicy="no-referrer">
+														<img src="https://www.gravatar.com/avatar/{{ current_user.email|lower|replace(' ', '')|md5 }}?s=32&d=identicon" alt="user-avatar" class="rounded-circle" referrerpolicy="no-referrer">
 													</span>
 													<span>
 														<span class="account-user-name" title="{{ current_user.email }}">{{ current_user.email }}</span>

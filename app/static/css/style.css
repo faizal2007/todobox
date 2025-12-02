@@ -1,5 +1,5 @@
 /* Move down content because we have a fixed navbar that is 3.5rem tall */
-
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
 body {
   padding-top: 2rem;
 }
@@ -28,4 +28,130 @@ body {
   opacity: .5;
 }
 
+/* Navigation user info styling */
+.nav-user .account-user-name {
+  display: block;
+  font-weight: 600;
+}
+
+.nav-user .account-position {
+  display: block;
+  font-size: 12px;
+  margin-top: -3px;
+}
+
+/* PWA Install button styling */
+#pwa-install-btn {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #ff5555;
+  background: #ff5555;
+  color: #fff;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#pwa-install-btn.show {
+  display: inline-flex;
+}
+
+/* Logo styling */
+.topnav-logo .app-title {
+  display: inline-block;
+  margin: 0;
+  background-color: #ccffcc;
+  padding: 2px 4px;
+  font-family: 'Caveat', cursive;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+/* User avatar styling */
+.account-user-avatar img {
+  width: 32px;
+  height: 32px;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 640px) {
+  .nav-user {
+    padding: 17px 5px 17px 57px !important;
+  }
+
+  .nav-user .account-user-name {
+    display: none !important;
+  }
+
+  .nav-user .account-position {
+    display: none !important;
+  }
+
+  /* Card grid adjustments */
+  .page-title {
+    font-size: 1.6rem;
+  }
+
+  .row.justify-content-center > [class*='col-'] {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .card {
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .card-body {
+    padding: 0.9rem 0.9rem 1rem;
+  }
+
+  .card-title {
+    font-size: 1.05rem;
+    line-height: 1.25;
+    max-height: 2.5em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .card-text {
+    font-size: 0.85rem;
+    line-height: 1.2;
+    max-height: 6.2rem;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+  }
+
+  .card-text p {
+    margin-bottom: 0.4rem;
+  }
+
+  .card-widgets a {
+    font-size: 1.05rem;
+  }
+
+  .card-widgets {
+    top: 6px;
+    right: 6px;
+  }
+
+  .divider hr {
+    margin-top: 0.4rem;
+    margin-bottom: 0.55rem;
+  }
+
+  footer.blockquote-footer {
+    font-size: 0.7rem;
+  }
+
+  .card-wisdom {
+    font-size: 10px;
+  }
+}
 
