@@ -162,7 +162,14 @@
                     if (data['reminder_time']) {
                          // For now, set to custom time type
                          $('input[name="reminder_type"][value="custom"]').prop('checked', true).trigger('change');
-                         $('#reminder-datetime').val(data['reminder_time'].slice(0, 16)); // Format: YYYY-MM-DDTHH:mm
+                         // Extract just the date-time part (YYYY-MM-DDTHH:mm) from ISO format
+                         let reminderDateTime = data['reminder_time'];
+                         // Handle both formats: with and without timezone
+                         if (reminderDateTime.includes('T')) {
+                              reminderDateTime = reminderDateTime.split('T')[0] + 'T' + reminderDateTime.split('T')[1].substring(0, 5);
+                         }
+                         $('#reminder-datetime').val(reminderDateTime);
+                         console.log('Loaded reminder datetime:', reminderDateTime);
                     }
                } else {
                     $('#reminder-enabled').prop('checked', false);

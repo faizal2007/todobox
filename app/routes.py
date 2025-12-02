@@ -907,7 +907,9 @@ def add():
                         reminder_dt_utc = convert_from_user_timezone(reminder_dt, current_user.timezone)
                         t.reminder_time = reminder_dt_utc
                         t.reminder_enabled = True
-                    except ValueError:
+                        print(f"DEBUG: Updated reminder for todo {todo_id}: {reminder_datetime} ({current_user.timezone}) -> UTC {reminder_dt_utc}")
+                    except ValueError as e:
+                        print(f"DEBUG: Failed to parse reminder datetime: {reminder_datetime} - {str(e)}")
                         pass
                 elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
                     try:
@@ -923,13 +925,16 @@ def add():
                         
                         t.reminder_time = reminder_dt
                         t.reminder_enabled = True
+                        print(f"DEBUG: Updated reminder for todo {todo_id}: {minutes} {reminder_before_unit} before target")
                     except (ValueError, TypeError):
+                        print(f"DEBUG: Failed to parse reminder before parameters")
                         pass
             else:
                 # Clear reminder if disabled
                 t.reminder_enabled = False
                 t.reminder_time = None
                 t.reminder_sent = False
+                print(f"DEBUG: Cleared reminder for todo {todo_id}")
 
             if getTitle == title and getActivities == activites :
                 if schedule_day != "today" or getTomorrow == '1':
@@ -942,6 +947,8 @@ def add():
                     t.modified = datetime.now()
                     db.session.commit()  # type: ignore[attr-defined]
                 else:
+                    # Even if title/content didn't change, we still need to save reminder changes
+                    db.session.commit()  # type: ignore[attr-defined]
                     return make_response(
                         jsonify({
                             'status': 'failed',
