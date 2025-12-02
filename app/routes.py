@@ -839,13 +839,16 @@ def add():
             if reminder_enabled and reminder_type:
                 if reminder_type == "custom" and reminder_datetime:
                     try:
+                        from app.timezone_utils import convert_from_user_timezone
                         # Parse datetime-local format (YYYY-MM-DDTHH:mm)
                         reminder_dt = datetime.fromisoformat(reminder_datetime)
-                        t.reminder_time = reminder_dt
+                        # Convert from user's timezone to UTC
+                        reminder_dt_utc = convert_from_user_timezone(reminder_dt, current_user.timezone)
+                        t.reminder_time = reminder_dt_utc
                         t.reminder_enabled = True
-                        print(f"DEBUG: Reminder set for {reminder_dt}")
-                    except ValueError:
-                        print(f"DEBUG: Invalid reminder datetime format: {reminder_datetime}")
+                        print(f"DEBUG: Reminder set for {reminder_datetime} ({current_user.timezone}) -> UTC {reminder_dt_utc}")
+                    except ValueError as e:
+                        print(f"DEBUG: Invalid reminder datetime format: {reminder_datetime} - {str(e)}")
                 elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
                     try:
                         minutes = int(reminder_before_minutes)
@@ -898,8 +901,11 @@ def add():
             if reminder_enabled and reminder_type:
                 if reminder_type == "custom" and reminder_datetime:
                     try:
+                        from app.timezone_utils import convert_from_user_timezone
                         reminder_dt = datetime.fromisoformat(reminder_datetime)
-                        t.reminder_time = reminder_dt
+                        # Convert from user's timezone to UTC
+                        reminder_dt_utc = convert_from_user_timezone(reminder_dt, current_user.timezone)
+                        t.reminder_time = reminder_dt_utc
                         t.reminder_enabled = True
                     except ValueError:
                         pass
@@ -1010,6 +1016,13 @@ def getTodo(id):
                 else:
                     button = todoBtn + delBtn
 
+        # Convert reminder time to user's timezone for display in the form
+        reminder_time_display = None
+        if t.reminder_time:
+            from app.timezone_utils import convert_to_user_timezone
+            reminder_dt_user = convert_to_user_timezone(t.reminder_time, current_user.timezone)
+            reminder_time_display = reminder_dt_user.isoformat() if reminder_dt_user else None
+        
         return make_response(
             jsonify({
                 'status': 'Success',
@@ -1019,7 +1032,7 @@ def getTodo(id):
                 'modified': t.modified,
                 'button': button,
                 'reminder_enabled': t.reminder_enabled or False,
-                'reminder_time': t.reminder_time.isoformat() if t.reminder_time else None,
+                'reminder_time': reminder_time_display,
                 'reminder_sent': t.reminder_sent or False
             }), 200
         )
