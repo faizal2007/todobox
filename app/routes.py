@@ -718,12 +718,10 @@ def mark_done(todo_id):
         db.session.commit()  # type: ignore[attr-defined]
         Tracker.add(todo.id, 6, date_entry)  # Status 6 = Done
 
-    return make_response(
-        jsonify({
+        return jsonify({
             'status': 'Success',
             'todo_id': todo.id if todo else None
         }), 200
-    )
 
 @app.route('/<path:todo>/view')
 @login_required
@@ -805,12 +803,10 @@ def add():
         tomorrow = datetime.now() + timedelta(days=1)
 
         if getTitle == '':
-            return make_response(
-                        jsonify({
-                            'status': 'failed',
-                            'msg': 'Title Required.'
-                        })
-                    )
+            return jsonify({
+                'status': 'failed',
+                'msg': 'Title Required.'
+            }), 400
 
         # Legacy support for old 'tomorrow' parameter
         if 'tomorrow' in request.form:
@@ -888,12 +884,10 @@ def add():
             # Filter by user_id to ensure user can only update their own todos
             t = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
             if not t:
-                return make_response(
-                    jsonify({
-                        'status': 'failed',
-                        'msg': 'Todo not found or access denied.'
-                    })
-                )
+                return jsonify({
+                    'status': 'failed',
+                    'msg': 'Todo not found or access denied.'
+                }), 404
             title = t.name
             activites = t.details
 
@@ -953,12 +947,10 @@ def add():
                 else:
                     # Even if title/content didn't change, we still need to save reminder changes
                     db.session.commit()  # type: ignore[attr-defined]
-                    return make_response(
-                        jsonify({
-                            'status': 'failed',
-                            'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>'
-                        })
-                    )
+                    return jsonify({
+                        'status': 'failed',
+                        'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>'
+                    }), 200
             else:
                 t.name = getTitle
                 t.details = getActivities
@@ -975,11 +967,9 @@ def add():
                     Tracker.add(todo_id, 5, datetime.now())  # Status 5 = new
                     print(f"DEBUG: Updated todo for TODAY - Tracker added with timestamp: {datetime.now()}")
                 
-                return make_response(
-                    jsonify({
-                        'status': 'success'
-                    })
-                )
+                return jsonify({
+                    'status': 'success'
+                }), 200
 
 
     return redirect(url_for('list', id='today'))
@@ -1034,19 +1024,17 @@ def getTodo(id):
             reminder_dt_user = convert_to_user_timezone(t.reminder_time, current_user.timezone)
             reminder_time_display = reminder_dt_user.isoformat() if reminder_dt_user else None
         
-        return make_response(
-            jsonify({
-                'status': 'Success',
-                'id': t.id,
-                'title': t.name,
-                'activities': t.details,
-                'modified': t.modified,
-                'button': button,
-                'reminder_enabled': t.reminder_enabled or False,
-                'reminder_time': reminder_time_display,
-                'reminder_sent': t.reminder_sent or False
-            }), 200
-        )
+        return jsonify({
+            'status': 'Success',
+            'id': t.id,
+            'title': t.name,
+            'activities': t.details,
+            'modified': t.modified,
+            'button': button,
+            'reminder_enabled': t.reminder_enabled or False,
+            'reminder_time': reminder_time_display,
+            'reminder_sent': t.reminder_sent or False
+        }), 200
     return redirect(url_for('list', id='today'))
 
 @app.route('/<path:id>/list')
@@ -1086,12 +1074,10 @@ def done(id, todo_id):
         todo.modified = date_entry
         Tracker.add(todo.id, 6, date_entry)  # Status 6 = Done
 
-    return make_response(
-            jsonify({
-                'status': 'Success',
-                'todo_id': todo.id
-            }), 200
-    )
+        return jsonify({
+            'status': 'Success',
+            'todo_id': todo.id
+        }), 200
 
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
