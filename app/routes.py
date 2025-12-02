@@ -554,6 +554,13 @@ def setup_account():
             if form.fullname.data and form.fullname.data.strip():
                 user.fullname = form.fullname.data.strip()
             
+            # Auto-detect timezone from IP address
+            from app.geolocation import detect_timezone_from_ip
+            detected_tz = detect_timezone_from_ip()
+            if detected_tz:
+                user.timezone = detected_tz
+                print(f"DEBUG: Auto-detected timezone {detected_tz} for user {user.email}")
+            
             db.session.add(user)  # type: ignore[attr-defined]
             db.session.commit()  # type: ignore[attr-defined]
             

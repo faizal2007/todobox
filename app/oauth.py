@@ -113,6 +113,13 @@ def process_google_callback(code):
         if name:
             new_user.fullname = name
         
+        # Auto-detect timezone from IP address
+        from app.geolocation import detect_timezone_from_ip
+        detected_tz = detect_timezone_from_ip()
+        if detected_tz:
+            new_user.timezone = detected_tz
+            print(f"DEBUG: Auto-detected timezone {detected_tz} for Google user {email}")
+        
         db.session.add(new_user)  # type: ignore[attr-defined]
         db.session.commit()  # type: ignore[attr-defined]
         
