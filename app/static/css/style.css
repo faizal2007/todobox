@@ -1,11 +1,12 @@
 /* Move down content because we have a fixed navbar that is 3.5rem tall */
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
 body {
-  padding-top: 2rem;
+  padding-top: 0;
 }
 
 .navbar {
   font-family: 'Big Shoulders Stencil Display', cursive;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .edit {
@@ -32,12 +33,32 @@ body {
 .nav-user .account-user-name {
   display: block;
   font-weight: 600;
+  color: #fff;
 }
 
 .nav-user .account-position {
   display: block;
   font-size: 12px;
   margin-top: -3px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* User info card background blend */
+.nav-user {
+  background: transparent !important;
+  backdrop-filter: none;
+}
+
+#topbar-userdrop.nav-link {
+  background: transparent !important;
+  border: none;
+}
+
+/* Remove white background from avatar area */
+.account-user-avatar {
+  background-color: transparent !important;
+  padding: 0 !important;
+  margin-right: 8px !important;
 }
 
 /* PWA Install button styling */
@@ -80,12 +101,25 @@ body {
   font-family: 'Caveat', cursive;
   font-size: 32px;
   font-weight: 700;
+  color: #fff !important;
 }
 
-/* User avatar styling */
-.account-user-avatar img {
-  width: 32px;
-  height: 32px;
+/* Keep topbar menu on the right */
+.topbar-right-menu {
+  margin-left: auto;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+/* Navbar background gradient */
+.navbar-custom,
+.topnav-navbar,
+.topnav {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.navbar-custom .container-fluid {
+  display: flex;
+  align-items: center;
 }
 
 /* Mobile responsive styles */
