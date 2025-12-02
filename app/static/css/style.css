@@ -59,10 +59,23 @@ body {
 }
 
 /* Logo styling */
+.topnav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.topnav-logo .logo-icon {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+}
+
 .topnav-logo .app-title {
   display: inline-block;
   margin: 0;
-  background-color: #ccffcc;
+  background-color: transparent;
   padding: 2px 4px;
   font-family: 'Caveat', cursive;
   font-size: 32px;
