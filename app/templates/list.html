@@ -245,6 +245,25 @@
           }
      });
 
+     // Reminder functionality
+     $('#reminder-enabled').change(function() {
+          if ($(this).is(':checked')) {
+               $('#reminder-options').slideDown(200);
+          } else {
+               $('#reminder-options').slideUp(200);
+          }
+     });
+
+     $('input[name="reminder_type"]').change(function() {
+          if ($(this).val() === 'custom') {
+               $('#reminder-custom-time').show();
+               $('#reminder-before-options').hide();
+          } else {
+               $('#reminder-custom-time').hide();
+               $('#reminder-before-options').show();
+          }
+     });
+
      /** Script for html modal **/
 
      $('.create-todo').click(function() {
@@ -254,6 +273,16 @@
           let todo_id = $("input[name='todo_id']").val();
           let schedule_day = $('input[name="schedule_day"]:checked').val();
           let custom_date = $('#custom_date').val();
+          
+          // Reminder data
+          let reminderEnabled = $('#reminder-enabled').is(':checked');
+          let reminderData = {
+               enabled: reminderEnabled,
+               type: reminderEnabled ? $('input[name="reminder_type"]:checked').val() : null,
+               datetime: reminderEnabled ? $('#reminder-datetime').val() : null,
+               beforeMinutes: reminderEnabled ? $('#reminder-before-minutes').val() : null,
+               beforeUnit: reminderEnabled ? $('#reminder-before-unit').val() : null
+          };
           
           if(title) {
                var $button = $(this);
@@ -271,7 +300,12 @@
                     'title': title,
                     'activities': activities,
                     'schedule_day': schedule_day,
-                    'custom_date': custom_date
+                    'custom_date': custom_date,
+                    'reminder_enabled': reminderData.enabled,
+                    'reminder_type': reminderData.type,
+                    'reminder_datetime': reminderData.datetime,
+                    'reminder_before_minutes': reminderData.beforeMinutes,
+                    'reminder_before_unit': reminderData.beforeUnit
                },
                function(data){
                     console.log('Server response:', data);

@@ -220,6 +220,9 @@ class Todo(db.Model): # type: ignore[attr-defined]
     timestamp = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
     modified = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
     target_date = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]
+    reminder_enabled = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Whether reminder is enabled
+    reminder_time = db.Column(db.DateTime, nullable=True) # type: ignore[attr-defined]  # When to send reminder (can be before target_date)
+    reminder_sent = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Whether reminder has been sent
     user_id = db.Column(db.Integer, db.ForeignKey('user.id')) # type: ignore[attr-defined]
     tracker_entries = db.relationship('Tracker', backref='todo', lazy='dynamic') # type: ignore[attr-defined]
 
@@ -261,6 +264,26 @@ class Todo(db.Model): # type: ignore[attr-defined]
 
     def __repr__(self):
         return '<Todo {}>'.format(self.name)
+    
+    def set_reminder(self, reminder_datetime):
+        """Set a reminder for this todo"""
+        self.reminder_enabled = True
+        self.reminder_time = reminder_datetime
+        self.reminder_sent = False
+        db.session.commit()  # type: ignore[attr-defined]
+    
+    def clear_reminder(self):
+        """Clear/disable reminder for this todo"""
+        self.reminder_enabled = False
+        self.reminder_time = None
+        self.reminder_sent = False
+        db.session.commit()  # type: ignore[attr-defined]
+    
+    def has_pending_reminder(self):
+        """Check if todo has a pending reminder to be sent"""
+        if not self.reminder_enabled or self.reminder_sent or not self.reminder_time:
+            return False
+        return datetime.now() >= self.reminder_time
 
     @classmethod
     def getList(cls, type, start, end, user_id=None):

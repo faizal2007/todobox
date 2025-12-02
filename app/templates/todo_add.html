@@ -44,6 +44,49 @@
 							<input type="date" class="form-control form-control-sm" id="custom_date" name="custom_date">
 						</div>
 					</div>
+					
+					<!-- Reminder Section -->
+					<div class="form-group">
+						<div class="custom-control custom-checkbox">
+							<input type="checkbox" class="custom-control-input" id="reminder-enabled" name="reminder-enabled">
+							<label class="custom-control-label" for="reminder-enabled">
+								<i class="mdi mdi-bell-outline mr-1"></i>Set Reminder
+							</label>
+						</div>
+					</div>
+					
+					<div class="form-group" id="reminder-options" style="display: none; padding-left: 1.5rem;">
+						<label for="reminder-type">Remind me:</label>
+						<div class="btn-group btn-group-toggle d-block mb-3" data-toggle="buttons">
+							<label class="btn btn-outline-secondary btn-sm active" for="reminder-custom">
+								<input type="radio" name="reminder_type" id="reminder-custom" value="custom" checked autocomplete="off"> At Specific Time
+							</label>
+							<label class="btn btn-outline-secondary btn-sm" for="reminder-before">
+								<input type="radio" name="reminder_type" id="reminder-before" value="before" autocomplete="off"> Before Target
+							</label>
+						</div>
+						
+						<!-- Custom reminder time -->
+						<div id="reminder-custom-time" class="mb-3">
+							<label for="reminder-datetime">Date & Time:</label>
+							<input type="datetime-local" class="form-control form-control-sm" id="reminder-datetime" name="reminder-datetime">
+						</div>
+						
+						<!-- Before target date options -->
+						<div id="reminder-before-options" style="display: none;" class="mb-3">
+							<label for="reminder-before-minutes">Remind me before:</label>
+							<div class="input-group input-group-sm">
+								<input type="number" class="form-control" id="reminder-before-minutes" name="reminder-before-minutes" value="30" min="1" max="1440">
+								<div class="input-group-append">
+									<select class="custom-select" id="reminder-before-unit" name="reminder-before-unit">
+										<option value="minutes">Minutes</option>
+										<option value="hours">Hours</option>
+										<option value="days">Days</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-light btn-rounded" data-dismiss="modal">Close</button>

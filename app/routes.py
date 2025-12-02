@@ -713,6 +713,13 @@ def add():
         schedule_day = request.form.get("schedule_day", "today")
         custom_date = request.form.get("custom_date", "")
         
+        # Handle reminder parameters
+        reminder_enabled = request.form.get("reminder_enabled") == "true"
+        reminder_type = request.form.get("reminder_type")
+        reminder_datetime = request.form.get("reminder_datetime")
+        reminder_before_minutes = request.form.get("reminder_before_minutes")
+        reminder_before_unit = request.form.get("reminder_before_unit")
+        
         print(f"DEBUG: schedule_day={schedule_day}, custom_date={custom_date}")  # Debug line
         
         # Calculate target date based on schedule selection
@@ -764,6 +771,36 @@ def add():
             else:
                 db.session.add(t)  # type: ignore[attr-defined]
 
+            # Handle reminder setup
+            if reminder_enabled and reminder_type:
+                if reminder_type == "custom" and reminder_datetime:
+                    try:
+                        # Parse datetime-local format (YYYY-MM-DDTHH:mm)
+                        reminder_dt = datetime.fromisoformat(reminder_datetime)
+                        t.reminder_time = reminder_dt
+                        t.reminder_enabled = True
+                        print(f"DEBUG: Reminder set for {reminder_dt}")
+                    except ValueError:
+                        print(f"DEBUG: Invalid reminder datetime format: {reminder_datetime}")
+                elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
+                    try:
+                        minutes = int(reminder_before_minutes)
+                        # Calculate reminder time based on target_date
+                        if reminder_before_unit == "minutes":
+                            reminder_dt = target_date - timedelta(minutes=minutes)
+                        elif reminder_before_unit == "hours":
+                            reminder_dt = target_date - timedelta(hours=minutes)
+                        elif reminder_before_unit == "days":
+                            reminder_dt = target_date - timedelta(days=minutes)
+                        else:
+                            reminder_dt = target_date - timedelta(minutes=minutes)
+                        
+                        t.reminder_time = reminder_dt
+                        t.reminder_enabled = True
+                        print(f"DEBUG: Reminder set for {minutes} {reminder_before_unit} before target date")
+                    except (ValueError, TypeError):
+                        print(f"DEBUG: Invalid reminder before parameters")
+
             db.session.commit()  # type: ignore[attr-defined]
             
             print(f"DEBUG: Todo created with ID: {t.id}, timestamp: {t.timestamp}, modified: {t.modified}")  # Debug line
@@ -792,6 +829,37 @@ def add():
                 )
             title = t.name
             activites = t.details
+
+            # Handle reminder updates
+            if reminder_enabled and reminder_type:
+                if reminder_type == "custom" and reminder_datetime:
+                    try:
+                        reminder_dt = datetime.fromisoformat(reminder_datetime)
+                        t.reminder_time = reminder_dt
+                        t.reminder_enabled = True
+                    except ValueError:
+                        pass
+                elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
+                    try:
+                        minutes = int(reminder_before_minutes)
+                        if reminder_before_unit == "minutes":
+                            reminder_dt = target_date - timedelta(minutes=minutes)
+                        elif reminder_before_unit == "hours":
+                            reminder_dt = target_date - timedelta(hours=minutes)
+                        elif reminder_before_unit == "days":
+                            reminder_dt = target_date - timedelta(days=minutes)
+                        else:
+                            reminder_dt = target_date - timedelta(minutes=minutes)
+                        
+                        t.reminder_time = reminder_dt
+                        t.reminder_enabled = True
+                    except (ValueError, TypeError):
+                        pass
+            else:
+                # Clear reminder if disabled
+                t.reminder_enabled = False
+                t.reminder_time = None
+                t.reminder_sent = False
 
             if getTitle == title and getActivities == activites :
                 if schedule_day != "today" or getTomorrow == '1':
