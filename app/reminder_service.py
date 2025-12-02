@@ -33,19 +33,15 @@ class ReminderService:
         
         if user_id:
             query = query.filter(Todo.user_id == user_id)
-            
-            # Get user's timezone
-            user = User.query.get(user_id)
-            user_tz = pytz.timezone(user.timezone or 'UTC')
-            now = datetime.now(user_tz).replace(tzinfo=None)
-        else:
-            # For all users, check in UTC
-            now = datetime.now()
         
-        # Filter by reminder time
+        # Get current time in UTC for comparison (reminder_time is stored in UTC)
+        now = datetime.now(pytz.UTC).replace(tzinfo=None)
+        
+        # Filter by reminder time - only include reminders where time has passed
+        # reminder_time is stored as UTC, so we compare against UTC now
         results = []
         for todo in query.all():
-            if todo.reminder_time and todo.reminder_time <= now:
+            if todo.reminder_time and todo.reminder_time < now:
                 results.append(todo)
         
         return results

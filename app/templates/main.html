@@ -66,10 +66,16 @@
 				
 				// Reminder checking system
 				function initReminderSystem() {
-					// Check for reminders every 30 seconds
-					setInterval(checkReminders, 30000);
-					// Also check on page load
+					// Check for reminders every 10 seconds (more frequent for better UX)
+					const reminderCheckInterval = setInterval(checkReminders, 10000);
+					// Also check on page load immediately
 					checkReminders();
+					// Check again after 2 seconds (allow page to fully load)
+					setTimeout(checkReminders, 2000);
+					console.log('Reminder system initialized - checking every 10 seconds');
+					
+					// Store interval ID globally so we can clear it if needed
+					window.reminderCheckInterval = reminderCheckInterval;
 				}
 				
 				async function checkReminders() {
@@ -83,14 +89,24 @@
 						
 						if (response.ok) {
 							const data = await response.json();
+							console.log('Reminder check response:', data);
 							
 							if (data.reminders && data.reminders.length > 0) {
+								console.log(`Found ${data.reminders.length} pending reminders`);
 								// Process each pending reminder
 								data.reminders.forEach(reminder => {
+									console.log('Processing reminder:', reminder);
 									showReminderNotification(reminder);
-									markReminderSent(reminder.todo_id);
+									// Mark as sent after showing notification
+									setTimeout(() => {
+										markReminderSent(reminder.todo_id);
+									}, 500);
 								});
+							} else {
+								console.log('No pending reminders at', new Date().toLocaleTimeString());
 							}
+						} else {
+							console.error('Reminder check failed with status:', response.status);
 						}
 					} catch (error) {
 						console.error('Error checking reminders:', error);
@@ -100,39 +116,50 @@
 				function showReminderNotification(reminder) {
 					// Show in-app notification
 					const notification = document.createElement('div');
-					notification.className = 'alert alert-info alert-dismissible fade show reminder-notification';
+					notification.className = 'alert alert-danger alert-dismissible fade show reminder-notification';
 					notification.setAttribute('role', 'alert');
 					notification.style.cssText = `
 						position: fixed;
 						top: 80px;
 						right: 20px;
-						width: 350px;
+						width: 380px;
 						max-width: 90%;
 						z-index: 9999;
-						box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+						box-shadow: 0 6px 16px rgba(255, 85, 85, 0.3);
 						animation: slideIn 0.3s ease-out;
+						background-color: #fff3cd;
+						border: 2px solid #ff5555;
+						border-left: 6px solid #ff5555;
 					`;
 					
+					// Create time display if available
+					let timeDisplay = '';
+					if (reminder.reminder_time) {
+						const reminderTime = new Date(reminder.reminder_time);
+						timeDisplay = `<small style="color: #666; display: block; margin-top: 3px;">Due: ${reminderTime.toLocaleTimeString()}</small>`;
+					}
+					
 					notification.innerHTML = `
-						<div style="display: flex; align-items: center; gap: 10px;">
-							<i class="mdi mdi-bell-ring" style="font-size: 24px; color: #ff5555;"></i>
-							<div>
-								<strong style="color: #ff5555;">Reminder</strong>
-								<div style="font-size: 14px; margin-top: 5px;">${reminder.title}</div>
-								<small style="color: #666; display: block; margin-top: 3px;">${reminder.details || 'Time to work on this task'}</small>
+						<div style="display: flex; align-items: center; gap: 12px;">
+							<i class="mdi mdi-bell-ring" style="font-size: 28px; color: #ff5555; animation: pulse 1.5s infinite;"></i>
+							<div style="flex: 1;">
+								<strong style="color: #ff5555; font-size: 16px;">⏰ Reminder</strong>
+								<div style="font-size: 15px; margin-top: 5px; font-weight: 500;">${reminder.title || 'Task Reminder'}</div>
+								${reminder.details ? `<small style="color: #666; display: block; margin-top: 3px;">${reminder.details}</small>` : ''}
+								${timeDisplay}
 							</div>
 						</div>
-						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close" style="position: absolute; right: 10px; top: 10px;">
 							<span aria-hidden="true">&times;</span>
 						</button>
 					`;
 					
-					// Add animation
+					// Add animations
 					const style = document.createElement('style');
 					style.textContent = `
 						@keyframes slideIn {
 							from {
-								transform: translateX(400px);
+								transform: translateX(420px);
 								opacity: 0;
 							}
 							to {
@@ -146,28 +173,59 @@
 								opacity: 1;
 							}
 							to {
-								transform: translateX(400px);
+								transform: translateX(420px);
 								opacity: 0;
 							}
 						}
+						@keyframes pulse {
+							0%, 100% {
+								opacity: 1;
+							}
+							50% {
+								opacity: 0.5;
+							}
+						}
 					`;
-					document.head.appendChild(style);
+					// Only add style if not already present
+					if (!document.querySelector('style[data-reminder-animation]')) {
+						style.setAttribute('data-reminder-animation', 'true');
+						document.head.appendChild(style);
+					}
 					
 					document.body.appendChild(notification);
+					console.log('Reminder notification displayed');
 					
-					// Auto-dismiss after 8 seconds
+					// Auto-dismiss after 10 seconds (longer than before for visibility)
 					setTimeout(() => {
 						notification.style.animation = 'slideOut 0.3s ease-out';
 						setTimeout(() => {
 							notification.remove();
 						}, 300);
-					}, 8000);
+					}, 10000);
+					
+					// Play a subtle notification sound if available
+					try {
+						const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+						const oscillator = audioContext.createOscillator();
+						const gainNode = audioContext.createGain();
+						oscillator.connect(gainNode);
+						gainNode.connect(audioContext.destination);
+						oscillator.frequency.value = 800;
+						gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+						gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+						oscillator.start(audioContext.currentTime);
+						oscillator.stop(audioContext.currentTime + 0.5);
+					} catch (e) {
+						// Audio context not supported, silently fail
+					}
 					
 					// Browser notification if supported
 					if ('Notification' in window && Notification.permission === 'granted') {
-						new Notification(reminder.title, {
+						new Notification(reminder.title || 'Task Reminder', {
 							body: reminder.details || 'Time to work on this task',
-							icon: '/static/assets/icons/icon-192x192.png'
+							icon: '/static/assets/icons/icon-192x192.png',
+							tag: `reminder-${reminder.todo_id}`, // Prevent duplicate notifications
+							requireInteraction: true // Keep notification visible until user interacts
 						});
 					}
 				}

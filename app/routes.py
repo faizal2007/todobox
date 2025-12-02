@@ -907,6 +907,8 @@ def add():
                         reminder_dt_utc = convert_from_user_timezone(reminder_dt, current_user.timezone)
                         t.reminder_time = reminder_dt_utc
                         t.reminder_enabled = True
+                        # Reset reminder_sent flag so the new reminder will trigger
+                        t.reminder_sent = False
                         print(f"DEBUG: Updated reminder for todo {todo_id}: {reminder_datetime} ({current_user.timezone}) -> UTC {reminder_dt_utc}")
                     except ValueError as e:
                         print(f"DEBUG: Failed to parse reminder datetime: {reminder_datetime} - {str(e)}")
@@ -925,6 +927,8 @@ def add():
                         
                         t.reminder_time = reminder_dt
                         t.reminder_enabled = True
+                        # Reset reminder_sent flag so the new reminder will trigger
+                        t.reminder_sent = False
                         print(f"DEBUG: Updated reminder for todo {todo_id}: {minutes} {reminder_before_unit} before target")
                     except (ValueError, TypeError):
                         print(f"DEBUG: Failed to parse reminder before parameters")
