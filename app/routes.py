@@ -999,7 +999,10 @@ def getTodo(id):
                 'title': t.name,
                 'activities': t.details,
                 'modified': t.modified,
-                'button': button
+                'button': button,
+                'reminder_enabled': t.reminder_enabled or False,
+                'reminder_time': t.reminder_time.isoformat() if t.reminder_time else None,
+                'reminder_sent': t.reminder_sent or False
             }), 200
         )
     return redirect(url_for('list', id='today'))

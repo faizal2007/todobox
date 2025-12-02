@@ -152,6 +152,23 @@
                $('#title-input-normal').val(data['title']);
                $("input[name='todo_id']").val(data['id']);
                simplemde.value(data['activities']);
+               
+               // Load reminder data if it exists
+               if (data['reminder_enabled']) {
+                    $('#reminder-enabled').prop('checked', true);
+                    $('#reminder-options').show();
+                    
+                    // Determine reminder type from reminder_time
+                    if (data['reminder_time']) {
+                         // For now, set to custom time type
+                         $('input[name="reminder_type"][value="custom"]').prop('checked', true).trigger('change');
+                         $('#reminder-datetime').val(data['reminder_time'].slice(0, 16)); // Format: YYYY-MM-DDTHH:mm
+                    }
+               } else {
+                    $('#reminder-enabled').prop('checked', false);
+                    $('#reminder-options').hide();
+               }
+               
                console.log(data)
                
                // Hide loading state after modal is shown
@@ -214,6 +231,16 @@
           $('label[for="today"]').addClass('active');
           $('label[for="tomorrow"], label[for="custom_day"]').removeClass('active');
           $('#custom-date-picker').hide();
+          
+          // Reset reminder fields
+          $('#reminder-enabled').prop('checked', false);
+          $('#reminder-options').hide();
+          $('input[name="reminder_type"][value="custom"]').prop('checked', true);
+          $('#reminder-datetime').val('');
+          $('#reminder-before-minutes').val('30');
+          $('#reminder-before-unit').val('minutes');
+          $('#reminder-custom-time').show();
+          $('#reminder-before-options').hide();
      })
 
      // Handle schedule day selection
