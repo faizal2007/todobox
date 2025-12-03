@@ -74,7 +74,8 @@ Examples:
     args = parser.parse_args()
     
     # Build pytest command as a list (safer than shell=True)
-    cmd = ['python', '-m', 'pytest', 'tests/test_functional.py']
+    test_file = 'tests/test_functional.py'
+    cmd = ['python', '-m', 'pytest', test_file]
     
     # Add test suite selection
     suite_map = {
@@ -89,8 +90,8 @@ Examples:
     }
     
     if args.suite != 'all':
-        # Append the test class to the test file path as a single element
-        cmd[3] = cmd[3] + suite_map[args.suite]
+        # Replace the test file with the file + test class selector
+        cmd[cmd.index(test_file)] = test_file + suite_map[args.suite]
     
     # Add flags
     if args.verbose:
