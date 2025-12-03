@@ -5,6 +5,60 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - Dashboard Time Period Grouping - 2025-12-03
+
+### Added
+
+- **Dashboard Time Period Grouping**: Todos are now grouped into 4 time periods:
+  - Today: Shows todos created/modified today
+  - Weekly: Shows todos from the current week
+  - Monthly: Shows todos from the current month
+  - Yearly: Shows todos from the current year
+- **Bootstrap Tabs/Pills Navigation**: Added interactive tabs to switch between different time period views
+  - Modern tab design with hover effects and smooth transitions
+  - Icons for each time period (Today, Weekly, Monthly, Yearly)
+  - Active tab highlighting with custom styling
+- **Multiple Donut Charts**: Each time period has its own dedicated donut chart
+  - Separate charts for Today, Weekly, Monthly, and Yearly views
+  - Charts display todo status distribution (Done, Pending, Re-assign)
+  - Fallback "No data" message when a time period has no todos
+  - Smooth animations and responsive design
+- **Fake Todo Generator**: Added option 9 in `todomanage.py` to generate test data
+  - Interactive menu option to create fake todos for testing dashboard charts
+  - Generates todos spanning different time periods (today, week, month, year)
+  - Configurable number of todos (1-1000)
+  - Smart distribution: more recent todos are generated more frequently
+  - Random task names and details from predefined lists
+  - Status distribution: 30% pending, 50% done, 20% re-assign
+  - Optional deletion of existing todos before generation
+  - Shows distribution summary after generation
+
+### Changed
+
+- Updated `dashboard()` route in `app/routes.py`:
+  - Added `_categorize_todos_by_period()` helper function to group todos by time ranges
+  - Modified dashboard to pass `time_period_data` to the template
+  - Filtered todos by current user to ensure proper data isolation
+- Enhanced `dashboard.html` template:
+  - Replaced single chart with tabbed interface using Bootstrap pills
+  - Added four separate canvas elements for each time period chart
+  - Implemented JavaScript to create and manage multiple Chart.js instances
+  - Added custom CSS styling for professional-looking tabs
+  - Improved chart titles to show the current time period context
+- Updated `todomanage.py`:
+  - Added `generate_fake_todos()` function for testing data generation
+  - Updated main menu to include new option (option 9)
+  - Changed "Exit" from option 9 to option 10
+  - Made database connection imports conditional to avoid import errors
+
+### Technical Details
+
+- Time period calculation uses Python's `datetime` to determine date ranges
+- Charts are initialized on page load and properly resized when tabs are switched
+- Maintains backward compatibility with existing dashboard statistics
+- All charts use consistent color scheme (Green for Done, Orange for Re-assign, Yellow for Pending)
+- Fake data generator uses weighted random selection for realistic distribution across time periods
+
 ## [1.3.12] - Security Fix - 2025-12-03
 
 ### Security

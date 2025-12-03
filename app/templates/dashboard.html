@@ -16,6 +16,38 @@
     .card {
         border-radius: 0.5rem;
     }
+    
+    /* Style for the tabs/pills */
+    .nav-pills .nav-link {
+        border-radius: 0.5rem;
+        margin-right: 0.5rem;
+        color: #6c757d;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-pills .nav-link:hover {
+        background-color: #e9ecef;
+        color: #495057;
+        transform: translateY(-2px);
+    }
+    
+    .nav-pills .nav-link.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+        box-shadow: 0 0.5rem 1rem rgba(0, 123, 255, 0.3);
+    }
+    
+    .nav-pills .nav-link i {
+        margin-right: 0.25rem;
+    }
+    
+    /* Tab content styling */
+    .tab-content {
+        padding-top: 1rem;
+    }
 </style>
 {% endblock %}
 
@@ -37,8 +69,52 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div style="position: relative; width: 100%; height: 400px;">
-                        <canvas id="todoChart"></canvas>
+                    <!-- Bootstrap Tabs/Pills for Time Periods -->
+                    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="pills-today-tab" data-toggle="pill" data-target="#pills-today" type="button" role="tab" aria-controls="pills-today" aria-selected="true">
+                                <i class="mdi mdi-calendar-today"></i> Today
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-weekly-tab" data-toggle="pill" data-target="#pills-weekly" type="button" role="tab" aria-controls="pills-weekly" aria-selected="false">
+                                <i class="mdi mdi-calendar-week"></i> Weekly
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-monthly-tab" data-toggle="pill" data-target="#pills-monthly" type="button" role="tab" aria-controls="pills-monthly" aria-selected="false">
+                                <i class="mdi mdi-calendar-month"></i> Monthly
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-yearly-tab" data-toggle="pill" data-target="#pills-yearly" type="button" role="tab" aria-controls="pills-yearly" aria-selected="false">
+                                <i class="mdi mdi-calendar"></i> Yearly
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="pills-tabContent">
+                        <div class="tab-pane fade show active" id="pills-today" role="tabpanel" aria-labelledby="pills-today-tab">
+                            <div style="position: relative; width: 100%; height: 400px;">
+                                <canvas id="todoChartToday"></canvas>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="pills-weekly" role="tabpanel" aria-labelledby="pills-weekly-tab">
+                            <div style="position: relative; width: 100%; height: 400px;">
+                                <canvas id="todoChartWeekly"></canvas>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="pills-monthly" role="tabpanel" aria-labelledby="pills-monthly-tab">
+                            <div style="position: relative; width: 100%; height: 400px;">
+                                <canvas id="todoChartMonthly"></canvas>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="pills-yearly" role="tabpanel" aria-labelledby="pills-yearly-tab">
+                            <div style="position: relative; width: 100%; height: 400px;">
+                                <canvas id="todoChartYearly"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -247,29 +323,49 @@ document.addEventListener('DOMContentLoaded', function() {
         progressBar.setAttribute('aria-valuenow', ariaValue);
     }
     
-    // Initialize the chart
-    const canvas = document.getElementById('todoChart');
-    if (!canvas || typeof Chart === 'undefined') {
-        console.error('Chart initialization failed: missing canvas or Chart.js library');
+    // Check if Chart.js is available
+    if (typeof Chart === 'undefined') {
+        console.error('Chart initialization failed: Chart.js library not loaded');
         return;
     }
     
-    try {
-        const chartSegments = {{ chart_segments | tojson | safe }};
+    // Get time period data from server
+    const timePeriodData = {{ time_period_data | tojson | safe }};
+    console.log('Time period data:', timePeriodData);
+    
+    // Function to create a chart for a specific time period
+    function createPeriodChart(canvasId, periodData, periodLabel) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.error(`Canvas ${canvasId} not found`);
+            return null;
+        }
+        
         const ctx = canvas.getContext('2d');
         
-        // Create enhanced 3-segment doughnut chart
-        new Chart(ctx, {
+        // Check if period has any data
+        if (!periodData || Object.keys(periodData).length === 0) {
+            // Display "No data" message
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#6c757d';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('No todos for ' + periodLabel, canvas.width / 2, canvas.height / 2);
+            return null;
+        }
+        
+        // Create chart
+        return new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: Object.keys(chartSegments).map(status => {
+                labels: Object.keys(periodData).map(status => {
                     if (status === 'done') return 'Done';
                     if (status === 're-assign') return 'Re-assign';
                     if (status === 'pending') return 'Pending';
                     return status.charAt(0).toUpperCase() + status.slice(1);
                 }),
                 datasets: [{
-                    data: Object.values(chartSegments),
+                    data: Object.values(periodData),
                     backgroundColor: [
                         '#28a745',  // done - green
                         '#fd7e14',  // re-assign - orange
@@ -315,6 +411,18 @@ document.addEventListener('DOMContentLoaded', function() {
                                 return `${label}: ${value} todos (${percentage}%)`;
                             }
                         }
+                    },
+                    title: {
+                        display: true,
+                        text: periodLabel + ' Todo Status',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        padding: {
+                            top: 10,
+                            bottom: 20
+                        }
                     }
                 },
                 cutout: '65%',
@@ -330,10 +438,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
-        
-    } catch (error) {
-        console.error('Error creating chart:', error);
     }
+    
+    // Create charts for each time period
+    const charts = {
+        today: createPeriodChart('todoChartToday', timePeriodData.today, 'Today'),
+        weekly: createPeriodChart('todoChartWeekly', timePeriodData.weekly, 'This Week'),
+        monthly: createPeriodChart('todoChartMonthly', timePeriodData.monthly, 'This Month'),
+        yearly: createPeriodChart('todoChartYearly', timePeriodData.yearly, 'This Year')
+    };
+    
+    console.log('Charts created:', charts);
+    
+    // Handle tab switching to properly resize charts
+    const tabButtons = document.querySelectorAll('button[data-toggle="pill"]');
+    tabButtons.forEach(button => {
+        button.addEventListener('shown.bs.tab', function (e) {
+            // Resize chart when tab becomes visible
+            const targetId = e.target.getAttribute('data-target');
+            const chartCanvas = document.querySelector(targetId + ' canvas');
+            if (chartCanvas) {
+                const period = chartCanvas.id.replace('todoChart', '').toLowerCase();
+                if (charts[period]) {
+                    charts[period].resize();
+                }
+            }
+        });
+    });
 });
 </script>
 {% endblock %}

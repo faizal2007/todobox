@@ -10,8 +10,6 @@ import getpass
 import secrets
 from pathlib import Path
 import time
-import psycopg2
-import pymysql
 
 # Add the project root to the path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -23,6 +21,7 @@ def wait_for_database(db_type, host, port, user, password, database, max_attempt
     for attempt in range(max_attempts):
         try:
             if db_type == 'postgres':
+                import psycopg2
                 conn = psycopg2.connect(
                     host=host,
                     port=port,
@@ -33,6 +32,7 @@ def wait_for_database(db_type, host, port, user, password, database, max_attempt
                 )
                 conn.close()
             elif db_type == 'mysql':
+                import pymysql
                 # Try connecting as root first (MariaDB creates root user)
                 try:
                     conn = pymysql.connect(
@@ -82,9 +82,10 @@ def main():
         print("  6) Run")
         print("  7) Generate SECRET_KEY and SALT")
         print("  8) Uninstall and cleanup")
-        print("  9) Exit")
+        print("  9) Generate fake todos (for testing)")
+        print("  10) Exit")
         
-        choice = input("\nSelect option (1-9): ").strip()
+        choice = input("\nSelect option (1-10): ").strip()
         
         if choice == '1':
             create_user()
@@ -103,10 +104,12 @@ def main():
         elif choice == '8':
             uninstall_and_cleanup()
         elif choice == '9':
+            generate_fake_todos()
+        elif choice == '10':
             print("\n✅ Exiting.\n")
             sys.exit(0)
         else:
-            print("\n❌ Invalid option. Please select 1-9.")
+            print("\n❌ Invalid option. Please select 1-10.")
 
 def run_todobox():
     """Run the TodoBox Flask application"""
@@ -1396,6 +1399,236 @@ def get_valid_password():
         
         print("✓ Password is valid (strength: moderate)")
         return password
+
+def generate_fake_todos():
+    """Generate fake todos spanning different time periods for testing"""
+    from app import app, db
+    from app.models import User, Todo, Tracker, Status
+    from datetime import datetime, timedelta
+    import random
+    
+    with app.app_context():
+        print("\n\n" + "="*60)
+        print("  Generate Fake Todos for Testing".center(60))
+        print("="*60)
+        
+        # List users
+        users = User.query.all()
+        
+        if not users:
+            print("\n❌ No users found. Please create a user first (option 1).")
+            return False
+        
+        print("\nAvailable users:")
+        for i, user in enumerate(users, 1):
+            email = user.email or '(no email)'
+            fullname = user.fullname or '(not set)'
+            print(f"  {i}) {email} - {fullname}")
+        
+        # Select user
+        try:
+            user_choice = input(f"\nSelect user (1-{len(users)}): ").strip()
+            user_index = int(user_choice) - 1
+            
+            if user_index < 0 or user_index >= len(users):
+                print("\n❌ Invalid user selection.")
+                return False
+            
+            selected_user = users[user_index]
+        except (ValueError, IndexError):
+            print("\n❌ Invalid user selection.")
+            return False
+        
+        # Get number of todos to generate
+        try:
+            num_todos_input = input("\nHow many todos to generate? [50]: ").strip() or "50"
+            num_todos = int(num_todos_input)
+            
+            if num_todos < 1 or num_todos > 1000:
+                print("\n❌ Please enter a number between 1 and 1000.")
+                return False
+        except ValueError:
+            print("\n❌ Invalid number.")
+            return False
+        
+        # Confirm
+        print(f"\n✓ Will generate {num_todos} fake todos for user: {selected_user.email}")
+        confirm = input("Continue? [Y/n]: ").strip().lower()
+        
+        if confirm == 'n':
+            print("\n❌ Operation cancelled.")
+            return False
+        
+        # Sample task data
+        task_names = [
+            "Review project proposal", "Update documentation", "Fix bug in login",
+            "Implement new feature", "Write unit tests", "Code review",
+            "Team meeting", "Client presentation", "Database optimization",
+            "Security audit", "Performance testing", "Deploy to production",
+            "Backup database", "Update dependencies", "Refactor code",
+            "Create user guide", "Design mockups", "API integration",
+            "Bug fixing session", "Sprint planning", "Retrospective meeting",
+            "Technical debt review", "Infrastructure upgrade", "Monitor logs",
+            "Customer support", "Training session", "Research new tech",
+            "Architecture review", "Load testing", "Code cleanup",
+            "Write blog post", "Update README", "Version release",
+            "Stakeholder meeting", "Budget planning", "Quarterly review",
+            "System maintenance", "Network configuration", "SSL certificate renewal",
+            "Disaster recovery test", "Compliance audit", "Performance review",
+            "Knowledge transfer", "Onboarding new team member", "Exit interview",
+            "Vendor negotiation", "Contract review", "Purchase equipment",
+            "Office setup", "Team building activity", "Workshop facilitation"
+        ]
+        
+        task_details = [
+            "Need to complete this task today",
+            "Follow up with team members",
+            "Review the latest changes",
+            "Coordinate with stakeholders",
+            "Prepare presentation materials",
+            "Analyze metrics and reports",
+            "Update project timeline",
+            "Schedule follow-up meeting",
+            "Document findings",
+            "Implement feedback",
+            "Test edge cases",
+            "Verify requirements",
+            "Update configuration",
+            "Monitor progress",
+            "Review best practices"
+        ]
+        
+        # Generate todos across different time periods
+        now = datetime.now()
+        today = now.replace(hour=10, minute=0, second=0, microsecond=0)
+        
+        # Define time ranges
+        time_ranges = {
+            'today': (today, today),
+            'yesterday': (today - timedelta(days=1), today - timedelta(days=1)),
+            'this_week': (today - timedelta(days=6), today - timedelta(days=1)),
+            'this_month': (today - timedelta(days=29), today - timedelta(days=7)),
+            'this_year': (today - timedelta(days=364), today - timedelta(days=30))
+        }
+        
+        # Distribution: More recent = more todos
+        distribution = {
+            'today': 0.15,          # 15% today
+            'yesterday': 0.10,      # 10% yesterday
+            'this_week': 0.25,      # 25% this week
+            'this_month': 0.30,     # 30% this month
+            'this_year': 0.20       # 20% this year
+        }
+        
+        # Delete existing fake todos for this user (optional)
+        delete_existing = input("\nDelete existing todos for this user? [y/N]: ").strip().lower()
+        if delete_existing == 'y':
+            try:
+                # Get all todos for this user
+                existing_todos = Todo.query.filter_by(user_id=selected_user.id).all()
+                for todo in existing_todos:
+                    # Delete trackers
+                    Tracker.query.filter_by(todo_id=todo.id).delete()
+                    # Delete todo
+                    db.session.delete(todo)
+                db.session.commit()
+                print(f"✅ Deleted {len(existing_todos)} existing todos")
+            except Exception as e:
+                print(f"⚠️  Warning: Failed to delete existing todos: {e}")
+                db.session.rollback()
+        
+        # Generate todos
+        print(f"\n📝 Generating {num_todos} fake todos...")
+        
+        statuses = [5, 6, 8]  # new, done, re-assign
+        status_weights = [0.3, 0.5, 0.2]  # 30% pending, 50% done, 20% re-assign
+        
+        todos_created = 0
+        
+        try:
+            for i in range(num_todos):
+                # Select time period based on distribution
+                rand = random.random()
+                cumulative = 0
+                selected_period = 'today'
+                
+                for period, prob in distribution.items():
+                    cumulative += prob
+                    if rand < cumulative:
+                        selected_period = period
+                        break
+                
+                # Get time range
+                start_date, end_date = time_ranges[selected_period]
+                
+                # Random date within range
+                time_delta = end_date - start_date
+                total_seconds = int(time_delta.total_seconds())
+                if total_seconds > 0:
+                    random_seconds = random.randint(0, total_seconds)
+                    todo_date = start_date + timedelta(seconds=random_seconds)
+                else:
+                    # For same-day periods, use the selected date with a random hour (0-22 to stay within the day)
+                    todo_date = start_date + timedelta(hours=random.randint(0, 22), minutes=random.randint(0, 59))
+                
+                # Random task
+                task_name = random.choice(task_names)
+                task_detail = random.choice(task_details)
+                
+                # Create todo
+                todo = Todo(
+                    name=task_name,
+                    details=task_detail,
+                    details_html=f"<p>{task_detail}</p>",
+                    user_id=selected_user.id
+                )
+                todo.timestamp = todo_date
+                todo.modified = todo_date
+                
+                db.session.add(todo)
+                db.session.flush()
+                
+                # Add tracker with weighted random status (without committing yet)
+                status_id = random.choices(statuses, weights=status_weights)[0]
+                tracker = Tracker(todo_id=todo.id, status_id=status_id, timestamp=todo_date)
+                db.session.add(tracker)
+                
+                # Update todo.modified to match tracker timestamp
+                todo.modified = todo_date
+                
+                todos_created += 1
+                
+                # Progress indicator
+                if (i + 1) % 10 == 0 or (i + 1) == num_todos:
+                    progress = (i + 1) / num_todos * 100
+                    print(f"  Progress: {i + 1}/{num_todos} ({progress:.1f}%)")
+            
+            db.session.commit()
+            
+            print(f"\n✅ Successfully generated {todos_created} fake todos!")
+            
+            # Show distribution
+            print("\n" + "-"*60)
+            print("Distribution by time period:")
+            print("-"*60)
+            
+            for period, (start, end) in time_ranges.items():
+                count = Todo.query.filter(
+                    Todo.user_id == selected_user.id,
+                    Todo.modified >= start,
+                    Todo.modified <= end
+                ).count()
+                print(f"  {period.replace('_', ' ').title():<15}: {count:>3} todos")
+            
+            print("-"*60)
+            print(f"\n💡 Tip: Log in as '{selected_user.email}' to see the dashboard charts with real data!")
+            
+            return True
+            
+        except Exception as e:
+            print(f"\n❌ Error generating todos: {e}")
+            db.session.rollback()
+            return False
 
 if __name__ == '__main__':
     try:

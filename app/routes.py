@@ -348,39 +348,86 @@ def index():
     else:
         return redirect(url_for('login'))
 
+def _categorize_todos_by_period(todos, now):
+    """Helper function to categorize todos by time period"""
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=today_start.weekday())
+    month_start = today_start.replace(day=1)
+    year_start = today_start.replace(month=1, day=1)
+    
+    # Initialize time period segments
+    periods = {
+        'today': {'done': 0, 're-assign': 0, 'pending': 0},
+        'weekly': {'done': 0, 're-assign': 0, 'pending': 0},
+        'monthly': {'done': 0, 're-assign': 0, 'pending': 0},
+        'yearly': {'done': 0, 're-assign': 0, 'pending': 0}
+    }
+    
+    for todo in todos:
+        # Get all trackers for this todo to check completion history
+        todo_trackers = db.session.query(Tracker, Status.name).join(Status).filter(  # type: ignore
+            Tracker.todo_id == todo.id  # type: ignore
+        ).order_by(Tracker.timestamp).all()  # type: ignore
+        
+        if not todo_trackers:
+            continue
+        
+        # Check if todo was ever completed (has 'done' status in history)
+        was_ever_completed = any(status == 'done' for _, status in todo_trackers)
+        
+        # Count re-assignments in history
+        reassignment_count = sum(1 for _, status in todo_trackers if status == 're-assign')
+        
+        # Determine the category
+        if was_ever_completed:
+            category = 'done'
+        elif reassignment_count > 0:
+            category = 're-assign'
+        else:
+            category = 'pending'
+        
+        # Categorize by time period based on modified date
+        todo_date = todo.modified
+        
+        if todo_date >= today_start:
+            periods['today'][category] += 1
+        if todo_date >= week_start:
+            periods['weekly'][category] += 1
+        if todo_date >= month_start:
+            periods['monthly'][category] += 1
+        if todo_date >= year_start:
+            periods['yearly'][category] += 1
+    
+    # Remove zero values for cleaner charts
+    for period in periods:
+        periods[period] = {k: v for k, v in periods[period].items() if v > 0}
+    
+    return periods
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
     from app.models import Todo, Tracker, Status
     from sqlalchemy import func, desc, and_
     
-    # Get latest status for each todo  
-    latest_tracker_subquery = db.session.query(  # type: ignore
-        Tracker.todo_id,  # type: ignore
-        func.max(Tracker.timestamp).label('latest_timestamp')
-    ).group_by(Tracker.todo_id).subquery()  # type: ignore
+    now = datetime.now()
     
-    # Get proper status categorization: check if todo was EVER completed, not just current status
+    # Get all todos for the current user
+    all_todos: list = db.session.query(Todo).filter_by(user_id=current_user.id).all()  # type: ignore
+    
+    # Categorize todos by time periods
+    time_period_data = _categorize_todos_by_period(all_todos, now)
+    
+    # Get legacy chart_segments for backward compatibility (overall stats)
     chart_segments = {'done': 0, 're-assign': 0, 'pending': 0}
-    
-    # Get all todos and analyze each one properly
-    all_todos: list = db.session.query(Todo).all()  # type: ignore
-    
     for todo in all_todos:
         # Get all trackers for this todo to check completion history
         todo_trackers = db.session.query(Tracker, Status.name).join(Status).filter(  # type: ignore
             Tracker.todo_id == todo.id  # type: ignore
         ).order_by(Tracker.timestamp).all()  # type: ignore
         
-        # Get latest status
-        latest_tracker = db.session.query(Tracker, Status.name).join(Status).filter(  # type: ignore
-            Tracker.todo_id == todo.id  # type: ignore
-        ).order_by(desc(Tracker.timestamp)).first()  # type: ignore
-        
-        if not latest_tracker:
+        if not todo_trackers:
             continue
-            
-        latest_status = latest_tracker[1]
         
         # Check if todo was ever completed (has 'done' status in history)
         was_ever_completed = any(status == 'done' for _, status in todo_trackers)
@@ -390,13 +437,10 @@ def dashboard():
         
         # Categorize todo properly
         if was_ever_completed:
-            # If todo was completed, it counts as "done" regardless of current status
             chart_segments['done'] += 1
         elif reassignment_count > 0:
-            # If todo was never completed but has re-assignments, count as "re-assign"
             chart_segments['re-assign'] += 1
         else:
-            # If todo was never completed and never re-assigned, count as "pending"
             chart_segments['pending'] += 1
     
     # Remove zero values for cleaner chart
@@ -409,9 +453,6 @@ def dashboard():
         'avg_reassignments_before_completion': 0.0,
         'todos_with_reassignments': 0
     }
-    
-    # Get all todos and analyze their re-assignment patterns
-    all_todos = db.session.query(Todo).all()  # type: ignore
     
     for todo in all_todos:
         # Get all trackers for this todo ordered by timestamp
@@ -439,7 +480,6 @@ def dashboard():
             reassignment_stats['completed_after_reassignments'] += reassign_count
     
     # Calculate average re-assignments before completion  
-    # We already have the completion data from our loop above
     completed_todos_count = chart_segments.get('done', 0)
     
     if completed_todos_count > 0:
@@ -450,18 +490,18 @@ def dashboard():
         reassignment_stats['avg_reassignments_before_completion'] = 0.0
     
     # Get recent undone todos for activity feed (filtered by current user and not completed)
-    # Using a similar pattern to getList() in models.py - matching tracker timestamp to todo modified time
     # Status 6 = 'done' (see Status.seed() in models.py)
     recent_todos = db.session.query(Todo).join(  # type: ignore[attr-defined]
         Tracker, Todo.id == Tracker.todo_id  # type: ignore[attr-defined]
     ).filter(
         Todo.user_id == current_user.id,
-        Tracker.timestamp == Todo.modified,  # type: ignore[attr-defined]  # Match the latest tracker (same pattern as getList)
-        Tracker.status_id != 6  # type: ignore[attr-defined]  # Status 6 = 'done'
+        Tracker.timestamp == Todo.modified,  # type: ignore[attr-defined]
+        Tracker.status_id != 6  # type: ignore[attr-defined]
     ).order_by(Todo.modified.desc()).limit(5).all()
     
     return render_template('dashboard.html', 
                          chart_segments=chart_segments,
+                         time_period_data=time_period_data,
                          recent_todos=recent_todos,
                          reassignment_stats=reassignment_stats)
 
