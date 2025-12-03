@@ -144,6 +144,30 @@
                $('#title-input-normal').val(data['title']);
                $("input[name='todo_id']").val(data['id']);
                simplemde.value(data['activities']);
+               
+               // Load reminder data if it exists
+               if (data['reminder_enabled']) {
+                    $('#reminder-enabled').prop('checked', true);
+                    $('#reminder-options').show();
+                    
+                    // Determine reminder type from reminder_time
+                    if (data['reminder_time']) {
+                         // For now, set to custom time type
+                         $('input[name="reminder_type"][value="custom"]').prop('checked', true).trigger('change');
+                         // Extract just the date-time part (YYYY-MM-DDTHH:mm) from ISO format
+                         let reminderDateTime = data['reminder_time'];
+                         // Handle both formats: with and without timezone
+                         if (reminderDateTime.includes('T')) {
+                              reminderDateTime = reminderDateTime.split('T')[0] + 'T' + reminderDateTime.split('T')[1].substring(0, 5);
+                         }
+                         $('#reminder-datetime').val(reminderDateTime);
+                         console.log('Loaded reminder datetime:', reminderDateTime);
+                    }
+               } else {
+                    $('#reminder-enabled').prop('checked', false);
+                    $('#reminder-options').hide();
+               }
+               
                console.log(data)
           });
      })
@@ -179,6 +203,16 @@
           let schedule_day = $('input[name="schedule_day"]:checked').val();
           let custom_date = $('#custom_date').val();
           
+          // Reminder data
+          let reminderEnabled = $('#reminder-enabled').is(':checked');
+          let reminderData = {
+               enabled: reminderEnabled,
+               type: reminderEnabled ? $('input[name="reminder_type"]:checked').val() : null,
+               datetime: reminderEnabled ? $('#reminder-datetime').val() : null,
+               beforeMinutes: reminderEnabled ? $('#reminder-before-minutes').val() : null,
+               beforeUnit: reminderEnabled ? $('#reminder-before-unit').val() : null
+          };
+          
           if(title) {
                var $button = $(this);
                var $icon = $button.find('.create-icon');
@@ -195,7 +229,12 @@
                     'title': title,
                     'activities': activities,
                     'schedule_day': schedule_day,
-                    'custom_date': custom_date
+                    'custom_date': custom_date,
+                    'reminder_enabled': reminderData.enabled,
+                    'reminder_type': reminderData.type,
+                    'reminder_datetime': reminderData.datetime,
+                    'reminder_before_minutes': reminderData.beforeMinutes,
+                    'reminder_before_unit': reminderData.beforeUnit
                },
                function(data){
                     console.log('Server response:', data);
@@ -239,6 +278,25 @@
                $('#custom-date-picker').show();
           } else {
                $('#custom-date-picker').hide();
+          }
+     });
+
+     // Reminder functionality
+     $('#reminder-enabled').change(function() {
+          if ($(this).is(':checked')) {
+               $('#reminder-options').slideDown(200);
+          } else {
+               $('#reminder-options').slideUp(200);
+          }
+     });
+
+     $('input[name="reminder_type"]').change(function() {
+          if ($(this).val() === 'custom') {
+               $('#reminder-custom-time').show();
+               $('#reminder-before-options').hide();
+          } else {
+               $('#reminder-custom-time').hide();
+               $('#reminder-before-options').show();
           }
      });
 
