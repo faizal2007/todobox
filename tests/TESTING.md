@@ -163,7 +163,7 @@ tests/test_functional.py::TestAuthentication::test_login_page_accessible SKIPPED
 
 ### Coverage Report
 
-```
+```text
 Name                      Stmts   Miss  Cover   Missing
 -------------------------------------------------------
 app/__init__.py              45      2    96%    23-24

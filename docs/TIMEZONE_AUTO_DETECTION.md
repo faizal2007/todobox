@@ -7,6 +7,7 @@ TodoBox now automatically detects the user's timezone based on their internet lo
 ## How It Works
 
 ### User Registration (Direct Login)
+
 1. User creates an account via `/setup/account`
 2. System detects user's IP address
 3. Queries ip-api.com for timezone information
@@ -14,6 +15,7 @@ TodoBox now automatically detects the user's timezone based on their internet lo
 5. User is logged in with correct timezone
 
 ### Google OAuth Login
+
 1. User logs in via Google OAuth
 2. New user account is created
 3. System detects user's IP address  
@@ -22,6 +24,7 @@ TodoBox now automatically detects the user's timezone based on their internet lo
 6. User is logged in with correct timezone
 
 ### Existing Users
+
 - Timezone is only auto-detected on first account creation/login
 - Existing users can change their timezone anytime in settings
 - The settings page now shows a hint about automatic detection
@@ -29,6 +32,7 @@ TodoBox now automatically detects the user's timezone based on their internet lo
 ## Technical Details
 
 ### Geolocation Service
+
 - **Service**: ip-api.com (free, no API key required)
 - **Rate Limit**: 45 requests per minute per IP
 - **Response Time**: ~200ms average
@@ -37,13 +41,14 @@ TodoBox now automatically detects the user's timezone based on their internet lo
 ### Fallback Behavior
 
 1. **If timezone is detected**: Use detected timezone
-2. **If IP detection fails**: 
+2. **If IP detection fails**:
    - Use user's explicit timezone if provided
    - Default to UTC
 3. **Localhost/Private IPs**: Skipped (won't attempt geolocation)
    - 127.0.0.1, localhost, 192.168.x.x, 10.x.x.x
 
 ### Country to Timezone Mapping
+
 If ip-api.com returns timezone info but it's not in pytz's database, the system has a fallback mapping of countries to default timezones:
 
 ```python
@@ -59,12 +64,14 @@ COUNTRY_TO_TIMEZONE = {
 ## File Structure
 
 ### New Files
-```
+
+```text
 app/geolocation.py          # Core geolocation and timezone detection module
 ```
 
 ### Updated Files
-```
+
+```text
 app/routes.py               # setup_account() - added timezone detection
 app/oauth.py                # process_google_callback() - added timezone detection
 app/templates/settings.html # Added user notification about auto-detection
@@ -73,11 +80,13 @@ app/templates/settings.html # Added user notification about auto-detection
 ## Available Timezones
 
 The system supports **433 different timezone options** including:
+
 - All major cities and regions
 - DST-aware timezones
 - Historical timezone data
 
 Examples:
+
 - Americas: `America/New_York`, `America/Chicago`, `America/Los_Angeles`, etc.
 - Europe: `Europe/London`, `Europe/Paris`, `Europe/Berlin`, etc.
 - Asia: `Asia/Tokyo`, `Asia/Hong_Kong`, `Asia/Bangkok`, `Asia/Kuala_Lumpur`, etc.
@@ -87,7 +96,8 @@ Examples:
 ## User Experience
 
 ### First Login
-```
+
+```text
 [User registers from Malaysia]
     ↓
 [System detects IP: 8.8.8.8]
@@ -100,7 +110,9 @@ Examples:
 ```
 
 ### Changing Timezone
+
 Users can always change their timezone in Settings:
+
 1. Go to Settings
 2. Find "Timezone Settings" section
 3. Select desired timezone
@@ -109,6 +121,7 @@ Users can always change their timezone in Settings:
 ## Reminder Behavior
 
 With automatic timezone detection:
+
 - Reminders are stored in UTC in the database
 - When checked, they're converted to user's timezone
 - Users see times in their local timezone in the UI
@@ -139,6 +152,7 @@ The system gracefully handles various error scenarios:
 No special configuration needed! The feature works out of the box.
 
 Optional: To use a different geolocation service, modify `app/geolocation.py`:
+
 ```python
 # Replace ip-api.com with your preferred service
 response = requests.get(
@@ -168,6 +182,7 @@ print(f"Corrected: {tz}")  # Output: UTC or detected timezone
 ## Future Enhancements
 
 Possible improvements:
+
 - Add browser-side timezone detection as fallback
 - Cache timezone detections for performance
 - Allow admin to disable auto-detection
@@ -177,12 +192,15 @@ Possible improvements:
 ## Troubleshooting
 
 **Issue**: Reminders showing wrong time
+
 - **Solution**: Check timezone in Settings - manually correct if needed
 
 **Issue**: Timezone not detected on registration
+
 - **Solution**: Manually set in Settings. Usually only happens if API is down.
 
 **Issue**: Seeing UTC instead of local timezone
+
 - **Possible causes**:
   - API service unavailable
   - Behind a proxy (check X-Forwarded-For header)

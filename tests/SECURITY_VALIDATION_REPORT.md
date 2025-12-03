@@ -17,6 +17,7 @@
 **Issue**: Hardcoded secrets in configuration  
 **Fix**: Use environment variables for SECRET_KEY and SALT  
 **Tests**:
+
 - `test_config_loads_from_environment` - Verifies config loads from environment
 - `test_secret_key_not_hardcoded` - Ensures old hardcoded value not present
 - `test_salt_not_hardcoded` - Ensures old hardcoded salt not present
@@ -29,6 +30,7 @@
 **Issue**: XSS vulnerability in markdown rendering  
 **Fix**: Bleach sanitization with ALLOWED_TAGS whitelist  
 **Tests**:
+
 - `test_bleach_sanitization_removes_script_tags` - Script tags sanitized
 - `test_bleach_sanitization_removes_onerror` - Event handlers removed
 - `test_bleach_preserves_safe_markdown` - Safe tags preserved
@@ -44,6 +46,7 @@
 **Issue**: No input validation in getList() method  
 **Fix**: Whitelist validation for type parameter  
 **Tests**:
+
 - `test_getlist_validates_type_parameter` - Valid types accepted
 - `test_getlist_rejects_invalid_type` - Invalid types rejected
 - `test_getlist_sql_injection_attempt` - SQL injection payloads blocked
@@ -51,6 +54,7 @@
 **Status**: ✅ All 3 tests passing
 
 **Validated Payloads**:
+
 - `'; DROP TABLE todos; --`
 - `' OR 1=1 --`
 - `today' OR '1'='1`
@@ -61,6 +65,7 @@
 **Issue**: Missing duplicate email/username validation  
 **Fix**: Uncommented validation methods with current_user check  
 **Tests**:
+
 - `test_duplicate_email_validation` - Prevents duplicate emails
 - `test_update_account_allows_own_email` - User can keep their email
 - `test_setup_form_prevents_duplicate_email` - Registration validates uniqueness
@@ -72,6 +77,7 @@
 **Issue**: Password security verification  
 **Fix**: Werkzeug password hashing with salt  
 **Tests**:
+
 - `test_passwords_are_hashed` - Passwords stored as hashes
 - `test_password_verification_works` - Check_password works correctly
 - `test_same_password_different_hashes` - Salt ensures different hashes
@@ -86,6 +92,7 @@
 **Issue**: API token security validation  
 **Fix**: Secure token generation with secrets module  
 **Tests**:
+
 - `test_api_token_generation` - Tokens generated correctly
 - `test_api_token_uniqueness` - Each user gets unique token
 - `test_api_token_regeneration` - Tokens can be regenerated
@@ -100,6 +107,7 @@
 ### 7. ✅ Security Integration (2 tests)
 
 **Tests**:
+
 - `test_complete_security_workflow` - Full workflow validation
 - `test_sql_injection_protection_in_routes` - Route-level protection
 
@@ -108,17 +116,21 @@
 ## Test Execution
 
 ### Running All Security Tests
+
 ```bash
 python -m pytest tests/test_security_updates.py -v
 ```
 
 ### Output Summary
-```
+
+```text
 ======================= 27 passed, 984 warnings in 2.84s =======================
 ```
 
 ### Individual Test Results
+
 All 27 tests passed successfully:
+
 - ✅ TestEnvironmentConfiguration (4/4)
 - ✅ TestXSSPrevention (5/5)
 - ✅ TestSQLInjectionPrevention (3/3)
@@ -130,6 +142,7 @@ All 27 tests passed successfully:
 ## Coverage Analysis
 
 ### Security Features Tested
+
 | Feature | Files Tested | Coverage |
 |---------|-------------|----------|
 | Environment Config | `app/config.py` | 100% |
@@ -140,6 +153,7 @@ All 27 tests passed successfully:
 | API Tokens | `app/models.py` | 100% |
 
 ### Test Quality
+
 - ✅ **Isolated**: Each test runs independently
 - ✅ **Fast**: All tests complete in ~3 seconds
 - ✅ **Comprehensive**: Covers all security patches
@@ -149,7 +163,9 @@ All 27 tests passed successfully:
 ## Validation Methods
 
 ### 1. Direct Testing
+
 Tests directly invoke the security-related code:
+
 ```python
 # Example: Testing bleach sanitization
 from bleach import clean
@@ -158,7 +174,9 @@ assert '<script>' not in html
 ```
 
 ### 2. Integration Testing
+
 Tests security through actual application routes:
+
 ```python
 # Example: Testing XSS in todo creation
 response = client.post('/add', data={
@@ -168,7 +186,9 @@ response = client.post('/add', data={
 ```
 
 ### 3. Boundary Testing
+
 Tests edge cases and attack vectors:
+
 ```python
 # Example: SQL injection attempts
 payloads = [
@@ -219,6 +239,7 @@ for payload in payloads:
 ## Recommendations
 
 ### ✅ Completed
+
 1. ✅ Create comprehensive security test suite
 2. ✅ Test all patches from SECURITY_PATCHES.md
 3. ✅ Verify environment variable loading
@@ -229,11 +250,13 @@ for payload in payloads:
 8. ✅ Validate API token security
 
 ### 🔄 Ongoing
+
 1. Run security tests before each release
 2. Update tests when security patches are added
 3. Review test results in CI/CD pipeline
 
 ### 📝 Future Enhancements
+
 1. Add penetration testing tools (OWASP ZAP)
 2. Add automated security scanning
 3. Add dependency vulnerability scanning
@@ -242,12 +265,14 @@ for payload in payloads:
 ## Compliance
 
 ### Security Standards
+
 - ✅ OWASP Top 10 addressed:
   - A03:2021 – Injection (SQL Injection)
   - A07:2021 – Cross-Site Scripting (XSS)
   - A02:2021 – Cryptographic Failures (Secrets Management)
 
 ### Best Practices
+
 - ✅ Environment-based configuration
 - ✅ Input validation and sanitization
 - ✅ Secure password storage

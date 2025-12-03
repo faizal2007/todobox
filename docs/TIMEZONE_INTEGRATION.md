@@ -7,6 +7,7 @@ The TodoBox application now has complete timezone support for reminders. Users c
 ## Features Implemented
 
 ### 1. User Timezone Setting
+
 - **Location**: Settings page (`/settings`)
 - **Timezone Options**: 43 different timezones across 7 regions
   - UTC
@@ -20,7 +21,8 @@ The TodoBox application now has complete timezone support for reminders. Users c
 
 ### 2. Reminder Time Conversion Flow
 
-#### When Creating/Editing a Reminder:
+#### When Creating/Editing a Reminder
+
 1. User sets reminder time in their local timezone via form
 2. Backend converts local time to UTC using `convert_from_user_timezone()`
 3. UTC time is stored in database (todo.reminder_time)
@@ -32,7 +34,8 @@ Convert to UTC: 7:00 PM UTC
 Store in DB: 2025-01-15 19:00:00
 ```
 
-#### When Displaying Reminder:
+#### When Displaying Reminder
+
 1. UTC time retrieved from database
 2. Backend converts UTC to user's timezone using `convert_to_user_timezone()`
 3. Converted time displayed in form, notifications, and API responses
@@ -45,7 +48,8 @@ Convert to user: 2:00 PM EST
 Display in form: Shows as 2:00 PM local time
 ```
 
-#### When Checking Pending Reminders:
+#### When Checking Pending Reminders
+
 1. Get current time in user's timezone
 2. Compare against reminder_time in UTC
 3. Notification shows time in user's local timezone
@@ -53,12 +57,14 @@ Display in form: Shows as 2:00 PM local time
 ### 3. Core Components
 
 #### Timezone Utilities (`app/timezone_utils.py`)
+
 - `convert_to_user_timezone(dt, user_timezone)` - UTC → User Local
 - `convert_from_user_timezone(dt, user_timezone)` - User Local → UTC
 - `get_user_local_time(user)` - Get current time in user's timezone
 - All functions include error handling and return None gracefully on errors
 
 #### Reminder Service (`app/reminder_service.py`)
+
 - Updated `get_pending_reminders()` to check in user's local timezone
 - Compares reminder times against current time in user's timezone
 - Handles multiple users with different timezone settings
@@ -66,11 +72,13 @@ Display in form: Shows as 2:00 PM local time
 #### API Endpoints
 
 ##### `/api/reminders/check` (GET)
+
 - Returns pending reminders with times converted to user's timezone
 - Used by frontend to check for reminders every 30 seconds
 - Response includes reminder_time in user's local timezone
 
 ##### `/api/reminders/process` (POST)
+
 - Marks reminders as sent
 - Returns notifications with times displayed in user's local timezone
 - Used to trigger browser and in-app notifications
@@ -78,16 +86,19 @@ Display in form: Shows as 2:00 PM local time
 #### Route Handlers
 
 ##### `/add` (POST)
+
 - Handles both creating new reminders and editing existing ones
 - Converts reminder_datetime from user's local timezone to UTC
 - Stores converted UTC time in database
 
 ##### `/getTodo` (POST)
+
 - Retrieves todo for editing
 - Converts reminder_time from UTC back to user's timezone
 - Form displays reminder time in user's local timezone
 
 ##### `/settings` (POST)
+
 - Accepts timezone parameter
 - Validates against whitelist of valid timezones
 - Stores in user.timezone field
@@ -95,11 +106,13 @@ Display in form: Shows as 2:00 PM local time
 ### 4. Database Schema
 
 #### User Model
+
 ```python
 timezone = db.Column(db.String(50), default='UTC')
 ```
 
 #### Todo Model
+
 ```python
 reminder_enabled = db.Column(db.Boolean, default=False)
 reminder_time = db.Column(db.DateTime)  # Always stored in UTC
@@ -109,12 +122,14 @@ reminder_sent = db.Column(db.Boolean, default=False)
 ### 5. UI Components
 
 #### Settings Form (`templates/settings.html`)
+
 - Timezone selector with 43 options
 - Current timezone pre-selected
 - Form POSTs to `/settings`
 - Success/error messages on save
 
 #### Todo Add Form (`templates/todo_add.html`)
+
 - Reminder checkbox to enable/disable
 - Reminder type selector: "Custom Time" or "Before Target"
 - Custom Time: datetime-local input (user's local timezone)
@@ -122,6 +137,7 @@ reminder_sent = db.Column(db.Boolean, default=False)
 - Dynamic visibility based on selected type
 
 #### Notification System (`templates/main.html`)
+
 - 30-second polling interval to check for reminders
 - In-app toast notifications showing reminder in user's timezone
 - Desktop browser notifications (with permission)
@@ -176,6 +192,7 @@ reminder_sent = db.Column(db.Boolean, default=False)
 ## Support
 
 For timezone issues:
+
 1. Check user's timezone setting in `/settings`
 2. Verify server timezone (should not affect functionality)
 3. Check browser console for any errors

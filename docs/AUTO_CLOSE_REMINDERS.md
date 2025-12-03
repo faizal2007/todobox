@@ -57,6 +57,7 @@ reminder_first_notification_time = db.Column(db.DateTime, nullable=True)
 #### `app/models.py` - Todo Model
 
 **New Method**: `should_auto_close_reminder()`
+
 ```python
 def should_auto_close_reminder(self):
     """Check if reminder should be automatically closed (3 notifications in 30 minutes)"""
@@ -71,12 +72,14 @@ def should_auto_close_reminder(self):
 #### `app/reminder_service.py` - ReminderService
 
 **Updated `mark_reminder_sent()` Method**:
+
 - Increments `reminder_notification_count`
 - Records `reminder_first_notification_time` on first notification
 - Calls `should_auto_close_reminder()` to check if limit reached
 - Automatically disables and closes reminder if 3 notifications sent within 30 minutes
 
 **Updated `get_pending_reminders()` Method**:
+
 - Checks each reminder with `should_auto_close_reminder()`
 - Auto-closes any that have exceeded the limit
 - Filters them out from pending list to prevent infinite notifications
@@ -86,6 +89,7 @@ def should_auto_close_reminder(self):
 #### `/api/reminders/check` (GET)
 
 Response now includes:
+
 ```json
 {
   "count": 1,
@@ -103,12 +107,14 @@ Response now includes:
 ```
 
 **New Fields**:
+
 - `notification_count`: How many times user has been notified (0, 1, 2, or 3)
 - `is_last_notification`: Boolean indicating if this is the 3rd/final notification
 
 #### `/api/reminders/process` (POST)
 
 Response includes notification count and auto-close info:
+
 ```json
 {
   "count": 1,
@@ -126,6 +132,7 @@ Response includes notification count and auto-close info:
 ```
 
 **Enhanced Message**: Message now includes:
+
 - `(1st reminder)` for first notification
 - `(2nd reminder)` for second notification
 - `(Final reminder - will auto-close after this)` for third notification
@@ -162,7 +169,7 @@ Response includes notification count and auto-close info:
 3. **Click elsewhere** (don't close the notification)
 4. **Wait ~2 seconds** and check if another reminder is pending
 5. **Second notification shows** - verify it says "(2nd reminder)"
-6. **Repeat step 3-4** 
+6. **Repeat step 3-4**
 7. **Third notification shows** - verify it says "(Final reminder...)"
 8. **Note the styling**:
    - Red border instead of orange
@@ -226,16 +233,19 @@ Potential improvements:
 ## Troubleshooting
 
 ### Reminder not auto-closing
+
 - Check browser console for JavaScript errors
 - Verify database migration was applied: `python -m flask db current`
 - Check that `reminder_notification_count` field exists: `DESCRIBE todo;`
 
 ### Wrong notification count
+
 - Clear browser cache
 - Verify backend restarted after code deploy
 - Check that correct version is running
 
 ### Sound not playing
+
 - Check browser audio settings
 - Verify notification permissions granted
 - Some browsers require user interaction before audio context works

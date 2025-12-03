@@ -17,12 +17,14 @@ Quick reference guide for developers maintaining TodoBox after the jQuery optimi
 ### 1. Event Listeners
 
 **Old (jQuery):**
+
 ```javascript
 $('.btn-delete').click(function() { ... });
 $(document.body).on('click', '#save', function() { ... });
 ```
 
 **New (Vanilla):**
+
 ```javascript
 document.querySelectorAll('.btn-delete').forEach(function(btn) {
     btn.addEventListener('click', function() { ... });
@@ -36,6 +38,7 @@ document.addEventListener('click', function(e) {
 ### 2. AJAX Requests
 
 **Old (jQuery):**
+
 ```javascript
 $.post('/api/endpoint', {
     'data': value,
@@ -48,6 +51,7 @@ $.post('/api/endpoint', {
 ```
 
 **New (Vanilla):**
+
 ```javascript
 fetch('/api/endpoint', {
     method: 'POST',
@@ -68,6 +72,7 @@ fetch('/api/endpoint', {
 ### 3. DOM Manipulation
 
 **Old (jQuery):**
+
 ```javascript
 $('#element').val(value);
 $('#element').prop('disabled', true);
@@ -77,6 +82,7 @@ $('.items').each(function() { ... });
 ```
 
 **New (Vanilla):**
+
 ```javascript
 document.getElementById('element').value = value;
 document.getElementById('element').disabled = true;
@@ -88,12 +94,14 @@ document.querySelectorAll('.items').forEach(function(item) { ... });
 ### 4. Data Attributes
 
 **Old (jQuery):**
+
 ```javascript
 var id = $button.data('id');
 $button.data('email', 'user@example.com');
 ```
 
 **New (Vanilla):**
+
 ```javascript
 var id = button.dataset.id;
 button.dataset.email = 'user@example.com';
@@ -102,12 +110,14 @@ button.dataset.email = 'user@example.com';
 ### 5. Modal Operations (Bootstrap 4)
 
 **Old (jQuery):**
+
 ```javascript
 $('#modal').modal('show');
 $('#modal').modal('hide');
 ```
 
 **New (Vanilla):**
+
 ```javascript
 // Show
 var modal = document.getElementById('modal');
@@ -230,6 +240,7 @@ var params = new URLSearchParams({
 ## Event Handling
 
 ### Single Element
+
 ```javascript
 button.addEventListener('click', function(e) {
     e.preventDefault();
@@ -238,6 +249,7 @@ button.addEventListener('click', function(e) {
 ```
 
 ### Multiple Elements
+
 ```javascript
 document.querySelectorAll('.btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -247,6 +259,7 @@ document.querySelectorAll('.btn').forEach(function(btn) {
 ```
 
 ### Event Delegation
+
 ```javascript
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('btn-delete')) {
@@ -263,6 +276,7 @@ document.addEventListener('click', function(e) {
 ## Promise Patterns
 
 ### Success/Error Handling
+
 ```javascript
 fetch(url)
     .then(response => response.json())
@@ -271,6 +285,7 @@ fetch(url)
 ```
 
 ### Sequential Operations
+
 ```javascript
 fetch(url1)
     .then(response => response.json())
@@ -284,6 +299,7 @@ fetch(url1)
 ```
 
 ### Parallel Operations
+
 ```javascript
 Promise.all([
     fetch(url1).then(r => r.json()),
@@ -302,6 +318,7 @@ Promise.all([
 ### Issue: Dynamically added elements not responding to handlers
 
 **Solution:** Use event delegation
+
 ```javascript
 // Won't work for dynamic elements
 document.querySelector('.btn').addEventListener('click', handler);
@@ -317,6 +334,7 @@ document.addEventListener('click', function(e) {
 ### Issue: CSRF token not sent in POST request
 
 **Solution:** Add to headers or body
+
 ```javascript
 fetch(url, {
     method: 'POST',
@@ -332,6 +350,7 @@ fetch(url, {
 ### Issue: Modal not displaying after fetch
 
 **Solution:** Re-initialize modal classes and backdrop
+
 ```javascript
 var modal = document.getElementById('modal');
 modal.classList.add('show');
@@ -347,6 +366,7 @@ document.body.appendChild(backdrop);
 ### Issue: Form data not submitting correctly
 
 **Solution:** Proper URLSearchParams usage
+
 ```javascript
 var params = new URLSearchParams();
 params.append('key', 'value');
@@ -373,22 +393,26 @@ fetch(url, {
 ## Troubleshooting
 
 ### Modal backdrop not showing
+
 - Ensure `document.body.classList.add('modal-open')` is called
 - Check that backdrop div is created and added to DOM
 - Verify CSS classes match Bootstrap 4 specifications
 
 ### CSRF token missing
+
 - Check that token is passed in headers or body
 - Verify `{{ csrf_token() }}` is available in template context
 - Use Network tab in browser DevTools to inspect requests
 
 ### Event handlers not firing
+
 - Use event delegation for dynamically added elements
 - Check that selector matches actual DOM structure
 - Verify `preventDefault()` is called when needed
 - Use console.log() to debug event handling
 
 ### Fetch request timing out
+
 - Increase timeout if needed (timeout not built into Fetch)
 - Use AbortController for timeout implementation
 - Check network connectivity in DevTools
