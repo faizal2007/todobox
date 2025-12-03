@@ -102,7 +102,7 @@ var TodoOperations = (function() {
      * Setup save/create todo handler
      * @param {Object} simplemde - SimpleMDE editor instance
      * @param {String} csrfToken - CSRF token for requests
-     * @param {String} redirectUrl - URL to redirect after saving
+     * @param {String|Function} redirectUrl - URL to redirect after saving, or function that returns URL based on schedule_day
      */
     function setupSaveHandler(simplemde, csrfToken, redirectUrl) {
         $('.create-todo').click(function() {
@@ -127,7 +127,7 @@ var TodoOperations = (function() {
                 
                 $.post('/add', {
                     '_csrf_token': csrfToken,
-                    'todo_id': todo_id ? todo_id : '',
+                    'todo_id': todo_id || '',
                     'title': title,
                     'activities': activities,
                     'schedule_day': schedule_day,
@@ -139,7 +139,14 @@ var TodoOperations = (function() {
                     'reminder_before_unit': reminderData.beforeUnit
                 },
                 function(data) {
-                    window.location.href = redirectUrl;
+                    // Determine redirect URL
+                    let targetUrl;
+                    if (typeof redirectUrl === 'function') {
+                        targetUrl = redirectUrl(schedule_day);
+                    } else {
+                        targetUrl = redirectUrl;
+                    }
+                    window.location.href = targetUrl;
                 }).fail(function() {
                     // Hide loading state on error
                     $icon.show();

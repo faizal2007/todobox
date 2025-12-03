@@ -199,64 +199,19 @@
 
      // Initialize centralized todo operations with custom redirect logic
      $(document).ready(function() {
-          // Custom save handler that handles schedule-based redirect
-          $('.create-todo').off('click').click(function() {
-               let title = $('#title-input-normal').val();
-               let activities = simplemde.value();
-               let todo_id = $("input[name='todo_id']").val();
-               let schedule_day = $('input[name="schedule_day"]:checked').val();
-               let custom_date = $('#custom_date').val();
-               
-               // Collect reminder data
-               let reminderData = TodoOperations.collectReminderData();
-               
-               if(title) {
-                    var $button = $(this);
-                    var $icon = $button.find('.create-icon');
-                    var $loading = $button.find('.create-loading');
-                    
-                    // Show loading state
-                    $icon.hide();
-                    $loading.show();
-                    $button.prop('disabled', true);
-                    
-                    $.post('/add', {
-                         '_csrf_token': '{{ csrf_token() }}',
-                         'todo_id': todo_id ? todo_id:'',
-                         'title': title,
-                         'activities': activities,
-                         'schedule_day': schedule_day,
-                         'custom_date': custom_date,
-                         'reminder_enabled': reminderData.enabled,
-                         'reminder_type': reminderData.type,
-                         'reminder_datetime': reminderData.datetime,
-                         'reminder_before_minutes': reminderData.beforeMinutes,
-                         'reminder_before_unit': reminderData.beforeUnit
-                    },
-                    function(data){
-                         // Redirect based on schedule selection
-                         if (schedule_day === 'tomorrow') {
-                              window.location.href = "{{ url_for('list', id='tomorrow') }}";
-                         } else if (schedule_day === 'custom') {
-                              // For custom dates, redirect to today page for now
-                              // Could be enhanced to create a custom date view
-                              window.location.href = "{{ url_for('list', id='today') }}";
-                         } else {
-                              window.location.href = "{{ url_for('list', id='today') }}";
-                         }
-                    }).fail(function() {
-                         // Hide loading state on error
-                         $icon.show();
-                         $loading.hide();
-                         $button.prop('disabled', false);
-                    });
+          // Define redirect function based on schedule selection
+          var redirectFunction = function(schedule_day) {
+               if (schedule_day === 'tomorrow') {
+                    return "{{ url_for('list', id='tomorrow') }}";
+               } else if (schedule_day === 'custom') {
+                    return "{{ url_for('list', id='today') }}";
+               } else {
+                    return "{{ url_for('list', id='today') }}";
                }
-               else
-                    $('#title-input-normal').last().addClass('is-invalid')
-          });
+          };
           
-          // Initialize other handlers from centralized module
           TodoOperations.setupEditHandler(simplemde, '{{ csrf_token() }}', true);
+          TodoOperations.setupSaveHandler(simplemde, '{{ csrf_token() }}', redirectFunction);
           TodoOperations.setupReminderHandlers();
           TodoOperations.setupScheduleHandlers();
           TodoOperations.setupModalHandlers(simplemde);
