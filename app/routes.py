@@ -96,7 +96,7 @@ def get_manifest():
     from app.config import TITLE
     
     manifest = {
-        "name": f"{TITLE} TodoBox",
+        "name": f"{TITLE}",
         "short_name": TITLE,
         "description": "Track and manage daily todos securely.",
         "start_url": "/dashboard",
