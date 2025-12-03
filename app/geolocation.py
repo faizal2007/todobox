@@ -4,6 +4,7 @@ import requests
 from flask import request
 import pytz
 from typing import Optional, Tuple
+import logging
 
 # Timezone mapping for country codes to default timezones
 COUNTRY_TO_TIMEZONE = {
@@ -92,10 +93,10 @@ def detect_timezone_from_ip() -> Optional[str]:
     except requests.RequestException as e:
         # If the API call fails, silently return None
         # This ensures the app doesn't break if the service is unavailable
-        print(f"DEBUG: Timezone detection failed: {str(e)}")
+        logging.debug(f"Timezone detection failed: {str(e)}")
         return None
     except Exception as e:
-        print(f"DEBUG: Unexpected error in timezone detection: {str(e)}")
+        logging.debug(f"Unexpected error in timezone detection: {str(e)}")
         return None
 
 

@@ -5,6 +5,7 @@ Google OAuth2 Authentication Handler
 import os
 import requests
 import json
+import logging
 from flask import current_app, url_for, session
 from google.auth.transport.requests import Request
 from google.oauth2.id_token import verify_oauth2_token
@@ -118,7 +119,7 @@ def process_google_callback(code):
         detected_tz = detect_timezone_from_ip()
         if detected_tz:
             new_user.timezone = detected_tz
-            print(f"DEBUG: Auto-detected timezone {detected_tz} for Google user {email}")
+            logging.debug(f"Auto-detected timezone {detected_tz} for Google user {email}")
         
         db.session.add(new_user)  # type: ignore[attr-defined]
         db.session.commit()  # type: ignore[attr-defined]
@@ -126,5 +127,5 @@ def process_google_callback(code):
         return new_user, True
         
     except Exception as e:
-        print(f"Error processing Google callback: {str(e)}")
+        logging.error(f"Error processing Google callback: {str(e)}")
         return None, False
