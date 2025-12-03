@@ -39,6 +39,10 @@ def app():
 @pytest.fixture
 def client(app):
     """Create a test client for the application."""
+    # Workaround for werkzeug.__version__ issue
+    import werkzeug
+    if not hasattr(werkzeug, '__version__'):
+        werkzeug.__version__ = '3.0.0'
     return app.test_client()
 
 
