@@ -83,108 +83,159 @@
     <script>
         function todo_add(data, byPass=0){
             /**
-             * Function to add todo
+             * Function to add todo using Fetch API
             * */
         
-            $.post($SCRIPT_ROOT + '/add', {
-                        '_csrf_token': '{{ csrf_token() }}',
-                        'todo_id': data[0],
-                        'title': $('#titleFormControlInput1').val(),
-                        'byPass': byPass,
-                        'activities': $('#activitiesFormControlTextArea1').val()
-                    },
-                    function(data) {
-                        $('#titleFormControlInput1').prop("disabled", true);
-                        $('#activitiesFormControlTextArea1').prop("disabled", true);
-                        $('.modal-footer').html('<div class="alert alert-warning" role="alert">Saving ...</div>');
-                    })
-                    .done(function(data){
-                        if(data['status'] == 'failed') {
-                            $('.modal-footer').html('<div class="alert alert-info alert-dismissible fade show" role="alert">No change made'+
-                                                '</div>');
-                        
-                            $(".alert").fadeOut(2000).slideUp(5000, function() {
-                                $(this).alert('close');
-                                $('#titleFormControlInput1').prop("disabled", false);
-                                $('#activitiesFormControlTextArea1').prop("disabled", false);
-                                $('.modal-footer').html('<button type="button" class="btn btn-warning" id="delete">Delete</button>');
-                                // window.location.href = "{{ url_for('todo') }}";
-                            });
-                        }
-                        else {
-                            $('#titleFormControlInput1').prop("disabled", true);
-                            $('#activitiesFormControlTextArea1').prop("disabled", true);
-                            $('.modal-footer').html('<div class="alert alert-success alert-dismissible fade show" role="alert">Saving success'+
-                                                '</div>');
-                            $(".alert").fadeOut(2000).slideUp(4000, function() {
-                                $(this).alert('close');
-                                window.location.href = "{{ url_for('view', todo='pending') }}";
-                            });
-                        }
+            fetch(window.SCRIPT_ROOT + '/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: new URLSearchParams({
+                    '_csrf_token': '{{ csrf_token() }}',
+                    'todo_id': data[0],
+                    'title': document.getElementById('titleFormControlInput1').value,
+                    'byPass': byPass,
+                    'activities': document.getElementById('activitiesFormControlTextArea1').value
+                })
+            })
+            .then(response => {
+                document.getElementById('titleFormControlInput1').disabled = true;
+                document.getElementById('activitiesFormControlTextArea1').disabled = true;
+                document.querySelector('.modal-footer').innerHTML = '<div class="alert alert-warning" role="alert">Saving ...</div>';
+                return response.json();
+            })
+            .then(responseData => {
+                if(responseData['status'] == 'failed') {
+                    document.querySelector('.modal-footer').innerHTML = '<div class="alert alert-info alert-dismissible fade show" role="alert">No change made</div>';
                     
-                    });
+                    var alert = document.querySelector('.alert');
+                    alert.style.display = 'none';
+                    setTimeout(function() {
+                        alert.style.display = 'block';
+                        alert.remove();
+                        document.getElementById('titleFormControlInput1').disabled = false;
+                        document.getElementById('activitiesFormControlTextArea1').disabled = false;
+                        document.querySelector('.modal-footer').innerHTML = '<button type="button" class="btn btn-warning" id="delete">Delete</button>';
+                    }, 2000);
+                }
+                else {
+                    document.getElementById('titleFormControlInput1').disabled = true;
+                    document.getElementById('activitiesFormControlTextArea1').disabled = true;
+                    document.querySelector('.modal-footer').innerHTML = '<div class="alert alert-success alert-dismissible fade show" role="alert">Saving success</div>';
+                    var alert = document.querySelector('.alert');
+                    alert.style.display = 'none';
+                    setTimeout(function() {
+                        alert.style.display = 'block';
+                        alert.remove();
+                        window.location.href = "{{ url_for('view', todo='pending') }}";
+                    }, 4000);
+                }
+            })
+            .catch(error => {
+                console.error('Error adding todo:', error);
+                document.querySelector('.modal-footer').innerHTML = '<div class="alert alert-danger" role="alert">Error saving todo</div>';
+            });
         }
         /**
          * todo table list
         * */
-        $(document).ready(function() {
-            let table = $('#todoTable').DataTable({
+        document.addEventListener('DOMContentLoaded', function() {
+            var todoTable = document.getElementById('todoTable');
+            if (!todoTable) return;
+            
+            var table = new DataTable(todoTable, {
                 "order": [[ 3, "desc" ]],
                 "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
                 "columnDefs":[
                     { "visible": false, "targets": [5], "searchable": false}
                 ],
             });
-            // stateSave: true
-            $('#todoTable tbody').on( 'click', 'tr', function () {
-                if ( $(this).hasClass('selected') ) {
-                    let data = table.row(this).data();
-                    $('#todoModal').modal('show');
-                    $.post("/" + data[0] + '/todo', {
-                        '_csrf_token': '{{ csrf_token() }}',
-                        'tbl_save': 1
-                    },
-                    function(data) {
-                        $('.modal-footer').html(data['button']);
-                        $("input[name='todo_id']").val(data['id']);
-                        $('#titleFormControlInput1').val(data['title']);
-                        $('#activitiesFormControlTextArea1').val(data['activities']);
+            
+            // Table row click handler
+            todoTable.querySelector('tbody').addEventListener('click', function(e) {
+                var row = e.target.closest('tr');
+                if (!row) return;
+                
+                if (row.classList.contains('selected')) {
+                    var data = table.row(row).data();
+                    document.getElementById('todoModal').classList.add('show');
+                    document.getElementById('todoModal').style.display = 'block';
+                    
+                    fetch("/" + data[0] + '/todo', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': '{{ csrf_token() }}'
+                        },
+                        body: new URLSearchParams({
+                            '_csrf_token': '{{ csrf_token() }}',
+                            'tbl_save': '1'
+                        })
                     })
-
-                    $(document.body).on("click", "#save", function (e){
-                        todo_add(data);
+                    .then(response => response.json())
+                    .then(responseData => {
+                        document.querySelector('.modal-footer').innerHTML = responseData['button'];
+                        document.querySelector("input[name='todo_id']").value = responseData['id'];
+                        document.getElementById('titleFormControlInput1').value = responseData['title'];
+                        document.getElementById('activitiesFormControlTextArea1').value = responseData['activities'];
+                        
+                        // Setup delete handler
+                        var deleteBtn = document.getElementById('delete');
+                        if (deleteBtn) {
+                            deleteBtn.addEventListener('click', function() {
+                                fetch("/" + data[0] + '/delete', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                        'X-CSRFToken': '{{ csrf_token() }}'
+                                    },
+                                    body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
+                                })
+                                .then(function() {
+                                    document.getElementById('titleFormControlInput1').disabled = true;
+                                    document.getElementById('activitiesFormControlTextArea1').disabled = true;
+                                })
+                                .then(function() {
+                                    document.querySelector('.modal-footer').innerHTML = '<div class="alert alert-info alert-dismissible fade show" role="alert">Deleting Todo ...</div>';
+                                    var alert = document.querySelector('.alert');
+                                    alert.style.display = 'none';
+                                    setTimeout(function() {
+                                        alert.style.display = 'block';
+                                        alert.remove();
+                                        window.location.href = "{{ url_for('view', todo='pending') }}";
+                                    }, 2000);
+                                })
+                                .catch(error => console.error('Error deleting todo:', error));
+                            });
+                        }
+                        
+                        // Setup save handler
+                        var saveBtn = document.getElementById('save');
+                        if (saveBtn) {
+                            saveBtn.addEventListener('click', function() {
+                                todo_add(data);
+                            });
+                        }
+                        
+                        // Setup update handler
+                        var todoBtn = document.getElementById('todo');
+                        if (todoBtn) {
+                            todoBtn.addEventListener('click', function() {
+                                todo_add(data, 1);
+                            });
+                        }
                     })
-
-                    $(document.body).on("click", "#todo", function (e){
-                        todo_add(data, 1);
-                    })
-
-                    $(document.body).on("click", "#delete", function (e){
-                        $.post("/" + data[0] + '/delete', {
-                            '_csrf_token': '{{ csrf_token() }}'
-                            },
-                            function(){
-                                $('#titleFormControlInput1').prop("disabled", true);
-                                $('#activitiesFormControlTextArea1').prop("disabled", true);
-                            })
-                            .done(function(data){
-                                $('.modal-footer').html('<div class="alert alert-info alert-dismissible fade show" role="alert">Deleting Todo ...'+
-                                        '</div>');
-                                        $(".alert").fadeOut(2000).slideUp(5000, function() {
-                                            $(this).alert('close');
-                                            window.location.href = "{{ url_for('view', todo='pending') }}";
-                                        });
-                            })
-                        // alert(data[0]);
-                    })
-
-                    $(this).removeClass('selected');
+                    .catch(error => console.error('Error fetching todo:', error));
+                    
+                    row.classList.remove('selected');
                 }
                 else {
                     table.$('tr.selected').removeClass('selected');
-                    $(this).addClass('selected');
+                    row.classList.add('selected');
                 }
-            } );
-        } );
+            });
+        });
     </script>
 {% endblock %}

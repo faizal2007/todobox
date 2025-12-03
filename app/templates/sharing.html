@@ -422,42 +422,44 @@
         });
     }
     
-    // Share confirmation handlers using jQuery for DOM manipulation
-    $(document).ready(function() {
+    // Share confirmation handlers using vanilla JavaScript
+    document.addEventListener('DOMContentLoaded', function() {
         // Revoke share button handler
-        $('.revoke-share-btn').click(function() {
-            var $btn = $(this);
-            var $form = $btn.closest('form');
-            var username = $btn.data('username');
-            
-            showConfirmModal(
-                'Revoke Sharing',
-                'Are you sure you want to stop sharing with ' + username + '?',
-                function() {
-                    $form.submit();
-                },
-                'Revoke',
-                'btn-danger',
-                'bg-danger text-white'
-            );
+        document.querySelectorAll('.revoke-share-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var form = this.closest('form');
+                var username = this.dataset.username;
+                
+                showConfirmModal(
+                    'Revoke Sharing',
+                    'Are you sure you want to stop sharing with ' + username + '?',
+                    function() {
+                        form.submit();
+                    },
+                    'Revoke',
+                    'btn-danger',
+                    'bg-danger text-white'
+                );
+            });
         });
         
         // Remove share access button handler
-        $('.remove-share-btn').click(function() {
-            var $btn = $(this);
-            var $form = $btn.closest('form');
-            var username = $btn.data('username');
-            
-            showConfirmModal(
-                'Remove Shared Access',
-                'Are you sure you want to remove shared access from ' + username + '?',
-                function() {
-                    $form.submit();
-                },
-                'Remove',
-                'btn-secondary',
-                'bg-secondary text-white'
-            );
+        document.querySelectorAll('.remove-share-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var form = this.closest('form');
+                var username = this.dataset.username;
+                
+                showConfirmModal(
+                    'Remove Shared Access',
+                    'Are you sure you want to remove shared access from ' + username + '?',
+                    function() {
+                        form.submit();
+                    },
+                    'Remove',
+                    'btn-secondary',
+                    'bg-secondary text-white'
+                );
+            });
         });
     });
 })();

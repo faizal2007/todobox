@@ -459,32 +459,41 @@ function togglePassword(fieldId) {
 {% block extra_script_footer %}
 <script>
 // Token confirmation handlers
-$(document).ready(function() {
-    $('#generateTokenBtn').click(function() {
-        showConfirmModal(
-            'Generate New Token',
-            'Are you sure you want to generate a new token? The old token will be invalidated.',
-            function() {
-                $('#generateTokenForm').submit();
-            },
-            'Generate',
-            'btn-warning',
-            'bg-warning text-dark'
-        );
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    var generateTokenBtn = document.getElementById('generateTokenBtn');
+    var revokeTokenBtn = document.getElementById('revokeTokenBtn');
+    var generateTokenForm = document.getElementById('generateTokenForm');
+    var revokeTokenForm = document.getElementById('revokeTokenForm');
+    
+    if (generateTokenBtn) {
+        generateTokenBtn.addEventListener('click', function() {
+            showConfirmModal(
+                'Generate New Token',
+                'Are you sure you want to generate a new token? The old token will be invalidated.',
+                function() {
+                    generateTokenForm.submit();
+                },
+                'Generate',
+                'btn-warning',
+                'bg-warning text-dark'
+            );
+        });
+    }
 
-    $('#revokeTokenBtn').click(function() {
-        showConfirmModal(
-            'Revoke API Token',
-            'Are you sure you want to revoke your API token? This will prevent all API access until you generate a new token.',
-            function() {
-                $('#revokeTokenForm').submit();
-            },
-            'Revoke',
-            'btn-danger',
-            'bg-danger text-white'
-        );
-    });
+    if (revokeTokenBtn) {
+        revokeTokenBtn.addEventListener('click', function() {
+            showConfirmModal(
+                'Revoke API Token',
+                'Are you sure you want to revoke your API token? This will prevent all API access until you generate a new token.',
+                function() {
+                    revokeTokenForm.submit();
+                },
+                'Revoke',
+                'btn-danger',
+                'bg-danger text-white'
+            );
+        });
+    }
 });
 </script>
 {% endblock %}

@@ -128,39 +128,61 @@
 </script>
 
 <script>
-     $('.done').click(function() {
-          $.post('/' + $(this).data('id') + '/done', {
-            '_csrf_token': '{{ csrf_token() }}'
-          },
-          function(data){
-               window.location.href = "{{ url_for('undone') }}";
-          });
-     })
-
-     $('.close-todo').click(function() {
-          var $button = $(this);
-          var todoId = $button.data('id');
-          var todoTitle = $button.closest('.card-body').find('.card-title').text().trim();
-          
-          showConfirmModal(
-               'Delete Todo',
-               'Are you sure you want to delete "' + todoTitle + '"? This action cannot be undone.',
-               function() {
-                    $.post('/' + todoId + '/delete', {
-                      '_csrf_token': '{{ csrf_token() }}'
-                    },
-                    function(data){
+     document.addEventListener('DOMContentLoaded', function() {
+          // Mark todo as done
+          document.querySelectorAll('.done').forEach(function(btn) {
+               btn.addEventListener('click', function() {
+                    var todoId = this.dataset.id;
+                    fetch('/' + todoId + '/done', {
+                         method: 'POST',
+                         headers: {
+                              'Content-Type': 'application/x-www-form-urlencoded',
+                              'X-CSRFToken': '{{ csrf_token() }}'
+                         },
+                         body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
+                    })
+                    .then(function() {
                          window.location.href = "{{ url_for('undone') }}";
+                    })
+                    .catch(function(error) {
+                         console.error('Error marking todo as done:', error);
                     });
-               },
-               'Delete',
-               'btn-danger',
-               'bg-danger text-white'
-          );
-     })
+               });
+          });
 
-     // Initialize centralized todo operations
-     $(document).ready(function() {
+          // Delete todo
+          document.querySelectorAll('.close-todo').forEach(function(btn) {
+               btn.addEventListener('click', function() {
+                    var todoId = this.dataset.id;
+                    var todoTitle = this.closest('.card-body').querySelector('.card-title').textContent.trim();
+                    
+                    showConfirmModal(
+                         'Delete Todo',
+                         'Are you sure you want to delete "' + todoTitle + '"? This action cannot be undone.',
+                         function() {
+                              fetch('/' + todoId + '/delete', {
+                                   method: 'POST',
+                                   headers: {
+                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                        'X-CSRFToken': '{{ csrf_token() }}'
+                                   },
+                                   body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
+                              })
+                              .then(function() {
+                                   window.location.href = "{{ url_for('undone') }}";
+                              })
+                              .catch(function(error) {
+                                   console.error('Error deleting todo:', error);
+                              });
+                         },
+                         'Delete',
+                         'btn-danger',
+                         'bg-danger text-white'
+                    );
+               });
+          });
+
+          // Initialize centralized todo operations
           TodoOperations.initialize({
                simplemde: simplemde,
                csrfToken: '{{ csrf_token() }}',

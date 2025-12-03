@@ -113,92 +113,115 @@
 <!-- <script src="assets/js/pages/demo.simplemde.js"></script> -->
                                                                                                     
 <script>
-     $('.done').click(function() {
-          var $button = $(this);
-          var $icon = $button.find('.done-icon');
-          var $loading = $button.find('.done-loading');
-          
-          // Show loading state
-          $icon.hide();
-          $loading.show();
-          $button.prop('disabled', true);
-          
-          $.post($SCRIPT_ROOT + $button.data('id') + '/done', {
-            '_csrf_token': '{{ csrf_token() }}'
-          },
-          function(data){
-               window.location.href = "{{ url_for('list', id='today') }}";
-          }).fail(function() {
-               // Hide loading state on error
-               $icon.show();
-               $loading.hide();
-               $button.prop('disabled', false);
-          });
-     })
-
-     $('.close-todo').click(function() {
-          var $button = $(this);
-          var todoId = $button.data('id');
-          var todoTitle = $button.closest('.card-body').find('.card-title').text().trim();
-          
-          showConfirmModal(
-               'Delete Todo',
-               'Are you sure you want to delete "' + todoTitle + '"? This action cannot be undone.',
-               function() {
-                    var $icon = $button.find('.delete-icon');
-                    var $loading = $button.find('.delete-loading');
+     document.addEventListener('DOMContentLoaded', function() {
+          // Mark todo as done
+          document.querySelectorAll('.done').forEach(function(button) {
+               button.addEventListener('click', function() {
+                    var icon = this.querySelector('.done-icon');
+                    var loading = this.querySelector('.done-loading');
                     
                     // Show loading state
-                    $icon.hide();
-                    $loading.show();
-                    $button.prop('disabled', true);
+                    if (icon) icon.style.display = 'none';
+                    if (loading) loading.style.display = '';
+                    this.disabled = true;
                     
-                    let title = '{{ title }}'
-                    $.post('/' + todoId + '/delete', {
-                      '_csrf_token': '{{ csrf_token() }}'
-                    },
-                    function(data){
-                         if(title == 'today')
-                              window.location.href = "{{ url_for('list', id='today') }}";
-                         else
-                              window.location.href = "{{ url_for('list', id='tomorrow') }}";
-                    }).fail(function() {
+                    fetch(window.SCRIPT_ROOT + this.dataset.id + '/done', {
+                         method: 'POST',
+                         headers: {
+                              'Content-Type': 'application/x-www-form-urlencoded',
+                              'X-CSRFToken': '{{ csrf_token() }}'
+                         },
+                         body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
+                    })
+                    .then(function() {
+                         window.location.href = "{{ url_for('list', id='today') }}";
+                    })
+                    .catch(function(error) {
+                         console.error('Error marking todo as done:', error);
                          // Hide loading state on error
-                         $icon.show();
-                         $loading.hide();
-                         $button.prop('disabled', false);
+                         if (icon) icon.style.display = '';
+                         if (loading) loading.style.display = 'none';
+                         button.disabled = false;
                     });
-               },
-               'Delete',
-               'btn-danger',
-               'bg-danger text-white'
-          );
-     })
+               });
+          });
 
-     // reset value
-     $('#create-todo-main').click(function() {
-          $('#title-input-normal').val('');
-          $("input[name='todo_id']").val('')
-          simplemde.value('');
-          // Reset schedule selection to today
-          $('input[name="schedule_day"][value="today"]').prop('checked', true);
-          $('label[for="today"]').addClass('active');
-          $('label[for="tomorrow"], label[for="custom_day"]').removeClass('active');
-          $('#custom-date-picker').hide();
-          
-          // Reset reminder fields
-          $('#reminder-enabled').prop('checked', false);
-          $('#reminder-options').hide();
-          $('input[name="reminder_type"][value="custom"]').prop('checked', true);
-          $('#reminder-datetime').val('');
-          $('#reminder-before-minutes').val('30');
-          $('#reminder-before-unit').val('minutes');
-          $('#reminder-custom-time').show();
-          $('#reminder-before-options').hide();
-     })
+          // Delete todo
+          document.querySelectorAll('.close-todo').forEach(function(button) {
+               button.addEventListener('click', function() {
+                    var todoId = this.dataset.id;
+                    var todoTitle = this.closest('.card-body').querySelector('.card-title').textContent.trim();
+                    
+                    showConfirmModal(
+                         'Delete Todo',
+                         'Are you sure you want to delete "' + todoTitle + '"? This action cannot be undone.',
+                         function() {
+                              var icon = button.querySelector('.delete-icon');
+                              var loading = button.querySelector('.delete-loading');
+                              
+                              // Show loading state
+                              if (icon) icon.style.display = 'none';
+                              if (loading) loading.style.display = '';
+                              button.disabled = true;
+                              
+                              var title = '{{ title }}';
+                              fetch('/' + todoId + '/delete', {
+                                   method: 'POST',
+                                   headers: {
+                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                        'X-CSRFToken': '{{ csrf_token() }}'
+                                   },
+                                   body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
+                              })
+                              .then(function() {
+                                   if(title == 'today')
+                                        window.location.href = "{{ url_for('list', id='today') }}";
+                                   else
+                                        window.location.href = "{{ url_for('list', id='tomorrow') }}";
+                              })
+                              .catch(function(error) {
+                                   console.error('Error deleting todo:', error);
+                                   // Hide loading state on error
+                                   if (icon) icon.style.display = '';
+                                   if (loading) loading.style.display = 'none';
+                                   button.disabled = false;
+                              });
+                         },
+                         'Delete',
+                         'btn-danger',
+                         'bg-danger text-white'
+                    );
+               });
+          });
 
-     // Initialize centralized todo operations with custom redirect logic
-     $(document).ready(function() {
+          // reset value
+          var createTodoBtn = document.getElementById('create-todo-main');
+          if (createTodoBtn) {
+               createTodoBtn.addEventListener('click', function() {
+                    document.getElementById('title-input-normal').value = '';
+                    document.querySelector("input[name='todo_id']").value = '';
+                    simplemde.value('');
+                    
+                    // Reset schedule selection to today
+                    document.querySelector('input[name="schedule_day"][value="today"]').checked = true;
+                    document.querySelector('label[for="today"]').classList.add('active');
+                    document.querySelectorAll('label[for="tomorrow"], label[for="custom_day"]').forEach(function(label) {
+                         label.classList.remove('active');
+                    });
+                    document.getElementById('custom-date-picker').style.display = 'none';
+                    
+                    // Reset reminder fields
+                    document.getElementById('reminder-enabled').checked = false;
+                    document.getElementById('reminder-options').style.display = 'none';
+                    document.querySelector('input[name="reminder_type"][value="custom"]').checked = true;
+                    document.getElementById('reminder-datetime').value = '';
+                    document.getElementById('reminder-before-minutes').value = '30';
+                    document.getElementById('reminder-before-unit').value = 'minutes';
+                    document.getElementById('reminder-custom-time').style.display = '';
+                    document.getElementById('reminder-before-options').style.display = 'none';
+               });
+          }
+
           // Define redirect function based on schedule selection
           var redirectFunction = function(schedule_day) {
                if (schedule_day === 'tomorrow') {
