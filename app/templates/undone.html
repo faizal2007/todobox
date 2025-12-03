@@ -156,12 +156,11 @@
                          $('input[name="reminder_type"][value="custom"]').prop('checked', true).trigger('change');
                          // Extract just the date-time part (YYYY-MM-DDTHH:mm) from ISO format
                          let reminderDateTime = data['reminder_time'];
-                         // Handle both formats: with and without timezone
-                         if (reminderDateTime.includes('T')) {
-                              reminderDateTime = reminderDateTime.split('T')[0] + 'T' + reminderDateTime.split('T')[1].substring(0, 5);
+                         // Extract the first 16 characters to get YYYY-MM-DDTHH:mm
+                         if (reminderDateTime && reminderDateTime.length >= 16) {
+                              reminderDateTime = reminderDateTime.substring(0, 16);
                          }
                          $('#reminder-datetime').val(reminderDateTime);
-                         console.log('Loaded reminder datetime:', reminderDateTime);
                     }
                } else {
                     $('#reminder-enabled').prop('checked', false);
