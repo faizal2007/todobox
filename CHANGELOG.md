@@ -5,6 +5,38 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.12] - Security Fix - 2025-12-03
+
+### Security
+
+- Replaced all print statements with proper logging across multiple modules
+  - `app/__init__.py`: Replaced 4 print statements with appropriate logging levels (warning, info, error)
+  - `app/geolocation.py`: Replaced 2 DEBUG print statements with `logging.debug()`
+  - `app/oauth.py`: Replaced 2 print statements with `logging.debug()` and `logging.error()`
+  - `app/reminder_service.py`: Replaced 2 print statements with `logging.info()` and `logging.error()`
+  - `app/timezone_utils.py`: Replaced 2 print statements with `logging.error()`
+  - Added `import logging` to all affected modules
+  - This prevents potential information disclosure in production and allows proper log level control via configuration
+
+## [1.3.11] - Security Fix - 2025-12-03
+
+### Security
+
+- Replaced remaining print statements with proper logging in `app/routes.py`
+  - Replaced error handling print statements (lines 328-331) with `logging.exception()`
+  - Removed commented-out debug print statement (line 1045)
+  - Added logging module import for proper error logging
+  - This ensures production logs can be properly controlled and won't leak sensitive information to stdout/stderr
+
+## [1.3.10] - Security Fix - 2025-12-03
+
+### Security
+
+- Removed all debug print statements from `app/routes.py`
+  - Removed 21 debug print statements that could leak sensitive information in production
+  - Debug statements were logging user emails, timezone information, todo IDs, timestamps, and internal application state
+  - This prevents potential information disclosure in production logs and improves overall security posture
+
 ## [1.3.9] - Security Fix - 2025-12-03
 
 ### Security

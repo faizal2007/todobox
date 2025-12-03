@@ -16,6 +16,7 @@ from bleach import clean
 from wtforms.csrf.core import CSRF
 from functools import wraps
 import requests
+import logging
 
 # API Token Authentication Decorator
 def require_api_token(f):
@@ -324,11 +325,9 @@ def init_default_data():
             if status_count == 0:
                 Status.seed()
                 db.session.commit()  # type: ignore[attr-defined]
-    except Exception as e:
-        print(f"ERROR: Failed to initialize default data: {e}")
+    except Exception:
+        logging.exception("Failed to initialize default data")
         # Don't let this crash the app, but log the error
-        import traceback
-        traceback.print_exc()
 
 # Initialize data once when app starts
 # init_default_data()  # DISABLED - moved to app startup hook
@@ -559,7 +558,6 @@ def setup_account():
             detected_tz = detect_timezone_from_ip()
             if detected_tz:
                 user.timezone = detected_tz
-                print(f"DEBUG: Auto-detected timezone {detected_tz} for user {user.email}")
             
             db.session.add(user)  # type: ignore[attr-defined]
             db.session.commit()  # type: ignore[attr-defined]
@@ -794,8 +792,6 @@ def add():
         reminder_before_minutes = request.form.get("reminder_before_minutes")
         reminder_before_unit = request.form.get("reminder_before_unit")
         
-        print(f"DEBUG: schedule_day={schedule_day}, custom_date={custom_date}")  # Debug line
-        
         # Calculate target date based on schedule selection
         if schedule_day == "tomorrow":
             target_date = datetime.now() + timedelta(days=1)
@@ -805,9 +801,7 @@ def add():
                 parsed_date = datetime.strptime(custom_date, "%Y-%m-%d").date()
                 current_time = datetime.now().time()
                 target_date = datetime.combine(parsed_date, current_time)
-                print(f"DEBUG: Parsed custom date: {target_date}")  # Debug line
             except ValueError:
-                print(f"DEBUG: Invalid date format: {custom_date}")  # Debug line
                 target_date = datetime.now()  # Default to today if invalid date
         else:
             target_date = datetime.now()  # Default to today
@@ -839,7 +833,6 @@ def add():
                 # Now update the timestamps
                 t.timestamp = target_date
                 t.modified = target_date
-                print(f"DEBUG: Setting custom timestamp: {target_date}")  # Debug line
             else:
                 db.session.add(t)  # type: ignore[attr-defined]
 
@@ -854,9 +847,8 @@ def add():
                         reminder_dt_utc = convert_from_user_timezone(reminder_dt, current_user.timezone)
                         t.reminder_time = reminder_dt_utc
                         t.reminder_enabled = True
-                        print(f"DEBUG: Reminder set for {reminder_datetime} ({current_user.timezone}) -> UTC {reminder_dt_utc}")
                     except ValueError as e:
-                        print(f"DEBUG: Invalid reminder datetime format: {reminder_datetime} - {str(e)}")
+                        logging.debug(f"Invalid reminder datetime format: {reminder_datetime} - {str(e)}")
                 elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
                     try:
                         minutes = int(reminder_before_minutes)
@@ -872,23 +864,18 @@ def add():
                         
                         t.reminder_time = reminder_dt
                         t.reminder_enabled = True
-                        print(f"DEBUG: Reminder set for {minutes} {reminder_before_unit} before target date")
                     except (ValueError, TypeError):
-                        print(f"DEBUG: Invalid reminder before parameters")
+                        logging.debug("Invalid reminder before parameters")
 
             db.session.commit()  # type: ignore[attr-defined]
-            
-            print(f"DEBUG: Todo created with ID: {t.id}, timestamp: {t.timestamp}, modified: {t.modified}")  # Debug line
             
             # Add tracker entry with appropriate date
             if schedule_day == "today" and getTomorrow == 0:
                 # For today, use the actual timestamp from the todo
                 Tracker.add(t.id, 5, t.timestamp)  # Status 5 = new
-                print(f"DEBUG: Tracker added for TODAY with timestamp: {t.timestamp}")
             else:
                 # For tomorrow or custom date, use the target_date
                 Tracker.add(t.id, 5, target_date)  # Status 5 = new
-                print(f"DEBUG: Tracker added for {schedule_day.upper()} with timestamp: {target_date}")
         else:
             # Updating existing todo
             todo_id = request.form.get("todo_id")
@@ -915,10 +902,8 @@ def add():
                         t.reminder_enabled = True
                         # Reset reminder_sent flag so the new reminder will trigger
                         t.reminder_sent = False
-                        print(f"DEBUG: Updated reminder for todo {todo_id}: {reminder_datetime} ({current_user.timezone}) -> UTC {reminder_dt_utc}")
                     except ValueError as e:
-                        print(f"DEBUG: Failed to parse reminder datetime: {reminder_datetime} - {str(e)}")
-                        pass
+                        logging.debug(f"Failed to parse reminder datetime: {reminder_datetime} - {str(e)}")
                 elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
                     try:
                         minutes = int(reminder_before_minutes)
@@ -935,16 +920,13 @@ def add():
                         t.reminder_enabled = True
                         # Reset reminder_sent flag so the new reminder will trigger
                         t.reminder_sent = False
-                        print(f"DEBUG: Updated reminder for todo {todo_id}: {minutes} {reminder_before_unit} before target")
                     except (ValueError, TypeError):
-                        print(f"DEBUG: Failed to parse reminder before parameters")
-                        pass
+                        logging.debug("Failed to parse reminder before parameters")
             else:
                 # Clear reminder if disabled
                 t.reminder_enabled = False
                 t.reminder_time = None
                 t.reminder_sent = False
-                print(f"DEBUG: Cleared reminder for todo {todo_id}")
 
             if getTitle == title and getActivities == activites :
                 if schedule_day != "today" or getTomorrow == '1':
@@ -952,7 +934,6 @@ def add():
                     t.modified = target_date
                     db.session.commit()  # type: ignore[attr-defined]
                     Tracker.add(todo_id, 8, target_date)  # Status 8 = re-assign
-                    print(f"DEBUG: Updated todo (no content change) - Tracker added with timestamp: {target_date}")
                 elif byPass == '1':
                     t.modified = datetime.now()
                     db.session.commit()  # type: ignore[attr-defined]
@@ -963,7 +944,6 @@ def add():
                         t.modified = datetime.now()
                         db.session.commit()  # type: ignore[attr-defined]
                         Tracker.add(todo_id, 8, datetime.now())  # Status 8 = re-assign
-                        print(f"DEBUG: Rescheduled todo to TODAY (no content change) - Tracker added")
                         return jsonify({
                             'status': 'success'
                         }), 200
@@ -983,12 +963,10 @@ def add():
                     t.modified = target_date
                     db.session.commit()  # type: ignore[attr-defined]
                     Tracker.add(todo_id, 8, target_date)  # Status 8 = re-assign
-                    print(f"DEBUG: Updated todo (content changed) - Tracker added with timestamp: {target_date}")
                 else:
                     t.modified = datetime.now()
                     db.session.commit()  # type: ignore[attr-defined]
                     Tracker.add(todo_id, 5, datetime.now())  # Status 5 = new
-                    print(f"DEBUG: Updated todo for TODAY - Tracker added with timestamp: {datetime.now()}")
                 
                 return jsonify({
                     'status': 'success'
@@ -1063,8 +1041,6 @@ def getTodo(id):
 @app.route('/<path:id>/list')
 @login_required
 def list(id):
-    # print(Todo.getList(id))
-    # abort(404)
    
     if id == 'today':
         query_date = date.today()

@@ -4,6 +4,7 @@ Timezone utility functions for converting between UTC and user timezones.
 
 from datetime import datetime
 import pytz
+import logging
 
 def convert_to_user_timezone(dt, user_timezone='UTC'):
     """
@@ -31,7 +32,7 @@ def convert_to_user_timezone(dt, user_timezone='UTC'):
         user_tz = pytz.timezone(user_timezone)
         return dt.astimezone(user_tz)
     except Exception as e:
-        print(f"Timezone conversion error: {e}")
+        logging.error(f"Timezone conversion error: {e}")
         return dt
 
 def convert_from_user_timezone(dt, user_timezone='UTC'):
@@ -57,7 +58,7 @@ def convert_from_user_timezone(dt, user_timezone='UTC'):
         # Convert to UTC
         return dt.astimezone(pytz.UTC).replace(tzinfo=None)
     except Exception as e:
-        print(f"Timezone conversion error: {e}")
+        logging.error(f"Timezone conversion error: {e}")
         return dt
 
 def get_user_local_time(user):

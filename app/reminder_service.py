@@ -5,6 +5,7 @@ Checks for pending reminders and sends notifications.
 
 from datetime import datetime
 import pytz
+import logging
 from sqlalchemy import and_, not_
 from app import db
 from app.models import Todo, User
@@ -85,13 +86,13 @@ class ReminderService:
                     ReminderService.mark_reminder_sent(todo.id)
                     result['processed'] += 1
                     
-                    print(f"Reminder sent for todo {todo.id}: {todo.name}")
+                    logging.info(f"Reminder sent for todo {todo.id}: {todo.name}")
             except Exception as e:
                 result['errors'].append({
                     'todo_id': todo.id,
                     'error': str(e)
                 })
-                print(f"Error processing reminder for todo {todo.id}: {str(e)}")
+                logging.error(f"Error processing reminder for todo {todo.id}: {str(e)}")
         
         return result
     

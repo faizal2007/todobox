@@ -9,6 +9,7 @@ from app.utils import momentjs
 from lib.database import connect_db
 import os
 import hashlib
+import logging
 
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_object('app.config')
@@ -109,13 +110,13 @@ def initialize_default_data():
         try:
             user_count = models.User.query.count()
         except Exception:
-            print("⚠️  User table not accessible, skipping data initialization")
+            logging.warning("⚠️  User table not accessible, skipping data initialization")
             return
             
         try:
             status_count = models.Status.query.count()
         except Exception:
-            print("⚠️  Status table not accessible, skipping data initialization")
+            logging.warning("⚠️  Status table not accessible, skipping data initialization")
             return
 
         # Check and seed users if none exist
@@ -129,13 +130,11 @@ def initialize_default_data():
             db.session.commit()  # type: ignore[attr-defined]
         
         _initialized = True
-        print("✅ Default data initialized successfully")
+        logging.info("✅ Default data initialized successfully")
         
     except Exception as e:
-        print(f"ERROR: Failed to initialize default data: {e}")
-        # Don't let this crash the app, but log the error
-        import traceback
-        traceback.print_exc()
+        # Use logging.exception to include traceback in logs
+        logging.exception("Failed to initialize default data")
 
 @app.before_request
 def ensure_initialized():
