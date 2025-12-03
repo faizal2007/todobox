@@ -91,6 +91,8 @@
 {% block extra_script_footer %}
 <!-- SimpleMDE js -->
 <script src='{{ url_for('static', filename='assets/js/vendor/simplemde.min.js') }}'></script>
+<!-- Centralized Todo Operations -->
+<script src='{{ url_for('static', filename='assets/js/todo-operations.js') }}'></script>
 <script>
      let simplemde = new SimpleMDE({ 
         spellChecker: false,
@@ -126,62 +128,6 @@
           },
           function(data){
                window.location.href = "{{ url_for('list', id='today') }}";
-          }).fail(function() {
-               // Hide loading state on error
-               $icon.show();
-               $loading.hide();
-               $button.prop('disabled', false);
-          });
-     })
-
-     $('.edit').click(function() {
-          var $button = $(this);
-          var $icon = $button.find('.edit-icon');
-          var $loading = $button.find('.edit-loading');
-          
-          // Show loading state
-          $icon.hide();
-          $loading.show();
-          $button.prop('disabled', true);
-          
-          $.post('/' + $(this).data('id') + '/todo', {
-            '_csrf_token': '{{ csrf_token() }}'
-          },
-          function(data){
-               $('#info-header-modal').modal('show');
-               $('#title-input-normal').val(data['title']);
-               $("input[name='todo_id']").val(data['id']);
-               simplemde.value(data['activities']);
-               
-               // Load reminder data if it exists
-               if (data['reminder_enabled']) {
-                    $('#reminder-enabled').prop('checked', true);
-                    $('#reminder-options').show();
-                    
-                    // Determine reminder type from reminder_time
-                    if (data['reminder_time']) {
-                         // For now, set to custom time type
-                         $('input[name="reminder_type"][value="custom"]').prop('checked', true).trigger('change');
-                         // Extract just the date-time part (YYYY-MM-DDTHH:mm) from ISO format
-                         let reminderDateTime = data['reminder_time'];
-                         // Handle both formats: with and without timezone
-                         if (reminderDateTime.includes('T')) {
-                              reminderDateTime = reminderDateTime.split('T')[0] + 'T' + reminderDateTime.split('T')[1].substring(0, 5);
-                         }
-                         $('#reminder-datetime').val(reminderDateTime);
-                         console.log('Loaded reminder datetime:', reminderDateTime);
-                    }
-               } else {
-                    $('#reminder-enabled').prop('checked', false);
-                    $('#reminder-options').hide();
-               }
-               
-               console.log(data)
-               
-               // Hide loading state after modal is shown
-               $icon.show();
-               $loading.hide();
-               $button.prop('disabled', false);
           }).fail(function() {
                // Hide loading state on error
                $icon.show();
@@ -228,6 +174,7 @@
                'bg-danger text-white'
           );
      })
+
      // reset value
      $('#create-todo-main').click(function() {
           $('#title-input-normal').val('');
@@ -250,143 +197,25 @@
           $('#reminder-before-options').hide();
      })
 
-     // Handle schedule day selection
-     $('input[name="schedule_day"]').change(function() {
-          console.log('Schedule changed to:', $(this).val());
-          if ($(this).val() === 'custom') {
-               $('#custom-date-picker').show();
-          } else {
-               $('#custom-date-picker').hide();
-          }
-     });
-
-     // Handle label clicks for button group
-     $('label[for="today"], label[for="tomorrow"], label[for="custom_day"]').click(function() {
-          const targetInput = $(this).attr('for');
-          const inputValue = $('#' + targetInput).val();
-          
-          // Remove active class from all labels
-          $('label[for="today"], label[for="tomorrow"], label[for="custom_day"]').removeClass('active');
-          // Add active class to clicked label
-          $(this).addClass('active');
-          
-          console.log('Button clicked:', inputValue);
-          
-          if (inputValue === 'custom') {
-               $('#custom-date-picker').show();
-          } else {
-               $('#custom-date-picker').hide();
-          }
-     });
-
-     // Reminder functionality
-     $('#reminder-enabled').change(function() {
-          if ($(this).is(':checked')) {
-               $('#reminder-options').slideDown(200);
-          } else {
-               $('#reminder-options').slideUp(200);
-          }
-     });
-
-     $('input[name="reminder_type"]').change(function() {
-          if ($(this).val() === 'custom') {
-               $('#reminder-custom-time').show();
-               $('#reminder-before-options').hide();
-          } else {
-               $('#reminder-custom-time').hide();
-               $('#reminder-before-options').show();
-          }
-     });
-
-     /** Script for html modal **/
-
-     $('.create-todo').click(function() {
-          
-          let title = $('#title-input-normal').val();
-          let activities = simplemde.value();
-          let todo_id = $("input[name='todo_id']").val();
-          let schedule_day = $('input[name="schedule_day"]:checked').val();
-          let custom_date = $('#custom_date').val();
-          
-          // Reminder data
-          let reminderEnabled = $('#reminder-enabled').is(':checked');
-          let reminderData = {
-               enabled: reminderEnabled,
-               type: reminderEnabled ? $('input[name="reminder_type"]:checked').val() : null,
-               datetime: reminderEnabled ? $('#reminder-datetime').val() : null,
-               beforeMinutes: reminderEnabled ? $('#reminder-before-minutes').val() : null,
-               beforeUnit: reminderEnabled ? $('#reminder-before-unit').val() : null
+     // Initialize centralized todo operations with custom redirect logic
+     $(document).ready(function() {
+          // Define redirect function based on schedule selection
+          var redirectFunction = function(schedule_day) {
+               if (schedule_day === 'tomorrow') {
+                    return "{{ url_for('list', id='tomorrow') }}";
+               } else if (schedule_day === 'custom') {
+                    return "{{ url_for('list', id='today') }}";
+               } else {
+                    return "{{ url_for('list', id='today') }}";
+               }
           };
           
-          if(title) {
-               var $button = $(this);
-               var $icon = $button.find('.create-icon');
-               var $loading = $button.find('.create-loading');
-               
-               // Show loading state
-               $icon.hide();
-               $loading.show();
-               $button.prop('disabled', true);
-               
-               $.post('/add', {
-                    '_csrf_token': '{{ csrf_token() }}',
-                    'todo_id': todo_id ? todo_id:'',
-                    'title': title,
-                    'activities': activities,
-                    'schedule_day': schedule_day,
-                    'custom_date': custom_date,
-                    'reminder_enabled': reminderData.enabled,
-                    'reminder_type': reminderData.type,
-                    'reminder_datetime': reminderData.datetime,
-                    'reminder_before_minutes': reminderData.beforeMinutes,
-                    'reminder_before_unit': reminderData.beforeUnit
-               },
-               function(data){
-                    console.log('Server response:', data);
-                    // Redirect based on schedule selection
-                    if (schedule_day === 'tomorrow') {
-                         window.location.href = "{{ url_for('list', id='tomorrow') }}";
-                    } else if (schedule_day === 'custom') {
-                         // For custom dates, redirect to today page for now
-                         // Could be enhanced to create a custom date view
-                         window.location.href = "{{ url_for('list', id='today') }}";
-                    } else {
-                         window.location.href = "{{ url_for('list', id='today') }}";
-                    }
-               }).fail(function() {
-                    // Hide loading state on error
-                    $icon.show();
-                    $loading.hide();
-                    $button.prop('disabled', false);
-               });
-          }
-          else
-               $('#title-input-normal').last().addClass('is-invalid')
-          
-     })
-
-     $('#info-header-modal').on('shown.bs.modal', function() {
-          $(this).find('[autofocus]').focus();
-          simplemde.codemirror.refresh();
-     });
-
-     $(document).ready(function() {
-    
-          $(document).keydown(function(event) {
-               // Only if modal is visible
-               if ($('#info-header-modal').hasClass('show')) {
-                    // Detect Ctrl + Enter to save
-                    if ((event.ctrlKey || event.metaKey) && event.which === 13) {
-                         event.preventDefault();
-                         $('.create-todo').click();
-                    }
-                    
-                    // Detect Ctrl + S to save
-                    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-                         event.preventDefault();
-                         $('.create-todo').click();
-                    }
-               }
+          // Initialize all todo operations at once
+          TodoOperations.initialize({
+               simplemde: simplemde,
+               csrfToken: '{{ csrf_token() }}',
+               redirectUrl: redirectFunction,
+               showLoadingState: true
           });
           
           // Add wisdom quotes to each card

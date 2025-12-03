@@ -5,6 +5,25 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.7] - Bug Fix - 2025-12-03
+
+### Fixed
+
+- Fixed "Set Reminder" functionality not working when editing tasks from the Undone page
+  - Added missing reminder data loading code to the edit handler in `undone.html`
+  - Added reminder data submission to the save handler in `undone.html`
+  - Added reminder checkbox and radio button event handlers in `undone.html`
+  - Reminder functionality now works consistently across all pages (today, tomorrow, and undone)
+  - Users can now properly set, view, and update reminders when editing undone tasks
+
+### Changed
+
+- Refactored todo operations to use centralized JavaScript module
+  - Created `todo-operations.js` for shared todo functionality across pages
+  - Reduced code duplication between `list.html` and `undone.html`
+  - Centralized reminder handling, schedule selection, and keyboard shortcuts
+  - Makes future updates easier as changes automatically apply to all pages using the module
+
 ## [1.3.6] - Bug Fix - 2025-12-02
 
 ### 1.3.6 - Fixed
