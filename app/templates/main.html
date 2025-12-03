@@ -193,6 +193,7 @@
 					
 					// Track if user cancelled the reminder
 					let reminderCancelled = false;
+					let autoDismissTimer;
 					
 					// Handle close button click - cancel the reminder
 					const closeButton = notification.querySelector('.close');
@@ -232,7 +233,7 @@
 					
 					// Auto-dismiss after 10 seconds (longer than before for visibility)
 					// Mark as sent only if user didn't cancel
-					const autoDismissTimer = setTimeout(async () => {
+					autoDismissTimer = setTimeout(async () => {
 						notification.style.animation = 'slideOut 0.3s ease-out';
 						setTimeout(() => {
 							notification.remove();
