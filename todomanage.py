@@ -1568,8 +1568,8 @@ def generate_fake_todos():
                     random_seconds = random.randint(0, total_seconds)
                     todo_date = start_date + timedelta(seconds=random_seconds)
                 else:
-                    # For same-day periods, use the selected date with a random hour
-                    todo_date = start_date + timedelta(hours=random.randint(0, 23))
+                    # For same-day periods, use the selected date with a random hour (0-22 to stay within the day)
+                    todo_date = start_date + timedelta(hours=random.randint(0, 22), minutes=random.randint(0, 59))
                 
                 # Random task
                 task_name = random.choice(task_names)
@@ -1616,7 +1616,7 @@ def generate_fake_todos():
                 count = Todo.query.filter(
                     Todo.user_id == selected_user.id,
                     Todo.modified >= start,
-                    Todo.modified <= end + timedelta(days=1)
+                    Todo.modified <= end
                 ).count()
                 print(f"  {period.replace('_', ' ').title():<15}: {count:>3} todos")
             
