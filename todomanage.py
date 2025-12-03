@@ -1554,7 +1554,7 @@ def generate_fake_todos():
                 
                 for period, prob in distribution.items():
                     cumulative += prob
-                    if rand <= cumulative:
+                    if rand < cumulative:
                         selected_period = period
                         break
                 
@@ -1563,8 +1563,13 @@ def generate_fake_todos():
                 
                 # Random date within range
                 time_delta = end_date - start_date
-                random_seconds = random.randint(0, int(time_delta.total_seconds()))
-                todo_date = start_date + timedelta(seconds=random_seconds)
+                total_seconds = int(time_delta.total_seconds())
+                if total_seconds > 0:
+                    random_seconds = random.randint(0, total_seconds)
+                    todo_date = start_date + timedelta(seconds=random_seconds)
+                else:
+                    # For same-day periods, use the selected date with a random hour
+                    todo_date = start_date + timedelta(hours=random.randint(0, 23))
                 
                 # Random task
                 task_name = random.choice(task_names)
@@ -1583,9 +1588,13 @@ def generate_fake_todos():
                 db.session.add(todo)
                 db.session.flush()
                 
-                # Add tracker with weighted random status
+                # Add tracker with weighted random status (without committing yet)
                 status_id = random.choices(statuses, weights=status_weights)[0]
-                Tracker.add(todo.id, status_id, todo_date)
+                tracker = Tracker(todo_id=todo.id, status_id=status_id, timestamp=todo_date)
+                db.session.add(tracker)
+                
+                # Update todo.modified to match tracker timestamp
+                todo.modified = todo_date
                 
                 todos_created += 1
                 
