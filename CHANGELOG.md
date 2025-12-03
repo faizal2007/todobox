@@ -23,6 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Charts display todo status distribution (Done, Pending, Re-assign)
   - Fallback "No data" message when a time period has no todos
   - Smooth animations and responsive design
+- **Fake Todo Generator**: Added option 9 in `todomanage.py` to generate test data
+  - Interactive menu option to create fake todos for testing dashboard charts
+  - Generates todos spanning different time periods (today, week, month, year)
+  - Configurable number of todos (1-1000)
+  - Smart distribution: more recent todos are generated more frequently
+  - Random task names and details from predefined lists
+  - Status distribution: 30% pending, 50% done, 20% re-assign
+  - Optional deletion of existing todos before generation
+  - Shows distribution summary after generation
 
 ### Changed
 
@@ -36,6 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented JavaScript to create and manage multiple Chart.js instances
   - Added custom CSS styling for professional-looking tabs
   - Improved chart titles to show the current time period context
+- Updated `todomanage.py`:
+  - Added `generate_fake_todos()` function for testing data generation
+  - Updated main menu to include new option (option 9)
+  - Changed "Exit" from option 9 to option 10
+  - Made database connection imports conditional to avoid import errors
 
 ### Technical Details
 
@@ -43,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Charts are initialized on page load and properly resized when tabs are switched
 - Maintains backward compatibility with existing dashboard statistics
 - All charts use consistent color scheme (Green for Done, Orange for Re-assign, Yellow for Pending)
+- Fake data generator uses weighted random selection for realistic distribution across time periods
 
 ## [1.3.12] - Security Fix - 2025-12-03
 
