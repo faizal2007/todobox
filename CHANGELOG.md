@@ -5,6 +5,16 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.6] - Bug Fix - 2025-12-02
+
+### 1.3.6 - Fixed
+
+- Fixed undone task edit not working when selecting "Today" schedule option
+  - When editing an undone task and clicking "Today" to reschedule it back to today's list, the task now correctly updates
+  - Previously, selecting "Today" for an undone task without changing content would fail silently
+  - The fix checks if the todo's modified date differs from today and updates it accordingly with a re-assign tracker entry
+  - Resolves issue where nothing happened after clicking save with "Today" selected
+
 ## [1.3.5] - Documentation Recheck - 2025-11-30
 
 ### 1.3.5 - Fixed

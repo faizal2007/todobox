@@ -957,12 +957,23 @@ def add():
                     t.modified = datetime.now()
                     db.session.commit()  # type: ignore[attr-defined]
                 else:
-                    # Even if title/content didn't change, we still need to save reminder changes
-                    db.session.commit()  # type: ignore[attr-defined]
-                    return jsonify({
-                        'status': 'failed',
-                        'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>'
-                    }), 200
+                    # Check if the todo's current date is different from today
+                    # If so, reschedule it to today
+                    if t.modified.date() != datetime.now().date():
+                        t.modified = datetime.now()
+                        db.session.commit()  # type: ignore[attr-defined]
+                        Tracker.add(todo_id, 8, datetime.now())  # Status 8 = re-assign
+                        print(f"DEBUG: Rescheduled todo to TODAY (no content change) - Tracker added")
+                        return jsonify({
+                            'status': 'success'
+                        }), 200
+                    else:
+                        # Even if title/content didn't change, we still need to save reminder changes
+                        db.session.commit()  # type: ignore[attr-defined]
+                        return jsonify({
+                            'status': 'failed',
+                            'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>'
+                        }), 200
             else:
                 t.name = getTitle
                 t.details = getActivities
