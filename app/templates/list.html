@@ -218,27 +218,34 @@
                showLoadingState: true
           });
           
-          // Add wisdom quotes to each card
+          // Cache DOM query for better performance
           var cardWisdoms = document.querySelectorAll('.card-wisdom');
-          var count = cardWisdoms.length;
           
-          // Fetch quotes from backend API endpoint
-          cardWisdoms.forEach(function(el, index) {
-               $.ajax({
-                    url: '/api/quote',
-                    type: 'GET',
-                    timeout: 5000,
-                    success: function(data) {
-                         if (data.quote) {
+          // Fetch a single quote and apply to all cards (more efficient than fetching per card)
+          if (cardWisdoms.length > 0) {
+               fetch('/api/quote', {
+                    method: 'GET',
+                    timeout: 5000
+               })
+               .then(response => {
+                    if (!response.ok) throw new Error('Quote fetch failed');
+                    return response.json();
+               })
+               .then(data => {
+                    if (data.quote) {
+                         // Apply same quote to all cards
+                         cardWisdoms.forEach(function(el) {
                               el.textContent = data.quote;
-                         }
-                    },
-                    error: function() {
-                         // Fallback: use a default quote if API fails
-                         el.textContent = 'Stay focused';
+                         });
                     }
+               })
+               .catch(err => {
+                    console.debug('Quote API unavailable, using fallback');
+                    cardWisdoms.forEach(function(el) {
+                         el.textContent = 'Stay focused';
+                    });
                });
-          });
+          }
      });
 </script>
 {% endblock %} 
