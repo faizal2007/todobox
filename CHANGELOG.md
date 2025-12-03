@@ -5,6 +5,46 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - Reminder Feature Spacing Fix - 2025-12-03
+
+### Fixed
+
+- **Reminder Notification Intervals**: Fixed issue where all 3 reminder notifications were sent immediately instead of being spaced 30 minutes apart
+  - Updated `ReminderService.get_pending_reminders()` to enforce proper 30-minute spacing
+  - 1st reminder shows immediately upon reminder time
+  - 2nd reminder shows only after 30+ minutes elapsed
+  - 3rd reminder shows only after 60+ minutes elapsed
+  - Prevents duplicate notifications between intervals
+
+- **Auto-Close Behavior**: Clarified auto-close logic
+  - Auto-close triggers only if all 3 reminders occur within 30-minute window from first notification
+  - Reminders spaced 30 minutes apart won't trigger auto-close (by design)
+
+### Added
+
+- **Testing**:
+  - `tests/test_reminder_30_min_interval.py`: New test suite with 6 comprehensive interval tests
+  - Tests verify: immediate 1st, no duplicates, proper 30/60 min spacing, no premature displays
+
+### Changed
+
+- **Backend Logic**: `app/reminder_service.py`
+  - Modified `get_pending_reminders()` to calculate required elapsed time based on notification count
+  - `notification_count * 30 * 60` seconds required to show next reminder
+  - Prevents rapid duplicate notifications from frontend polling
+
+### Technical Details
+
+- **Root Cause**: Frontend was checking `/api/reminders/check` every 10 seconds without spacing logic
+- **Solution**: Backend now enforces 30-minute minimum intervals between successive reminders
+- **Testing Results**: 14/14 reminder tests passing (8 existing + 6 new)
+- **Commit**: 4aec690 - "Fix: Enforce 30-minute intervals between reminder notifications"
+
+### User Impact
+
+✅ **Before**: All 3 notifications sent immediately (bug)  
+✅ **After**: Notifications properly spaced 30 minutes apart (fixed)
+
 ## [1.6.0] - JavaScript/jQuery Optimization - 2025-12-03
 
 ### Changed
