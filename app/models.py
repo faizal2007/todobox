@@ -225,6 +225,8 @@ class Todo(db.Model): # type: ignore[attr-defined]
     reminder_enabled = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Whether reminder is enabled
     reminder_time = db.Column(db.DateTime, nullable=True) # type: ignore[attr-defined]  # When to send reminder (can be before target_date)
     reminder_sent = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Whether reminder has been sent
+    reminder_notification_count = db.Column(db.Integer, default=0) # type: ignore[attr-defined]  # Count of notifications sent
+    reminder_first_notification_time = db.Column(db.DateTime, nullable=True) # type: ignore[attr-defined]  # Time of first notification
     user_id = db.Column(db.Integer, db.ForeignKey('user.id')) # type: ignore[attr-defined]
     tracker_entries = db.relationship('Tracker', backref='todo', lazy='dynamic') # type: ignore[attr-defined]
 
@@ -272,6 +274,8 @@ class Todo(db.Model): # type: ignore[attr-defined]
         self.reminder_enabled = True
         self.reminder_time = reminder_datetime
         self.reminder_sent = False
+        self.reminder_notification_count = 0
+        self.reminder_first_notification_time = None
         db.session.commit()  # type: ignore[attr-defined]
     
     def clear_reminder(self):
@@ -279,6 +283,8 @@ class Todo(db.Model): # type: ignore[attr-defined]
         self.reminder_enabled = False
         self.reminder_time = None
         self.reminder_sent = False
+        self.reminder_notification_count = 0
+        self.reminder_first_notification_time = None
         db.session.commit()  # type: ignore[attr-defined]
     
     def has_pending_reminder(self):
@@ -286,6 +292,15 @@ class Todo(db.Model): # type: ignore[attr-defined]
         if not self.reminder_enabled or self.reminder_sent or not self.reminder_time:
             return False
         return datetime.now() >= self.reminder_time
+    
+    def should_auto_close_reminder(self):
+        """Check if reminder should be automatically closed (3 notifications in 30 minutes)"""
+        if self.reminder_notification_count >= 3 and self.reminder_first_notification_time:
+            elapsed_time = datetime.now() - self.reminder_first_notification_time
+            # If 3 notifications sent within 30 minutes, auto-close
+            if elapsed_time.total_seconds() <= 30 * 60:  # 30 minutes = 1800 seconds
+                return True
+        return False
 
     @classmethod
     def getList(cls, type, start, end, user_id=None):

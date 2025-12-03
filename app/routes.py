@@ -107,12 +107,18 @@ def check_reminders():
             reminder_time_str = reminder_time.isoformat() if reminder_time else None
         else:
             reminder_time_str = None
+        
+        # Check if this will be the last notification before auto-close
+        notification_count = todo.reminder_notification_count or 0
+        is_last_notification = (notification_count >= 2)  # This will be the 3rd notification
             
         reminders_data.append({
             'todo_id': todo.id,
             'title': todo.name,
             'details': todo.details,
-            'reminder_time': reminder_time_str
+            'reminder_time': reminder_time_str,
+            'notification_count': notification_count,
+            'is_last_notification': is_last_notification
         })
     
     return jsonify({
@@ -131,6 +137,9 @@ def process_reminders():
     
     notifications = []
     for todo in reminders:
+        # Get current notification count (before incrementing)
+        notification_count = (todo.reminder_notification_count or 0) + 1
+        
         # Convert reminder time to user's timezone for display
         reminder_time = todo.reminder_time
         if reminder_time:
@@ -138,12 +147,27 @@ def process_reminders():
             reminder_time_str = reminder_time.isoformat() if reminder_time else None
         else:
             reminder_time_str = None
+        
+        # Determine if this is the last notification (3rd notification)
+        is_last_notification = (notification_count >= 3)
+        
+        # Build message indicating notification count
+        if notification_count == 1:
+            message_suffix = " (1st reminder)"
+        elif notification_count == 2:
+            message_suffix = " (2nd reminder)"
+        elif notification_count >= 3:
+            message_suffix = " (final reminder - will auto-close after this)"
+        else:
+            message_suffix = ""
             
         notification = {
             'todo_id': todo.id,
             'title': f"Reminder: {todo.name}",
-            'message': f"Your task '{todo.name}' is due!",
-            'reminder_time': reminder_time_str
+            'message': f"Your task '{todo.name}' is due!{message_suffix}",
+            'reminder_time': reminder_time_str,
+            'notification_count': notification_count,
+            'is_last_notification': is_last_notification
         }
         notifications.append(notification)
         ReminderService.mark_reminder_sent(todo.id)

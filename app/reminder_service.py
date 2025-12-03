@@ -22,7 +22,7 @@ class ReminderService:
             user_id: Optional user ID to filter reminders
             
         Returns:
-            List of Todo objects with pending reminders
+            List of Todo objects with pending reminders (excluding auto-closed ones)
         """
         query = Todo.query.filter(
             and_(
@@ -43,20 +43,44 @@ class ReminderService:
         results = []
         for todo in query.all():
             if todo.reminder_time and todo.reminder_time < now:
-                results.append(todo)
+                # Check if this reminder should be auto-closed (3+ notifications in 30 minutes)
+                if todo.should_auto_close_reminder():
+                    # Auto-close the reminder
+                    todo.reminder_enabled = False
+                    todo.reminder_sent = True
+                    db.session.commit()  # type: ignore[attr-defined]
+                    logging.info(f"Auto-closed reminder for todo {todo.id} after 3 notifications in 30 minutes")
+                else:
+                    results.append(todo)
         
         return results
     
     @staticmethod
     def mark_reminder_sent(todo_id):
-        """Mark a reminder as sent
+        """Mark a reminder as sent and track notification count
         
         Args:
             todo_id: ID of the todo
         """
         todo = Todo.query.get(todo_id)
         if todo:
-            todo.reminder_sent = True
+            # Increment notification count
+            if todo.reminder_notification_count is None:
+                todo.reminder_notification_count = 0
+            todo.reminder_notification_count += 1
+            
+            # Track first notification time
+            if todo.reminder_first_notification_time is None:
+                todo.reminder_first_notification_time = datetime.now(pytz.UTC).replace(tzinfo=None)
+            
+            # Check if we should auto-close the reminder (3+ notifications in 30 minutes)
+            if todo.should_auto_close_reminder():
+                todo.reminder_enabled = False
+                todo.reminder_sent = True
+                logging.info(f"Auto-closed reminder for todo {todo_id} after 3 notifications in 30 minutes")
+            
+            db.session.add(todo)  # type: ignore[attr-defined]
+            db.session.flush()  # type: ignore[attr-defined]
             db.session.commit()  # type: ignore[attr-defined]
             return True
         return False
