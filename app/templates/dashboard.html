@@ -48,6 +48,25 @@
     .tab-content {
         padding-top: 1rem;
     }
+    
+    /* Mobile responsive - center tabs on small screens */
+    @media (max-width: 576px) {
+        .nav-pills {
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .nav-pills .nav-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .nav-pills .nav-link {
+            margin-right: 0;
+            font-size: 0.875rem;
+            padding: 0.5rem 0.75rem;
+        }
+    }
 </style>
 {% endblock %}
 
