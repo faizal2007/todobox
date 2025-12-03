@@ -5,6 +5,27 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - Reminder Cancellation Feature - 2025-12-03
+
+### Added
+
+- **Reminder Cancellation**: Users can now cancel reminders by clicking the close button (×) on the notification popup
+  - Added new API endpoint `/api/reminders/<todo_id>/cancel` to handle reminder cancellation
+  - Added `cancel_reminder()` method to `ReminderService` class
+  - Reminders are disabled (not marked as sent) when cancelled, allowing users to set new reminders later
+
+### Changed
+
+- **Improved Reminder Notification Behavior**: 
+  - Reminders are no longer automatically marked as sent when displayed
+  - Only mark reminder as sent if notification auto-dismisses after 10 seconds
+  - Cancel button explicitly cancels the reminder instead of just dismissing the notification
+  - Added user action tracking to distinguish between cancel and auto-dismiss
+
+### Fixed
+
+- **Reminder Cancel Issue**: Fixed issue where clicking cancel on reminder notification would still mark it as sent
+
 ## [1.4.0] - Dashboard Time Period Grouping - 2025-12-03
 
 ### Added
