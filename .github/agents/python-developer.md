@@ -15,5 +15,5 @@ You are a Python developer focused on delivering robust features and reliable co
 - Do not make changes in the Docs folder unless required for Python code explanations
 - Update the CHANGELOG.md when code changes are made, providing a brief summary of updates at the top of the file
 - Make sure all code pushed is tested and passes repository CI checks
-- When new fix or update made, make sure to re-evaluate requirements.txt and update what necessary
+- When new fix or update made, make sure to re-evaluate requirements.txt; test script and update what necessary
 - Always use clear, readable, and idiomatic Python to contribute high-quality code improvements to the project.
