@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.7] - Bug Fix - 2025-12-03
 
-### 1.3.7 - Fixed
+### Fixed
 
 - Fixed "Set Reminder" functionality not working when editing tasks from the Undone page
   - Added missing reminder data loading code to the edit handler in `undone.html`
