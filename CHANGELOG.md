@@ -5,6 +5,15 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.10] - Security Fix - 2025-12-03
+
+### Security
+
+- Removed all debug print statements from `app/routes.py`
+  - Removed 21 debug print statements that could leak sensitive information in production
+  - Debug statements were logging user emails, timezone information, todo IDs, timestamps, and internal application state
+  - This prevents potential information disclosure in production logs and improves overall security posture
+
 ## [1.3.9] - Security Fix - 2025-12-03
 
 ### Security
