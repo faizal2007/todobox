@@ -5,6 +5,45 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - Dashboard Time Period Grouping - 2025-12-03
+
+### Added
+
+- **Dashboard Time Period Grouping**: Todos are now grouped into 4 time periods:
+  - Today: Shows todos created/modified today
+  - Weekly: Shows todos from the current week
+  - Monthly: Shows todos from the current month
+  - Yearly: Shows todos from the current year
+- **Bootstrap Tabs/Pills Navigation**: Added interactive tabs to switch between different time period views
+  - Modern tab design with hover effects and smooth transitions
+  - Icons for each time period (Today, Weekly, Monthly, Yearly)
+  - Active tab highlighting with custom styling
+- **Multiple Donut Charts**: Each time period has its own dedicated donut chart
+  - Separate charts for Today, Weekly, Monthly, and Yearly views
+  - Charts display todo status distribution (Done, Pending, Re-assign)
+  - Fallback "No data" message when a time period has no todos
+  - Smooth animations and responsive design
+
+### Changed
+
+- Updated `dashboard()` route in `app/routes.py`:
+  - Added `_categorize_todos_by_period()` helper function to group todos by time ranges
+  - Modified dashboard to pass `time_period_data` to the template
+  - Filtered todos by current user to ensure proper data isolation
+- Enhanced `dashboard.html` template:
+  - Replaced single chart with tabbed interface using Bootstrap pills
+  - Added four separate canvas elements for each time period chart
+  - Implemented JavaScript to create and manage multiple Chart.js instances
+  - Added custom CSS styling for professional-looking tabs
+  - Improved chart titles to show the current time period context
+
+### Technical Details
+
+- Time period calculation uses Python's `datetime` to determine date ranges
+- Charts are initialized on page load and properly resized when tabs are switched
+- Maintains backward compatibility with existing dashboard statistics
+- All charts use consistent color scheme (Green for Done, Orange for Re-assign, Yellow for Pending)
+
 ## [1.3.12] - Security Fix - 2025-12-03
 
 ### Security
