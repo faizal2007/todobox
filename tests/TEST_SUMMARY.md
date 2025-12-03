@@ -41,8 +41,8 @@ Comprehensive test suite for TodoBox backend and frontend functionality. Tests c
 - **Todo CRUD API**: 5/5 tests passing
   - List todos (GET /api/todo)
   - Create todo (POST /api/todo)
-  - Update todo (PUT /api/todo/ID)
-  - Delete todo (DELETE /api/todo/ID)
+  - Update todo (PUT /api/todo/{id})
+  - Delete todo (DELETE /api/todo/{id})
   - Unauthorized access (401 responses)
   
 - **Quote API**: 1/1 test passing

@@ -49,7 +49,7 @@ Removed all debug statements that were logging:
 **Files:** 6 files modified  
 **Changes:** 12 print statements replaced
 
-#### app/**init**.py (4 statements)
+#### `app/__init__.py` (4 statements)
 
 - ⚠️  Warnings: Table accessibility issues → `logging.warning()`
 - ✅ Info: Successful initialization → `logging.info()`
@@ -161,7 +161,7 @@ CodeQL Security Analysis:
 
 The application now uses Python's `logging` module. Configure logging via:
 
-### Basic Configuration (add to app/**init**.py or config.py)
+### Basic Configuration (add to `app/__init__.py` or `config.py`)
 
 ```python
 import logging

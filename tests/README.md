@@ -304,7 +304,7 @@ def test_feature_name(client, db_session):
 pip install -r requirements.txt
 ```
 
-### "werkzeug has no attribute '**version**'" Error
+### "werkzeug has no attribute `__version__`" Error
 
 **Solution:** Already fixed in all test files with werkzeug workaround
 
