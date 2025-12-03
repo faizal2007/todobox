@@ -21,7 +21,8 @@ var TodoOperations = (function() {
                 $('input[name="reminder_type"][value="custom"]').prop('checked', true).trigger('change');
                 // Extract just the date-time part (YYYY-MM-DDTHH:mm) from ISO format
                 let reminderDateTime = data['reminder_time'];
-                // Extract the first 16 characters to get YYYY-MM-DDTHH:mm
+                // Extract the first 16 characters to get YYYY-MM-DDTHH:mm format
+                // ISO format: 2024-12-03T14:30:00.000Z -> We need: 2024-12-03T14:30
                 if (reminderDateTime && reminderDateTime.length >= 16) {
                     reminderDateTime = reminderDateTime.substring(0, 16);
                 }
@@ -258,7 +259,11 @@ var TodoOperations = (function() {
      */
     function initialize(options) {
         if (!options.simplemde || !options.csrfToken || !options.redirectUrl) {
-            console.error('TodoOperations: Missing required initialization options');
+            console.error('TodoOperations: Missing required initialization options:', {
+                simplemde: !!options.simplemde,
+                csrfToken: !!options.csrfToken,
+                redirectUrl: !!options.redirectUrl
+            });
             return;
         }
 
