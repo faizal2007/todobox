@@ -5,7 +5,7 @@
         <title>{{ config.TITLE }} - {{ title }}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta content="Todo application to track down our daily activity" name="description" />
-		<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+		<link rel="manifest" href="{{ url_for('get_manifest') }}">
 		<meta name="theme-color" content="#ff5555">
 		<!-- PWA & platform icons -->
 		<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='assets/icons/icon-192x192.png') }}">

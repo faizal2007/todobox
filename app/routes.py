@@ -89,6 +89,61 @@ def get_quote():
     fallback_quote = random.choice(LOCAL_QUOTES)
     return jsonify({'quote': fallback_quote})
 
+@app.route('/manifest.json')
+@csrf.exempt
+def get_manifest():
+    """Serve dynamic PWA manifest with app title from config"""
+    from app.config import TITLE
+    
+    manifest = {
+        "name": f"{TITLE} TodoBox",
+        "short_name": TITLE,
+        "description": "Track and manage daily todos securely.",
+        "start_url": "/dashboard",
+        "scope": "/",
+        "display": "standalone",
+        "background_color": "#ffffff",
+        "theme_color": "#ff5555",
+        "orientation": "portrait-primary",
+        "icons": [
+            {
+                "src": "/static/assets/images/favicon.ico",
+                "sizes": "32x32",
+                "type": "image/x-icon"
+            },
+            {
+                "src": "/static/assets/icons/icon-192x192.png",
+                "sizes": "192x192",
+                "type": "image/png"
+            },
+            {
+                "src": "/static/assets/icons/icon-256x256.png",
+                "sizes": "256x256",
+                "type": "image/png"
+            },
+            {
+                "src": "/static/assets/icons/icon-384x384.png",
+                "sizes": "384x384",
+                "type": "image/png"
+            },
+            {
+                "src": "/static/assets/icons/icon-512x512.png",
+                "sizes": "512x512",
+                "type": "image/png"
+            },
+            {
+                "src": "/static/assets/icons/icon-512x512.png",
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any maskable"
+            }
+        ]
+    }
+    
+    response = make_response(jsonify(manifest))
+    response.headers['Content-Type'] = 'application/manifest+json'
+    return response
+
 @app.route('/api/reminders/check', methods=['GET'])
 @login_required
 def check_reminders():
