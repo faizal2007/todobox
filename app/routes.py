@@ -848,7 +848,7 @@ def add():
                         t.reminder_time = reminder_dt_utc
                         t.reminder_enabled = True
                     except ValueError as e:
-                        pass
+                        logging.debug(f"Invalid reminder datetime format: {reminder_datetime} - {str(e)}")
                 elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
                     try:
                         minutes = int(reminder_before_minutes)
@@ -865,7 +865,7 @@ def add():
                         t.reminder_time = reminder_dt
                         t.reminder_enabled = True
                     except (ValueError, TypeError):
-                        pass
+                        logging.debug("Invalid reminder before parameters")
 
             db.session.commit()  # type: ignore[attr-defined]
             
@@ -903,7 +903,7 @@ def add():
                         # Reset reminder_sent flag so the new reminder will trigger
                         t.reminder_sent = False
                     except ValueError as e:
-                        pass
+                        logging.debug(f"Failed to parse reminder datetime: {reminder_datetime} - {str(e)}")
                 elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
                     try:
                         minutes = int(reminder_before_minutes)
@@ -921,7 +921,7 @@ def add():
                         # Reset reminder_sent flag so the new reminder will trigger
                         t.reminder_sent = False
                     except (ValueError, TypeError):
-                        pass
+                        logging.debug("Failed to parse reminder before parameters")
             else:
                 # Clear reminder if disabled
                 t.reminder_enabled = False
