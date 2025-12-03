@@ -160,7 +160,7 @@
                     
                     // Determine reminder type from reminder_time
                     if (data['reminder_time']) {
-                         // For now, set to custom time type
+                         // Set reminder type to custom time (the backend stores actual datetime values)
                          $('input[name="reminder_type"][value="custom"]').prop('checked', true).trigger('change');
                          // Extract just the date-time part (YYYY-MM-DDTHH:mm) from ISO format
                          let reminderDateTime = data['reminder_time'];
