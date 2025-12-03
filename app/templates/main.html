@@ -200,6 +200,16 @@
 						closeButton.addEventListener('click', async () => {
 							reminderCancelled = true;
 							console.log('User cancelled reminder for todo:', reminder.todo_id);
+							
+							// Clear the auto-dismiss timer
+							clearTimeout(autoDismissTimer);
+							
+							// Remove notification immediately
+							notification.style.animation = 'slideOut 0.3s ease-out';
+							setTimeout(() => {
+								notification.remove();
+							}, 300);
+							
 							// Call cancel API endpoint
 							try {
 								const response = await fetch(`/api/reminders/${reminder.todo_id}/cancel`, {
