@@ -16,6 +16,7 @@ from bleach import clean
 from wtforms.csrf.core import CSRF
 from functools import wraps
 import requests
+import logging
 
 # API Token Authentication Decorator
 def require_api_token(f):
@@ -324,11 +325,9 @@ def init_default_data():
             if status_count == 0:
                 Status.seed()
                 db.session.commit()  # type: ignore[attr-defined]
-    except Exception as e:
-        print(f"ERROR: Failed to initialize default data: {e}")
+    except Exception:
+        logging.exception("Failed to initialize default data")
         # Don't let this crash the app, but log the error
-        import traceback
-        traceback.print_exc()
 
 # Initialize data once when app starts
 # init_default_data()  # DISABLED - moved to app startup hook
@@ -1042,8 +1041,6 @@ def getTodo(id):
 @app.route('/<path:id>/list')
 @login_required
 def list(id):
-    # print(Todo.getList(id))
-    # abort(404)
    
     if id == 'today':
         query_date = date.today()

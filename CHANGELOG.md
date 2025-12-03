@@ -5,6 +5,16 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.11] - Security Fix - 2025-12-03
+
+### Security
+
+- Replaced remaining print statements with proper logging in `app/routes.py`
+  - Replaced error handling print statements (lines 328-331) with `logging.exception()`
+  - Removed commented-out debug print statement (line 1045)
+  - Added logging module import for proper error logging
+  - This ensures production logs can be properly controlled and won't leak sensitive information to stdout/stderr
+
 ## [1.3.10] - Security Fix - 2025-12-03
 
 ### Security
