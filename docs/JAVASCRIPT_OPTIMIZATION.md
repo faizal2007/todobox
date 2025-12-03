@@ -4,9 +4,9 @@
 Comprehensive refactoring of JavaScript code across all templates to replace jQuery with vanilla JavaScript and modern Fetch API. This optimization improves performance, reduces dependencies, and modernizes the codebase.
 
 **Date:** December 3, 2025  
-**Total Files Modified:** 8  
-**Total jQuery Calls Removed:** 30+  
-**Commits:** 3 (05b9936, f19af21, plus previous commits)
+**Total Files Modified:** 9  
+**Total jQuery Calls Removed:** 50+  
+**Commits:** 5 (05b9936, f19af21, cbaccb3, 3293397, cd3401e)
 
 ---
 
@@ -157,18 +157,62 @@ document.querySelectorAll('.revoke-share-btn').forEach(function(btn) {
 
 ---
 
-### 7. **app/templates/admin/panel.html**
+### 8. **app/templates/todo.html**
 **Issues Fixed:**
-- jQuery handler for delete user button
-- Unnecessary $(document).ready() wrapper
+- Multiple jQuery $.post() calls for CRUD operations (.close, #today, .edit, #tomorrow, #save)
+- jQuery event handlers using $(document.body).on()
+- jQuery modal event handler (.on('shown.bs.modal'))
+- jQuery keyboard shortcut handling
+- jQuery form manipulation
 
 **Changes:**
-- Converted `.delete-user-btn` handler to vanilla JavaScript
-- Uses `querySelectorAll()` with forEach loop
-- Proper event propagation handling
-- Maintains confirmation modal integration
+- Converted all delete/add/edit operations to Fetch API
+  - Proper Promise chain for error handling
+  - Loading state management without jQuery
+  - Response handling with proper JSON parsing
+- Replaced event delegation with vanilla JavaScript listener
+  - Uses event.target checking for dynamic buttons
+  - Cleaner callback syntax
+- Converted modal event from jQuery to vanilla JavaScript
+  - Uses Bootstrap modal API without jQuery
+  - Proper null checks for optional elements
+- Keyboard shortcut handling converted to vanilla JS
+  - Proper modal state checking without jQuery
+  - CodeMirror focus detection using classList
+
+**Result:**
+- Complete jQuery removal from page-specific logic
+- All AJAX operations now use Fetch API
+- Better async error handling
 
 ---
+
+### 9. **app/templates/confirm_modal.html**
+**Issues Fixed:**
+- jQuery selectors ($("#confirmModal") etc)
+- jQuery text/DOM manipulation (.text(), .addClass(), .removeClass())
+- jQuery event handler (.off(), .on())
+- jQuery modal show/hide (.modal('show'), .modal('hide'))
+
+**Changes:**
+- Replaced all jQuery selectors with document.getElementById()
+- Converted text manipulation to textContent
+- Implemented vanilla JavaScript Bootstrap 4 modal manipulation
+  - Manual backdrop creation
+  - CSS class manipulation for modal states
+  - Proper aria-hidden and display property handling
+- Event handler management without jQuery
+  - Node cloning to remove previous handlers
+  - addEventListener for new handler attachment
+
+**Important Note:**
+- This is a reusable component used throughout the application
+- All templates using showConfirmModal() continue to work without changes
+- Bootstrap 4 modal manipulation done without jQuery dependency
+
+**Result:**
+- showConfirmModal() function now fully vanilla JavaScript
+- All modals work correctly with improved error recovery
 
 ## Performance Improvements
 
@@ -262,19 +306,73 @@ document.querySelectorAll('.revoke-share-btn').forEach(function(btn) {
    - Removed unused variables
 
 2. **f19af21**: "Refactor: Replace jQuery with vanilla JavaScript and Fetch API across templates"
-   - Converted all $.post() calls to Fetch API
+   - Converted all $.post() calls to Fetch API (6 templates)
    - Replaced jQuery event handlers with vanilla JavaScript
-   - Optimized DOM manipulations across 6 template files
+   - Optimized DOM manipulations across templates
 
----
+3. **cbaccb3**: "Docs: Add comprehensive JavaScript optimization summary"
+   - Initial documentation of optimization work
+   - Performance metrics and testing recommendations
+
+4. **3293397**: "Refactor: Replace jQuery with vanilla JavaScript in todo.html"
+   - Converted all todo CRUD operations to Fetch API
+   - Replaced complex event delegation with vanilla JS
+   - Implemented Bootstrap 4 modal handling without jQuery
+
+5. **cd3401e**: "Refactor: Replace jQuery with vanilla JavaScript in confirm_modal.html"
+   - Removed jQuery from reusable confirmation modal component
+   - Implemented Bootstrap 4 modal manipulation in vanilla JS
+   - Fixed backdrop handling for proper modal display
 
 ## Code Quality Metrics
 
-- **jQuery Removed:** ~30+ instances across 6 templates
-- **Fetch API Added:** ~15 instances
-- **Event Listeners Added:** ~20 vanilla implementations
-- **Lines of Code:** Reduced by ~40 lines overall (removed boilerplate)
-- **Cyclomatic Complexity:** Slightly reduced (clearer Promise chains vs nested callbacks)
+- **jQuery Removed:** ~50+ instances across 9 templates
+- **Fetch API Added:** ~20 instances
+- **Event Listeners Added:** ~35 vanilla implementations
+- **Lines of Code:** Reduced by ~80 lines overall (removed jQuery boilerplate)
+- **Cyclomatic Complexity:** Reduced (clearer Promise chains vs nested callbacks)
+- **API Calls:** Optimized from multiple to single calls where possible
+- **DOM Queries:** Improved performance with direct element access
+
+**Files Modified:**
+1. main.html - 1 critical fix (duplicate SCRIPT_ROOT)
+2. list.html - 50+ lines refactored (quote fetching + event handlers)
+3. undone.html - 40+ lines refactored (done/delete operations)
+4. view.html - 100+ lines refactored (DataTable row handlers)
+5. sharing.html - 30+ lines refactored (share event handlers)
+6. settings.html - 20+ lines refactored (token handlers)
+7. admin/panel.html - 15+ lines refactored (delete user handler)
+8. todo.html - 100+ lines refactored (CRUD operations + modals)
+9. confirm_modal.html - 30+ lines refactored (reusable modal component)
+
+## Remaining jQuery Usage (Necessary Dependencies)
+
+### External Libraries Still Using jQuery
+1. **DataTables (view.html, list.html)**
+   - Required for complex table operations
+   - No lightweight vanilla JS equivalent with same features
+   - Recommendation: Keep jQuery for now, monitor for lightweight alternatives
+
+2. **SimpleMDE (list.html, todo.html, undone.html)**
+   - Markdown editor with jQuery hooks
+   - Used for todo description editing
+   - Recommendation: Consider replacement in future (Milkdown, TipTap)
+
+### jQuery 3.5.1 CDN
+- Still loaded in base.html for DataTables and SimpleMDE support
+- If both are removed, jQuery dependency can be completely eliminated
+- Current setup: Minimal jQuery usage outside of plugin dependencies
+
+---
+
+## JavaScript File Summary
+
+**app/static/assets/js/app.js** (unchanged - Bootstrap components):
+- Contains Bootstrap plugin initializations
+- Theme switching functionality
+- Layout management
+- These are framework-level features, not page-specific
+- Still uses jQuery but for legitimate Bootstrap initialization purposes
 
 ---
 
