@@ -1,6 +1,16 @@
 # jQuery to Vanilla JavaScript Migration Guide
 
-Quick reference for developers maintaining TodoBox after the jQuery optimization.
+**For:** Developers, Code Reviewers  
+**Read Time:** 15 minutes  
+**Status:** Complete  
+**Last Updated:** December 3, 2025  
+**Related Documentation:** [JavaScript Optimization](JAVASCRIPT_OPTIMIZATION.md), [Code Review](CODE_REVIEW.md), [API Documentation](API.md)
+
+## Overview
+
+Quick reference guide for developers maintaining TodoBox after the jQuery optimization. Contains pattern mappings, common use cases, and solutions to typical migration issues.
+
+---
 
 ## Key Patterns Used
 
@@ -89,7 +99,7 @@ var id = button.dataset.id;
 button.dataset.email = 'user@example.com';
 ```
 
-### 5. Modal Operations
+### 5. Modal Operations (Bootstrap 4)
 
 **Old (jQuery):**
 ```javascript
@@ -97,7 +107,7 @@ $('#modal').modal('show');
 $('#modal').modal('hide');
 ```
 
-**New (Vanilla - Bootstrap 4):**
+**New (Vanilla):**
 ```javascript
 // Show
 var modal = document.getElementById('modal');
@@ -110,6 +120,8 @@ modal.classList.remove('show');
 modal.style.display = 'none';
 document.body.classList.remove('modal-open');
 ```
+
+---
 
 ## Common Use Cases
 
@@ -167,6 +179,8 @@ var parent = element.closest('.parent');
 var next = element.nextElementSibling;
 ```
 
+---
+
 ## CSS Class Management
 
 ```javascript
@@ -182,12 +196,12 @@ element.classList.toggle('active');
 // Check if has class
 if (element.classList.contains('active')) { ... }
 
-// Add multiple classes
+// Add/remove multiple classes
 element.classList.add('active', 'primary');
-
-// Remove multiple classes
 element.classList.remove('active', 'primary');
 ```
+
+---
 
 ## Form Operations
 
@@ -204,12 +218,14 @@ document.getElementById('input').disabled = true;
 // Get form data
 var formData = new FormData(document.getElementById('form'));
 
-// Create URLSearchParams
+// Create URL parameters
 var params = new URLSearchParams({
     'key1': 'value1',
     'key2': 'value2'
 });
 ```
+
+---
 
 ## Event Handling
 
@@ -241,6 +257,8 @@ document.addEventListener('click', function(e) {
     }
 });
 ```
+
+---
 
 ## Promise Patterns
 
@@ -277,16 +295,18 @@ Promise.all([
 .catch(error => console.error(error));
 ```
 
+---
+
 ## Common Issues and Solutions
 
-### Issue: Elements added dynamically not getting handlers
+### Issue: Dynamically added elements not responding to handlers
 
 **Solution:** Use event delegation
 ```javascript
-// Won't work for dynamically added elements
+// Won't work for dynamic elements
 document.querySelector('.btn').addEventListener('click', handler);
 
-// Will work for dynamically added elements
+// Will work for dynamic elements
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('btn')) {
         handler();
@@ -324,21 +344,66 @@ backdrop.className = 'modal-backdrop fade show';
 document.body.appendChild(backdrop);
 ```
 
-## When to Keep Using jQuery
+### Issue: Form data not submitting correctly
 
-1. **DataTables** - Complex table widget, kept as is
-2. **SimpleMDE** - Markdown editor, kept as is
-3. **Bootstrap plugin initialization** - Theme/layout management
+**Solution:** Proper URLSearchParams usage
+```javascript
+var params = new URLSearchParams();
+params.append('key', 'value');
+params.append('_csrf_token', '{{ csrf_token() }}');
 
-Don't remove these - they require jQuery for proper functionality.
-
-## Resources
-
-- [MDN: DOM API](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model)
-- [MDN: Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
-- [MDN: Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
-- [MDN: querySelector](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector)
+fetch(url, {
+    method: 'POST',
+    body: params
+});
+```
 
 ---
 
-Last updated: December 3, 2025
+## When to Keep Using jQuery
+
+1. **DataTables** - Complex table widget, requires jQuery
+2. **SimpleMDE** - Markdown editor, requires jQuery
+3. **Bootstrap plugin initialization** - Theme/layout management
+
+**Do not remove these** - they require jQuery for proper functionality.
+
+---
+
+## Troubleshooting
+
+### Modal backdrop not showing
+- Ensure `document.body.classList.add('modal-open')` is called
+- Check that backdrop div is created and added to DOM
+- Verify CSS classes match Bootstrap 4 specifications
+
+### CSRF token missing
+- Check that token is passed in headers or body
+- Verify `{{ csrf_token() }}` is available in template context
+- Use Network tab in browser DevTools to inspect requests
+
+### Event handlers not firing
+- Use event delegation for dynamically added elements
+- Check that selector matches actual DOM structure
+- Verify `preventDefault()` is called when needed
+- Use console.log() to debug event handling
+
+### Fetch request timing out
+- Increase timeout if needed (timeout not built into Fetch)
+- Use AbortController for timeout implementation
+- Check network connectivity in DevTools
+
+---
+
+## Resources
+
+- **[MDN: DOM API](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model)** - DOM manipulation reference
+- **[MDN: Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)** - Fetch documentation
+- **[MDN: Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)** - Promise reference
+- **[MDN: querySelector](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector)** - Element selection
+
+---
+
+**Last Updated:** December 3, 2025  
+**Status:** Active Reference Guide  
+**Version:** 1.0

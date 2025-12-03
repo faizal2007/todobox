@@ -89,6 +89,12 @@ Comprehensive documentation is available in the `docs/` directory:
 
 - **[OAUTH_SETUP.md](docs/OAUTH_SETUP.md)** - Google OAuth2 setup and configuration
 
+### Code Quality & Performance
+
+- **[JAVASCRIPT_OPTIMIZATION.md](docs/JAVASCRIPT_OPTIMIZATION.md)** - JavaScript modernization (jQuery to vanilla JS)
+- **[JQUERY_MIGRATION_GUIDE.md](docs/JQUERY_MIGRATION_GUIDE.md)** - Developer guide for JavaScript patterns
+- **[CODE_REVIEW.md](docs/CODE_REVIEW.md)** - Code review findings and best practices
+
 ### Migration Guides
 
 - **[README_MIGRATIONS.md](docs/README_MIGRATIONS.md)** - Database migration documentation
