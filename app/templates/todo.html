@@ -119,153 +119,223 @@
                         "link",
                         "preview"
                     ],
-        element: $("#activitiesFormControlTextArea1")[0] });
+        element: document.getElementById("activitiesFormControlTextArea1") });
         simplemde.render();
 
-    $('.close').click(function() {
-            //alert($(this).data('id'));
-            $.post($SCRIPT_ROOT + $(this).data('id') + '/delete', {
-            '_csrf_token': '{{ csrf_token() }}'
-            },
-            function(){
-               window.location.href = "{{ url_for('todo') }}";
-            });
-    })
-
-    $('#today').click(function() {
-        $.post($SCRIPT_ROOT + '/add', {
-            '_csrf_token': '{{ csrf_token() }}',
-            'todo_id': '',
-            'title': $('#titleFormControlInput1').val(),
-            'activities': simplemde.value(),
-            'activities_html': simplemde.value()
-        },
-        function(data) {
-            /**window.location.href = "{{ url_for('todo') }}";**/
-            if(data['status'] == 'failed') {
-                
-                $('form.needs-validation').last().addClass('was-invalidated')
-                $('#titleFormControlInput1').last().addClass('is-invalid')
-            }
-            else {
-                window.location.href = "{{ url_for('todo') }}";
-            }
-            
-        });
-    })
-    
-   
-   
-    $('.edit').click(function() {
-        // $('#todo-id-view').text($(this).data('id'));  
-        
-        $.post($SCRIPT_ROOT + $(this).data('id') + '/todo', {
-            '_csrf_token': '{{ csrf_token() }}'
-        },
-        function(data) {
-            $('.modal-footer').html(data['button']);
-            $("input[name='todo_id']").val(data['id']);
-            $('#titleFormControlInput1').val(data['title']);
-            /**$('#activitiesFormControlTextArea1').val(data['activities']);**/
-            //alert("div.CodeMirror").hasClass("CodeMirror-focused");
-            simplemde.value(data['activities']);
-            
-        }) ;
-    })
-
-     //$('#tomorrow').click(function() {
-        $(document.body).on("click", "#tomorrow", function (e){
-        
-        $.post($SCRIPT_ROOT + '/add', {
-            '_csrf_token': '{{ csrf_token() }}',
-            'todo_id': $("input[name='todo_id']").val(),
-            'title': $('#titleFormControlInput1').val(),
-            'activities': simplemde.value(),
-            'activities_html': simplemde.value(),
-            'tomorrow':1
-        },
-        function() {
-            window.location.href = "{{ url_for('list', id='tomorrow') }}";
-        });
-    })
-
-    $(document.body).on("click", "#save", function (e){
-        $.post($SCRIPT_ROOT + '/add', {
-            '_csrf_token': '{{ csrf_token() }}',
-            'todo_id': $("input[name='todo_id']").val(),
-            'title': $('#titleFormControlInput1').val(),
-            'activities': simplemde.value(),
-            'activities_html': simplemde.value()
-        },
-        function(data) {
-            // window.location.href = "{{ url_for('todo') }}" + '?update=success';
-            $('#titleFormControlInput1').prop("disabled", true);
-            $('#activitiesFormControlTextArea1').prop("disabled", true);
-            $('.modal-footer').html('<div class="alert alert-warning" role="alert">Saving ...</div>');
-        })
-        .done(function(data){
-            
-            if(data['status'] == 'failed') {
-                $('.modal-footer').html('<div class="alert alert-info alert-dismissible fade show" role="alert">No change made'+
-                                    '</div>');
-            
-                $(".alert").fadeOut(2000).slideUp(5000, function() {
-                    $(this).alert('close');
-                    $('#titleFormControlInput1').prop("disabled", false);
-                    $('#activitiesFormControlTextArea1').prop("disabled", false);
-                    $('.modal-footer').html(data['button']);
-                    // window.location.href = "{{ url_for('todo') }}";
-                });
-            }
-            else {
-                $('#titleFormControlInput1').prop("disabled", true);
-                $('#activitiesFormControlTextArea1').prop("disabled", true);
-                $('.modal-footer').html('<div class="alert alert-success alert-dismissible fade show" role="alert">Saving success'+
-                                    '</div>');
-                $(".alert").fadeOut(2000).slideUp(4000, function() {
-                    $(this).alert('close');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Delete todo
+        document.querySelectorAll('.close').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                var todoId = this.dataset.id;
+                fetch(window.SCRIPT_ROOT + todoId + '/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
+                })
+                .then(function() {
                     window.location.href = "{{ url_for('todo') }}";
+                })
+                .catch(function(error) {
+                    console.error('Error deleting todo:', error);
+                });
+            });
+        });
+
+        // Add todo (Today)
+        var todayBtn = document.getElementById('today');
+        if (todayBtn) {
+            todayBtn.addEventListener('click', function() {
+                var titleInput = document.getElementById('titleFormControlInput1');
+                var title = titleInput.value;
+                
+                fetch(window.SCRIPT_ROOT + '/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: new URLSearchParams({
+                        '_csrf_token': '{{ csrf_token() }}',
+                        'todo_id': '',
+                        'title': title,
+                        'activities': simplemde.value(),
+                        'activities_html': simplemde.value()
+                    })
+                })
+                .then(response => response.json())
+                .then(function(data) {
+                    if(data['status'] == 'failed') {
+                        document.querySelector('form.needs-validation').classList.add('was-invalidated');
+                        titleInput.classList.add('is-invalid');
+                    }
+                    else {
+                        window.location.href = "{{ url_for('todo') }}";
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error adding todo:', error);
+                });
+            });
+        }
+        
+        // Edit todo
+        document.querySelectorAll('.edit').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var todoId = this.dataset.id;
+                fetch(window.SCRIPT_ROOT + todoId + '/todo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
+                })
+                .then(response => response.json())
+                .then(function(data) {
+                    document.querySelector('.modal-footer').innerHTML = data['button'];
+                    document.querySelector("input[name='todo_id']").value = data['id'];
+                    document.getElementById('titleFormControlInput1').value = data['title'];
+                    simplemde.value(data['activities']);
+                })
+                .catch(function(error) {
+                    console.error('Error fetching todo:', error);
+                });
+            });
+        });
+
+        // Add todo (Tomorrow)
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'tomorrow') {
+                fetch(window.SCRIPT_ROOT + '/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: new URLSearchParams({
+                        '_csrf_token': '{{ csrf_token() }}',
+                        'todo_id': document.querySelector("input[name='todo_id']").value,
+                        'title': document.getElementById('titleFormControlInput1').value,
+                        'activities': simplemde.value(),
+                        'activities_html': simplemde.value(),
+                        'tomorrow': '1'
+                    })
+                })
+                .then(function() {
+                    window.location.href = "{{ url_for('list', id='tomorrow') }}";
+                })
+                .catch(function(error) {
+                    console.error('Error adding todo:', error);
                 });
             }
-           
         });
-    })
-    
-    $('#todoModal').on('shown.bs.modal', function() {
-        $(this).find('[autofocus]').focus();
-        simplemde.codemirror.refresh();
-    });
-    
-    $(document).keydown(function(event) {
-        // Ctrl+Enter (or Cmd+Enter on Mac) to save
-        if ((event.ctrlKey || event.metaKey) && event.keyCode === 13) {
-            if($('#todoModal').hasClass('show')) {
-                event.preventDefault();
-                event.stopPropagation();
-                
-                // Click save button if it exists (editing mode)
-                let saveBtn = $('#todoModal').find('#save');
-                if (saveBtn.length > 0) {
-                    saveBtn.click();
-                }
-                return false;
-            }
-        }
-        
-        // Regular Enter key behavior (without Ctrl/Cmd)
-        if (event.which === 13) {
-            if($('#todoModal').hasClass('show')) {
-                if($("div.CodeMirror").hasClass("CodeMirror-focused") != true) {
-                    $('#today').trigger("click");
-                }
 
-                if(event.shiftKey && event.which === 13) {
-                    $('#today').trigger("click");
+        // Save todo
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'save') {
+                fetch(window.SCRIPT_ROOT + '/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: new URLSearchParams({
+                        '_csrf_token': '{{ csrf_token() }}',
+                        'todo_id': document.querySelector("input[name='todo_id']").value,
+                        'title': document.getElementById('titleFormControlInput1').value,
+                        'activities': simplemde.value(),
+                        'activities_html': simplemde.value()
+                    })
+                })
+                .then(response => {
+                    document.getElementById('titleFormControlInput1').disabled = true;
+                    document.getElementById('activitiesFormControlTextArea1').disabled = true;
+                    document.querySelector('.modal-footer').innerHTML = '<div class="alert alert-warning" role="alert">Saving ...</div>';
+                    return response.json();
+                })
+                .then(function(data) {
+                    if(data['status'] == 'failed') {
+                        document.querySelector('.modal-footer').innerHTML = '<div class="alert alert-info alert-dismissible fade show" role="alert">No change made</div>';
+                        var alert = document.querySelector('.alert');
+                        alert.style.display = 'none';
+                        setTimeout(function() {
+                            alert.style.display = 'block';
+                            alert.remove();
+                            document.getElementById('titleFormControlInput1').disabled = false;
+                            document.getElementById('activitiesFormControlTextArea1').disabled = false;
+                            document.querySelector('.modal-footer').innerHTML = data['button'];
+                        }, 2000);
+                    }
+                    else {
+                        document.getElementById('titleFormControlInput1').disabled = true;
+                        document.getElementById('activitiesFormControlTextArea1').disabled = true;
+                        document.querySelector('.modal-footer').innerHTML = '<div class="alert alert-success alert-dismissible fade show" role="alert">Saving success</div>';
+                        var alert = document.querySelector('.alert');
+                        alert.style.display = 'none';
+                        setTimeout(function() {
+                            alert.style.display = 'block';
+                            alert.remove();
+                            window.location.href = "{{ url_for('todo') }}";
+                        }, 4000);
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error saving todo:', error);
+                });
+            }
+        });
+        
+        // Modal shown event
+        var todoModal = document.getElementById('todoModal');
+        if (todoModal) {
+            todoModal.addEventListener('shown.bs.modal', function() {
+                var autofocusEl = this.querySelector('[autofocus]');
+                if (autofocusEl) autofocusEl.focus();
+                if (simplemde && simplemde.codemirror) {
+                    simplemde.codemirror.refresh();
+                }
+            });
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            var todoModal = document.getElementById('todoModal');
+            var isModalOpen = todoModal && todoModal.classList.contains('show');
+            
+            // Ctrl+Enter (or Cmd+Enter on Mac) to save
+            if ((event.ctrlKey || event.metaKey) && event.keyCode === 13) {
+                if(isModalOpen) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    var saveBtn = todoModal.querySelector('#save');
+                    if (saveBtn) {
+                        saveBtn.click();
+                    }
+                    return false;
                 }
             }
-        
+            
+            // Regular Enter key behavior (without Ctrl/Cmd)
+            if (event.which === 13) {
+                if(isModalOpen) {
+                    var codeMirrorEditor = document.querySelector(".CodeMirror");
+                    var isEditorFocused = codeMirrorEditor && codeMirrorEditor.classList.contains("CodeMirror-focused");
+                    
+                    if (!isEditorFocused) {
+                        var todayBtn = document.getElementById('today');
+                        if (todayBtn) {
+                            }
+                    }
+                }
+            }
+            
             event.preventDefault();
-        }
+        });
     });
     
  </script>
