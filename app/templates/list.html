@@ -210,12 +210,13 @@
                }
           };
           
-          TodoOperations.setupEditHandler(simplemde, '{{ csrf_token() }}', true);
-          TodoOperations.setupSaveHandler(simplemde, '{{ csrf_token() }}', redirectFunction);
-          TodoOperations.setupReminderHandlers();
-          TodoOperations.setupScheduleHandlers();
-          TodoOperations.setupModalHandlers(simplemde);
-          TodoOperations.setupKeyboardShortcuts();
+          // Initialize all todo operations at once
+          TodoOperations.initialize({
+               simplemde: simplemde,
+               csrfToken: '{{ csrf_token() }}',
+               redirectUrl: redirectFunction,
+               showLoadingState: true
+          });
           
           // Add wisdom quotes to each card
           var cardWisdoms = document.querySelectorAll('.card-wisdom');
