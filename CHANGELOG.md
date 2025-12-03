@@ -5,6 +5,50 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - Auto-Close Reminders Feature - 2025-12-03
+
+### Added
+
+- **Auto-Close Reminders**: Reminders now automatically close after 3 notifications within 30 minutes
+  - Added `reminder_notification_count` field to Todo model to track notification count
+  - Added `reminder_first_notification_time` field to track when first notification was sent
+  - Added `should_auto_close_reminder()` method to Todo model to check auto-close conditions
+  - Database migration `i1234567890_add_reminder_notification_tracking.py` to add new fields
+
+- **Enhanced Reminder UI**:
+  - Show notification count on each reminder: "(1st reminder)", "(2nd reminder)", "(Final reminder...)"
+  - Color coding: Orange for 1st/2nd reminders, Red for final reminder
+  - Faster bell animation for final reminder (0.8s pulse vs 1.5s)
+  - Higher pitch notification sound (1000Hz) for final reminder vs standard (800Hz)
+  - Visual indicator showing this is the last notification before auto-close
+
+- **Updated API Endpoints**:
+  - `/api/reminders/check` now returns `notification_count` and `is_last_notification` fields
+  - `/api/reminders/process` now includes count info and auto-close message
+  - Enhanced notification messages indicate which notification number it is
+
+- **Documentation**: 
+  - Added comprehensive feature documentation in `docs/AUTO_CLOSE_REMINDERS.md`
+  - Includes manual testing steps, edge cases, and troubleshooting guide
+
+### Changed
+
+- **ReminderService.mark_reminder_sent()**: Now tracks notification count instead of just setting a flag
+  - Increments `reminder_notification_count` with each notification
+  - Records `reminder_first_notification_time` on first notification
+  - Automatically disables and closes reminder when 3 notifications sent within 30 minutes
+
+- **ReminderService.get_pending_reminders()**: Now filters out auto-closed reminders
+  - Checks each reminder with `should_auto_close_reminder()` method
+  - Skips reminders that have reached auto-close threshold
+  - Prevents infinite notification loops
+
+### Fixed
+
+- **Reminder Fatigue**: Users will no longer be endlessly reminded if they don't manually close a reminder
+  - Prevents reminder notification spam
+  - Automatic closure ensures reminders don't accumulate indefinitely
+
 ## [1.4.1] - Reminder Cancellation Feature - 2025-12-03
 
 ### Added
