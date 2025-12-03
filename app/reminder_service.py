@@ -62,6 +62,25 @@ class ReminderService:
         return False
     
     @staticmethod
+    def cancel_reminder(todo_id):
+        """Cancel a reminder (disable it without marking as sent)
+        
+        Args:
+            todo_id: ID of the todo
+            
+        Returns:
+            bool: True if reminder was cancelled successfully, False otherwise
+        """
+        todo = Todo.query.get(todo_id)
+        if todo and todo.reminder_enabled:
+            # Disable the reminder but don't mark as sent
+            # This allows the user to set a new reminder later if needed
+            todo.reminder_enabled = False
+            db.session.commit()  # type: ignore[attr-defined]
+            return True
+        return False
+    
+    @staticmethod
     def process_reminders():
         """Process all pending reminders and send notifications
         

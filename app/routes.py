@@ -153,6 +153,32 @@ def process_reminders():
         'notifications': notifications
     })
 
+@app.route('/api/reminders/<int:todo_id>/cancel', methods=['POST'])
+@login_required
+def cancel_reminder(todo_id):
+    """Cancel a reminder for a specific todo"""
+    from app.reminder_service import ReminderService
+    
+    # Get the todo and verify ownership
+    todo = Todo.query.get_or_404(todo_id)
+    
+    # Verify the todo belongs to the current user
+    if todo.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    # Cancel the reminder (don't mark as sent, just disable it)
+    success = ReminderService.cancel_reminder(todo_id)
+    
+    if success:
+        return jsonify({
+            'success': True,
+            'message': 'Reminder cancelled successfully'
+        })
+    else:
+        return jsonify({
+            'error': 'Failed to cancel reminder'
+        }), 400
+
 @app.route('/api/auth/token', methods=['POST'])
 @csrf.exempt
 @login_required

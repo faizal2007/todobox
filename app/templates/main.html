@@ -97,10 +97,6 @@
 								data.reminders.forEach(reminder => {
 									console.log('Processing reminder:', reminder);
 									showReminderNotification(reminder);
-									// Mark as sent after showing notification
-									setTimeout(() => {
-										markReminderSent(reminder.todo_id);
-									}, 500);
 								});
 							} else {
 								console.log('No pending reminders at', new Date().toLocaleTimeString());
@@ -195,12 +191,48 @@
 					document.body.appendChild(notification);
 					console.log('Reminder notification displayed');
 					
+					// Track if user cancelled the reminder
+					let reminderCancelled = false;
+					
+					// Handle close button click - cancel the reminder
+					const closeButton = notification.querySelector('.close');
+					if (closeButton) {
+						closeButton.addEventListener('click', async () => {
+							reminderCancelled = true;
+							console.log('User cancelled reminder for todo:', reminder.todo_id);
+							// Call cancel API endpoint
+							try {
+								const response = await fetch(`/api/reminders/${reminder.todo_id}/cancel`, {
+									method: 'POST',
+									headers: {
+										'Content-Type': 'application/json',
+										'X-CSRFToken': document.querySelector('input[name="csrf_token"]')?.value || ''
+									}
+								});
+								if (response.ok) {
+									console.log('Reminder cancelled successfully');
+								} else {
+									console.error('Failed to cancel reminder');
+								}
+							} catch (error) {
+								console.error('Error cancelling reminder:', error);
+							}
+						});
+					}
+					
 					// Auto-dismiss after 10 seconds (longer than before for visibility)
-					setTimeout(() => {
+					// Mark as sent only if user didn't cancel
+					const autoDismissTimer = setTimeout(async () => {
 						notification.style.animation = 'slideOut 0.3s ease-out';
 						setTimeout(() => {
 							notification.remove();
 						}, 300);
+						
+						// Mark as sent only if not cancelled
+						if (!reminderCancelled) {
+							console.log('Auto-dismissing reminder, marking as sent');
+							await markReminderSent(reminder.todo_id);
+						}
 					}, 10000);
 					
 					// Play a subtle notification sound if available
