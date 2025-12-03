@@ -3,10 +3,14 @@
     <head>
         <meta charset="utf-8" />
         <title>{{ config.TITLE }} - {{ title }}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
         <meta content="Todo application to track down our daily activity" name="description" />
 		<link rel="manifest" href="{{ url_for('get_manifest') }}">
 		<meta name="theme-color" content="#ff5555">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<meta name="apple-mobile-web-app-title" content="{{ config.TITLE }}">
 		<!-- PWA & platform icons -->
 		<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='assets/icons/icon-192x192.png') }}">
 		<link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='assets/icons/icon-512x512.png') }}">
@@ -28,38 +32,58 @@
 				// Register service worker for PWA install prompt
 				if ('serviceWorker' in navigator) {
 					window.addEventListener('load', () => {
-						navigator.serviceWorker.register('/service-worker.js');
+						navigator.serviceWorker.register('/service-worker.js').then(reg => {
+							console.log('Service Worker registered:', reg);
+						}).catch(err => {
+							console.error('Service Worker registration failed:', err);
+						});
 					});
 				}
-				let deferredPrompt; 
+				let deferredPrompt = null;
 				const btn = document.getElementById('pwa-install-btn');
+				
+				// Hide button by default
+				if (btn) btn.style.display = 'none';
 				
 				// Show install button when beforeinstallprompt event fires
 				window.addEventListener('beforeinstallprompt', (e) => {
+					console.log('beforeinstallprompt event fired');
 					e.preventDefault();
 					deferredPrompt = e;
-					if (btn) btn.style.display = 'inline-flex';
+					if (btn) {
+						btn.style.display = 'inline-flex';
+						console.log('Install button shown');
+					}
 				});
 				
 				// Hide install button when app is installed
 				window.addEventListener('appinstalled', () => {
+					console.log('App installed successfully');
 					if (btn) btn.style.display = 'none';
 					deferredPrompt = null;
 				});
 				
-				// Hide button if app is already installed (on page load)
+				// Check if app is already installed on page load
 				if (window.navigator.getInstalledRelatedApps) {
 					window.navigator.getInstalledRelatedApps().then(apps => {
-						if (apps.length > 0) {
-							if (btn) btn.style.display = 'none';
+						console.log('Installed related apps:', apps.length);
+						if (apps.length > 0 && btn) {
+							btn.style.display = 'none';
 						}
+					}).catch(err => {
+						console.log('getInstalledRelatedApps not fully supported:', err);
 					});
 				}
 				
 				function installPWA() {
-					if (!deferredPrompt) return;
+					console.log('Install button clicked');
+					if (!deferredPrompt) {
+						console.log('No deferred prompt available');
+						return;
+					}
 					deferredPrompt.prompt();
 					deferredPrompt.userChoice.then((result) => { 
+						console.log('Install prompt result:', result.outcome);
 						if (result.outcome === 'accepted') {
 							if (btn) btn.style.display = 'none';
 						}
@@ -372,7 +396,9 @@
 										{% if not current_user.is_anonymous %}
 										<ul class="list-unstyled topbar-right-menu float-right mb-0">
 											<li class="dropdown notification-list">
-												<button id="pwa-install-btn" onclick="installPWA()">Install App</button>
+												<button id="pwa-install-btn" onclick="installPWA()" title="Install this app on your device">
+													<i class="mdi mdi-cloud-download"></i> Install App
+												</button>
 												<a class="nav-link dropdown-toggle nav-user arrow-none mr-0" data-toggle="dropdown" id="topbar-userdrop" href="#" role="button" aria-haspopup="true"
 													aria-expanded="false">
 													<span class="account-user-avatar">

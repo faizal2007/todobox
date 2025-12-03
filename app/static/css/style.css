@@ -63,20 +63,35 @@ body {
 
 /* PWA Install button styling */
 #pwa-install-btn {
-  display: none;
+  display: none !important;
   align-items: center;
-  gap: 4px;
-  border: 1px solid #ff5555;
+  gap: 6px;
+  border: none;
   background: #ff5555;
   color: #fff;
-  font-size: 12px;
-  padding: 4px 8px;
+  font-size: 13px;
+  padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(255, 85, 85, 0.2);
+  transition: all 0.3s ease;
+  margin-right: 10px;
+}
+
+#pwa-install-btn:hover {
+  background: #e64545;
+  box-shadow: 0 4px 8px rgba(255, 85, 85, 0.3);
+  transform: translateY(-1px);
+}
+
+#pwa-install-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(255, 85, 85, 0.2);
 }
 
 #pwa-install-btn.show {
-  display: inline-flex;
+  display: inline-flex !important;
 }
 
 /* Logo styling */

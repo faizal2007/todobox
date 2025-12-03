@@ -96,7 +96,7 @@ def get_manifest():
     from app.config import TITLE
     
     manifest = {
-        "name": f"{TITLE}",
+        "name": f"{TITLE} - Todo Task Manager",
         "short_name": TITLE,
         "description": "Track and manage daily todos securely.",
         "start_url": "/dashboard",
@@ -104,6 +104,7 @@ def get_manifest():
         "display": "standalone",
         "background_color": "#ffffff",
         "theme_color": "#ff5555",
+        "categories": ["productivity"],
         "orientation": "portrait-primary",
         "icons": [
             {
