@@ -30,32 +30,55 @@
  * @param {string} headerClass - CSS class for modal header (defaults to 'bg-danger text-white' if not provided)
  */
 function showConfirmModal(title, message, onConfirm, confirmBtnText, confirmBtnClass, headerClass) {
-    var modal = $('#confirmModal');
-    var header = $('#confirmModalHeader');
-    var titleEl = $('#confirmModalLabel');
-    var messageEl = $('#confirmModalMessage');
-    var confirmBtn = $('#confirmModalConfirmBtn');
+    var modal = document.getElementById('confirmModal');
+    var header = document.getElementById('confirmModalHeader');
+    var titleEl = document.getElementById('confirmModalLabel');
+    var messageEl = document.getElementById('confirmModalMessage');
+    var confirmBtn = document.getElementById('confirmModalConfirmBtn');
     
     // Set content with defaults
-    titleEl.text(title || 'Confirm Action');
-    messageEl.text(message || 'Are you sure you want to proceed?');
+    titleEl.textContent = title || 'Confirm Action';
+    messageEl.textContent = message || 'Are you sure you want to proceed?';
     
     // Set button text and class with defaults
-    confirmBtn.text(confirmBtnText || 'Confirm');
-    confirmBtn.removeClass().addClass('btn ' + (confirmBtnClass || 'btn-danger'));
+    confirmBtn.textContent = confirmBtnText || 'Confirm';
+    confirmBtn.className = 'btn ' + (confirmBtnClass || 'btn-danger');
     
     // Set header class with default
-    header.removeClass().addClass('modal-header ' + (headerClass || 'bg-danger text-white'));
+    header.className = 'modal-header ' + (headerClass || 'bg-danger text-white');
     
-    // Remove previous click handler (namespaced) and add new one to avoid interference
-    confirmBtn.off('click.confirmModal').on('click.confirmModal', function() {
-        modal.modal('hide');
+    // Remove previous click handler by cloning and replacing (cleanest way without jQuery)
+    var newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    
+    newConfirmBtn.addEventListener('click', function() {
+        // Hide modal - Bootstrap 4 still requires jQuery for .modal()
+        // But we can use vanilla JS to manipulate the modal
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
+        
+        // Remove the backdrop if it exists
+        var backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+        
         if (typeof onConfirm === 'function') {
             onConfirm();
         }
     });
     
-    // Show modal
-    modal.modal('show');
+    // Show modal using vanilla JavaScript (mimics jQuery's .modal('show'))
+    modal.classList.add('show');
+    modal.removeAttribute('aria-hidden');
+    modal.style.display = 'block';
+    document.body.classList.add('modal-open');
+    
+    // Add backdrop element
+    var backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop fade show';
+    document.body.appendChild(backdrop);
 }
 </script>
