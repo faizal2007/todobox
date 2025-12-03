@@ -127,7 +127,7 @@ var TodoOperations = (function() {
                 
                 $.post('/add', {
                     '_csrf_token': csrfToken,
-                    'todo_id': todo_id || '',
+                    'todo_id': todo_id ? todo_id : '',
                     'title': title,
                     'activities': activities,
                     'schedule_day': schedule_day,
