@@ -89,8 +89,8 @@ Examples:
     }
     
     if args.suite != 'all':
-        # Append the test class to the test file path
-        cmd[-1] = cmd[-1] + suite_map[args.suite]
+        # Append the test class to the test file path as a single element
+        cmd[3] = cmd[3] + suite_map[args.suite]
     
     # Add flags
     if args.verbose:
@@ -115,7 +115,7 @@ Examples:
     print(f"  Running: {' '.join(cmd)}")
     print(f"{'='*70}\n")
     
-    exit_code = subprocess.run(cmd, cwd=Path(__file__).parent.parent).returncode
+    exit_code = run_command(cmd)
     
     if exit_code == 0:
         print(f"\n✅ All tests passed!")
