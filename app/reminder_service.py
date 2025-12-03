@@ -51,7 +51,23 @@ class ReminderService:
                     db.session.commit()  # type: ignore[attr-defined]
                     logging.info(f"Auto-closed reminder for todo {todo.id} after 3 notifications in 30 minutes")
                 else:
-                    results.append(todo)
+                    # Check if we should send another reminder (spaced 30 minutes apart)
+                    notification_count = todo.reminder_notification_count or 0
+                    
+                    if notification_count == 0:
+                        # First notification - always show
+                        results.append(todo)
+                    elif todo.reminder_first_notification_time:
+                        # For subsequent notifications, check if appropriate time has passed
+                        # 2nd reminder: needs 30 min elapsed
+                        # 3rd reminder: needs 60 min elapsed
+                        elapsed_time = now - todo.reminder_first_notification_time
+                        required_elapsed_seconds = notification_count * 30 * 60  # 1st=0, 2nd=1800, 3rd=3600, etc
+                        
+                        if elapsed_time.total_seconds() >= required_elapsed_seconds:
+                            # Only show up to 3 reminders total
+                            if notification_count < 3:
+                                results.append(todo)
         
         return results
     
