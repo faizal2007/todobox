@@ -9,14 +9,19 @@ import argparse
 from pathlib import Path
 
 
-def run_command(cmd, description=""):
-    """Run a shell command and return exit code."""
+def run_command(cmd_list, description=""):
+    """Run a command and return exit code.
+    
+    Args:
+        cmd_list: List of command arguments (e.g., ['python', '-m', 'pytest'])
+        description: Optional description to print before running
+    """
     if description:
         print(f"\n{'='*70}")
         print(f"  {description}")
         print(f"{'='*70}\n")
     
-    result = subprocess.run(cmd, shell=True, cwd=Path(__file__).parent.parent)
+    result = subprocess.run(cmd_list, cwd=Path(__file__).parent.parent)
     return result.returncode
 
 
@@ -68,8 +73,9 @@ Examples:
     
     args = parser.parse_args()
     
-    # Build pytest command
-    cmd = 'python -m pytest tests/test_functional.py'
+    # Build pytest command as a list (safer than shell=True)
+    test_file = 'tests/test_functional.py'
+    cmd = ['python', '-m', 'pytest', test_file]
     
     # Add test suite selection
     suite_map = {
@@ -84,32 +90,33 @@ Examples:
     }
     
     if args.suite != 'all':
-        cmd += suite_map[args.suite]
+        # Replace the test file with the file + test class selector
+        cmd[cmd.index(test_file)] = test_file + suite_map[args.suite]
     
     # Add flags
     if args.verbose:
-        cmd += ' -v'
+        cmd.append('-v')
     else:
-        cmd += ' -q'
+        cmd.append('-q')
     
     if args.coverage:
-        cmd += ' --cov=app --cov-report=term-missing --cov-report=html'
+        cmd.extend(['--cov=app', '--cov-report=term-missing', '--cov-report=html'])
     
     if args.keyword:
-        cmd += f' -k "{args.keyword}"'
+        cmd.extend(['-k', args.keyword])
     
     if args.pdb:
-        cmd += ' --pdb'
+        cmd.append('--pdb')
     
     if args.html:
-        cmd += ' --html=report.html --self-contained-html'
+        cmd.extend(['--html=report.html', '--self-contained-html'])
     
     # Show what we're running
     print(f"\n{'='*70}")
-    print(f"  Running: {cmd}")
+    print(f"  Running: {' '.join(cmd)}")
     print(f"{'='*70}\n")
     
-    exit_code = subprocess.run(cmd, shell=True, cwd=Path(__file__).parent.parent).returncode
+    exit_code = run_command(cmd)
     
     if exit_code == 0:
         print(f"\n✅ All tests passed!")

@@ -5,6 +5,16 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.9] - Security Fix - 2025-12-03
+
+### Security
+
+- Fixed command injection vulnerability in `tests/run_tests.py`
+  - Removed unsafe `shell=True` parameter from subprocess.run() calls
+  - Replaced string-based command execution with secure list-based arguments
+  - This prevents potential command injection attacks through subprocess calls
+  - The test runner functionality remains unchanged while being significantly more secure
+
 ## [1.3.8] - UI Improvement - 2025-12-03
 
 ### Changed
