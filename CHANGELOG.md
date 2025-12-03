@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Reminder functionality now works consistently across all pages (today, tomorrow, and undone)
   - Users can now properly set, view, and update reminders when editing undone tasks
 
+### Changed
+
+- Refactored todo operations to use centralized JavaScript module
+  - Created `todo-operations.js` for shared todo functionality across pages
+  - Reduced code duplication between `list.html` and `undone.html`
+  - Centralized reminder handling, schedule selection, and keyboard shortcuts
+  - Makes future updates easier as changes automatically apply to all pages using the module
+
 ## [1.3.6] - Bug Fix - 2025-12-02
 
 ### 1.3.6 - Fixed
