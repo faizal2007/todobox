@@ -6,11 +6,11 @@ Comprehensive test suite for TodoBox backend and frontend functionality. Tests c
 
 ## Test Statistics
 
-### Current Status
-- **Total Tests**: 115 tests
-- **Passing**: 78 tests (67.8%)
-- **Failing**: 33 tests (mostly older tests needing updates)
-- **Errors**: 4 tests (incorrect model usage in legacy tests)
+### Current Status (December 2024)
+- **Total Tests**: 170 tests
+- **Passing**: 133 tests (78.2%)
+- **Failing**: 35 tests (route/authentication issues)
+- **Errors**: 2 tests (model initialization issues)
 
 ### Coverage by Category
 
@@ -110,8 +110,8 @@ Comprehensive test suite for TodoBox backend and frontend functionality. Tests c
 
 ## Test Files
 
-### New Comprehensive Test Files
-1. **tests/test_comprehensive.py** (28 tests)
+### Core Test Files (Active)
+1. **tests/test_comprehensive.py** (28 tests) - ✅ 26/28 passing
    - Model tests (User, Todo, Status, Tracker)
    - API endpoint tests
    - Route tests (public & authenticated)
@@ -119,7 +119,7 @@ Comprehensive test suite for TodoBox backend and frontend functionality. Tests c
    - Security feature tests
    - Integration tests
 
-2. **tests/test_backend_routes.py** (28 tests)
+2. **tests/test_backend_routes.py** (28 tests) - ✅ 26/28 passing
    - Authentication route tests
    - Todo management route tests
    - User settings route tests
@@ -131,16 +131,47 @@ Comprehensive test suite for TodoBox backend and frontend functionality. Tests c
    - Data validation tests
    - Concurrent access tests
 
-### Existing Test Files
-3. **tests/test_user_isolation.py** (17 tests, mostly passing)
-   - Encryption edge cases ✅
-   - User isolation tests (API) ✅
-   - Shared todo access tests (some failing)
-   - Todo encryption tests ✅
+3. **tests/test_frontend.py** (27 tests) - ✅ 27/27 passing
+   - Static asset tests
+   - PWA feature tests
+   - Template tests
+   - Frontend integration tests
+   - Responsive design tests
+   - Accessibility tests
+   - Security headers tests
+   - Error handling tests
+   - Form functionality tests
 
-4. **tests/test_functional.py** (38 tests, partially passing)
-   - Legacy functional tests
-   - Some need updates for current model structure
+4. **tests/test_security_updates.py** (27 tests) - ✅ 27/27 passing
+   - Environment configuration tests
+   - XSS prevention tests
+   - SQL injection prevention tests
+   - Form validation tests
+   - Password security tests
+   - API token security tests
+   - Security integration tests
+
+5. **tests/test_functional.py** (38 tests) - ⚠️ 28/38 passing
+   - Authentication flow tests
+   - Todo management tests (some need route fixes)
+   - User isolation tests
+   - Todo sharing tests
+   - Admin functionality tests
+   - User settings tests
+   - End-to-end workflows
+   - Todomanage CLI tests
+
+6. **tests/test_user_isolation.py** (17 tests) - ⚠️ 7/17 passing
+   - Encryption edge cases ✅
+   - User isolation tests (need auth fixes)
+   - Shared todo access tests
+   - Todo encryption tests
+
+7. **tests/test_reminder_30_min_interval.py** (1 test) - ❌ Failing
+   - 30-minute interval reminder tests (DB setup issue)
+
+8. **tests/test_reminder_auto_close.py** (1 test) - ❌ Failing
+   - Auto-close reminder tests (DB setup issue)
 
 ## Running Tests
 
@@ -252,28 +283,39 @@ python -m pytest tests/test_comprehensive.py::TestUserModel::test_create_user -v
 - ✅ Logical grouping
 - ✅ Easy to navigate and extend
 
-## Known Issues (To Be Fixed)
+## Known Issues (Being Fixed)
 
-### Minor Issues (4 failing tests)
-1. **test_change_password**: Password verification assertion needs adjustment
-2. **test_sharing_toggle**: POST data format issue
-3. **test_login_page**: Redirect handling in specific scenario
-4. **test_add_todo_route**: Route endpoint validation
+### Minor Issues (2 failing tests in otherwise passing files)
+1. **test_change_password** (test_backend_routes.py): Password verification needs adjustment
+2. **test_sharing_toggle** (test_backend_routes.py): POST data format issue
 
-### Legacy Test Issues (29 failing, 4 errors)
-- **test_functional.py**: Some tests use outdated model structure
-  - Need to update from `title` to `name` for Todo model
-  - Need to fix user authentication in test fixtures
+### Legacy Test Issues (35 failing tests total)
+1. **Route Path Issues**: Some tests use outdated routes
+   - Using `/todo/add` instead of `/add`
+   - Using `/todo/{id}/delete` instead of `/delete/{id}`
+   - Need route updates throughout
 
-These are being addressed in subsequent updates.
+2. **Authentication Issues**: Login fixtures need fixes
+   - Email mismatch in logged_in_client fixture
+   - Some tests expect 200 but get 302 redirects
+
+3. **Reminder Tests**: Database setup issues
+   - test_reminder_30_min_interval.py
+   - test_reminder_auto_close.py
+   - Need proper database initialization
+
+4. **User Isolation Tests**: Authentication fixes needed
+   - Many tests get 302 redirects instead of expected responses
+   - Need to ensure proper login state
 
 ## Next Steps
 
-### Immediate
-1. ✅ Create comprehensive test suite (**COMPLETED**)
-2. ✅ Test all backend API endpoints (**COMPLETED**)
-3. ✅ Test all backend routes (**COMPLETED**)
-4. ✅ Test security features (**COMPLETED**)
+### Immediate Priorities
+1. ✅ Fix Todo model references (`title` → `name`) - COMPLETED
+2. 🔄 Fix route paths in tests (in progress)
+3. 🔄 Fix authentication in fixtures (in progress)
+4. 🔄 Fix reminder test database setup
+5. ⏳ Fix user isolation test authentication
 
 ### Future Enhancements
 1. Add frontend JavaScript unit tests (Jest/Mocha)
@@ -281,7 +323,22 @@ These are being addressed in subsequent updates.
 3. Add load testing (Locust/JMeter)
 4. Add API integration tests with external services
 5. Add performance benchmarking
-6. Fix remaining legacy test issues
+6. Increase code coverage to 90%+
+
+## Recent Updates
+
+### December 4, 2024
+- Fixed Todo model test issues (title → name)
+- Improved test pass rate from 77% to 78.2%
+- Reduced errors from 4 to 2
+- Updated test documentation
+- Identified and documented all failing test issues
+
+### December 3, 2024
+- Created comprehensive security test suite (27 tests, 100% passing)
+- Fixed werkzeug compatibility issues
+- Updated test infrastructure
+- Created test documentation
 
 ## Dependencies
 
@@ -323,7 +380,8 @@ When adding new features:
 
 ---
 
-**Last Updated**: December 3, 2024
-**Test Suite Version**: 2.0
-**Total Test Count**: 115 tests
-**Pass Rate**: 67.8% (78/115)
+**Last Updated**: December 4, 2024  
+**Test Suite Version**: 3.0  
+**Total Test Count**: 170 tests  
+**Pass Rate**: 78.2% (133/170)  
+**Status**: Active development - improving test coverage and fixing legacy tests

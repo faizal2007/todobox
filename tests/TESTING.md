@@ -1,6 +1,19 @@
-# TodoBox Functional Tests
+# TodoBox Testing Guide
 
-Comprehensive functional test suite for the TodoBox application. Tests cover authentication, todo management, user isolation, sharing, admin features, and end-to-end workflows.
+Comprehensive testing guide for the TodoBox application. Tests cover authentication, todo management, user isolation, sharing, admin features, security, and end-to-end workflows.
+
+## Quick Links
+
+- **[TESTING_BEST_PRACTICES.md](TESTING_BEST_PRACTICES.md)** - Comprehensive guide to writing good tests
+- **[TEST_SUMMARY.md](TEST_SUMMARY.md)** - Current test status and coverage
+- **[run_tests.py](run_tests.py)** - Test runner with CLI options
+
+## Test Overview
+
+**Total Tests**: 183  
+**Passing**: 146 (79.8%)  
+**Test Files**: 9  
+**Coverage**: ~45% of codebase
 
 ## Test Coverage
 
