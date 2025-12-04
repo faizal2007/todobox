@@ -1,8 +1,8 @@
 {
-  "name": "Shimasu TodoBox",
-  "short_name": "TodoBox",
-  "description": "Track and manage daily todos securely.",
-  "start_url": "/dashboard",
+  "name": "Shimasu TodoBox [DEV]",
+  "short_name": "TodoBox DEV",
+  "description": "Track and manage daily todos securely. [Development Version]",
+  "start_url": "/dashboard?source=pwa-dev",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",

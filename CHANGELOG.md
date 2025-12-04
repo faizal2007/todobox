@@ -5,6 +5,33 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.4] - PWA Button Visibility and Localhost Configuration - 2025-12-04
+
+### Fixed
+
+- **PWA Install Button**: Restored visibility in development environment
+  - Reverted to CSS class-based visibility control (`show` class) from master branch
+  - Fixed button positioning and styling
+  - Resolved duplicate debug button issue
+  
+- **Development Configuration**: 
+  - Updated default host from `127.0.0.1` to `localhost` for PWA support
+  - PWA install prompts require secure context (HTTPS or localhost)
+  - Added manifest link to base.html head for proper PWA detection
+
+- **Manifest Configuration**:
+  - Updated manifest to distinguish dev environment: "TodoBox [DEV]"
+  - Changed start_url to include dev parameter: `/dashboard?source=pwa-dev`
+  - Prevents conflict with production PWA installations
+
+### Changed
+
+- **todobox.py**: Default host changed to `localhost` from `127.0.0.1`
+- **.flaskenv**: BIND_ADDRESS set to `localhost` with PWA support comment
+- **app/routes.py**: Added `send_from_directory` import (service worker already served via __init__.py)
+- **app/templates/base.html**: Added PWA manifest link in HTML head
+- **app/templates/main.html**: Restored master branch button implementation with CSS classes
+
 ## [1.6.3] - Documentation Revision and Update - 2025-12-04
 
 ### Changed
@@ -39,6 +66,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Version numbers updated across documentation suite
 - File counts and statistics corrected
 - Navigation paths updated for new features
+
+## [1.6.3] - Secure Account Deletion Feature - 2025-12-04
+
+### Added
+
+- **Root Index Route**: New `/` endpoint for application entry point
+  - Redirects authenticated users to `/dashboard`
+  - Redirects anonymous users to `/login`
+  - Resolves 404 error when accessing application root
+
+- **Secure Account Deletion**: New feature allowing users to securely delete their accounts
+  - Email-based verification code sent to user's registered email
+  - 6-digit numeric code requirement for confirmation
+  - All associated data is permanently deleted (todos, trackers, shares, reminders)
+  - Gratitude message shown after successful deletion
+  - Proper session cleanup after account deletion
+  - CSRF protection on all deletion operations
+
+- **DeleteAccountForm**: New WTForm for account deletion verification
+  - Validates deletion code input
+  - Integrated with Flask-WTF for CSRF protection
+  - Added to `app/forms.py`
+
+- **Account Deletion Route**: `/delete_account` endpoint
+  - GET: Generates verification code and sends via email
+  - POST: Verifies code and performs account deletion
+  - Cascading deletion of all user data (todos, trackers, shares)
+  - Proper error handling for email delivery failures
+  - Session invalidation after deletion
+
+- **Enhanced Account Template**: Improved deletion UI in `account.html`
+  - Clear two-step deletion process
+  - "Request Deletion Code" button with confirmation
+  - Code entry form with 6-digit pattern validation
+  - "Confirm Delete Account" button with warning
+  - Success screen showing gratitude message
+  - Visual warnings about data permanence
+
+### Fixed
+
+- **Root URL 404 Error**: Added missing index route
+  - Application now responds to http://127.0.0.1:9191/
+  - Proper routing to dashboard or login based on authentication state
+
+- **routes.py Import Organization**: Cleaned up and consolidated imports
+  - Removed duplicate imports
+  - Removed unused imports (importlib.resources, os.pipe, unittest.mock.patch)
+  - Properly organized all Flask, SQLAlchemy, and app imports
+  - All imports now at the top of the file before route definitions
+
+- **Type Annotations**: Added proper type ignore comments for SQLAlchemy operations
+  - Fixed Pylance warnings for db.session operations
+  - Properly marked query and session methods
+
+### Security
+
+- Email verification required before account deletion
+- Code expires after session ends
+- All associated data is cleaned up in cascading deletes
+- CSRF tokens protect deletion endpoints
+>>>>>>> Stashed changes
 
 ## [1.6.2] - PWA Diagnostics & Troubleshooting - 2025-12-03
 

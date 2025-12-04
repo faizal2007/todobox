@@ -1169,11 +1169,20 @@ def delete_user():
                 print("\n❌ User deletion cancelled.")
                 return False
         
-        # Delete user
+        # Delete user and all related data
         try:
+            # Delete all todos and related trackers
+            todo_ids = [t.id for t in user.todo.all()]
+            if todo_ids:
+                for tid in todo_ids:
+                    from app.models import Tracker, TodoShare, Todo
+                    Tracker.query.filter_by(todo_id=tid).delete()
+                TodoShare.query.filter_by(owner_id=user.id).delete()
+                TodoShare.query.filter_by(shared_with_id=user.id).delete()
+                Todo.query.filter_by(user_id=user.id).delete()
             db.session.delete(user)  # type: ignore[union-attr]
             db.session.commit()  # type: ignore[union-attr]
-            print(f"\n✅ User '{email}' deleted successfully!")
+            print(f"\n✅ User '{email}' and all related data deleted successfully!")
             return True
         except Exception as e:
             print(f"\n❌ Error deleting user: {e}")
