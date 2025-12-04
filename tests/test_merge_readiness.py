@@ -16,8 +16,6 @@ import pytest
 import sys
 import os
 from pathlib import Path
-import json
-import subprocess
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -255,7 +253,7 @@ class TestDatabaseCompatibility:
             Status.seed()
             db.session.commit()
             
-            # Verify statuses exist (seed creates 4 statuses starting from id 5)
+            # Verify statuses exist
             assert Status.query.count() >= 4
             statuses = Status.query.all()
             status_names = [s.name for s in statuses]
@@ -334,6 +332,9 @@ class TestAPICompatibility:
 class TestSecurityCompliance:
     """Test security measures are in place"""
     
+    # Common insecure secret key values to check against
+    INSECURE_SECRET_KEYS = ['dev', 'development', 'secret', 'default', 'test', 'change_me']
+    
     @pytest.fixture
     def app(self):
         """Create test application with in-memory database"""
@@ -391,7 +392,7 @@ class TestSecurityCompliance:
             secret_key = flask_app.config.get('SECRET_KEY')
             assert secret_key is not None
             # Should not be common default values
-            assert secret_key not in ['dev', 'development', 'secret', 'default']
+            assert secret_key not in self.INSECURE_SECRET_KEYS
 
 
 class TestDocumentation:
