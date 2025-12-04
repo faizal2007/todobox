@@ -1,20 +1,27 @@
-from importlib.resources import path
-from os import pipe
-from unittest.mock import patch
-from flask import render_template, request, redirect, url_for, make_response, jsonify, abort, flash, redirect, session, g
-from app import app, db, csrf
+
+from flask import render_template, request, redirect, url_for, make_response, jsonify, abort, flash, session, g, send_from_directory
 from flask_login import current_user, login_user, login_required, logout_user
+from app import app, db, csrf
 from app.models import Todo, User, Status, Tracker, ShareInvitation, TodoShare
-from app.forms import LoginForm, SetupAccountForm, ChangePassword, UpdateAccount, ShareInvitationForm, SharingSettingsForm
+from app.forms import (
+    LoginForm, SetupAccountForm, ChangePassword, UpdateAccount, 
+    ShareInvitationForm, SharingSettingsForm, DeleteAccountForm
+)
 from app.oauth import generate_google_auth_url, process_google_callback
-from app.email_service import send_sharing_invitation, get_invitation_link, is_email_configured
+from app.email_service import (
+    send_sharing_invitation, get_invitation_link, is_email_configured,
+    SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM_EMAIL
+)
 from urllib.parse import urlparse as url_parse
 from datetime import datetime, date, timedelta
 from sqlalchemy import asc, desc, or_
+from functools import wraps
+from email.mime.text import MIMEText
+import smtplib
+import secrets
 import markdown
 from bleach import clean
 from wtforms.csrf.core import CSRF
-from functools import wraps
 import requests
 import logging
 
@@ -438,81 +445,68 @@ def init_default_data():
 # Initialize data once when app starts
 # init_default_data()  # DISABLED - moved to app startup hook
 
-@app.route('/')
-def root():
-    """Root route - redirect to dashboard if logged in, otherwise to login"""
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    else:
-        return redirect(url_for('login'))
-
-@app.route('/index')
-def index():
-    """Index route - redirect to dashboard if logged in, otherwise to login"""
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    else:
-        return redirect(url_for('login'))
-
-def _categorize_todos_by_period(todos, now):
-    """Helper function to categorize todos by time period"""
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    week_start = today_start - timedelta(days=today_start.weekday())
-    month_start = today_start.replace(day=1)
-    year_start = today_start.replace(month=1, day=1)
-    
-    # Initialize time period segments
-    periods = {
-        'today': {'done': 0, 're-assign': 0, 'pending': 0},
-        'weekly': {'done': 0, 're-assign': 0, 'pending': 0},
-        'monthly': {'done': 0, 're-assign': 0, 'pending': 0},
-        'yearly': {'done': 0, 're-assign': 0, 'pending': 0}
-    }
-    
-    for todo in todos:
-        # Get all trackers for this todo to check completion history
-        todo_trackers = db.session.query(Tracker, Status.name).join(Status).filter(  # type: ignore
-            Tracker.todo_id == todo.id  # type: ignore
-        ).order_by(Tracker.timestamp).all()  # type: ignore
-        
-        if not todo_trackers:
-            continue
-        
-        # Check if todo was ever completed (has 'done' status in history)
-        was_ever_completed = any(status == 'done' for _, status in todo_trackers)
-        
-        # Count re-assignments in history
-        reassignment_count = sum(1 for _, status in todo_trackers if status == 're-assign')
-        
-        # Determine the category
-        if was_ever_completed:
-            category = 'done'
-        elif reassignment_count > 0:
-            category = 're-assign'
-        else:
-            category = 'pending'
-        
-        # Categorize by time period based on modified date
-        todo_date = todo.modified
-        
-        if todo_date >= today_start:
-            periods['today'][category] += 1
-        if todo_date >= week_start:
-            periods['weekly'][category] += 1
-        if todo_date >= month_start:
-            periods['monthly'][category] += 1
-        if todo_date >= year_start:
-            periods['yearly'][category] += 1
-    
-    # Remove zero values for cleaner charts
-    for period in periods:
-        periods[period] = {k: v for k, v in periods[period].items() if v > 0}
-    
-    return periods
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    def _categorize_todos_by_period(todos, now):
+        """Categorize todos by time period and status for dashboard charts"""
+        today_start = datetime(now.year, now.month, now.day)
+        week_start = today_start - timedelta(days=today_start.weekday())
+        month_start = datetime(now.year, now.month, 1)
+        year_start = datetime(now.year, 1, 1)
+
+        periods = {
+            'today': {'done': 0, 're-assign': 0, 'pending': 0},
+            'weekly': {'done': 0, 're-assign': 0, 'pending': 0},
+            'monthly': {'done': 0, 're-assign': 0, 'pending': 0},
+            'yearly': {'done': 0, 're-assign': 0, 'pending': 0}
+        }
+
+        for todo in todos:
+            # Get all trackers for this todo to check completion history
+            todo_trackers = (
+                db.session.query(Tracker, Status.name)
+                .join(Status, Tracker.status_id == Status.id)
+                .filter(Tracker.todo_id == todo.id)
+                .order_by(Tracker.timestamp)
+                .all()
+            )
+
+            if not todo_trackers:
+                continue
+
+            # Check if todo was ever completed (has 'done' status in history)
+            was_ever_completed = any(status == 'done' for _, status in todo_trackers)
+
+            # Count re-assignments in history
+            reassignment_count = sum(1 for _, status in todo_trackers if status == 're-assign')
+
+            # Determine the category
+            if was_ever_completed:
+                category = 'done'
+            elif reassignment_count > 0:
+                category = 're-assign'
+            else:
+                category = 'pending'
+
+            # Categorize by time period based on modified date
+            todo_date = todo.modified
+
+            if todo_date >= today_start:
+                periods['today'][category] += 1
+            if todo_date >= week_start:
+                periods['weekly'][category] += 1
+            if todo_date >= month_start:
+                periods['monthly'][category] += 1
+            if todo_date >= year_start:
+                periods['yearly'][category] += 1
+
+        # Remove zero values for cleaner charts
+        for period in periods:
+            periods[period] = {k: v for k, v in periods[period].items() if v > 0}
+
+        return periods
     from app.models import Todo, Tracker, Status
     from sqlalchemy import func, desc, and_
     
@@ -610,6 +604,13 @@ def dashboard():
                          time_period_data=time_period_data,
                          recent_todos=recent_todos,
                          reassignment_stats=reassignment_stats)
+
+@app.route('/')
+def index():
+    """Root route - redirect authenticated users to dashboard, others to login"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -837,6 +838,75 @@ def account():
         raise
     
     return render_template('account.html', title='User Account', form=form)
+
+@app.route('/delete_account', methods=['POST', 'GET'])
+@login_required
+def delete_account():
+    """Handle user account deletion with email code verification"""
+    form = DeleteAccountForm()
+    gratitude_message = False
+    
+    if request.method == 'POST':
+        # Verify the code entered by the user
+        code = request.form.get('delete_code')
+        session_code = session.get('delete_account_code')
+        
+        if not session_code or code != session_code:
+            flash('Invalid or expired code. Please check your email and try again.', 'error')
+            return redirect(url_for('account'))
+        
+        # Delete user and all related data
+        user = current_user
+        todo_ids = [t.id for t in user.todo.all()]
+        
+        if todo_ids:
+            # Delete all trackers for this user's todos
+            for tid in todo_ids:
+                Tracker.query.filter_by(todo_id=tid).delete()  # type: ignore[attr-defined]
+            
+            # Delete all todo shares (both as owner and shared with)
+            TodoShare.query.filter_by(owner_id=user.id).delete()  # type: ignore[attr-defined]
+            TodoShare.query.filter_by(shared_with_id=user.id).delete()  # type: ignore[attr-defined]
+            
+            # Delete all todos for this user
+            Todo.query.filter_by(user_id=user.id).delete()  # type: ignore[attr-defined]
+        
+        # Delete the user account itself
+        db.session.delete(user)  # type: ignore[attr-defined]
+        db.session.commit()  # type: ignore[attr-defined]
+        
+        # Logout the user
+        logout_user()
+        
+        # Clear the session code
+        session.pop('delete_account_code', None)
+        
+        # Show gratitude message
+        gratitude_message = True
+        return render_template('account.html', gratitude_message=gratitude_message)
+    
+    else:
+        # GET request - generate and send verification code to email
+        code = str(secrets.randbelow(1000000)).zfill(6)
+        session['delete_account_code'] = code
+        
+        # Prepare and send email with verification code
+        msg = MIMEText(f'Your code to delete your account is: {code}\nIf you did not request this, ignore this email.')
+        msg['Subject'] = 'Your TodoBox Account Deletion Code'
+        msg['From'] = SMTP_FROM_EMAIL
+        msg['To'] = current_user.email
+        
+        try:
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                server.starttls()
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.sendmail(SMTP_FROM_EMAIL, [current_user.email], msg.as_string())
+            flash('A code has been sent to your email. Enter it below to confirm account deletion.', 'info')
+        except Exception as e:
+            flash('Failed to send email. Please contact support.', 'error')
+            logging.error(f'Email error during account deletion: {str(e)}')
+        
+        return redirect(url_for('account'))
 
 @app.route('/undone')
 @login_required

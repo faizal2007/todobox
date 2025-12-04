@@ -76,3 +76,8 @@ class SharingSettingsForm(FlaskForm):
     """Form for managing sharing settings"""
     sharing_enabled = BooleanField('Enable Todo Sharing')
     submit = SubmitField('Save Settings')
+
+class DeleteAccountForm(FlaskForm):
+    """Form for account deletion with code verification"""
+    delete_code = StringField('Verification Code', validators=[DataRequired()])
+    submit = SubmitField('Delete Account')
