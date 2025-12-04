@@ -113,17 +113,23 @@ class TestEncryptionUtilities:
         assert decrypt_text(plaintext) == plaintext
     
     def test_get_fernet_creates_valid_instance(self, app_context):
-        """Test Fernet instance creation"""
+        """Test Fernet instance creation and key consistency"""
         from app.encryption import get_fernet
         from cryptography.fernet import Fernet
         
-        fernet = get_fernet()
-        assert isinstance(fernet, Fernet)
+        # Get two instances
+        fernet1 = get_fernet()
+        fernet2 = get_fernet()
         
-        # Verify it can encrypt and decrypt
-        test_data = b"test data"
-        encrypted = fernet.encrypt(test_data)
-        decrypted = fernet.decrypt(encrypted)
+        # Both should be Fernet instances
+        assert isinstance(fernet1, Fernet)
+        assert isinstance(fernet2, Fernet)
+        
+        # Verify key derivation is consistent - same app context = same key
+        # Encrypt with first instance, decrypt with second
+        test_data = b"test consistency"
+        encrypted = fernet1.encrypt(test_data)
+        decrypted = fernet2.decrypt(encrypted)
         assert decrypted == test_data
 
 
@@ -335,13 +341,19 @@ class TestGeolocationUtilities:
 
 
 class TestEmailService:
-    """Tests for email_service.py functions"""
+    """Tests for email_service.py functions
+    
+    Note: These tests use environment variable mocking which can lead to
+    unpredictable behavior. In production code, consider using dependency
+    injection or configuration factory patterns instead.
+    """
     
     def test_is_email_configured_with_settings(self, app_context):
         """Test email configuration check with settings"""
         from app import email_service
         
         # Mock environment variables
+        # Note: Module reloading is not ideal but necessary for current implementation
         with patch.dict('os.environ', {
             'SMTP_SERVER': 'smtp.gmail.com',
             'SMTP_PORT': '587',
