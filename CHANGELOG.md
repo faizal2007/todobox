@@ -5,6 +5,64 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.2] - PWA Diagnostics & Troubleshooting - 2025-12-03
+
+### Added
+
+- **PWA Debug Button**: New diagnostic tool in top navigation bar
+  - Shows comprehensive PWA status information
+  - Tests manifest validity
+  - Verifies Service Worker registration
+  - Checks HTTPS connection and browser support
+  - Provides browser-specific install instructions
+  - Helpful tips for troubleshooting
+
+- **Enhanced Console Logging**: Detailed PWA event tracking
+  - ✓ Service Worker registration confirmation
+  - ✓ beforeinstallprompt event detection with checkmarks
+  - ✓ Install button visibility state tracking
+  - ⚠️ Warning messages for missing features
+  - Diagnostic information for debugging
+
+- **5-Second Timeout Detection**: Automatic diagnostics if beforeinstallprompt doesn't fire
+  - Logs possible reasons for failure
+  - Suggests next steps for troubleshooting
+  - Helps identify HTTPS, browser support, or criteria issues
+
+- **Documentation**: New comprehensive troubleshooting guide
+  - `docs/PWA_INSTALL_BUTTON_TROUBLESHOOTING.md`
+  - Step-by-step diagnostic process
+  - Browser-specific install methods (Chrome, Safari, Firefox, Samsung Internet)
+  - Common issues and solutions
+  - Local HTTPS setup instructions
+  - Debugging commands for developers
+
+### Changed
+
+- **PWA Initialization**: Improved timing and reliability
+  - Now waits for DOM to be ready before accessing button element
+  - Uses DOMContentLoaded for proper initialization order
+  - Better error handling for edge cases
+
+- **Service Worker Registration**: Enhanced error handling
+  - Comprehensive error logging
+  - Async timeout detection
+  - Fallback diagnostics
+
+### Diagnostics & Debugging
+
+- **Issue**: Install button not appearing on mobile despite all PWA requirements met
+- **Root Cause**: Complex to diagnose without tools; now provides step-by-step debugging
+- **Solution**: Added diagnostic tools and comprehensive troubleshooting guide
+- **Files Modified**:
+  - `app/templates/main.html`: PWA initialization and debug button
+  - `docs/DOCUMENTATION_MASTER_INDEX.md`: Added troubleshooting doc entry
+
+### User Impact - PWA Diagnostics
+
+✅ **Before**: Button not appearing, no way to diagnose why
+✅ **After**: Click "PWA Debug" button for instant diagnostics and solutions
+
 ## [1.6.1] - Reminder Feature Spacing Fix - 2025-12-03
 
 ### Fixed
