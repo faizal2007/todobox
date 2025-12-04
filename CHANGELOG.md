@@ -20,6 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Login Page Mobile Responsiveness**: Improved mobile layout
+  - Login form now uses full width on mobile devices
+  - Vertically centered login box for better UX
+  - Responsive column sizing: full width on mobile, scaled on larger screens
+  - Removed jumbotron wrapper for cleaner design
+  - Stacked login buttons vertically instead of side-by-side
+  - Better padding and spacing on all screen sizes
+  - Card-based design with shadow for modern look
+
 - **Notification Stacking**: Reminder notifications now stack vertically instead of overlapping
   - Multiple notifications display in a vertical stack with 10px gap
   - Each notification shows a numbered badge (1, 2, 3, etc.) when multiple are present
