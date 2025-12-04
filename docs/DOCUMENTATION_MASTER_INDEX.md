@@ -368,6 +368,28 @@ This documentation suite provides **comprehensive coverage** of the TodoBox Flas
 
 ---
 
+#### 18. **PWA_INSTALL_BUTTON_TROUBLESHOOTING.md** - PWA Diagnostics & Installation Guide
+
+**For:** Users, support staff, developers  
+**Read Time:** 8 minutes  
+**Status:** Complete - December 3, 2025  
+**Topics:**
+
+- Quick start: Using PWA Debug button
+- How the install process works
+- Step-by-step diagnostic process
+- Interpreting debug results
+- Browser-specific install methods (Chrome, Safari, Firefox)
+- Common issues and fixes
+- Testing PWA locally (HTTPS setup)
+- Debugging commands
+- Code changes made
+- What to do if still not working
+
+**Use this when:** Troubleshooting why install button doesn't appear or PWA install fails
+
+---
+
 ## 🎯 Quick Navigation by Purpose
 
 ### I want to
@@ -673,12 +695,13 @@ docs/
 ├── JAVASCRIPT_OPTIMIZATION_EXECUTIVE_SUMMARY.md ← Executive summary
 ├── DEVELOPMENT_SESSION_DECEMBER_2025.md         ← Development session log
 ├── REMINDER_FEATURE_FIX.md                      ← Reminder feature fix details
+├── PWA_INSTALL_BUTTON_TROUBLESHOOTING.md        ← PWA diagnostics and troubleshooting
 │
 ├── DOCUMENTATION_MASTER_INDEX.md                ← This file
 └── screenshots/                                 ← Application screenshots
 ```
 
-**Total:** 28 documentation files (5 new in this session)
+**Total:** 29 documentation files (6 new in this session)
 
 ---
 
