@@ -36,9 +36,8 @@ def app():
 def client(app):
     """Create test client"""
     # Workaround for werkzeug.__version__ issue
-    import werkzeug
-    if not hasattr(werkzeug, '__version__'):
-        werkzeug.__version__ = '3.0.0'
+    from tests.test_utils import apply_werkzeug_version_workaround
+    apply_werkzeug_version_workaround()
     return app.test_client()
 
 
@@ -120,13 +119,12 @@ class TestEncryptionUtilities:
         
         fernet = get_fernet()
         assert isinstance(fernet, Fernet)
-    
-    def test_encryption_key_derivation_consistency(self, app_context):
-        """Test that encryption key derivation is consistent"""
-        from app.encryption import _get_encryption_key
-        key1 = _get_encryption_key()
-        key2 = _get_encryption_key()
-        assert key1 == key2
+        
+        # Verify it can encrypt and decrypt
+        test_data = b"test data"
+        encrypted = fernet.encrypt(test_data)
+        decrypted = fernet.decrypt(encrypted)
+        assert decrypted == test_data
 
 
 class TestTimezoneUtilities:

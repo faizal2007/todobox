@@ -35,9 +35,8 @@ def app():
 def client(app):
     """Create test client"""
     # Workaround for werkzeug.__version__ issue
-    import werkzeug
-    if not hasattr(werkzeug, '__version__'):
-        werkzeug.__version__ = '3.0.0'
+    from tests.test_utils import apply_werkzeug_version_workaround
+    apply_werkzeug_version_workaround()
     return app.test_client()
 
 
