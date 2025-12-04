@@ -31,6 +31,10 @@ Visit `http://localhost:5000` in your browser.
 - 🧂 **Salt Generator** - Secure password hashing with cryptographically strong salts
 - 🚀 **Ready to Deploy** - Production-ready with unified configuration
 - 🔑 **API Access** - RESTful API with token-based authentication for external integrations
+- ⏰ **Smart Reminders** - Set reminders with automatic timezone detection and auto-close after 3 notifications
+- 🌍 **Timezone Support** - Automatic timezone detection based on IP geolocation with 43+ timezone options
+- 📱 **PWA Support** - Install as a Progressive Web App on mobile and desktop devices
+- 📊 **Dashboard Analytics** - Track tasks with donut charts grouped by time periods (today, weekly, monthly, yearly)
 
 ## Technology Stack
 
@@ -43,7 +47,7 @@ Visit `http://localhost:5000` in your browser.
 - **Frontend:** Bootstrap 4, Jinja2 templates
 - **Python:** 3.10+
 
-**Status:** ✅ **Production Ready** (November 26, 2025)
+**Status:** ✅ **Production Ready** (December 2025)
 
 ## Common Commands
 
@@ -93,7 +97,13 @@ Comprehensive documentation is available in the `docs/` directory:
 
 - **[JAVASCRIPT_OPTIMIZATION.md](docs/JAVASCRIPT_OPTIMIZATION.md)** - JavaScript modernization (jQuery to vanilla JS)
 - **[JQUERY_MIGRATION_GUIDE.md](docs/JQUERY_MIGRATION_GUIDE.md)** - Developer guide for JavaScript patterns
-- **[CODE_REVIEW.md](docs/CODE_REVIEW.md)** - Code review findings and best practices
+- **[AXE_LINTER_BEST_PRACTICES.md](docs/AXE_LINTER_BEST_PRACTICES.md)** - Accessibility guidelines
+
+### Features & Integrations
+
+- **[AUTO_CLOSE_REMINDERS.md](docs/AUTO_CLOSE_REMINDERS.md)** - Auto-close reminder feature documentation
+- **[TIMEZONE_AUTO_DETECTION.md](docs/TIMEZONE_AUTO_DETECTION.md)** - Automatic timezone detection
+- **[TIMEZONE_INTEGRATION.md](docs/TIMEZONE_INTEGRATION.md)** - Timezone integration for reminders
 
 ### Migration Guides
 

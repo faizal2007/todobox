@@ -4,7 +4,7 @@ This documentation provides comprehensive information about the TodoBox
 Flask application - a todo management system with user authentication
 and task tracking capabilities.
 
-**Last Updated:** November 29, 2025
+**Last Updated:** December 4, 2025
 
 ## Contents
 
@@ -37,14 +37,12 @@ and task tracking capabilities.
 
 - **[README_MIGRATIONS.md](README_MIGRATIONS.md)** - Migration quick reference
 - **[MIGRATION_FIX_GUIDE.md](MIGRATION_FIX_GUIDE.md)** - Migration troubleshooting
-- **[MIGRATION_FIX_SUMMARY.md](MIGRATION_FIX_SUMMARY.md)** - Migration fix summary
-- **[MIGRATION_ANALYSIS.md](MIGRATION_ANALYSIS.md)** - Migration chain analysis
-- **[MIGRATION_TEST_RESULTS.md](MIGRATION_TEST_RESULTS.md)** - Migration test results
 
-### Technical Notes
+### Features & Integrations
 
-- **[WERKZEUG_FIX.md](WERKZEUG_FIX.md)** - Werkzeug 3.0 compatibility fixes
-- **[PROGRESS_NOVEMBER_2025.md](PROGRESS_NOVEMBER_2025.md)** - November 2025 progress
+- **[AUTO_CLOSE_REMINDERS.md](AUTO_CLOSE_REMINDERS.md)** - Auto-close reminder feature documentation
+- **[TIMEZONE_AUTO_DETECTION.md](TIMEZONE_AUTO_DETECTION.md)** - Automatic timezone detection
+- **[TIMEZONE_INTEGRATION.md](TIMEZONE_INTEGRATION.md)** - Timezone integration for reminders
 
 ### Documentation Index
 
