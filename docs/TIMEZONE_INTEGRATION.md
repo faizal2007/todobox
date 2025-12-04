@@ -20,7 +20,8 @@ The TodoBox application now has complete timezone support for reminders. Users c
 
 ### 2. Reminder Time Conversion Flow
 
-#### When Creating/Editing a Reminder:
+#### When Creating/Editing a Reminder
+
 1. User sets reminder time in their local timezone via form
 2. Backend converts local time to UTC using `convert_from_user_timezone()`
 3. UTC time is stored in database (todo.reminder_time)
@@ -32,7 +33,8 @@ Convert to UTC: 7:00 PM UTC
 Store in DB: 2025-01-15 19:00:00
 ```
 
-#### When Displaying Reminder:
+#### When Displaying Reminder
+
 1. UTC time retrieved from database
 2. Backend converts UTC to user's timezone using `convert_to_user_timezone()`
 3. Converted time displayed in form, notifications, and API responses
@@ -45,7 +47,8 @@ Convert to user: 2:00 PM EST
 Display in form: Shows as 2:00 PM local time
 ```
 
-#### When Checking Pending Reminders:
+#### When Checking Pending Reminders
+
 1. Get current time in user's timezone
 2. Compare against reminder_time in UTC
 3. Notification shows time in user's local timezone

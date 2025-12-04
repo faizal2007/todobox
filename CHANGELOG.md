@@ -5,6 +5,41 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.3] - Documentation Revision and Update - 2025-12-04
+
+### Changed
+
+- **README.md**: Updated with missing features
+  - Added Smart Reminders feature with auto-close
+  - Added Timezone Support with automatic detection
+  - Added PWA Support documentation
+  - Added Dashboard Analytics feature
+  - Updated status date to December 2025
+  - Added timezone and reminder documentation links
+
+- **docs/README.md**: Updated documentation index
+  - Updated last modified date to December 4, 2025
+  - Added timezone feature documentation section
+  - Added auto-close reminders documentation
+  - Organized documentation into clearer categories
+
+- **docs/DOCUMENTATION_MASTER_INDEX.md**: Comprehensive update
+  - Updated to version 1.5
+  - Added TIMEZONE_AUTO_DETECTION.md documentation entry
+  - Added TIMEZONE_INTEGRATION.md documentation entry
+  - Updated statistics (23 files, ~240 KB, 180+ sections, 130+ examples)
+  - Updated file tree structure
+  - Added timezone navigation guides
+  - Updated version to 1.6.2
+  - Improved support section with timezone and reminder topics
+
+### Documentation
+
+- All documentation files reviewed for consistency
+- Version numbers updated across documentation suite
+- File counts and statistics corrected
+- Navigation paths updated for new features
+
 ## [1.6.2] - PWA Diagnostics & Troubleshooting - 2025-12-03
 
 ### Added
