@@ -420,8 +420,9 @@ class TestDocumentation:
     
     def test_testing_documentation_exists(self):
         """Verify testing documentation exists"""
-        test_doc = Path(__file__).parent / 'TESTING.md'
-        assert test_doc.exists()
+        # Check for README.md (main testing guide)
+        test_doc = Path(__file__).parent / 'README.md'
+        assert test_doc.exists(), "tests/README.md should exist"
 
 
 if __name__ == '__main__':
