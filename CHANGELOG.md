@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated statistics (23 files, ~240 KB, 180+ sections, 130+ examples)
   - Updated file tree structure
   - Added timezone navigation guides
-  - Updated version to 1.6.2
+  - Updated version to 1.6.3
   - Improved support section with timezone and reminder topics
 
 ### Documentation

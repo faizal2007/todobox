@@ -529,7 +529,7 @@ This documentation suite provides **comprehensive coverage** of the TodoBox Flas
 | Tables | 35+ |
 | Issues identified | 15 |
 | Sections | 180+ |
-| Read time (full suite) | ~3.5 hours (increased detail per file) |
+| Read time (full suite) | ~3.5 hours |
 
 ---
 
