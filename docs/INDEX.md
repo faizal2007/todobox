@@ -5,8 +5,8 @@
 Complete documentation for the TodoBox Flask application is available in the `/docs` folder, covering all features, setup, deployment, and maintenance.
 
 **Last Updated:** December 4, 2025  
-**Documentation Version:** 1.5  
-**Application Version:** 1.6.3
+**Documentation Version:** 1.6  
+**Application Version:** 1.6.7
 
 ---
 
@@ -196,9 +196,9 @@ docs/
 
 ## Version Information
 
-- **Documentation Version:** 1.5
+- **Documentation Version:** 1.6
 - **Last Updated:** December 4, 2025
-- **Application Version:** 1.6.3
+- **Application Version:** 1.6.7
 - **Status:** Production Ready ✅
 
 ---

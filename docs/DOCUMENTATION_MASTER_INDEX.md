@@ -571,21 +571,21 @@ This documentation suite provides **comprehensive coverage** of the TodoBox Flas
 
 | Metric | Value |
 |--------|-------|
-| Total documentation files | 23 |
-| Total documentation size | ~240 KB |
-| Code examples | 130+ |
+| Total documentation files | 26 |
+| Total documentation size | ~280 KB |
+| Code examples | 140+ |
 | Technical diagrams | 10+ |
 | Developer guides | 5 |
 | Setup guides | 2 |
 | API documentation | 2 |
 | Architecture docs | 2 |
 | Feature documentation | 3 |
-| Testing documentation | 1 |
+| Testing documentation | 3 |
 | Session/Progress logs | 2 |
-| Tables | 35+ |
+| Tables | 40+ |
 | Issues identified | 15 |
-| Sections | 180+ |
-| Read time (full suite) | ~3.5 hours |
+| Sections | 200+ |
+| Read time (full suite) | ~4 hours |
 
 ---
 
@@ -860,14 +860,14 @@ docs/
 
 ## Version Information
 
-- **Documentation Version:** 1.5
+- **Documentation Version:** 1.6
 - **Last Updated:** December 4, 2025
-- **Application Version:** 1.6.3
+- **Application Version:** 1.6.7
 - **Status:** Complete & Production Ready
 
 ---
 
-**Total Documentation:** 23 files | ~240 KB | 180+ sections | 130+ examples
+**Total Documentation:** 26 files | ~280 KB | 200+ sections | 140+ examples
 
 👉 **Start with:** `README.md`
 
