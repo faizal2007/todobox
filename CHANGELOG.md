@@ -35,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Testing Visibility**: Testing documentation now easier to find and access in main docs folder
 - **Documentation Standards**: All files comply with `.copilot-markdown-rules.md` standards
 
+### Technical Notes
+
+- Files moved from `/tests` to `/docs` are tracked as renames (R100) by Git
+- No merge conflicts detected in local testing with `git merge` and `git rebase`
+- Branch is up-to-date with master (commit ee74ccd)
+
 ## [1.6.6] - Account Page UI Improvements - 2025-12-04
 
 ### Added
