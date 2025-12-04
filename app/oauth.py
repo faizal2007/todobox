@@ -48,10 +48,18 @@ def generate_google_auth_url():
         )
     )
 
-    # Append prompt only if explicitly configured
-    prompt_value = current_app.config.get('GOOGLE_OAUTH_PROMPT')
-    if prompt_value:
-        request_uri += "&prompt={}".format(prompt_value)
+    # Check if we should force account selection (after logout)
+    from flask import session as flask_session
+    force_selection = flask_session.pop('force_account_selection', False)
+    
+    if force_selection:
+        # Force account selection and consent after logout
+        request_uri += "&prompt=consent select_account"
+    else:
+        # Append prompt only if explicitly configured
+        prompt_value = current_app.config.get('GOOGLE_OAUTH_PROMPT')
+        if prompt_value:
+            request_uri += "&prompt={}".format(prompt_value)
 
     return request_uri
 
@@ -92,6 +100,12 @@ def process_google_callback(code):
         email = id_info.get("email")
         name = id_info.get("name", "")
         google_id = id_info.get("sub")
+        
+        # SECURITY: Check if this account was recently deleted
+        from app.models import DeletedAccount
+        if DeletedAccount.is_blocked(email, google_id):
+            logging.warning(f"Blocked re-registration attempt for recently deleted account: {email}")
+            return None, False
         
         # Check if user already exists
         existing_user = User.query.filter_by(email=email).first()

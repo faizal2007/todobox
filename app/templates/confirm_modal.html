@@ -35,6 +35,8 @@ function showConfirmModal(title, message, onConfirm, confirmBtnText, confirmBtnC
     var titleEl = document.getElementById('confirmModalLabel');
     var messageEl = document.getElementById('confirmModalMessage');
     var confirmBtn = document.getElementById('confirmModalConfirmBtn');
+    var closeBtn = modal.querySelector('.close');
+    var cancelBtn = modal.querySelector('[data-dismiss="modal"]');
     
     // Set content with defaults
     titleEl.textContent = title || 'Confirm Action';
@@ -47,13 +49,8 @@ function showConfirmModal(title, message, onConfirm, confirmBtnText, confirmBtnC
     // Set header class with default
     header.className = 'modal-header ' + (headerClass || 'bg-danger text-white');
     
-    // Remove previous click handler by cloning and replacing (cleanest way without jQuery)
-    var newConfirmBtn = confirmBtn.cloneNode(true);
-    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-    
-    newConfirmBtn.addEventListener('click', function() {
-        // Hide modal - Bootstrap 4 still requires jQuery for .modal()
-        // But we can use vanilla JS to manipulate the modal
+    // Function to close modal
+    function closeModal() {
         modal.classList.remove('show');
         modal.setAttribute('aria-hidden', 'true');
         modal.style.display = 'none';
@@ -64,13 +61,47 @@ function showConfirmModal(title, message, onConfirm, confirmBtnText, confirmBtnC
         if (backdrop) {
             backdrop.remove();
         }
-        
+    }
+    
+    // Remove previous click handlers by cloning and replacing
+    var newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    
+    var newCloseBtn = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+    
+    // Handle confirm button
+    newConfirmBtn.addEventListener('click', function() {
+        closeModal();
         if (typeof onConfirm === 'function') {
             onConfirm();
         }
     });
     
-    // Show modal using vanilla JavaScript (mimics jQuery's .modal('show'))
+    // Handle close button (X)
+    newCloseBtn.addEventListener('click', function() {
+        closeModal();
+    });
+    
+    // Handle cancel button - get the new reference after modal is shown
+    setTimeout(function() {
+        var cancelButtons = modal.querySelectorAll('[data-dismiss="modal"]');
+        cancelButtons.forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                closeModal();
+            });
+        });
+    }, 100);
+    
+    // Handle backdrop click to close
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+    
+    // Show modal using vanilla JavaScript
     modal.classList.add('show');
     modal.removeAttribute('aria-hidden');
     modal.style.display = 'block';
@@ -80,5 +111,10 @@ function showConfirmModal(title, message, onConfirm, confirmBtnText, confirmBtnC
     var backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop fade show';
     document.body.appendChild(backdrop);
+    
+    // Handle backdrop click
+    backdrop.addEventListener('click', function() {
+        closeModal();
+    });
 }
 </script>

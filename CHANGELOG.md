@@ -5,6 +5,73 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.6] - Account Page UI Improvements - 2025-12-04
+
+### Fixed
+
+- **Modal Close Buttons**: Fixed X button and Cancel button not working in confirmation modals
+  - Enhanced `showConfirmModal()` function to properly handle close button (X) clicks
+  - Added event handlers for Cancel button using `data-dismiss="modal"` attribute
+  - Added backdrop click to close functionality
+  - All modal dismissal methods now properly clean up backdrop and reset modal state
+
+- **CRITICAL SECURITY: Account Deletion Re-registration Prevention**:
+  - **Issue**: After account deletion, users could immediately re-login via OAuth and auto-create a new account, effectively bypassing the deletion
+  - **Root Cause**: OAuth auto-creates accounts if user doesn't exist, allowing deleted users to recreate accounts instantly
+  - **Fix Implementation**:
+    - Created `DeletedAccount` model to track deleted emails and OAuth IDs with 7-day cooldown period
+    - Added check in OAuth callback (`app/oauth.py`) to block re-registration during cooldown
+    - Added check in setup/account creation to block password-based re-registration during cooldown
+    - Records email and OAuth ID when account is deleted in `delete_account()` route
+    - Shows clear error message: "This account was recently deleted and cannot be re-used for 7 days"
+  - **Security Impact**: Prevents immediate account recreation after deletion, enforces 7-day waiting period
+  - **Database**: New `deleted_account` table with email, oauth_id, deleted_at, cooldown_until columns
+  - **Migration**: `4329e380c9c6_add_deleted_account_tracking_table.py`
+
+- **CRITICAL SECURITY: Account Deletion OAuth Bypass**:
+  - Fixed security vulnerability where deleted OAuth users could auto-login immediately after deletion
+  - Fixed Google logout URL malformation error (400 error) that occurred during redirect
+  - After account deletion, all users (OAuth and regular) redirect to login page
+  - Forces account selection and consent on next OAuth login attempt via session flag
+  - Prevents automatic account recreation through cached OAuth tokens
+  - Clears both session and remember_me cookies with proper path='/' parameter
+  - Sets force_account_selection flag to require full authentication on next OAuth login
+
+- **Logout Functionality**: Fixed persistent login issue
+  - Logout now properly clears all cookies including remember_me tokens
+  - Session data is cleared except for flash messages
+  - Prevents automatic re-login after logout (especially for OAuth/Gmail users)
+  - **Forces Google account selection after logout**: Users must re-select their account after logging out
+  - Added session flag to trigger consent/account selection prompt on next OAuth login
+  - Added cache control headers to prevent back-button issues
+  - Both regular logout and Google logout routes updated
+
+### Changed
+
+- **Account Page Redesign**:
+  - Split page into two separate card boxes for better organization
+  - **User Profile Card** (left): Blue header with account information
+    - Email field now displayed as read-only (disabled) with info message
+    - Full Name field for editing
+    - Update Account button
+  - **Danger Zone Card** (right): Red header for account deletion
+    - Clear warning messages and alerts
+    - Request deletion code button
+    - Verification code entry form
+    - Confirm deletion button
+  - Responsive layout: Cards stack vertically on mobile, side-by-side on desktop (col-lg-6)
+  - Enhanced visual design with Material Design icons throughout
+  - Color-coded headers: Primary blue for profile, danger red for deletion
+  - Improved spacing and visual hierarchy
+
+### Improved
+
+- **User Experience**:
+  - Email cannot be changed (displayed as disabled field with explanation)
+  - Clear visual separation between safe operations (profile) and dangerous operations (deletion)
+  - Better visual feedback with warning alerts in danger zone
+  - Consistent icon usage for better navigation
+
 ## [1.6.5] - Test Documentation Cleanup - 2025-12-04
 
 ### Fixed

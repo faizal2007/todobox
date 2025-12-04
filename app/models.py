@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 # from sqlalchemy.orm import backref, func
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.sql.expression import null
 from app import db, login
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -352,6 +352,47 @@ class Status(db.Model): # type: ignore[attr-defined]
 
     def __repr__(self):
         return '<Status {}>'.format(self.name)
+
+
+class DeletedAccount(db.Model): # type: ignore[attr-defined]
+    """Track deleted accounts to prevent immediate re-registration"""
+    id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
+    email = db.Column(db.String(120), index=True, nullable=False) # type: ignore[attr-defined]
+    oauth_id = db.Column(db.String(255)) # type: ignore[attr-defined]  # Google subject ID if OAuth user
+    deleted_at = db.Column(db.DateTime, default=datetime.utcnow) # type: ignore[attr-defined]
+    cooldown_until = db.Column(db.DateTime) # type: ignore[attr-defined]  # When the email can be re-used
+    
+    def __init__(self, email, oauth_id=None, cooldown_days=7):
+        self.email = email
+        self.oauth_id = oauth_id
+        self.deleted_at = datetime.utcnow()
+        self.cooldown_until = datetime.utcnow() + timedelta(days=cooldown_days)
+    
+    @classmethod
+    def is_blocked(cls, email, oauth_id=None):
+        """Check if an email or OAuth ID is in cooldown period"""
+        now = datetime.utcnow()
+        if oauth_id:
+            query = cls.query.filter(
+                cls.cooldown_until > now,
+                or_(cls.email == email, cls.oauth_id == oauth_id)
+            )
+        else:
+            query = cls.query.filter(
+                cls.cooldown_until > now,
+                cls.email == email
+            )
+        return query.first() is not None
+    
+    @classmethod
+    def cleanup_expired(cls):
+        """Remove expired cooldown entries (optional maintenance)"""
+        now = datetime.utcnow()
+        cls.query.filter(cls.cooldown_until <= now).delete()
+        db.session.commit() # type: ignore[attr-defined]
+    
+    def __repr__(self):
+        return f'<DeletedAccount {self.email}>'
 
 
 @login.user_loader

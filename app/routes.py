@@ -17,6 +17,7 @@ from datetime import datetime, date, timedelta
 from sqlalchemy import asc, desc, or_
 from functools import wraps
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import smtplib
 import secrets
 import markdown
@@ -692,6 +693,12 @@ def setup_account():
                 flash('Database connection error: ' + db_error, 'danger')
                 return render_template('setup_account.html', title='Create Account', form=form, db_error=db_error)
             
+            # SECURITY: Check if this email was recently deleted
+            from app.models import DeletedAccount
+            if DeletedAccount.is_blocked(form.email.data):
+                flash('This email address was recently deleted and cannot be re-used for 7 days. Please use a different email or wait until the cooldown period expires.', 'warning')
+                return render_template('setup_account.html', title='Create Account', form=form, db_error=db_error)
+            
             # Create the user
             user = User(
                 email=form.email.data
@@ -734,19 +741,67 @@ def setup_account():
 @app.route('/logout')
 @login_required
 def logout():
-    """Logout the current user and clear session"""
+    """Logout the current user and clear all session data"""
+    # Logout the user
     logout_user()
-    return redirect(url_for('login'))
+    
+    # Clear session data but preserve flashes for the success message
+    keys_to_remove = [k for k in session.keys() if k not in ['_flashes']]
+    for key in keys_to_remove:
+        session.pop(key, None)
+    
+    # Set flag to force account selection on next OAuth login
+    session['force_account_selection'] = True
+    
+    # Flash success message
+    flash('You have been successfully logged out.', 'success')
+    
+    # Create response with redirect
+    response = make_response(redirect(url_for('login')))
+    
+    # Clear remember_me and session cookies
+    response.set_cookie('remember_token', '', expires=0, max_age=0)
+    response.set_cookie('session', '', expires=0, max_age=0)
+    
+    # Set cache control headers to prevent back button issues
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    
+    return response
 
 @app.route('/logout/google')
 @login_required
 def logout_google():
-    """Logout the current user and also sign out of Google account"""
-    # Log out from the app
+    """Logout the current user, clear session, and also sign out of Google account"""
+    # Logout the user
     logout_user()
-    # Redirect to Google logout which will then continue back to our login page
+    
+    # Clear session data
+    keys_to_remove = [k for k in session.keys() if k not in ['_flashes']]
+    for key in keys_to_remove:
+        session.pop(key, None)
+    
+    # Set flag to force account selection on next OAuth login
+    session['force_account_selection'] = True
+    
+    # Flash success message
+    flash('You have been successfully logged out from Google.', 'success')
+    
+    # Create response that redirects to Google logout
     google_logout = 'https://accounts.google.com/Logout?continue=' + url_for('login', _external=True)
-    return redirect(google_logout)
+    response = make_response(redirect(google_logout))
+    
+    # Clear remember_me and session cookies
+    response.set_cookie('remember_token', '', expires=0, max_age=0)
+    response.set_cookie('session', '', expires=0, max_age=0)
+    
+    # Set cache control headers
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    
+    return response
 
 @app.route('/auth/login/google')
 def oauth_login_google():
@@ -777,7 +832,7 @@ def oauth_callback_google():
     user, is_new = process_google_callback(code)
     
     if not user:
-        flash('Google authentication failed. Please try again or use password login.', 'warning')
+        flash('Authentication failed. If you recently deleted your account, please wait 7 days before re-registering with the same email.', 'warning')
         return redirect(url_for('login'))
     
     # Check if user is blocked
@@ -857,6 +912,8 @@ def delete_account():
         
         # Delete user and all related data
         user = current_user
+        user_email = user.email
+        user_oauth_id = user.oauth_id
         todo_ids = [t.id for t in user.todo.all()]
         
         if todo_ids:
@@ -871,37 +928,140 @@ def delete_account():
             # Delete all todos for this user
             Todo.query.filter_by(user_id=user.id).delete()  # type: ignore[attr-defined]
         
+        # Record the deletion to prevent immediate re-registration
+        from app.models import DeletedAccount
+        deleted_record = DeletedAccount(
+            email=user_email,
+            oauth_id=user_oauth_id,
+            cooldown_days=7  # 7-day cooldown period before email can be re-used
+        )
+        db.session.add(deleted_record)  # type: ignore[attr-defined]
+        
         # Delete the user account itself
         db.session.delete(user)  # type: ignore[attr-defined]
         db.session.commit()  # type: ignore[attr-defined]
         
-        # Logout the user
+        # Store flash message and OAuth status before clearing session
+        success_message = 'Your account has been successfully deleted. Thank you for using TodoBox!'
+        was_oauth_user = user.oauth_provider == 'google'
+        
+        # Logout the user - this clears the Flask-Login session
         logout_user()
         
-        # Clear the session code
-        session.pop('delete_account_code', None)
+        # Clear specific session keys but keep flashes
+        keys_to_remove = [k for k in session.keys() if k not in ['_flashes']]
+        for key in keys_to_remove:
+            session.pop(key, None)
         
-        # Show gratitude message
-        gratitude_message = True
-        return render_template('account.html', gratitude_message=gratitude_message)
+        # CRITICAL: Force account selection on next login to prevent auto-login after deletion
+        session['force_account_selection'] = True
+        
+        # Add flash message
+        flash(success_message, 'success')
+        
+        # Create redirect response to login page
+        response = make_response(redirect(url_for('login')))
+        
+        # Clear all cookies including remember_me token and session
+        response.set_cookie('remember_token', '', expires=0, max_age=0, path='/')
+        response.set_cookie('session', '', expires=0, max_age=0, path='/')
+        
+        # Set cache control headers to prevent back button issues
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        
+        return response
     
     else:
         # GET request - generate and send verification code to email
         code = str(secrets.randbelow(1000000)).zfill(6)
         session['delete_account_code'] = code
         
-        # Prepare and send email with verification code
-        msg = MIMEText(f'Your code to delete your account is: {code}\nIf you did not request this, ignore this email.')
-        msg['Subject'] = 'Your TodoBox Account Deletion Code'
+        # Prepare and send nicely formatted HTML email with verification code
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = '🔐 TodoBox Account Deletion Verification Code'
         msg['From'] = SMTP_FROM_EMAIL
         msg['To'] = current_user.email
+        
+        # Create plain text version
+        text_content = f'''TodoBox Account Deletion Request
+
+Your verification code is: {code}
+
+This code was requested for: {current_user.email}
+
+If you did not request this code, please ignore this email. Your account will remain secure.
+
+Best regards,
+TodoBox Team'''
+        
+        # Create HTML version
+        html_content = f'''<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+        .code-box {{ background: white; border: 2px dashed #667eea; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }}
+        .code {{ font-size: 32px; font-weight: bold; color: #667eea; letter-spacing: 8px; font-family: monospace; }}
+        .info-box {{ background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px; }}
+        .email {{ color: #667eea; font-weight: bold; }}
+        .footer {{ text-align: center; color: #666; font-size: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; }}
+        .warning {{ color: #dc3545; font-weight: bold; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="margin: 0;">🔐 Account Deletion Request</h1>
+        </div>
+        <div class="content">
+            <p>Hello,</p>
+            <p>We received a request to delete your TodoBox account. To proceed with the deletion, please use the verification code below:</p>
+            
+            <div class="code-box">
+                <div style="color: #666; font-size: 14px; margin-bottom: 10px;">Your Verification Code</div>
+                <div class="code">{code}</div>
+            </div>
+            
+            <div class="info-box">
+                <strong>📧 Requested by:</strong> <span class="email">{current_user.email}</span>
+            </div>
+            
+            <p><strong>⚠️ Important:</strong></p>
+            <ul>
+                <li>This code is valid for this session only</li>
+                <li>Enter this code on the account deletion page to confirm</li>
+                <li>This action will <span class="warning">permanently delete</span> all your data</li>
+            </ul>
+            
+            <p>If you did not request this code, please ignore this email. Your account will remain secure and no changes will be made.</p>
+            
+            <div class="footer">
+                <p>Best regards,<br><strong>TodoBox Team</strong></p>
+                <p style="color: #999;">This is an automated message, please do not reply.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>'''
+        
+        # Attach both versions
+        part1 = MIMEText(text_content, 'plain')
+        part2 = MIMEText(html_content, 'html')
+        msg.attach(part1)
+        msg.attach(part2)
         
         try:
             with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
                 server.starttls()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 server.sendmail(SMTP_FROM_EMAIL, [current_user.email], msg.as_string())
-            flash('A code has been sent to your email. Enter it below to confirm account deletion.', 'info')
+            flash(f'A verification code has been sent to {current_user.email}. Check your inbox and enter it below to confirm account deletion.', 'info')
         except Exception as e:
             flash('Failed to send email. Please contact support.', 'error')
             logging.error(f'Email error during account deletion: {str(e)}')
