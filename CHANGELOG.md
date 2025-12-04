@@ -5,6 +5,29 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.5] - Test Documentation Cleanup - 2025-12-04
+
+### Fixed
+
+- **Test Documentation**: Cleaned up TEST_SUMMARY.md
+  - Removed 371 lines of duplicate content (lines 478-856)
+  - Fixed duplicate section headings (Backend Models, API Endpoints, etc.)
+  - Updated test statistics to match actual test run results
+  - Corrected test count from 228 to 227 tests
+  - Updated pass rate from 80.3% to 80.6% (183/227 passing)
+
+- **Documentation Consistency**:
+  - Updated TESTING.md with correct test statistics
+  - Ensured all test document stats are consistent
+  - Added note about documentation fix in Recent Updates section
+
+### Changed
+
+- **Test Statistics**: All test documentation now reflects accurate counts
+  - Total Tests: 227 (was incorrectly listed as 228)
+  - Passing: 183 tests (80.6%)
+  - Failing: 44 tests (19.4%)
+
 ## [1.6.4] - PWA Button Visibility and Localhost Configuration - 2025-12-04
 
 ### Fixed
