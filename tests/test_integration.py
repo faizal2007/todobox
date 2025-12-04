@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 def app():
     """Create and configure a test application instance."""
     from app import app, db
+    from tests.test_utils import seed_status_data
     
     # Configure for testing
     app.config['TESTING'] = True
@@ -25,23 +26,8 @@ def app():
     
     with app.app_context():
         db.create_all()
-        
-        # Seed status data
-        from app.models import Status
-        if Status.query.count() == 0:
-            statuses = [
-                Status(name='new'),
-                Status(name='done'),
-                Status(name='failed'),
-                Status(name='re-assign')
-            ]
-            for i, status in enumerate(statuses, start=5):
-                status.id = i
-            db.session.add_all(statuses)
-            db.session.commit()
-        
+        seed_status_data(db)
         yield app
-        
         db.session.remove()
         db.drop_all()
 
@@ -49,10 +35,8 @@ def app():
 @pytest.fixture
 def client(app):
     """Create a test client for the application."""
-    # Workaround for werkzeug.__version__ issue
-    import werkzeug
-    if not hasattr(werkzeug, '__version__'):
-        werkzeug.__version__ = '3.0.0'
+    from tests.test_utils import apply_werkzeug_version_workaround
+    apply_werkzeug_version_workaround()
     return app.test_client()
 
 

@@ -179,7 +179,7 @@ class TestTodoManagement:
         db_session.session.commit()
         
         client.post('/login', data={
-            'email': 'todouser',
+            'email': 'todo@example.com',  # Fixed: was 'todouser'
             'password': 'TodoPass123!'
         })
         
