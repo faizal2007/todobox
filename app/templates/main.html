@@ -467,9 +467,16 @@
 												<button id="pwa-install-btn" onclick="installPWA()" title="Install this app on your device">
 													<i class="mdi mdi-cloud-download"></i> Install App
 												</button>
+												{% if config.PWA_DEBUG %}
 												<button id="pwa-debug-btn" onclick="showPWADebug()" title="Show PWA debug info" style="display: inline-flex; margin-left: 5px; background: #999; font-size: 11px; padding: 4px 8px; align-items: center; gap: 4px; border-radius: 4px; color: white; border: none; cursor: pointer;">
 													<i class="mdi mdi-bug"></i> PWA Debug
 												</button>
+												{% endif %}
+												{% if config.DEBUG %}
+												<button id="pwa-debug-btn" onclick="showPWADebug()" title="Show PWA debug info" style="display: inline-flex; margin-left: 5px; background: #999; font-size: 11px; padding: 4px 8px; align-items: center; gap: 4px; border-radius: 4px; color: white; border: none; cursor: pointer;">
+													<i class="mdi mdi-bug"></i> PWA Debug
+												</button>
+												{% endif %}
 												<a class="nav-link dropdown-toggle nav-user arrow-none mr-0" data-toggle="dropdown" id="topbar-userdrop" href="#" role="button" aria-haspopup="true"
 													aria-expanded="false">
 													<span class="account-user-avatar">

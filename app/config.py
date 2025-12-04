@@ -55,3 +55,6 @@ SESSION_COOKIE_DOMAIN = os.environ.get('SESSION_COOKIE_DOMAIN') or None
 REMEMBER_COOKIE_SECURE = os.environ.get('REMEMBER_COOKIE_SECURE', 'true').lower() == 'true'
 REMEMBER_COOKIE_HTTPONLY = os.environ.get('REMEMBER_COOKIE_HTTPONLY', 'true').lower() == 'true'
 REMEMBER_COOKIE_SAMESITE = os.environ.get('REMEMBER_COOKIE_SAMESITE', 'Lax')
+
+# PWA Debug Button (show only if enabled)
+PWA_DEBUG = os.environ.get('PWA_DEBUG', 'false').lower() == 'true'

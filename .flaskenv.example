@@ -1,6 +1,6 @@
-# FLASK_ENV=development
-FLASK_APP=todobox.py
-TITLE=Shimasu
+FLASK_ENV=development
+DEBUG=True
+TITLE=My Sandbox
 
 # Security - CHANGE THESE IN PRODUCTION!
 SECRET_KEY=change-me-to-a-secure-random-key
@@ -10,10 +10,13 @@ SALT=change-me-to-a-secure-salt
 DATABASE_DEFAULT=sqlite
 DATABASE_NAME=todobox.db
 
+# MySQL Example (uncomment and configure if using MySQL)
+# DB_URL=localhost
+# DB_USER=todobox
+# DB_PW=your-secure-password
+# DB_NAME=todobox
+
 # Todo Encryption (optional)
-# Set to 'true' to enable encryption of todo data (name, details)
-# When enabled, database administrators cannot read todo content in raw database
-# Default: false (disabled)
 TODO_ENCRYPTION_ENABLED=false
 
 # Optional: For PostgreSQL (uncomment and configure)
@@ -23,29 +26,17 @@ TODO_ENCRYPTION_ENABLED=false
 # POSTGRES_PW=your-secure-password
 # POSTGRES_DB=todo_db
 
-# Optional: For MySQL (uncomment and configure)
-# DATABASE_DEFAULT=mysql
-# DB_URL=localhost
-# DB_USER=todobox
-# DB_PW=your-secure-password
-# DB_NAME=todobox
-
 # Application Settings
-TITLE=My Sandbox
-BIND_ADDRESS=127.0.0.1
+# BIND_ADDRESS=127.0.0.1  # Uncomment ONLY for local dev. For production, leave commented to use 0.0.0.0
 PORT=5000
 
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=your_client_id_here
 GOOGLE_CLIENT_SECRET=your_client_secret_here
-# IMPORTANT: When running behind a reverse proxy (e.g., haruka-tunnel, ngrok, cloudflare tunnel),
-# set this to your public URL to fix Google OAuth sign-in issues.
-# Example: OAUTH_REDIRECT_URI=https://your-public-domain.com/auth/callback/google
+GOOGLE_OAUTH_PROMPT="login select_account"
 OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google
 
 # Email/SMTP Configuration (for sharing invitations)
-# Required for sending sharing invitations via email
-# For Gmail, use an App-specific password: https://support.google.com/accounts/answer/185833
 # SMTP_SERVER=smtp.gmail.com
 # SMTP_PORT=587
 # SMTP_USERNAME=your_gmail@gmail.com
@@ -53,9 +44,10 @@ OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google
 # SMTP_FROM_EMAIL=your_gmail@gmail.com
 
 # Reverse Proxy Configuration (optional)
-# Set these when running behind multiple proxy layers (e.g., load balancer + tunnel)
-# Values indicate how many proxies to trust for each X-Forwarded-* header
 # PROXY_X_FOR=1
 # PROXY_X_PROTO=1
 # PROXY_X_HOST=1
 # PROXY_X_PREFIX=1
+
+# PWA Debug Button (optional, use DEBUG instead)
+# PWA_DEBUG=true
