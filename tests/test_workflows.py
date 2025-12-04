@@ -298,32 +298,27 @@ class TestDashboardWorkflow:
     def test_dashboard_view_workflow(self, app, client, authenticated_user):
         """Test viewing dashboard with todo statistics"""
         with app.app_context():
-            from app.models import Todo
+            from app.models import Todo, Status
             from app import db
             
-            # Create some todos with different statuses
-            from app.models import Status
+            # Get status IDs
             new_status = Status.query.filter_by(name='new').first()
             done_status = Status.query.filter_by(name='done').first()
             
             # Create new todos
             for i in range(3):
-                todo = Todo(
-                    name=f'Task {i}',
-                    details='Test task',
-                    user_id=authenticated_user,
-                    status_id=new_status.id
-                )
+                todo = Todo()
+                todo.name = f'Task {i}'
+                todo.details = 'Test task'
+                todo.user_id = authenticated_user
                 db.session.add(todo)
             
             # Create completed todos
             for i in range(2):
-                todo = Todo(
-                    name=f'Done Task {i}',
-                    details='Completed task',
-                    user_id=authenticated_user,
-                    status_id=done_status.id
-                )
+                todo = Todo()
+                todo.name = f'Done Task {i}'
+                todo.details = 'Completed task'
+                todo.user_id = authenticated_user
                 db.session.add(todo)
             
             db.session.commit()

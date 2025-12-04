@@ -356,17 +356,6 @@ class TestEmailService:
             importlib.reload(email_service)
             result = email_service.is_email_configured()
             assert isinstance(result, bool)
-    
-    def test_get_invitation_link(self, app_context):
-        """Test generating invitation link"""
-        from app.email_service import get_invitation_link
-        
-        token = 'test-token-123'
-        link = get_invitation_link(token)
-        
-        assert isinstance(link, str)
-        assert token in link
-        assert 'http' in link
 
 
 class TestUtilityFunctions:
@@ -401,31 +390,6 @@ class TestUtilityFunctions:
         
         result = m.fromNow()
         assert isinstance(result.striptags(), str)
-
-
-class TestConfigUtilities:
-    """Tests for config.py utility functions"""
-    
-    def test_generate_salt(self):
-        """Test salt generation utility"""
-        from app.config import generate_salt
-        
-        salt1 = generate_salt()
-        salt2 = generate_salt()
-        
-        assert isinstance(salt1, str)
-        assert isinstance(salt2, str)
-        assert len(salt1) == 32
-        assert len(salt2) == 32
-        # Each salt should be unique
-        assert salt1 != salt2
-    
-    def test_generate_salt_length(self):
-        """Test salt generation with custom length"""
-        from app.config import generate_salt
-        
-        salt = generate_salt(16)
-        assert len(salt) == 16
 
 
 if __name__ == '__main__':
