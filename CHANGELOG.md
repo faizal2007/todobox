@@ -18,6 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Accessible from Admin Panel → "Blocked Accounts" button
   - Routes: `/admin/blocked-accounts`, `/admin/blocked-account/<id>/remove`, `/admin/blocked-accounts/cleanup`
 
+### Changed
+
+- **Notification Stacking**: Reminder notifications now stack vertically instead of overlapping
+  - Multiple notifications display in a vertical stack with 10px gap
+  - Each notification shows a numbered badge (1, 2, 3, etc.) when multiple are present
+  - Notifications stack in a dedicated container at top-right
+  - Users can see total count of active reminders
+  - Auto-dismissal and manual dismissal work independently for each notification
+  - Improved visibility for multiple simultaneous reminders
+
 ### Fixed
 
 - **Reminder System**: Only check for reminders after user login

@@ -205,9 +205,32 @@
 				}
 				
 			function showReminderNotification(reminder) {
+				// Create notification container if it doesn't exist
+				let notificationContainer = document.getElementById('reminder-notification-container');
+				if (!notificationContainer) {
+					notificationContainer = document.createElement('div');
+					notificationContainer.id = 'reminder-notification-container';
+					notificationContainer.style.cssText = `
+						position: fixed;
+						top: 80px;
+						right: 20px;
+						width: 380px;
+						max-width: 90%;
+						z-index: 9999;
+						display: flex;
+						flex-direction: column;
+						gap: 10px;
+					`;
+					document.body.appendChild(notificationContainer);
+				}
+				
+				// Count existing notifications to show badge
+				const existingCount = notificationContainer.children.length;
+				
 				// Show in-app notification
 				const notification = document.createElement('div');
 				notification.className = 'alert alert-dismissible fade show reminder-notification';
+				notification.setAttribute('data-reminder-id', reminder.todo_id);
 				
 				// Determine styling based on notification count
 				let isLastNotification = reminder.is_last_notification || false;
@@ -219,17 +242,14 @@
 				notification.className = `alert alert-dismissible fade show reminder-notification ${alertClass}`;
 				notification.setAttribute('role', 'alert');
 				notification.style.cssText = `
-					position: fixed;
-					top: 80px;
-					right: 20px;
-					width: 380px;
-					max-width: 90%;
-					z-index: 9999;
+					position: relative;
+					width: 100%;
 					box-shadow: ${isLastNotification ? '0 6px 16px rgba(255, 85, 85, 0.3)' : '0 6px 16px rgba(255, 152, 0, 0.3)'};
 					animation: slideIn 0.3s ease-out;
 					background-color: ${isLastNotification ? '#fff3cd' : '#fff8e1'};
 					border: 2px solid ${borderColor};
 					border-left: 6px solid ${borderColor};
+					margin-bottom: 0;
 				`;
 				
 				// Create time display if available
@@ -253,8 +273,15 @@
 					countDisplay = `<small style="color: ${borderColor}; display: block; margin-top: 5px; font-weight: 600;">${countMessage}</small>`;
 				}
 				
+				// Add notification number badge if there are multiple notifications
+				let notificationBadge = '';
+				if (existingCount > 0) {
+					notificationBadge = `<span style="position: absolute; top: 10px; left: 10px; background: ${borderColor}; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">${existingCount + 1}</span>`;
+				}
+				
 				notification.innerHTML = `
-					<div style="display: flex; align-items: center; gap: 12px;">
+					${notificationBadge}
+					<div style="display: flex; align-items: center; gap: 12px; ${existingCount > 0 ? 'padding-left: 20px;' : ''}">
 						<i class="mdi mdi-bell-ring" style="font-size: 28px; color: ${iconColor}; animation: ${isLastNotification ? 'pulse 0.8s infinite' : 'pulse 1.5s infinite'};"></i>
 						<div style="flex: 1;">
 							<strong style="color: ${borderColor}; font-size: 16px;">⏰ Reminder</strong>
@@ -307,12 +334,25 @@
 					document.head.appendChild(style);
 				}
 				
-				document.body.appendChild(notification);
-				console.log('Reminder notification displayed - Count:', notificationCount, 'Is Last:', isLastNotification);
+				// Append to container (stacks vertically)
+				notificationContainer.appendChild(notification);
+				console.log(`Reminder notification displayed (#${existingCount + 1}) - Count:`, notificationCount, 'Is Last:', isLastNotification);
 				
 				// Track if user cancelled the reminder
 				let reminderCancelled = false;
 				let autoDismissTimer;
+				
+				// Function to remove notification
+				const removeNotification = () => {
+					notification.style.animation = 'slideOut 0.3s ease-out';
+					setTimeout(() => {
+						notification.remove();
+						// Remove container if empty
+						if (notificationContainer.children.length === 0) {
+							notificationContainer.remove();
+						}
+					}, 300);
+				};
 				
 				// Handle close button click - cancel the reminder
 				const closeButton = notification.querySelector('.close');
@@ -325,10 +365,7 @@
 						clearTimeout(autoDismissTimer);
 						
 						// Remove notification immediately
-						notification.style.animation = 'slideOut 0.3s ease-out';
-						setTimeout(() => {
-							notification.remove();
-						}, 300);
+						removeNotification();
 						
 						// Call cancel API endpoint
 						try {
@@ -353,10 +390,7 @@
 				// Auto-dismiss after 10 seconds (longer than before for visibility)
 				// Mark as sent only if user didn't cancel
 				autoDismissTimer = setTimeout(async () => {
-					notification.style.animation = 'slideOut 0.3s ease-out';
-					setTimeout(() => {
-						notification.remove();
-					}, 300);
+					removeNotification();
 					
 					// Mark as sent only if not cancelled
 					if (!reminderCancelled) {
