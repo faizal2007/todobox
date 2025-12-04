@@ -425,8 +425,12 @@
 					Notification.requestPermission();
 				}
 				
-				// Initialize reminder system when page is ready
-				document.addEventListener('DOMContentLoaded', initReminderSystem);
+				// Initialize reminder system only if user is logged in
+				document.addEventListener('DOMContentLoaded', function() {
+					{% if current_user.is_authenticated %}
+						initReminderSystem();
+					{% endif %}
+				});
     		</script>
 		{% block extra_css %}{% endblock %}
 		{% block extra_script_header %}{% endblock %}

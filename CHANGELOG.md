@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Reminder System**: Only check for reminders after user login
+  - Fixed reminder system initializing on login/public pages
+  - Reminder polling now only runs when user is authenticated
+  - Prevents unnecessary API calls on login/setup pages
+  - Uses `current_user.is_authenticated` check before initialization
+
 - **Modal Close Buttons**: Fixed X button and Cancel button not working in confirmation modals
   - Enhanced `showConfirmModal()` function to properly handle close button (X) clicks
   - Added event handlers for Cancel button using `data-dismiss="modal"` attribute
