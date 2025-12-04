@@ -1902,6 +1902,8 @@ def admin_delete_user(user_id):
         return redirect(url_for('admin_panel'))
     
     label = user.fullname or user.email
+    user_email = user.email
+    user_oauth_id = user.oauth_id
     
     # Delete user's todos and related data
     # First delete trackers for user's todos
@@ -1924,6 +1926,15 @@ def admin_delete_user(user_id):
         ).delete(synchronize_session=False)
     else:
         ShareInvitation.query.filter(ShareInvitation.from_user_id == user.id).delete(synchronize_session=False)  # type: ignore[attr-defined]
+    
+    # Record the deletion to prevent immediate re-registration
+    from app.models import DeletedAccount
+    deleted_record = DeletedAccount(
+        email=user_email,
+        oauth_id=user_oauth_id,
+        cooldown_days=7  # 7-day cooldown period before email can be re-used
+    )
+    db.session.add(deleted_record)  # type: ignore[attr-defined]
     
     # Delete the user
     db.session.delete(user)  # type: ignore[attr-defined]
@@ -1957,3 +1968,58 @@ def admin_toggle_admin(user_id):
     label = user.fullname or user.email
     flash(f'User "{label}" has been {action}.', 'success')
     return redirect(url_for('admin_panel'))
+
+
+@app.route('/admin/blocked-accounts')
+@login_required
+@require_admin
+def admin_blocked_accounts():
+    """View all blocked (deleted) accounts in cooldown period"""
+    from app.models import DeletedAccount
+    from datetime import datetime
+    
+    # Get all accounts still in cooldown
+    now = datetime.utcnow()
+    blocked_accounts = DeletedAccount.query.filter(
+        DeletedAccount.cooldown_until > now
+    ).order_by(DeletedAccount.deleted_at.desc()).all()
+    
+    # Get expired accounts for informational purposes
+    expired_accounts = DeletedAccount.query.filter(
+        DeletedAccount.cooldown_until <= now
+    ).order_by(DeletedAccount.deleted_at.desc()).limit(10).all()
+    
+    return render_template('admin/blocked_accounts.html',
+                          title='Blocked Accounts',
+                          blocked_accounts=blocked_accounts,
+                          expired_accounts=expired_accounts)
+
+
+@app.route('/admin/blocked-account/<int:account_id>/remove', methods=['POST'])
+@login_required
+@require_admin
+def admin_remove_block(account_id):
+    """Remove a block/cooldown from a deleted account"""
+    from app.models import DeletedAccount
+    
+    blocked_account = DeletedAccount.query.get_or_404(account_id)
+    email = blocked_account.email
+    
+    # Delete the blocked account record
+    db.session.delete(blocked_account)  # type: ignore[attr-defined]
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    flash(f'Cooldown removed for "{email}". This email can now be re-registered immediately.', 'success')
+    return redirect(url_for('admin_blocked_accounts'))
+
+
+@app.route('/admin/blocked-accounts/cleanup', methods=['POST'])
+@login_required
+@require_admin
+def admin_cleanup_expired_blocks():
+    """Clean up all expired cooldown records"""
+    from app.models import DeletedAccount
+    
+    count = DeletedAccount.cleanup_expired()
+    flash(f'Cleaned up {count} expired cooldown records.', 'success')
+    return redirect(url_for('admin_blocked_accounts'))

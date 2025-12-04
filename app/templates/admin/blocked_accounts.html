@@ -1,0 +1,219 @@
+{% extends "main.html" %}
+{% set active_page = title %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h1 class="page-title">
+                    <i class="mdi mdi-shield-lock mr-2"></i>{{ active_page|title }}
+                </h1>
+                <div class="page-title-right">
+                    <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">
+                        <i class="mdi mdi-arrow-left mr-1"></i>Back to Admin Panel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            {% set alert_type = 'alert-success' if category == 'success' else 'alert-danger' if category == 'error' else 'alert-warning' if category == 'warning' else 'alert-info' %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert {{ alert_type }} alert-dismissible fade show" role="alert">
+                        <i class="mdi mdi-{{ 'check-circle' if category == 'success' else 'alert-circle' }} mr-2"></i>
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Active Cooldown Accounts -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-clock-alert mr-2"></i>Active Cooldown Accounts
+                        <span class="badge badge-dark ml-2">{{ blocked_accounts|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        <i class="mdi mdi-information mr-1"></i>
+                        These accounts were deleted and are currently in a 7-day cooldown period. They cannot re-register until the cooldown expires.
+                    </p>
+
+                    {% if blocked_accounts %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th><i class="mdi mdi-email mr-1"></i>Email</th>
+                                    <th><i class="mdi mdi-key-variant mr-1"></i>OAuth ID</th>
+                                    <th><i class="mdi mdi-calendar-remove mr-1"></i>Deleted At</th>
+                                    <th><i class="mdi mdi-calendar-clock mr-1"></i>Cooldown Until</th>
+                                    <th><i class="mdi mdi-timer-sand mr-1"></i>Time Remaining</th>
+                                    <th class="text-center"><i class="mdi mdi-cog mr-1"></i>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for account in blocked_accounts %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ account.email }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if account.oauth_id %}
+                                            <span class="badge badge-info">
+                                                <i class="mdi mdi-google mr-1"></i>OAuth
+                                            </span>
+                                            <small class="text-muted d-block">{{ account.oauth_id[:20] }}...</small>
+                                        {% else %}
+                                            <span class="badge badge-secondary">Password</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ account.deleted_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC
+                                    </td>
+                                    <td>
+                                        {{ account.cooldown_until.strftime('%Y-%m-%d %H:%M:%S') }} UTC
+                                    </td>
+                                    <td>
+                                        {% set now = account.deleted_at.__class__.utcnow() %}
+                                        {% set remaining = account.cooldown_until - now %}
+                                        {% if remaining.days > 0 %}
+                                            <span class="badge badge-warning">
+                                                {{ remaining.days }} day{{ 's' if remaining.days != 1 else '' }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-warning">
+                                                {{ (remaining.seconds // 3600) }} hours
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <form method="POST" action="{{ url_for('admin_remove_block', account_id=account.id) }}" style="display: inline;" onsubmit="return confirm('Remove cooldown for {{ account.email }}? They will be able to re-register immediately.');">
+                                            <button type="submit" class="btn btn-sm btn-success" title="Remove Cooldown">
+                                                <i class="mdi mdi-shield-off mr-1"></i>Remove Block
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0" role="alert">
+                        <i class="mdi mdi-check-circle mr-1"></i>
+                        No accounts currently in cooldown period.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expired Cooldown Accounts (Informational) -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-clock-check mr-2"></i>Recently Expired Cooldowns
+                        <span class="badge badge-light ml-2">{{ expired_accounts|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        <i class="mdi mdi-information mr-1"></i>
+                        These cooldowns have expired. These accounts can now be re-registered. You can clean up these records.
+                    </p>
+
+                    {% if expired_accounts %}
+                    <div class="mb-3">
+                        <form method="POST" action="{{ url_for('admin_cleanup_expired_blocks') }}" style="display: inline;" onsubmit="return confirm('Clean up all expired cooldown records?');">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="mdi mdi-delete-sweep mr-1"></i>Clean Up Expired Records
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th><i class="mdi mdi-email mr-1"></i>Email</th>
+                                    <th><i class="mdi mdi-key-variant mr-1"></i>Auth Type</th>
+                                    <th><i class="mdi mdi-calendar-remove mr-1"></i>Deleted At</th>
+                                    <th><i class="mdi mdi-calendar-check mr-1"></i>Expired At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for account in expired_accounts %}
+                                <tr class="text-muted">
+                                    <td>{{ account.email }}</td>
+                                    <td>
+                                        {% if account.oauth_id %}
+                                            <span class="badge badge-info">
+                                                <i class="mdi mdi-google mr-1"></i>OAuth
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">Password</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ account.deleted_at.strftime('%Y-%m-%d %H:%M') }} UTC</td>
+                                    <td>{{ account.cooldown_until.strftime('%Y-%m-%d %H:%M') }} UTC</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0" role="alert">
+                        <i class="mdi mdi-check-circle mr-1"></i>
+                        No expired cooldown records.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Information Card -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="mdi mdi-information mr-2"></i>About Account Cooldowns
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li><strong>7-Day Cooldown:</strong> When an account is deleted (by user or admin), the email is blocked for 7 days.</li>
+                        <li><strong>Purpose:</strong> Prevents abuse, ensures deletion is intentional, and provides time for account recovery requests.</li>
+                        <li><strong>Applies To:</strong> Both OAuth (Google) and password-based accounts.</li>
+                        <li><strong>Admin Override:</strong> You can remove the cooldown using the "Remove Block" button to allow immediate re-registration.</li>
+                        <li><strong>Automatic Cleanup:</strong> Expired records can be manually cleaned up or will be checked automatically during login attempts.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include confirm modal -->
+{% include 'confirm_modal.html' %}
+
+{% endblock %}

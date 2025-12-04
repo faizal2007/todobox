@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.6.6] - Account Page UI Improvements - 2025-12-04
 
+### Added
+
+- **Admin: Blocked Accounts Management**:
+  - New admin page to view all accounts in cooldown period after deletion
+  - View active cooldowns with time remaining and deletion details
+  - Remove cooldown blocks to allow immediate re-registration
+  - Clean up expired cooldown records
+  - Shows email, OAuth status, deleted date, and cooldown expiry
+  - Accessible from Admin Panel → "Blocked Accounts" button
+  - Routes: `/admin/blocked-accounts`, `/admin/blocked-account/<id>/remove`, `/admin/blocked-accounts/cleanup`
+
 ### Fixed
 
 - **Modal Close Buttons**: Fixed X button and Cancel button not working in confirmation modals
@@ -23,8 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Added check in OAuth callback (`app/oauth.py`) to block re-registration during cooldown
     - Added check in setup/account creation to block password-based re-registration during cooldown
     - Records email and OAuth ID when account is deleted in `delete_account()` route
+    - Records email and OAuth ID when admin deletes user in `admin_delete_user()` route
     - Shows clear error message: "This account was recently deleted and cannot be re-used for 7 days"
   - **Security Impact**: Prevents immediate account recreation after deletion, enforces 7-day waiting period
+  - **Applies To**: Both self-deletion and admin-initiated deletion
   - **Database**: New `deleted_account` table with email, oauth_id, deleted_at, cooldown_until columns
   - **Migration**: `4329e380c9c6_add_deleted_account_tracking_table.py`
 

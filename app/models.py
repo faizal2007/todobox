@@ -388,8 +388,10 @@ class DeletedAccount(db.Model): # type: ignore[attr-defined]
     def cleanup_expired(cls):
         """Remove expired cooldown entries (optional maintenance)"""
         now = datetime.utcnow()
+        count = cls.query.filter(cls.cooldown_until <= now).count()
         cls.query.filter(cls.cooldown_until <= now).delete()
         db.session.commit() # type: ignore[attr-defined]
+        return count
     
     def __repr__(self):
         return f'<DeletedAccount {self.email}>'
