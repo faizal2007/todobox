@@ -33,10 +33,21 @@ and task tracking capabilities.
 - **[SECURITY_PATCHES.md](SECURITY_PATCHES.md)** - Security improvements applied
 - **[AXE_LINTER_BEST_PRACTICES.md](AXE_LINTER_BEST_PRACTICES.md)** - Accessibility guidelines
 
+### Testing & Quality Assurance
+
+- **[TESTING.md](TESTING.md)** - Comprehensive testing guide with test suites
+- **[TESTING_BEST_PRACTICES.md](TESTING_BEST_PRACTICES.md)** - Testing guidelines and patterns
+- **[TEST_SUMMARY.md](TEST_SUMMARY.md)** - Test results and coverage summary
+
 ### Migration Guides
 
 - **[README_MIGRATIONS.md](README_MIGRATIONS.md)** - Migration quick reference
 - **[MIGRATION_FIX_GUIDE.md](MIGRATION_FIX_GUIDE.md)** - Migration troubleshooting
+
+### Performance & Optimization
+
+- **[JAVASCRIPT_OPTIMIZATION.md](JAVASCRIPT_OPTIMIZATION.md)** - JavaScript modernization details
+- **[JQUERY_MIGRATION_GUIDE.md](JQUERY_MIGRATION_GUIDE.md)** - jQuery to vanilla JS migration patterns
 
 ### Features & Integrations
 

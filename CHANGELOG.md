@@ -5,6 +5,36 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.7] - Documentation Reorganization - 2025-12-04
+
+### Changed
+
+- **Documentation Structure**: Reorganized all documentation according to standard practices
+  - Moved testing documentation from `/tests` to `/docs` folder
+  - TESTING.md - Comprehensive testing guide (227 tests, 80.6% passing)
+  - TESTING_BEST_PRACTICES.md - Testing guidelines and patterns
+  - TEST_SUMMARY.md - Test results and coverage summary
+  - All documentation now centralized in `/docs` folder for better organization
+
+### Updated
+
+- **docs/README.md**: Added Testing & Quality Assurance section with testing documentation links
+- **docs/INDEX.md**: Updated with testing documentation, increased file count to 26 files
+- **docs/DOCUMENTATION_MASTER_INDEX.md**: 
+  - Version updated to 1.6
+  - Added three new testing documentation sections (items 10-12)
+  - Updated file tree structure to include testing docs
+  - Updated statistics (26 files, ~280 KB, 140+ examples, 40+ tables)
+  - Renumbered all subsequent documentation items (13-23)
+- **README.md**: Added Testing & Quality Assurance section in documentation links
+- **Documentation Statistics**: Updated counts across all index files to reflect 26 total documentation files
+
+### Improved
+
+- **Documentation Organization**: All markdown files now follow standard structure with centralized location
+- **Testing Visibility**: Testing documentation now easier to find and access in main docs folder
+- **Documentation Standards**: All files comply with `.copilot-markdown-rules.md` standards
+
 ## [1.6.6] - Account Page UI Improvements - 2025-12-04
 
 ### Added

@@ -46,6 +46,12 @@ Complete documentation for the TodoBox Flask application is available in the `/d
 - **[SECURITY_PATCHES.md](SECURITY_PATCHES.md)** - Security improvements
 - **[AXE_LINTER_BEST_PRACTICES.md](AXE_LINTER_BEST_PRACTICES.md)** - Accessibility guidelines
 
+### Testing & Quality Assurance
+
+- **[TESTING.md](TESTING.md)** - Comprehensive testing guide with test suites
+- **[TESTING_BEST_PRACTICES.md](TESTING_BEST_PRACTICES.md)** - Testing guidelines and patterns
+- **[TEST_SUMMARY.md](TEST_SUMMARY.md)** - Test results and coverage summary
+
 ### Features & Integrations
 
 - **[AUTO_CLOSE_REMINDERS.md](AUTO_CLOSE_REMINDERS.md)** - Reminder feature documentation
@@ -68,14 +74,14 @@ Complete documentation for the TodoBox Flask application is available in the `/d
 
 | Metric | Value |
 |--------|-------|
-| Total files | 23 |
-| Total documentation | ~240 KB |
-| Code examples | 130+ |
+| Total files | 26 |
+| Total documentation | ~280 KB |
+| Code examples | 140+ |
 | Diagrams | 10+ |
-| Tables | 35+ |
+| Tables | 40+ |
 | Issues identified | 15 |
-| Sections | 180+ |
-| Read time (full suite) | ~3.5 hours |
+| Sections | 200+ |
+| Read time (full suite) | ~4 hours |
 
 ---
 
@@ -99,6 +105,7 @@ Complete documentation for the TodoBox Flask application is available in the `/d
 - ✅ Database schema and models
 - ✅ System architecture and design patterns
 - ✅ Security best practices
+- ✅ Testing suites and coverage reports
 - ✅ Deployment procedures (3 options)
 - ✅ Performance optimization guides
 - ✅ Migration troubleshooting
@@ -166,6 +173,11 @@ docs/
 │   ├── SECURITY_PATCHES.md
 │   └── AXE_LINTER_BEST_PRACTICES.md
 │
+├── Testing & QA
+│   ├── TESTING.md
+│   ├── TESTING_BEST_PRACTICES.md
+│   └── TEST_SUMMARY.md
+│
 ├── Features
 │   ├── AUTO_CLOSE_REMINDERS.md
 │   ├── TIMEZONE_AUTO_DETECTION.md
@@ -203,6 +215,7 @@ docs/
 | Deployment | DEPLOYMENT.md | Troubleshooting |
 | Timezones | TIMEZONE_AUTO_DETECTION.md | Technical details |
 | Reminders | AUTO_CLOSE_REMINDERS.md | Feature docs |
+| Testing | TESTING.md | Test suites |
 
 ### Quick Commands
 

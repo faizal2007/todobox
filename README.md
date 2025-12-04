@@ -99,6 +99,12 @@ Comprehensive documentation is available in the `docs/` directory:
 - **[JQUERY_MIGRATION_GUIDE.md](docs/JQUERY_MIGRATION_GUIDE.md)** - Developer guide for JavaScript patterns
 - **[AXE_LINTER_BEST_PRACTICES.md](docs/AXE_LINTER_BEST_PRACTICES.md)** - Accessibility guidelines
 
+### Testing & Quality Assurance
+
+- **[TESTING.md](docs/TESTING.md)** - Comprehensive testing guide with test suites
+- **[TESTING_BEST_PRACTICES.md](docs/TESTING_BEST_PRACTICES.md)** - Testing guidelines and patterns
+- **[TEST_SUMMARY.md](docs/TEST_SUMMARY.md)** - Test results and coverage summary
+
 ### Features & Integrations
 
 - **[AUTO_CLOSE_REMINDERS.md](docs/AUTO_CLOSE_REMINDERS.md)** - Auto-close reminder feature documentation
