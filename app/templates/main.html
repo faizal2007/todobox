@@ -41,7 +41,7 @@
 				
 				if (pwaBtn) {
 					// Make sure button is hidden initially
-					pwaBtn.style.display = 'none';
+					pwaBtn.classList.remove('show');
 					console.log('Install button hidden by default');
 				}
 				
@@ -89,12 +89,12 @@
     				
     				// Show button if not already installed
     				if (!pwaBtn) pwaBtn = document.getElementById('pwa-install-btn');
-    				if (pwaBtn) {
-    					pwaBtn.style.display = 'inline-flex';
-    					console.log('✓ Install button now VISIBLE');
-    				} else {
-    					console.warn('✗ Install button element not found');
-    				}
+					if (pwaBtn) {
+						pwaBtn.classList.add('show');
+						console.log('✓ Install button now VISIBLE');
+					} else {
+						console.warn('✗ Install button element not found');
+					}
     			});
     			
     			// appinstalled event handler (fires after successful installation)
