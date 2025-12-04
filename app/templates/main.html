@@ -29,69 +29,137 @@
     			if (!window.SCRIPT_ROOT) {
     				window.SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
     			}
-				// Register service worker for PWA install prompt
+    			
+    			// Global PWA state
+    			let deferredPrompt = null;
+    			let pwaBtn = null;
+    			
+			// Initialize PWA system after DOM is ready
+			function initPWASystem() {
+				pwaBtn = document.getElementById('pwa-install-btn');
+				console.log('PWA System initialized, button found:', !!pwaBtn);
+				
+				if (pwaBtn) {
+					// Make sure button is hidden initially
+					pwaBtn.style.display = 'none';
+					console.log('Install button hidden by default');
+				}
+				
+				// Register service worker
 				if ('serviceWorker' in navigator) {
-					window.addEventListener('load', () => {
-						navigator.serviceWorker.register('/service-worker.js').then(reg => {
-							console.log('Service Worker registered:', reg);
-						}).catch(err => {
-							console.error('Service Worker registration failed:', err);
-						});
-					});
+					navigator.serviceWorker.register('/service-worker.js')
+						.then(reg => console.log('✓ Service Worker registered:', reg))
+						.catch(err => console.error('✗ Service Worker failed:', err));
 				}
-				let deferredPrompt = null;
-				const btn = document.getElementById('pwa-install-btn');
 				
-				// Hide button by default
-				if (btn) btn.style.display = 'none';
-				
-				// Show install button when beforeinstallprompt event fires
-				window.addEventListener('beforeinstallprompt', (e) => {
-					console.log('beforeinstallprompt event fired');
-					e.preventDefault();
-					deferredPrompt = e;
-					if (btn) {
-						btn.style.display = 'inline-flex';
-						console.log('Install button shown');
-					}
-				});
-				
-				// Hide install button when app is installed
-				window.addEventListener('appinstalled', () => {
-					console.log('App installed successfully');
-					if (btn) btn.style.display = 'none';
-					deferredPrompt = null;
-				});
-				
-				// Check if app is already installed on page load
+				// Check if app is already installed
 				if (window.navigator.getInstalledRelatedApps) {
-					window.navigator.getInstalledRelatedApps().then(apps => {
-						console.log('Installed related apps:', apps.length);
-						if (apps.length > 0 && btn) {
-							btn.style.display = 'none';
-						}
-					}).catch(err => {
-						console.log('getInstalledRelatedApps not fully supported:', err);
-					});
+					window.navigator.getInstalledRelatedApps()
+						.then(apps => {
+							console.log('Installed related apps count:', apps.length);
+							if (apps.length > 0 && pwaBtn) {
+								console.log('App already installed - hiding button');
+								pwaBtn.style.display = 'none';
+							}
+						})
+						.catch(err => console.log('getInstalledRelatedApps error:', err));
 				}
 				
-				function installPWA() {
-					console.log('Install button clicked');
+				// Set a timeout to check if beforeinstallprompt fired within 5 seconds
+				setTimeout(() => {
 					if (!deferredPrompt) {
-						console.log('No deferred prompt available');
-						return;
+						console.warn('⚠️ beforeinstallprompt did NOT fire within 5 seconds');
+						console.log('Possible reasons:');
+						console.log('1. App is already installed (uninstall first)');
+						console.log('2. Browser does not support install prompts');
+						console.log('3. Not accessed via HTTPS (required for PWA)');
+						console.log('4. Service Worker registration failed');
+						console.log('5. User previously dismissed the install prompt');
+						console.log('6. PWA criteria not met (icons, manifest, etc.)');
+						console.log('\nClick PWA Debug button for diagnostics');
+					} else {
+						console.log('✓ beforeinstallprompt fired successfully');
 					}
-					deferredPrompt.prompt();
-					deferredPrompt.userChoice.then((result) => { 
-						console.log('Install prompt result:', result.outcome);
-						if (result.outcome === 'accepted') {
-							if (btn) btn.style.display = 'none';
-						}
-						deferredPrompt = null; 
-					});
-				}
+				}, 5000);
+			}    			// beforeinstallprompt event handler (fires when PWA is installable)
+    			window.addEventListener('beforeinstallprompt', (e) => {
+    				console.log('✓ beforeinstallprompt event fired - APP IS INSTALLABLE');
+    				e.preventDefault();
+    				deferredPrompt = e;
+    				
+    				// Show button if not already installed
+    				if (!pwaBtn) pwaBtn = document.getElementById('pwa-install-btn');
+    				if (pwaBtn) {
+    					pwaBtn.style.display = 'inline-flex';
+    					console.log('✓ Install button now VISIBLE');
+    				} else {
+    					console.warn('✗ Install button element not found');
+    				}
+    			});
+    			
+    			// appinstalled event handler (fires after successful installation)
+    			window.addEventListener('appinstalled', () => {
+    				console.log('✓ App installed successfully');
+    				if (pwaBtn) pwaBtn.style.display = 'none';
+    				deferredPrompt = null;
+    			});
+    			
+    			// Install button click handler
+    			function installPWA() {
+    				console.log('Install button clicked');
+    				if (!deferredPrompt) {
+    					console.warn('No deferred prompt available - app may not be installable');
+    					return;
+    				}
+    				
+    				deferredPrompt.prompt();
+    				deferredPrompt.userChoice.then((result) => { 
+    					console.log('Install result:', result.outcome);
+    					if (result.outcome === 'accepted') {
+    						if (pwaBtn) pwaBtn.style.display = 'none';
+    					}
+    					deferredPrompt = null; 
+    				});
+    			}
+    			
+			// Initialize PWA when DOM is ready
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', initPWASystem);
+			} else {
+				initPWASystem();
+			}
+			
+			// Debug function to show PWA diagnostics
+			function showPWADebug() {
+				const info = {
+					'beforeinstallprompt received': !!deferredPrompt,
+					'Button visible': pwaBtn ? pwaBtn.style.display !== 'none' : 'N/A',
+					'Service Worker support': 'serviceWorker' in navigator,
+					'getInstalledRelatedApps support': !!window.navigator.getInstalledRelatedApps,
+					'Manifest URL': '/manifest.json',
+					'User Agent': navigator.userAgent,
+					'Current URL': window.location.href,
+					'HTTPS': window.location.protocol === 'https:',
+					'Standalone mode': window.navigator.standalone || 'Not supported'
+				};
 				
-				// Reminder checking system
+				// Try to fetch manifest to verify it's valid
+				fetch('/manifest.json')
+					.then(r => r.json())
+					.then(manifest => {
+						info['Manifest valid'] = '✓ Yes';
+						info['Manifest name'] = manifest.name;
+						console.table(info);
+						alert('PWA Debug Info (check console):\n\n' + 
+							Object.entries(info).map(([k, v]) => `${k}: ${v}`).join('\n') + 
+							'\n\nBeforeinstallprompt: ' + (deferredPrompt ? 'YES - Ready to install' : 'NO - Not fired yet\n\nTips:\n- On Chrome/Android: Should appear automatically\n- On Safari: Use "Share > Add to Home Screen"\n- Using HTTP? Try HTTPS\n- App already installed? Uninstall and refresh'));
+					})
+					.catch(e => {
+						info['Manifest valid'] = '✗ No - Error: ' + e.message;
+						console.table(info);
+						alert('PWA Debug Info:\n\n' + Object.entries(info).map(([k, v]) => `${k}: ${v}`).join('\n'));
+					});
+			}				// Reminder checking system
 				function initReminderSystem() {
 					// Check for reminders every 10 seconds (more frequent for better UX)
 					const reminderCheckInterval = setInterval(checkReminders, 10000);
@@ -398,6 +466,9 @@
 											<li class="dropdown notification-list">
 												<button id="pwa-install-btn" onclick="installPWA()" title="Install this app on your device">
 													<i class="mdi mdi-cloud-download"></i> Install App
+												</button>
+												<button id="pwa-debug-btn" onclick="showPWADebug()" title="Show PWA debug info" style="display: inline-flex; margin-left: 5px; background: #999; font-size: 11px; padding: 4px 8px; align-items: center; gap: 4px; border-radius: 4px; color: white; border: none; cursor: pointer;">
+													<i class="mdi mdi-bug"></i> PWA Debug
 												</button>
 												<a class="nav-link dropdown-toggle nav-user arrow-none mr-0" data-toggle="dropdown" id="topbar-userdrop" href="#" role="button" aria-haspopup="true"
 													aria-expanded="false">
