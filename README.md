@@ -102,6 +102,7 @@ Comprehensive documentation is available in the `docs/` directory:
 
 ### Features & Integrations
 
+- **[KIV_STATUS.md](docs/KIV_STATUS.md)** - KIV (Keep In View) status feature documentation
 - **[AUTO_CLOSE_REMINDERS.md](docs/AUTO_CLOSE_REMINDERS.md)** - Auto-close reminder feature documentation
 - **[TIMEZONE_AUTO_DETECTION.md](docs/TIMEZONE_AUTO_DETECTION.md)** - Automatic timezone detection
 - **[TIMEZONE_INTEGRATION.md](docs/TIMEZONE_INTEGRATION.md)** - Timezone integration for reminders

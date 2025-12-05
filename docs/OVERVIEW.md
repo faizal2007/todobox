@@ -17,10 +17,12 @@ TodoBox (formerly MySandbox) is a Flask-based web application for managing perso
 ### Todo Management
 
 - Create and edit todo items
-- Organize tasks by status (new, done, failed, re-assign)
+- Organize tasks by status (new, done, failed, re-assign, kiv)
+- KIV (Keep In View) status for tasks on hold or requiring future attention
 - Markdown support for task descriptions
 - Task scheduling (today or tomorrow)
 - Task deletion
+- Separate view for KIV tasks on Undone page
 
 ### Task Tracking
 

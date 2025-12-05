@@ -139,6 +139,25 @@ TodoBox is a server-rendered Flask application that uses HTML forms and HTTP red
 
 - **Status Code**: 200
 
+### Mark Todo as KIV
+
+- **Route**: `POST /<todo_id>/kiv`
+- **Authentication**: Required
+- **Parameters**:
+  - `todo_id` (required): Todo item ID
+- **Description**: Mark a todo item as KIV (Keep In View) - tasks on hold
+- **Response**: JSON with success status
+
+```json
+{
+  "status": "Success",
+  "todo_id": 1
+}
+```
+
+- **Status Code**: 200
+- **Alternative Route**: `POST /<id>/<todo_id>/kiv` (with date context)
+
 ### Delete Todo
 
 - **Route**: `POST /<todo_id>/delete`

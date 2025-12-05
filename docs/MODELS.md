@@ -175,10 +175,11 @@ Defines todo item status types.
 
 | ID | Name | Description |
 |----|------|-------------|
-| 1 | new | Newly created task |
-| 2 | done | Completed task |
-| 3 | failed | Failed task |
-| 4 | re-assign | Reassigned task |
+| 5 | new | Newly created task |
+| 6 | done | Completed task |
+| 7 | failed | Failed task |
+| 8 | re-assign | Reassigned task |
+| 9 | kiv | Keep In View - tasks on hold |
 
 ### Status Methods
 
