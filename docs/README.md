@@ -4,7 +4,7 @@ This documentation provides comprehensive information about the TodoBox
 Flask application - a todo management system with user authentication
 and task tracking capabilities.
 
-**Last Updated:** December 4, 2025
+**Last Updated:** December 5, 2025
 
 ## Contents
 
@@ -40,9 +40,15 @@ and task tracking capabilities.
 
 ### Features & Integrations
 
+- **[KIV_STATUS.md](KIV_STATUS.md)** - KIV (Keep In View) status feature
 - **[AUTO_CLOSE_REMINDERS.md](AUTO_CLOSE_REMINDERS.md)** - Auto-close reminder feature documentation
 - **[TIMEZONE_AUTO_DETECTION.md](TIMEZONE_AUTO_DETECTION.md)** - Automatic timezone detection
 - **[TIMEZONE_INTEGRATION.md](TIMEZONE_INTEGRATION.md)** - Timezone integration for reminders
+
+### Performance & Optimization
+
+- **[JAVASCRIPT_OPTIMIZATION.md](JAVASCRIPT_OPTIMIZATION.md)** - JavaScript modernization details
+- **[JQUERY_MIGRATION_GUIDE.md](JQUERY_MIGRATION_GUIDE.md)** - jQuery to vanilla JS patterns
 
 ### Documentation Index
 
@@ -73,10 +79,13 @@ and task tracking capabilities.
 - Google OAuth2 authentication support
 - RESTful API with token-based authentication
 - Create, read, and manage todo items
-- Mark tasks as complete
+- Mark tasks as complete or KIV (Keep In View)
 - Task scheduling (today/tomorrow/custom date)
-- Dashboard with statistics
+- Dashboard with statistics and time-period grouping
 - Change password and account management
+- Smart reminders with auto-close functionality
+- Automatic timezone detection
+- PWA support for mobile and desktop
 - Markdown support for task descriptions
 - HTML sanitization for XSS prevention
 - Session management with timeout

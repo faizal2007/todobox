@@ -4,9 +4,9 @@
 
 Complete documentation for the TodoBox Flask application is available in the `/docs` folder, covering all features, setup, deployment, and maintenance.
 
-**Last Updated:** December 4, 2025  
-**Documentation Version:** 1.5  
-**Application Version:** 1.6.3
+**Last Updated:** December 5, 2025  
+**Documentation Version:** 1.6  
+**Application Version:** 1.7.0
 
 ---
 
@@ -49,6 +49,7 @@ Complete documentation for the TodoBox Flask application is available in the `/d
 ### Features & Integrations
 
 - **[AUTO_CLOSE_REMINDERS.md](AUTO_CLOSE_REMINDERS.md)** - Reminder feature documentation
+- **[KIV_STATUS.md](KIV_STATUS.md)** - KIV (Keep In View) status feature
 - **[TIMEZONE_AUTO_DETECTION.md](TIMEZONE_AUTO_DETECTION.md)** - Automatic timezone detection
 - **[TIMEZONE_INTEGRATION.md](TIMEZONE_INTEGRATION.md)** - Timezone support for reminders
 
@@ -68,14 +69,14 @@ Complete documentation for the TodoBox Flask application is available in the `/d
 
 | Metric | Value |
 |--------|-------|
-| Total files | 23 |
-| Total documentation | ~240 KB |
-| Code examples | 130+ |
+| Total files | 24 |
+| Total documentation | ~250 KB |
+| Code examples | 135+ |
 | Diagrams | 10+ |
 | Tables | 35+ |
 | Issues identified | 15 |
-| Sections | 180+ |
-| Read time (full suite) | ~3.5 hours |
+| Sections | 185+ |
+| Read time (full suite) | ~3.7 hours |
 
 ---
 
@@ -84,6 +85,7 @@ Complete documentation for the TodoBox Flask application is available in the `/d
 ### Application Features
 
 - ✅ Todo management with responsive grid layout
+- ✅ KIV (Keep In View) status for tasks on hold
 - ✅ Smart reminders with auto-close after 3 notifications
 - ✅ Automatic timezone detection based on IP geolocation
 - ✅ 43+ timezone options for users
