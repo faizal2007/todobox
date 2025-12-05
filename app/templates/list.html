@@ -44,6 +44,13 @@
                                                                 </span>
                                                                 <span class="sr-only">Mark as done</span>
                                                             </a> 
+                                                            <a class="kiv ml-2" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="KIV" aria-label="Mark as KIV">
+                                                                <i class="mdi mdi-clock-outline kiv-icon"></i>
+                                                                <span class="kiv-loading" style="display: none;">
+                                                                    <i class="mdi mdi-loading mdi-spin"></i>
+                                                                </span>
+                                                                <span class="sr-only">Mark as KIV</span>
+                                                            </a>
                                                        {% endif %}
                                                             <a class="edit pr-2" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Edit" aria-label="Edit todo">
                                                                 <i class="mdi mdi-clipboard-edit-outline edit-icon"></i>
@@ -71,7 +78,7 @@
                                                        </footer>
                                                        <div style="margin-top: 15px; text-align: right;">
                                                             <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; display: inline-block;">
-                                                                 <i class="mdi mdi-lightbulb-on mr-1"></i><span class="card-wisdom">Stay focused</span>
+                                                                 <i class="mdi mdi-lightbulb-on mr-1"></i><span class="card-wisdom" data-id="{{ list.Todo.id }}">...</span>
                                                             </div>
                                                        </div>
                                                   </div>
@@ -114,6 +121,76 @@
                                                                                                     
 <script>
      document.addEventListener('DOMContentLoaded', function() {
+          // Wisdom pool (used for subsequent todos)
+          const wisdoms = [
+               'Stay focused',
+               'Small steps, big gains',
+               'Consistency beats intensity',
+               'Prioritize what matters',
+               'Progress over perfection',
+               'One task at a time',
+               'Momentum starts small',
+               'Plan, then execute',
+               'Trim distractions',
+               'Keep moving forward'
+          ];
+          const spans = Array.from(document.querySelectorAll('.card-wisdom'));
+
+          // Deterministic mapping across reloads
+          // - First todo uses a cached daily wisdom from /api/quote (persisted per day)
+          // - Other todos derive wisdom deterministically from their todo IDs
+          const todayKey = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+          const storageKey = `wisdomOfDay:${todayKey}`;
+
+          function hashStringToIndex(str, modulo) {
+               // Simple deterministic hash to index
+               let h = 2166136261; // FNV offset basis
+               for (let i = 0; i < str.length; i++) {
+                    h ^= str.charCodeAt(i);
+                    h = (h * 16777619) >>> 0; // FNV prime
+               }
+               return h % modulo;
+          }
+
+          function getTodoIdForSpan(spanEl) {
+               // Read todo id directly embedded in span data-id
+               const idAttr = spanEl.getAttribute('data-id');
+               return idAttr && idAttr.trim() ? idAttr.trim() : null;
+          }
+
+          // Resolve wisdom of the day (first card) deterministically via localStorage
+          const applyWisdoms = (firstWisdom, firstAuthor=null) => {
+               if (spans.length > 0) {
+                    spans[0].textContent = firstAuthor ? `${firstWisdom} — ${firstAuthor}` : firstWisdom;
+               }
+               // Ensure different wisdoms for remaining cards using deterministic DOM order
+               const available = wisdoms.filter(w => w !== firstWisdom);
+               for (let i = 1; i < spans.length; i++) {
+                    const chosen = available[(i - 1) % available.length] || firstWisdom;
+                    // Append placeholder author for local wisdoms to keep consistency
+                    spans[i].textContent = `${chosen} — Anonymous`;
+               }
+          };
+
+          const cached = window.localStorage.getItem(storageKey);
+          if (cached) {
+               applyWisdoms(cached);
+          } else {
+               fetch('/api/quote', { method: 'GET' })
+                    .then(resp => resp.json())
+                    .then(data => {
+                         const firstWisdom = (data && data.quote) ? data.quote : wisdoms[0];
+                         const firstAuthor = (data && data.author) ? data.author : null;
+                         try { window.localStorage.setItem(storageKey, firstWisdom); } catch (e) {}
+                         applyWisdoms(firstWisdom, firstAuthor);
+                    })
+                    .catch(() => {
+                         // Fallback: deterministic based on date only
+                         const idx = hashStringToIndex(todayKey, wisdoms.length);
+                         applyWisdoms(wisdoms[idx]);
+                    });
+          }
+
           // Mark todo as done
           document.querySelectorAll('.done').forEach(function(button) {
                button.addEventListener('click', function() {
@@ -138,6 +215,38 @@
                     })
                     .catch(function(error) {
                          console.error('Error marking todo as done:', error);
+                         // Hide loading state on error
+                         if (icon) icon.style.display = '';
+                         if (loading) loading.style.display = 'none';
+                         button.disabled = false;
+                    });
+               });
+          });
+
+          // Mark todo as kiv
+          document.querySelectorAll('.kiv').forEach(function(button) {
+               button.addEventListener('click', function() {
+                    var icon = this.querySelector('.kiv-icon');
+                    var loading = this.querySelector('.kiv-loading');
+                    
+                    // Show loading state
+                    if (icon) icon.style.display = 'none';
+                    if (loading) loading.style.display = '';
+                    this.disabled = true;
+                    
+                    fetch(window.SCRIPT_ROOT + this.dataset.id + '/kiv', {
+                         method: 'POST',
+                         headers: {
+                              'Content-Type': 'application/x-www-form-urlencoded',
+                              'X-CSRFToken': '{{ csrf_token() }}'
+                         },
+                         body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
+                    })
+                    .then(function() {
+                         window.location.href = "{{ url_for('list', id='today') }}";
+                    })
+                    .catch(function(error) {
+                         console.error('Error marking todo as kiv:', error);
                          // Hide loading state on error
                          if (icon) icon.style.display = '';
                          if (loading) loading.style.display = 'none';
@@ -241,34 +350,7 @@
                showLoadingState: true
           });
           
-          // Cache DOM query for better performance
-          var cardWisdoms = document.querySelectorAll('.card-wisdom');
-          
-          // Fetch a single quote and apply to all cards (more efficient than fetching per card)
-          if (cardWisdoms.length > 0) {
-               fetch('/api/quote', {
-                    method: 'GET',
-                    timeout: 5000
-               })
-               .then(response => {
-                    if (!response.ok) throw new Error('Quote fetch failed');
-                    return response.json();
-               })
-               .then(data => {
-                    if (data.quote) {
-                         // Apply same quote to all cards
-                         cardWisdoms.forEach(function(el) {
-                              el.textContent = data.quote;
-                         });
-                    }
-               })
-               .catch(err => {
-                    console.debug('Quote API unavailable, using fallback');
-                    cardWisdoms.forEach(function(el) {
-                         el.textContent = 'Stay focused';
-                    });
-               });
-          }
+          // Removed secondary quote fetch to avoid double updates; rely on deterministic logic above
      });
 </script>
 {% endblock %} 
