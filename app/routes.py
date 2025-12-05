@@ -18,6 +18,10 @@ from sqlalchemy import asc, desc, or_
 from functools import wraps
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import random
+import json
+import urllib.request
+import urllib.error
 import smtplib
 import secrets
 import markdown
@@ -70,7 +74,7 @@ def csrf_validation_error(e):
     flash('Session expired. Please login again.', 'warning')
     return redirect(url_for('login'))
 
-# Fallback local quotes
+# Fallback local quotes (expanded for higher variety)
 LOCAL_QUOTES = [
     "Stay focused",
     "Keep it simple",
@@ -86,7 +90,32 @@ LOCAL_QUOTES = [
     "Be kind",
     "Never stop learning",
     "Create value",
-    "Think different"
+    "Think different",
+    "Small steps, big gains",
+    "Consistency beats intensity",
+    "Prioritize what matters",
+    "One task at a time",
+    "Momentum starts small",
+    "Plan, then execute",
+    "Trim distractions",
+    "Keep moving forward",
+    "Progress is a process",
+    "Make today count",
+    "Focus on what’s next",
+    "Done is better than perfect",
+    "Clarity drives action",
+    "Build it, then refine it",
+    "Simplify to amplify",
+    "Intent before effort",
+    "Less noise, more work",
+    "Start where you are",
+    "Show up consistently",
+    "Ship, learn, improve",
+    "Think long-term, act today",
+    "Seek momentum, not motivation",
+    "Direction over speed",
+    "Tiny wins, big outcomes",
+    "Focus. Execute. Iterate.",
 ]
 
 @app.route('/api/quote')
@@ -94,6 +123,25 @@ LOCAL_QUOTES = [
 def get_quote():
     """Return a local quote without external API calls"""
     import random
+    # Try external API first (ZenQuotes), fall back to LOCAL_QUOTES on any error
+    api_url = 'https://zenquotes.io/api/random'
+    try:
+        req = urllib.request.Request(api_url, headers={'User-Agent': 'TodoBox/1.0'})
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            data = resp.read()
+            parsed = json.loads(data)
+            # ZenQuotes returns a list with objects containing 'q' (quote) and 'a' (author)
+            if isinstance(parsed, list) and parsed:
+                item = parsed[0]
+                quote = item.get('q')
+                author = item.get('a')
+                if quote:
+                    # Include author if present
+                    return jsonify({'quote': quote, 'author': author})
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError):
+        pass
+
+    # Fallback
     fallback_quote = random.choice(LOCAL_QUOTES)
     return jsonify({'quote': fallback_quote})
 
@@ -597,7 +645,8 @@ def dashboard():
     ).filter(
         Todo.user_id == current_user.id,
         Tracker.timestamp == Todo.modified,  # type: ignore[attr-defined]
-        Tracker.status_id != 6  # type: ignore[attr-defined]
+        Tracker.status_id != 6,  # type: ignore[attr-defined]
+        Tracker.status_id != 9   # Status 9 = kiv
     ).order_by(Todo.modified.desc()).limit(5).all()
     
     return render_template('dashboard.html', 
@@ -1076,17 +1125,22 @@ def undone():
     # Use a simpler approach - get all todos and filter by latest tracker status
     
     undone_todos = []
+    kiv_todos = []
     all_todos = Todo.query.filter_by(user_id=current_user.id).order_by(Todo.modified.desc()).all()
     
     for todo in all_todos:
         # Get the latest tracker entry for this todo
         latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc()).first()  # type: ignore[attr-defined]
         
-        # Only include if the latest status is not completed (status_id != 6)
-        if latest_tracker and latest_tracker.status_id != 6:
-            undone_todos.append((todo, latest_tracker))
+        if latest_tracker:
+            if latest_tracker.status_id != 6 and latest_tracker.status_id != 9:
+                # Uncompleted tasks
+                undone_todos.append((todo, latest_tracker))
+            elif latest_tracker.status_id == 9:
+                # KIV tasks
+                kiv_todos.append((todo, latest_tracker))
     
-    return render_template('undone.html', title='Undone Tasks', todos=undone_todos)
+    return render_template('undone.html', title='Undone Tasks', todos=undone_todos, kiv_todos=kiv_todos)
 
 @app.route('/<path:todo_id>/done', methods=['POST'])
 @login_required
@@ -1098,6 +1152,27 @@ def mark_done(todo_id):
         todo.modified = date_entry
         db.session.commit()  # type: ignore[attr-defined]
         Tracker.add(todo.id, 6, date_entry)  # Status 6 = Done
+
+        return jsonify({
+            'status': 'Success',
+            'todo_id': todo.id if todo else None
+        }), 200
+    else:
+        return jsonify({
+            'status': 'Error',
+            'message': 'Todo not found'
+        }), 404
+
+@app.route('/<path:todo_id>/kiv', methods=['POST'])
+@login_required
+def mark_kiv(todo_id):
+    """Mark a todo as kiv from any page"""
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if todo:
+        date_entry = datetime.now()
+        todo.modified = date_entry
+        db.session.commit()  # type: ignore[attr-defined]
+        Tracker.add(todo.id, 9, date_entry)  # Status 9 = KIV
 
         return jsonify({
             'status': 'Success',
@@ -1448,6 +1523,34 @@ def done(id, todo_id):
     if id == 'today':
         todo.modified = date_entry
         Tracker.add(todo.id, 6, date_entry)  # Status 6 = Done
+
+        return jsonify({
+            'status': 'Success',
+            'todo_id': todo.id
+        }), 200
+    else:
+        return jsonify({
+            'status': 'Error',
+            'message': 'Invalid list type'
+        }), 400
+
+@app.route('/<path:id>/<path:todo_id>/kiv', methods=['POST'])
+@login_required
+def kiv(id, todo_id):
+    # Filter by user_id to ensure user can only mark their own todos as kiv
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return make_response(
+            jsonify({
+                'status': 'Error',
+                'message': 'Todo not found'
+            }), 404
+        )
+    date_entry = datetime.now()
+
+    if id == 'today':
+        todo.modified = date_entry
+        Tracker.add(todo.id, 9, date_entry)  # Status 9 = KIV
 
         return jsonify({
             'status': 'Success',

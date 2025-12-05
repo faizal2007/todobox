@@ -6,6 +6,7 @@ Tests complete user workflows including authentication, todo management, and sha
 import pytest
 import os
 import sys
+import json
 from datetime import datetime, timedelta
 
 # Add project root to path
@@ -33,7 +34,8 @@ def app():
                 Status(name='new'),
                 Status(name='done'),
                 Status(name='failed'),
-                Status(name='re-assign')
+                Status(name='re-assign'),
+                Status(name='kiv')
             ]
             for i, status in enumerate(statuses, start=5):
                 status.id = i
@@ -190,8 +192,8 @@ class TestTodoManagement:
         from app.models import Todo
         
         response = logged_in_client.post('/add', data={
-            'name': 'Test Todo',
-            'details': 'Test Description'
+            'title': 'Test Todo',
+            'activities': 'Test Description'
         }, follow_redirects=True)
         
         assert response.status_code in [200, 302]
@@ -225,7 +227,7 @@ class TestTodoManagement:
         """Test marking todo as done."""
         from app.models import Todo, User, Status
         
-        user = User.query.filter_by(email='todouser').first()
+        user = User.query.filter_by(email='todo@example.com').first()
         done_status = Status.query.filter_by(name='done').first()
         
         # Create a todo
@@ -237,13 +239,44 @@ class TestTodoManagement:
         db_session.session.commit()
         
         # Update status
-        response = logged_in_client.post(f'/mark/{todo.id}/done', follow_redirects=True)
+        response = logged_in_client.post(f'/{todo.id}/done')
         
         assert response.status_code == 200
+        data = json.loads(response.data)
+        assert data['status'] == 'Success'
         
         # Verify status was updated
-        updated_todo = Todo.query.get(todo.id)
-        assert updated_todo.status_id == done_status.id
+        from app.models import Tracker
+        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc()).first()
+        assert latest_tracker.status_id == done_status.id
+    
+    def test_mark_todo_as_kiv(self, logged_in_client, db_session):
+        """Test marking todo as KIV."""
+        from app.models import Todo, User, Status
+        
+        user = User.query.filter_by(email='todo@example.com').first()
+        kiv_status = Status.query.filter_by(name='kiv').first()
+        
+        # Create a todo
+        todo = Todo()
+        todo.name = 'KIV Todo'
+        todo.details = 'Test marking as KIV'
+        todo.user_id = user.id
+        db_session.session.add(todo)
+        db_session.session.commit()
+        
+        # Mark as KIV
+        response = logged_in_client.post(f'/{todo.id}/kiv')
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert data['status'] == 'Success'
+        
+        # Verify status was updated to KIV (status_id = 9)
+        from app.models import Tracker
+        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc()).first()
+        assert latest_tracker.status_id == kiv_status.id
+        assert kiv_status.id == 9
     
     def test_delete_todo(self, logged_in_client, db_session):
         """Test deleting a todo item."""

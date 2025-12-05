@@ -18,68 +18,124 @@
                          </div>
                     </div>
                     
-                    {% if todos %}
-                    <div class="row">
-                         <div class="col-12">
-                              {% set count = namespace(value=0) %}
-                              {% set column_size = 3 %}
-                              {% set balance_div = 4 % column_size  %}
-                              {% set breaker = namespace(value=balance_div) %}
-                              
-                              {% for todo_data in todos %}
-                                   {% set list = namespace(Todo=todo_data[0], Tracker=todo_data[1]) %}
-                                   {% if loop.index > balance_div %}
-                                        {% set breaker.value = column_size %}
-                                   {% endif %}
-                                   {% if loop.index == 1 + count.value %}    
-                                        <div class="card-deck mb-3">
-                                   {% endif %}
-                                             <!-- Portlet card -->
-                                             <div class="card">
-                                                  <div class="card-body">
-                                                       <div class="card-widgets">
-                                                            <a class="done" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Mark as Done" aria-label="Mark as done">
-                                                                <i class="mdi mdi-clipboard-check-outline"></i>
-                                                                <span class="sr-only">Mark as done</span>
-                                                            </a>
-                                                            <a class="edit pr-2" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Edit" aria-label="Edit todo">
-                                                                <i class="mdi mdi-clipboard-edit-outline"></i>
-                                                                <span class="sr-only">Edit todo</span>
-                                                            </a> 
-                                                            <a class="close-todo" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Delete" aria-label="Delete todo">
-                                                                <i class="mdi mdi-close"></i>
-                                                                <span class="sr-only">Delete todo</span>
-                                                            </a>
-                                                       </div>
-                                                       <h3 class="card-title mb-0">{{ list.Todo.name|title }}</h3>
-                                                       <div class="divider"><hr></div>
-                                                       <p class="card-text">
-                                                            {{ list.Todo.details_html|safe }}
-                                                       </p>
-                                                       <footer class="blockquote-footer"> 
-                                                            <i class="mdi mdi-clock-outline mr-1"></i>
-                                                            {{ momentjs(list.Tracker.timestamp).calendar() }}
-                                                            {% if list.Tracker.status_id == 1 %}
-                                                                <span class="badge badge-warning ml-2">Pending</span>
-                                                            {% elif list.Tracker.status_id == 3 %}
-                                                                <span class="badge badge-danger ml-2">Failed</span>
-                                                            {% elif list.Tracker.status_id == 4 %}
-                                                                <span class="badge badge-info ml-2">Re-assigned</span>
-                                                            {% endif %}
-                                                       </footer>
-                                                  </div>
-                                             </div> <!-- end card-->
-                                   {% if loop.index == breaker.value + count.value %}
-                                   {% set count.value = count.value + breaker.value %}
+                    {% if todos or kiv_todos %}
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs" id="taskTabs" role="tablist">
+                        {% if todos %}
+                        <li class="nav-item">
+                            <a class="nav-link active" id="uncompleted-tab" data-toggle="tab" href="#uncompleted" role="tab" aria-controls="uncompleted" aria-selected="true">
+                                Uncompleted Tasks <span class="badge badge-primary">{{ todos|length }}</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if kiv_todos %}
+                        <li class="nav-item">
+                            <a class="nav-link{% if not todos %} active{% endif %}" id="kiv-tab" data-toggle="tab" href="#kiv" role="tab" aria-controls="kiv" aria-selected="{% if not todos %}true{% else %}false{% endif %}">
+                                KIV Tasks <span class="badge badge-secondary">{{ kiv_todos|length }}</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    
+                    <!-- Tab content -->
+                    <div class="tab-content mt-3" id="taskTabsContent">
+                        {% if todos %}
+                        <div class="tab-pane fade show active" id="uncompleted" role="tabpanel" aria-labelledby="uncompleted-tab">
+                            <div class="row">
+                                {% if todos %}
+                                    {% for todo_data in todos %}
+                                        {% set list = namespace(Todo=todo_data[0], Tracker=todo_data[1]) %}
+                                        <div class="col-md-4">
+                                            <div class="card mb-3">
+                                                <div class="card-body">
+                                                    <div class="card-widgets">
+                                                        <a class="done" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Mark as Done" aria-label="Mark as done">
+                                                            <i class="mdi mdi-clipboard-check-outline"></i>
+                                                            <span class="sr-only">Mark as done</span>
+                                                        </a>
+                                                        <a class="kiv ml-2" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Mark as KIV" aria-label="Mark as KIV">
+                                                            <i class="mdi mdi-clock-outline"></i>
+                                                            <span class="sr-only">Mark as KIV</span>
+                                                        </a>
+                                                        <a class="edit pr-2" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Edit" aria-label="Edit todo">
+                                                            <i class="mdi mdi-clipboard-edit-outline"></i>
+                                                            <span class="sr-only">Edit todo</span>
+                                                        </a>
+                                                        <a class="close-todo" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Delete" aria-label="Delete todo">
+                                                            <i class="mdi mdi-close"></i>
+                                                            <span class="sr-only">Delete todo</span>
+                                                        </a>
+                                                    </div>
+                                                    <h3 class="card-title mb-0">{{ list.Todo.name|title }}</h3>
+                                                    <div class="divider"><hr></div>
+                                                    <p class="card-text">{{ list.Todo.details_html|safe }}</p>
+                                                    <footer class="blockquote-footer"> 
+                                                        <i class="mdi mdi-clock-outline mr-1"></i>
+                                                        {{ momentjs(list.Tracker.timestamp).calendar() }}
+                                                        {% if list.Tracker.status_id == 1 %}
+                                                            <span class="badge badge-warning ml-2">Pending</span>
+                                                        {% elif list.Tracker.status_id == 3 %}
+                                                            <span class="badge badge-danger ml-2">Failed</span>
+                                                        {% elif list.Tracker.status_id == 4 %}
+                                                            <span class="badge badge-info ml-2">Re-assigned</span>
+                                                        {% endif %}
+                                                    </footer>
+                                                </div>
+                                            </div>
                                         </div>
-                                   {% endif %}
-                              {% endfor %}
-                              
-                              <!-- Close any remaining open card-deck -->
-                              {% if todos|length % column_size != 0 %}
-                                   </div>
-                              {% endif %}
-                         </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="col-12">
+                                        <div class="alert alert-info">No uncompleted tasks.</div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if kiv_todos %}
+                        <div class="tab-pane fade{% if not todos %} show active{% endif %}" id="kiv" role="tabpanel" aria-labelledby="kiv-tab">
+                            <div class="row">
+                                {% if kiv_todos %}
+                                    {% for todo_data in kiv_todos %}
+                                        {% set list = namespace(Todo=todo_data[0], Tracker=todo_data[1]) %}
+                                        <div class="col-md-4">
+                                            <div class="card mb-3">
+                                                <div class="card-body">
+                                                    <div class="card-widgets">
+                                                        <a class="done" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Mark as Done" aria-label="Mark as done">
+                                                            <i class="mdi mdi-clipboard-check-outline"></i>
+                                                            <span class="sr-only">Mark as done</span>
+                                                        </a>
+                                                        <a class="edit pr-2" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Edit" aria-label="Edit todo">
+                                                            <i class="mdi mdi-clipboard-edit-outline"></i>
+                                                            <span class="sr-only">Edit todo</span>
+                                                        </a>
+                                                        <a class="close-todo" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Delete" aria-label="Delete todo">
+                                                            <i class="mdi mdi-close"></i>
+                                                            <span class="sr-only">Delete todo</span>
+                                                        </a>
+                                                    </div>
+                                                    <h3 class="card-title mb-0">{{ list.Todo.name|title }}</h3>
+                                                    <div class="divider"><hr></div>
+                                                    <p class="card-text">{{ list.Todo.details_html|safe }}</p>
+                                                    <footer class="blockquote-footer">
+                                                        <i class="mdi mdi-clock-outline mr-1"></i>
+                                                        {{ momentjs(list.Tracker.timestamp).calendar() }}
+                                                        <span class="badge badge-secondary ml-2">KIV</span>
+                                                    </footer>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="col-12">
+                                        <div class="alert alert-info">No KIV tasks right now.</div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                     {% else %}
                     <!-- No undone tasks -->
@@ -129,10 +185,45 @@
 
 <script>
      document.addEventListener('DOMContentLoaded', function() {
-          // Mark todo as done
-          document.querySelectorAll('.done').forEach(function(btn) {
-               btn.addEventListener('click', function() {
-                    var todoId = this.dataset.id;
+        // Ensure tab switching works even if Bootstrap JS isn't active
+        (function initTabs(){
+            const tabs = document.querySelectorAll('#taskTabs a[data-toggle="tab"]');
+            const panes = {
+                uncompleted: document.getElementById('uncompleted'),
+                kiv: document.getElementById('kiv')
+            };
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function(e){
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').replace('#','');
+                    // Update active classes on nav
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    // Hide all panes
+                    Object.values(panes).forEach(p => {
+                        if (!p) return;
+                        p.classList.remove('show');
+                        p.classList.remove('active');
+                    });
+                    // Show target pane
+                    const targetPane = panes[targetId];
+                    if (targetPane) {
+                        targetPane.classList.add('show');
+                        targetPane.classList.add('active');
+                    }
+                });
+            });
+        })();
+
+          // Event delegation for todo actions - survives page reloads and dynamic content
+          document.addEventListener('click', function(e) {
+               var btn = e.target.closest('.done, .kiv, .close-todo');
+               if (!btn) return;
+               e.preventDefault();
+               
+               var todoId = btn.dataset.id;
+               
+               if (btn.classList.contains('done')) {
                     fetch('/' + todoId + '/done', {
                          method: 'POST',
                          headers: {
@@ -147,14 +238,23 @@
                     .catch(function(error) {
                          console.error('Error marking todo as done:', error);
                     });
-               });
-          });
-
-          // Delete todo
-          document.querySelectorAll('.close-todo').forEach(function(btn) {
-               btn.addEventListener('click', function() {
-                    var todoId = this.dataset.id;
-                    var todoTitle = this.closest('.card-body').querySelector('.card-title').textContent.trim();
+               } else if (btn.classList.contains('kiv')) {
+                    fetch('/' + todoId + '/kiv', {
+                         method: 'POST',
+                         headers: {
+                              'Content-Type': 'application/x-www-form-urlencoded',
+                              'X-CSRFToken': '{{ csrf_token() }}'
+                         },
+                         body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
+                    })
+                    .then(function() {
+                         window.location.href = "{{ url_for('undone') }}";
+                    })
+                    .catch(function(error) {
+                         console.error('Error marking todo as kiv:', error);
+                    });
+               } else if (btn.classList.contains('close-todo')) {
+                    var todoTitle = btn.closest('.card-body').querySelector('.card-title').textContent.trim();
                     
                     showConfirmModal(
                          'Delete Todo',
@@ -179,7 +279,7 @@
                          'btn-danger',
                          'bg-danger text-white'
                     );
-               });
+               }
           });
 
           // Initialize centralized todo operations
