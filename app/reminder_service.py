@@ -43,31 +43,29 @@ class ReminderService:
         results = []
         for todo in query.all():
             if todo.reminder_time and todo.reminder_time < now:
-                # Check if this reminder should be auto-closed (3+ notifications in 30 minutes)
-                if todo.should_auto_close_reminder():
+                notification_count = todo.reminder_notification_count or 0
+                
+                # Auto-close if already sent 3 notifications
+                if notification_count >= 3:
                     # Auto-close the reminder
                     todo.reminder_enabled = False
                     todo.reminder_sent = True
                     db.session.commit()  # type: ignore[attr-defined]
-                    logging.info(f"Auto-closed reminder for todo {todo.id} after 3 notifications in 30 minutes")
-                else:
-                    # Check if we should send another reminder (spaced 30 minutes apart)
-                    notification_count = todo.reminder_notification_count or 0
+                    logging.info(f"Auto-closed reminder for todo {todo.id} after 3 notifications")
+                elif notification_count == 0:
+                    # First notification - always show
+                    results.append(todo)
+                elif todo.reminder_first_notification_time:
+                    # For subsequent notifications, check if appropriate time has passed
+                    # 2nd reminder: needs 30 min elapsed
+                    # 3rd reminder: needs 60 min elapsed
+                    elapsed_time = now - todo.reminder_first_notification_time
+                    required_elapsed_seconds = notification_count * 30 * 60  # 1st=0, 2nd=1800, 3rd=3600, etc
                     
-                    if notification_count == 0:
-                        # First notification - always show
-                        results.append(todo)
-                    elif todo.reminder_first_notification_time:
-                        # For subsequent notifications, check if appropriate time has passed
-                        # 2nd reminder: needs 30 min elapsed
-                        # 3rd reminder: needs 60 min elapsed
-                        elapsed_time = now - todo.reminder_first_notification_time
-                        required_elapsed_seconds = notification_count * 30 * 60  # 1st=0, 2nd=1800, 3rd=3600, etc
-                        
-                        if elapsed_time.total_seconds() >= required_elapsed_seconds:
-                            # Only show up to 3 reminders total
-                            if notification_count < 3:
-                                results.append(todo)
+                    if elapsed_time.total_seconds() >= required_elapsed_seconds:
+                        # Only show up to 3 reminders total
+                        if notification_count < 3:
+                            results.append(todo)
         
         return results
     
@@ -89,11 +87,11 @@ class ReminderService:
             if todo.reminder_first_notification_time is None:
                 todo.reminder_first_notification_time = datetime.now(pytz.UTC).replace(tzinfo=None)
             
-            # Check if we should auto-close the reminder (3+ notifications in 30 minutes)
-            if todo.should_auto_close_reminder():
+            # Auto-close after 3rd notification
+            if todo.reminder_notification_count >= 3:
                 todo.reminder_enabled = False
                 todo.reminder_sent = True
-                logging.info(f"Auto-closed reminder for todo {todo_id} after 3 notifications in 30 minutes")
+                logging.info(f"Auto-closed reminder for todo {todo_id} after 3 notifications")
             
             db.session.add(todo)  # type: ignore[attr-defined]
             db.session.flush()  # type: ignore[attr-defined]
@@ -103,7 +101,7 @@ class ReminderService:
     
     @staticmethod
     def cancel_reminder(todo_id):
-        """Cancel a reminder (disable it without marking as sent)
+        """Cancel a reminder (disable it and clear all tracking)
         
         Args:
             todo_id: ID of the todo
@@ -113,10 +111,13 @@ class ReminderService:
         """
         todo = Todo.query.get(todo_id)
         if todo and todo.reminder_enabled:
-            # Disable the reminder but don't mark as sent
-            # This allows the user to set a new reminder later if needed
+            # Disable the reminder and clear all tracking
             todo.reminder_enabled = False
+            todo.reminder_sent = True  # Mark as sent to prevent further notifications
+            todo.reminder_notification_count = 0
+            todo.reminder_first_notification_time = None
             db.session.commit()  # type: ignore[attr-defined]
+            logging.info(f"Reminder cancelled for todo {todo_id}")
             return True
         return False
     
