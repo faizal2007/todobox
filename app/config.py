@@ -58,3 +58,6 @@ REMEMBER_COOKIE_SAMESITE = os.environ.get('REMEMBER_COOKIE_SAMESITE', 'Lax')
 
 # PWA Debug Button (show only if enabled)
 PWA_DEBUG = os.environ.get('PWA_DEBUG', 'false').lower() == 'true'
+
+# Flask Debug Mode
+DEBUG = os.environ.get('DEBUG', 'false').lower() == 'true'

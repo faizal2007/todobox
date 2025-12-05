@@ -183,7 +183,7 @@ def create_todo_for_user(db, user, name='Test Todo'):
 def login_user(client, username, password):
     """Login a user and return the response."""
     return client.post('/login', data={
-        'username': username,
+        'email': username,
         'password': password
     }, follow_redirects=True)
 
@@ -367,6 +367,58 @@ class TestUserIsolation:
             
             # Mark own todo as done
             response = client.post(f'/today/{todo_id}/done')
+            
+            # Should succeed
+            assert response.status_code == 200
+            
+            import json
+            data = json.loads(response.data)
+            assert data['status'] == 'Success'
+    
+    def test_user_cannot_mark_others_todo_kiv(self, app, client):
+        """Test that a user cannot mark another user's todo as KIV."""
+        from app import db
+        from app.models import Tracker
+        
+        with app.app_context():
+            user1, user2 = create_test_users(db)
+            
+            # Create a todo for user1
+            todo = create_todo_for_user(db, user1, 'User1 KIV Todo')
+            todo_id = todo.id
+            
+            # Get initial tracker count
+            initial_tracker_count = Tracker.query.filter_by(todo_id=todo_id).count()
+            
+            # Login as user2
+            login_user(client, 'user2', 'password2')
+            
+            # Try to mark user1's todo as KIV
+            response = client.post(f'/today/{todo_id}/kiv')
+            
+            # Should return 404
+            assert response.status_code == 404
+            
+            # Verify no new tracker was added
+            final_tracker_count = Tracker.query.filter_by(todo_id=todo_id).count()
+            assert final_tracker_count == initial_tracker_count
+    
+    def test_user_can_mark_own_todo_kiv(self, app, client):
+        """Test that a user can mark their own todo as KIV."""
+        from app import db
+        
+        with app.app_context():
+            user1, _ = create_test_users(db)
+            
+            # Create a todo for user1
+            todo = create_todo_for_user(db, user1, 'Mark Me KIV')
+            todo_id = todo.id
+            
+            # Login as user1
+            login_user(client, 'user1', 'password1')
+            
+            # Mark own todo as KIV
+            response = client.post(f'/today/{todo_id}/kiv')
             
             # Should succeed
             assert response.status_code == 200

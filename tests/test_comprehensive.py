@@ -188,12 +188,13 @@ class TestStatusModel:
         from app.models import Status
         
         statuses = Status.query.all()
-        assert len(statuses) >= 4
+        assert len(statuses) >= 5  # Now includes kiv status
         
         status_names = [s.name for s in statuses]
         assert 'new' in status_names
         assert 'done' in status_names
         assert 'failed' in status_names
+        assert 'kiv' in status_names  # New KIV status
 
 
 class TestTrackerModel:

@@ -320,7 +320,8 @@ class Todo(db.Model): # type: ignore[attr-defined]
             ).filter(
                     Tracker.timestamp == Todo.modified, # type: ignore[attr-defined]
                     Tracker.timestamp.between(start, end), # type: ignore[attr-defined]
-                    Tracker.status_id != 6  # Status 6 = done # pyright: ignore[reportGeneralTypeIssues]
+                    Tracker.status_id != 6,  # Status 6 = done # pyright: ignore[reportGeneralTypeIssues]
+                    Tracker.status_id != 9   # Status 9 = kiv # pyright: ignore[reportGeneralTypeIssues]
             )
         
         # Filter by user if user_id is provided
@@ -343,7 +344,8 @@ class Status(db.Model): # type: ignore[attr-defined]
             Status(name='new'),
             Status(name='done'),
             Status(name='failed'),
-            Status(name='re-assign')
+            Status(name='re-assign'),
+            Status(name='kiv')
         ]
         for i, status in enumerate(statuses, start=5):
             status.id = i

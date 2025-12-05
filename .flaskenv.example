@@ -1,5 +1,5 @@
 FLASK_APP=todobox.py
-FLASK_ENV=development
+FLASK_DEBUG=True
 DEBUG=True
 TITLE=My Sandbox
 
@@ -12,6 +12,7 @@ DATABASE_DEFAULT=sqlite
 DATABASE_NAME=todobox.db
 
 # MySQL Example (uncomment and configure if using MySQL)
+# DATABASE_DEFAULT=mysql
 # DB_URL=localhost
 # DB_USER=todobox
 # DB_PW=your-secure-password
@@ -28,13 +29,11 @@ TODO_ENCRYPTION_ENABLED=false
 # POSTGRES_DB=todo_db
 
 # Application Settings
-# BIND_ADDRESS=127.0.0.1  # Uncomment ONLY for local dev. For production, leave commented to use 0.0.0.0
 PORT=5000
 
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=your_client_id_here
 GOOGLE_CLIENT_SECRET=your_client_secret_here
-GOOGLE_OAUTH_PROMPT="login select_account"
 OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google
 
 # Email/SMTP Configuration (for sharing invitations)
@@ -49,6 +48,3 @@ OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google
 # PROXY_X_PROTO=1
 # PROXY_X_HOST=1
 # PROXY_X_PREFIX=1
-
-# PWA Debug Button (optional, use DEBUG instead)
-# PWA_DEBUG=true
