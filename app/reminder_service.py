@@ -43,7 +43,7 @@ class ReminderService:
         results = []
         for todo in query.all():
             if todo.reminder_time and todo.reminder_time < now:
-                notification_count = todo.reminder_notification_count or 0
+                notification_count = todo.reminder_notification_count if todo.reminder_notification_count is not None else 0
                 
                 # Auto-close if already sent 3 notifications
                 if notification_count >= 3:
