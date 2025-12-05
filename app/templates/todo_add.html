@@ -1,4 +1,28 @@
 
+<!-- Flatpickr CSS and JS for datetime picker -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<style>
+    #reminder-datetime {
+        width: 100% !important;
+        height: 40px !important;
+        padding: 12px !important;
+        font-size: 16px !important;
+        background-color: white !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 4px !important;
+        box-sizing: border-box !important;
+    }
+    .flatpickr-calendar {
+        box-shadow: 0 3px 13px rgba(0,0,0,0.08);
+        border-radius: 6px;
+    }
+    .flatpickr-time input {
+        font-size: 14px;
+    }
+</style>
+
 <!-- Info Header Modal -->
 <div id="info-header-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="info-header-modalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -66,13 +90,33 @@
 							</label>
 						</div>
 						
-						<!-- Custom reminder time -->
-						<div id="reminder-custom-time" class="mb-3">
-							<label for="reminder-datetime">Date & Time:</label>
-							<input type="datetime-local" class="form-control form-control-sm" id="reminder-datetime" name="reminder-datetime">
-						</div>
-						
-						<!-- Before target date options -->
+					<!-- Custom reminder time -->
+					<div id="reminder-custom-time" class="mb-3">
+						<label for="reminder-datetime" class="form-label">Date & Time:</label>
+						<input type="text" id="reminder-datetime" name="reminder-datetime" placeholder="Select date and time" class="form-control">
+					</div>
+					<script>
+						document.addEventListener('DOMContentLoaded', function() {
+							// Initialize Flatpickr for date and time selection
+							flatpickr('#reminder-datetime', {
+								enableTime: true,
+								dateFormat: 'Y-m-d\\TH:i',
+								altInput: true,
+								altFormat: 'Y-m-d h:i K',
+								time_24hr: false,
+								minuteIncrement: 1,
+								minDate: 'today',
+								defaultDate: new Date(),
+								static: false,
+								inline: false,
+								mode: 'single',
+								theme: 'light',
+								weekNumbers: true,
+								allowInput: true,
+								closeOnSelect: true
+							});
+						});
+					</script>						<!-- Before target date options -->
 						<div id="reminder-before-options" style="display: none;" class="mb-3">
 							<label for="reminder-before-minutes">Remind me before:</label>
 							<div class="input-group input-group-sm">

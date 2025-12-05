@@ -5,6 +5,27 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - Reminder Persistence and Format Fix
+
+### Fixed
+
+- **Reminder Datetime Format Incompatibility**: Fixed critical issue where reminder datetimes were not being saved when editing todos. Root cause: Flatpickr was outputting user-friendly display format (e.g., "2025-12-06 2:30 PM") which Python's `datetime.fromisoformat()` could not parse, causing silent failures in the backend.
+- **Solution**: Implemented dual-format Flatpickr configuration:
+  - `dateFormat: 'Y-m-d\\TH:i'` - Stores ISO format internally (e.g., "2025-12-06T14:30") for backend compatibility
+  - `altInput: true` + `altFormat: 'Y-m-d h:i K'` - Displays user-friendly AM/PM format to the user
+- **Modal Cleanup**: Enhanced modal reset handlers to properly clear Flatpickr internal state using `.clear()` method, not just input values
+- **Files Modified**: `todo_add.html`, `list.html`, `undone.html`
+- **Tests**: Added comprehensive test suite (`test_reminder_persistence.py`) validating complete reminder flow from frontend to backend and back
+
+### Technical Details
+
+- Frontend sends: ISO format `"2025-12-06T14:30"`
+- Backend receives: ISO format via `datetime.fromisoformat()` ✅ Success
+- Backend converts: UTC for storage, then back to user timezone for display
+- Frontend receives: ISO format `"2025-12-06T14:30:00-05:00"`
+- Frontend extracts: First 16 chars `"2025-12-06T14:30"` for Flatpickr
+- User sees: Friendly format `"2025-12-06 2:30 PM"`
+
 ## [1.7.0] - KIV (Keep In View) Status Feature - 2025-12-05
 
 ### Added

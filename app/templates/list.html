@@ -350,6 +350,47 @@
                showLoadingState: true
           });
           
+          // Reset form when modal is closed
+          $('#info-header-modal').on('hidden.bs.modal', function() {
+               // Reset reminder section
+               $('#reminder-enabled').prop('checked', false);
+               $('#reminder-options').hide();
+               
+               // Clear Flatpickr properly
+               if (typeof flatpickr !== 'undefined') {
+                    var flatpickrInstances = flatpickr.getInstance('#reminder-datetime');
+                    if (flatpickrInstances) {
+                         flatpickrInstances.clear();
+                    }
+               }
+               $('#reminder-datetime').val('');
+               
+               $('#reminder-before-minutes').val('30');
+               $('#reminder-before-unit').val('minutes');
+               
+               // Reset reminder type to "custom"
+               $('#reminder-custom').prop('checked', true).trigger('change');
+               $('#reminder-custom-time').show();
+               $('#reminder-before-options').hide();
+               
+               // Reset schedule day to "today"
+               $('#today').prop('checked', true).trigger('change');
+               $('#custom-date-picker').hide();
+               $('#custom_date').val('');
+               
+               // Reset form fields
+               $('#title-input-normal').val('');
+               $("input[name='todo_id']").val('');
+               
+               // Reset SimpleMDE editor if it exists
+               if (typeof simplemde !== 'undefined' && simplemde) {
+                    simplemde.value('');
+               }
+               
+               // Reset other form states
+               $('.form-control').removeClass('is-invalid');
+          });
+          
           // Removed secondary quote fetch to avoid double updates; rely on deterministic logic above
      });
 </script>
