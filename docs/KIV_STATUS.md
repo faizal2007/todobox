@@ -1,7 +1,7 @@
 # KIV (Keep In View) Status Feature
 
 **Feature Version:** 1.7.0  
-**Date Added:** December 2025  
+**Date Added:** December 5, 2025  
 **Status:** Active
 
 ---
@@ -328,7 +328,7 @@ recent_todos = db.session.query(Todo, Tracker).join(
 
 ## Version History
 
-### Version 1.7.0 (December 2025)
+### Version 1.7.0 (December 5, 2025)
 
 - Initial implementation of KIV status feature
 - Added dedicated KIV tab on Undone page

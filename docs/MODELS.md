@@ -173,6 +173,8 @@ Defines todo item status types.
 
 ### Default Status Types
 
+**Note:** Status IDs start from 5 by design in the seed method (`enumerate(statuses, start=5)`).
+
 | ID | Name | Description |
 |----|------|-------------|
 | 5 | new | Newly created task |
