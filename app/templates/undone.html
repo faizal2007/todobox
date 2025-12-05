@@ -215,10 +215,15 @@
             });
         })();
 
-          // Mark todo as done
-          document.querySelectorAll('.done').forEach(function(btn) {
-               btn.addEventListener('click', function() {
-                    var todoId = this.dataset.id;
+          // Event delegation for todo actions - survives page reloads and dynamic content
+          document.addEventListener('click', function(e) {
+               var btn = e.target.closest('.done, .kiv, .close-todo');
+               if (!btn) return;
+               e.preventDefault();
+               
+               var todoId = btn.dataset.id;
+               
+               if (btn.classList.contains('done')) {
                     fetch('/' + todoId + '/done', {
                          method: 'POST',
                          headers: {
@@ -233,13 +238,7 @@
                     .catch(function(error) {
                          console.error('Error marking todo as done:', error);
                     });
-               });
-          });
-
-          // Mark todo as kiv
-          document.querySelectorAll('.kiv').forEach(function(btn) {
-               btn.addEventListener('click', function() {
-                    var todoId = this.dataset.id;
+               } else if (btn.classList.contains('kiv')) {
                     fetch('/' + todoId + '/kiv', {
                          method: 'POST',
                          headers: {
@@ -254,14 +253,8 @@
                     .catch(function(error) {
                          console.error('Error marking todo as kiv:', error);
                     });
-               });
-          });
-
-          // Delete todo
-          document.querySelectorAll('.close-todo').forEach(function(btn) {
-               btn.addEventListener('click', function() {
-                    var todoId = this.dataset.id;
-                    var todoTitle = this.closest('.card-body').querySelector('.card-title').textContent.trim();
+               } else if (btn.classList.contains('close-todo')) {
+                    var todoTitle = btn.closest('.card-body').querySelector('.card-title').textContent.trim();
                     
                     showConfirmModal(
                          'Delete Todo',
@@ -286,7 +279,7 @@
                          'btn-danger',
                          'bg-danger text-white'
                     );
-               });
+               }
           });
 
           // Initialize centralized todo operations
