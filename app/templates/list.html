@@ -357,11 +357,9 @@
                $('#reminder-options').hide();
                
                // Clear Flatpickr properly
-               if (typeof flatpickr !== 'undefined') {
-                    var flatpickrInstances = flatpickr.getInstance('#reminder-datetime');
-                    if (flatpickrInstances) {
-                         flatpickrInstances.clear();
-                    }
+               var reminderInput = document.getElementById('reminder-datetime');
+               if (reminderInput && reminderInput._flatpickr) {
+                    reminderInput._flatpickr.clear();
                }
                $('#reminder-datetime').val('');
                
