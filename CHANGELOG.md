@@ -5,6 +5,60 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - KIV (Keep In View) Status Feature - 2025-12-05
+
+### Added
+
+- **KIV Status**: New task status for tasks to "Keep In View"
+  - Separate tab on Undone page for KIV tasks
+  - Clock icon button to mark tasks as KIV
+  - Status ID 9 in the status table
+  - Automatic status tracking via Tracker model
+  - Badge counter showing number of KIV tasks
+
+- **API Endpoints**: Two new endpoints for KIV functionality
+  - `POST /<todo_id>/kiv` - Mark task as KIV from any page
+  - `POST /<date_id>/<todo_id>/kiv` - Mark task as KIV with date context
+
+- **UI Components**: Visual elements for KIV feature
+  - Clock outline icon (mdi-clock-outline) for KIV action
+  - Loading animation during KIV operation
+  - Secondary badge for KIV task counter
+  - Tooltip and accessibility labels
+  - Responsive tab layout on Undone page
+
+- **Documentation**: Comprehensive KIV feature documentation
+  - New file: `docs/KIV_STATUS.md` - Complete feature guide
+  - Use cases, best practices, and troubleshooting
+  - Technical implementation details
+  - API and database schema documentation
+
+### Changed
+
+- **Undone Page**: Reorganized with tabbed interface
+  - Tab 1: Uncompleted Tasks (pending/in-progress)
+  - Tab 2: KIV Tasks (keep in view)
+  - Dynamic tab display based on task availability
+  - Badge counters for each tab
+
+- **Dashboard Filtering**: Updated to exclude KIV tasks
+  - Recent todos query now filters out status_id = 9
+  - Prevents KIV tasks from appearing in dashboard
+  - Maintains clean separation of active vs KIV tasks
+
+- **Status Model**: Added KIV to status seeding
+  - Status table now includes 'kiv' as status ID 9
+  - Proper initialization in database migrations
+  - Consistent status tracking across application
+
+### Technical Details
+
+- **Backend**: Flask routes with login protection
+- **Frontend**: Vanilla JavaScript with Fetch API
+- **Database**: Status ID 9 for KIV, tracked in Tracker model
+- **Security**: CSRF protection on all KIV endpoints
+- **UX**: Loading states, error handling, accessibility support
+
 ## [1.6.6] - Account Page UI Improvements - 2025-12-04
 
 ### Added

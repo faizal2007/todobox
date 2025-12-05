@@ -23,6 +23,7 @@ Visit `http://localhost:5000` in your browser.
 ## Key Features
 
 - 📝 **Todo Management** - Create, organize, and track tasks with responsive grid layout
+- 🕐 **KIV Status** - Keep tasks in view with dedicated KIV (Keep In View) status for tasks on hold
 - 💡 **Wisdom Quotes** - Daily inspiration from ZenQuotes API with local fallback
 - 👤 **User Authentication** - Email/password and Google OAuth sign-in
 - 🎨 **Modern UI** - Bootstrap 4 responsive design with multiple themes
@@ -101,6 +102,7 @@ Comprehensive documentation is available in the `docs/` directory:
 
 ### Features & Integrations
 
+- **[KIV_STATUS.md](docs/KIV_STATUS.md)** - KIV (Keep In View) status feature documentation
 - **[AUTO_CLOSE_REMINDERS.md](docs/AUTO_CLOSE_REMINDERS.md)** - Auto-close reminder feature documentation
 - **[TIMEZONE_AUTO_DETECTION.md](docs/TIMEZONE_AUTO_DETECTION.md)** - Automatic timezone detection
 - **[TIMEZONE_INTEGRATION.md](docs/TIMEZONE_INTEGRATION.md)** - Timezone integration for reminders
@@ -354,6 +356,7 @@ curl -X POST -H "Authorization: Bearer YOUR_API_TOKEN" \
 
 See [CHANGELOG.md](CHANGELOG.md) for all recent changes including:
 
+- KIV (Keep In View) status feature with dedicated tab
 - Wisdom quotes integration (ZenQuotes + local fallback)
 - Salt generator function
 - Todo grid layout reorganization

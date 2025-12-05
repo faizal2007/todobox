@@ -1,8 +1,8 @@
 # TodoBox Complete Documentation Index
 
-**Last Updated:** December 4, 2025  
-**Version:** 1.5  
-**Status:** Updated with Complete Documentation Review
+**Last Updated:** December 5, 2025  
+**Version:** 1.6  
+**Status:** Updated with KIV Status Feature Documentation
 
 ---
 
@@ -18,6 +18,7 @@ This documentation suite provides **comprehensive coverage** of the TodoBox Flas
 - ✅ Deployment and maintenance procedures
 - ✅ Security patches and fixes
 - ✅ First-time user creation system
+- ✅ Feature documentation (KIV, Reminders, Timezone, PWA)
 - ✅ Progress tracking and status
 
 ---
@@ -390,7 +391,27 @@ This documentation suite provides **comprehensive coverage** of the TodoBox Flas
 
 ---
 
-#### 19. **TIMEZONE_AUTO_DETECTION.md** - Automatic Timezone Detection Feature
+#### 19. **KIV_STATUS.md** - KIV (Keep In View) Status Feature
+
+**For:** Users, developers, project managers  
+**Read Time:** 15 minutes  
+**Status:** Complete - December 2025  
+**Topics:**
+
+- KIV status overview and purpose
+- How to mark tasks as KIV
+- Viewing and managing KIV tasks
+- Technical implementation details
+- API endpoints for KIV functionality
+- UI components and design
+- Use cases and best practices
+- Troubleshooting guide
+
+**Use this when:** Understanding KIV feature, implementing task workflow, or managing tasks on hold
+
+---
+
+#### 20. **TIMEZONE_AUTO_DETECTION.md** - Automatic Timezone Detection Feature
 
 **For:** Developers, system administrators, users  
 **Read Time:** 10 minutes  
@@ -409,7 +430,7 @@ This documentation suite provides **comprehensive coverage** of the TodoBox Flas
 
 ---
 
-#### 20. **TIMEZONE_INTEGRATION.md** - Timezone Integration for Reminders
+#### 21. **TIMEZONE_INTEGRATION.md** - Timezone Integration for Reminders
 
 **For:** Developers, testing team  
 **Read Time:** 12 minutes  
@@ -515,15 +536,15 @@ This documentation suite provides **comprehensive coverage** of the TodoBox Flas
 
 | Metric | Value |
 |--------|-------|
-| Total documentation files | 23 |
-| Total documentation size | ~240 KB |
-| Code examples | 130+ |
+| Total documentation files | 24 |
+| Total documentation size | ~250 KB |
+| Code examples | 135+ |
 | Technical diagrams | 10+ |
 | Developer guides | 5 |
 | Setup guides | 2 |
 | API documentation | 2 |
 | Architecture docs | 2 |
-| Feature documentation | 3 |
+| Feature documentation | 4 |
 | Testing documentation | 1 |
 | Session/Progress logs | 2 |
 | Tables | 35+ |
@@ -703,6 +724,7 @@ flask run
 | Deployment | DEPLOYMENT.md | Troubleshooting |
 | Users | USER_CREATION.md | Troubleshooting |
 | Commands | QUICKSTART.md | Common commands |
+| KIV Status | KIV_STATUS.md | Feature guide |
 | Timezones | TIMEZONE_AUTO_DETECTION.md | Technical details |
 | Reminders | AUTO_CLOSE_REMINDERS.md | Feature documentation |
 
@@ -733,6 +755,7 @@ docs/
 ├── AXE_LINTER_BEST_PRACTICES.md                 ← Accessibility guide
 │
 ├── AUTO_CLOSE_REMINDERS.md                      ← Reminder feature
+├── KIV_STATUS.md                                ← KIV (Keep In View) status
 ├── TIMEZONE_AUTO_DETECTION.md                   ← Timezone detection
 ├── TIMEZONE_INTEGRATION.md                      ← Timezone for reminders
 │
@@ -745,7 +768,7 @@ docs/
 └── screenshots/                                 ← Application screenshots
 ```
 
-**Total:** 23 documentation files
+**Total:** 24 documentation files
 
 ---
 
@@ -807,7 +830,7 @@ docs/
 
 ---
 
-**Total Documentation:** 23 files | ~240 KB | 180+ sections | 130+ examples
+**Total Documentation:** 24 files | ~250 KB | 185+ sections | 135+ examples
 
 👉 **Start with:** `README.md`
 
