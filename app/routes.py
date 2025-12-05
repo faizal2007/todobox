@@ -411,11 +411,6 @@ def delete_todo(todo_id):
     if not todo:
         return jsonify({'error': 'Todo not found'}), 404
     
-    # Cancel any active reminder before deleting
-    if todo.reminder_enabled:
-        from app.reminder_service import ReminderService
-        ReminderService.cancel_reminder(todo.id)
-    
     # Delete trackers first
     Tracker.query.filter_by(todo_id=todo_id).delete()
     # Delete todo
@@ -1148,11 +1143,6 @@ def delete(todo_id):
     todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
     if not todo:
         abort(404)
-    
-    # Cancel any active reminder before deleting
-    if todo.reminder_enabled:
-        from app.reminder_service import ReminderService
-        ReminderService.cancel_reminder(todo.id)
     
     Tracker.delete(todo_id)
 

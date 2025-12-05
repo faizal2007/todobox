@@ -5,42 +5,6 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.6.7] - Reminder Notification Fixes - 2025-12-05
-
-### Fixed
-
-- **Reminder Notification Limit**: Fixed issue where reminders would continue appearing non-stop
-  - Reminders now properly limited to exactly 3 notifications maximum
-  - Auto-close triggers after the 3rd notification is sent
-  - Reminders no longer appear indefinitely when notification count reaches 3
-  
-- **Todo Deletion Reminder Cleanup**: Reminders are now properly disabled when a todo is deleted
-  - Web UI delete route (`/<path:todo_id>/delete`) now cancels active reminders before deletion
-  - API delete route (`/api/todo/<int:todo_id>`) now cancels active reminders before deletion
-  - Prevents orphaned reminders from continuing to appear after todo deletion
-  
-- **Cancel Reminder Improvements**: Enhanced cancel_reminder functionality
-  - Now properly clears all reminder tracking fields (notification_count, first_notification_time)
-  - Marks reminder as sent to prevent any future notifications
-  - Logs reminder cancellation for debugging
-
-### Changed
-
-- **Auto-close Logic**: Simplified reminder auto-close behavior
-  - Reminders auto-close immediately after 3rd notification, regardless of time elapsed
-  - Removed complex 30-minute window check that prevented proper auto-close
-  - Ensures predictable behavior: 3 notifications maximum, spaced 30 minutes apart
-
-### Added
-
-- **Test Suite**: Added comprehensive test coverage for reminder fixes
-  - `tests/test_reminder_fix.py`: New test suite validating all fix scenarios
-  - Tests for 3-notification limit enforcement
-  - Tests for auto-close on pending check
-  - Tests for cancel reminder functionality
-  - Tests for todo deletion reminder cleanup
-  - Updated existing test paths to work in CI environment
-
 ## [1.6.6] - Account Page UI Improvements - 2025-12-04
 
 ### Added
