@@ -4,6 +4,7 @@ __pycache__/
 /instance/
 .vscode/
 .flaskenv
+.env
 /database/
 instance/
 docker-compose.yml
