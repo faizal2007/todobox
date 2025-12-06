@@ -57,12 +57,19 @@ var TodoOperations = (function() {
             
             // Try new GET API endpoint first, fallback to old POST route
             var todoId = $(this).data('id');
-            var newApiUrl = window.SCRIPT_ROOT + 'api/todo/' + todoId;
-            var fallbackUrl = window.SCRIPT_ROOT + todoId + '/todo';
+            console.log('Raw Todo ID from data attribute:', todoId);
+            
+            // Ensure we extract just the numeric ID if it contains path information
+            var numericId = String(todoId).split('/').pop();
+            console.log('Cleaned numeric ID:', numericId);
+            
+            var newApiUrl = window.SCRIPT_ROOT + 'api/todo/' + numericId;
+            var fallbackUrl = window.SCRIPT_ROOT + numericId + '/todo';
             
             console.log('Attempting to fetch todo data...');
             console.log('New API URL:', newApiUrl);
-            console.log('Todo ID:', todoId);
+            console.log('Fallback URL:', fallbackUrl);
+            console.log('Cleaned Todo ID:', numericId);
             
             $.ajax({
                 url: newApiUrl,
