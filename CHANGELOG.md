@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **CRITICAL: Restored KIV Tab Auto-Switch Functionality**: Fixed regression where marking todos as KIV didn't automatically show the KIV tab
+  - KIV action now redirects to `/undone?tab=kiv` instead of just `/undone`
+  - Added JavaScript to detect URL parameter and auto-switch to KIV tab
+  - Applied fix to both `undone.html` and `list.html` templates
+  - Users now immediately see their todo moved to KIV section instead of having to manually click the tab
+  - Prevents similar regressions with centralized status action management
+  - Resolves frustrating UX where users thought KIV functionality was broken
+
 - **Fixed Date Display in Undone Tasks**: Corrected date shown for undone todos
   - Undone tasks now show the target schedule date instead of creation timestamp
   - Changed from `list.Tracker.timestamp` to `list.Todo.modified` in undone.html

@@ -195,6 +195,45 @@
 
 <script>
      document.addEventListener('DOMContentLoaded', function() {
+        // Check URL parameter to determine which tab to show
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        
+        // Auto-switch to KIV tab if requested via URL parameter
+        if (tabParam === 'kiv') {
+            console.log('Detected tab=kiv parameter, auto-switching to KIV tab');
+            // Use a small delay to ensure DOM is fully loaded
+            setTimeout(function() {
+                const kivTab = document.querySelector('#taskTabs a[href="#kiv"]');
+                const kivPane = document.getElementById('kiv');
+                const uncompletedTab = document.querySelector('#taskTabs a[href="#uncompleted"]');
+                const uncompletedPane = document.getElementById('uncompleted');
+                
+                console.log('KIV tab element:', kivTab);
+                console.log('KIV pane element:', kivPane);
+                
+                if (kivTab && kivPane) {
+                    // Remove active states from uncompleted tab/pane
+                    if (uncompletedTab) uncompletedTab.classList.remove('active');
+                    if (uncompletedPane) {
+                        uncompletedPane.classList.remove('show', 'active');
+                    }
+                    
+                    // Add active states to KIV tab/pane
+                    kivTab.classList.add('active');
+                    kivTab.setAttribute('aria-selected', 'true');
+                    kivPane.classList.add('show', 'active');
+                    
+                    console.log('Successfully switched to KIV tab');
+                } else {
+                    console.error('Could not find KIV tab or pane elements');
+                }
+                
+                // Clean up URL parameter
+                window.history.replaceState({}, '', window.location.pathname);
+            }, 100);
+        }
+        
         // Ensure tab switching works even if Bootstrap JS isn't active
         (function initTabs(){
             const tabs = document.querySelectorAll('#taskTabs a[data-toggle="tab"]');
@@ -202,13 +241,18 @@
                 uncompleted: document.getElementById('uncompleted'),
                 kiv: document.getElementById('kiv')
             };
+            
             tabs.forEach(tab => {
                 tab.addEventListener('click', function(e){
                     e.preventDefault();
                     const targetId = this.getAttribute('href').replace('#','');
                     // Update active classes on nav
-                    tabs.forEach(t => t.classList.remove('active'));
+                    tabs.forEach(t => {
+                        t.classList.remove('active');
+                        t.setAttribute('aria-selected', 'false');
+                    });
                     this.classList.add('active');
+                    this.setAttribute('aria-selected', 'true');
                     // Hide all panes
                     Object.values(panes).forEach(p => {
                         if (!p) return;
@@ -249,6 +293,7 @@
                          console.error('Error marking todo as done:', error);
                     });
                } else if (btn.classList.contains('kiv')) {
+                    console.log('KIV button clicked for todo:', todoId);
                     fetch('/' + todoId + '/kiv', {
                          method: 'POST',
                          headers: {
@@ -257,8 +302,9 @@
                          },
                          body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
                     })
-                    .then(function() {
-                         window.location.href = "{{ url_for('undone') }}";
+                    .then(function(response) {
+                         console.log('KIV request successful, redirecting to:', "{{ url_for('undone') }}?tab=kiv");
+                         window.location.href = "{{ url_for('undone') }}?tab=kiv";
                     })
                     .catch(function(error) {
                          console.error('Error marking todo as kiv:', error);
