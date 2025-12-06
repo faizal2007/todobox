@@ -7,3 +7,19 @@ __pycache__/
 /database/
 instance/
 docker-compose.yml
+
+# Temporary and debug files
+*.log
+debug_*.js
+temp_*
+validate_*.py
+*_debug.py
+clear_cache.sh
+verify_*.sh
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

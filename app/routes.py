@@ -131,14 +131,15 @@ def get_quote():
             data = resp.read()
             parsed = json.loads(data)
             # ZenQuotes returns a list with objects containing 'q' (quote) and 'a' (author)
-            if isinstance(parsed, list) and parsed:
+            if parsed and type(parsed) == list and len(parsed) > 0:
                 item = parsed[0]
-                quote = item.get('q')
-                author = item.get('a')
-                if quote:
-                    # Include author if present
-                    return jsonify({'quote': quote, 'author': author})
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError):
+                if type(item) == dict:
+                    quote = item.get('q')
+                    author = item.get('a')
+                    if quote:
+                        # Include author if present
+                        return jsonify({'quote': quote, 'author': author})
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError, json.JSONDecodeError, TypeError):
         pass
 
     # Fallback
@@ -393,6 +394,76 @@ def create_todo():
         'created_at': todo.timestamp.isoformat(),
         'modified_at': todo.modified.isoformat()
     }), 201
+
+@app.route('/api/todo/<int:todo_id>', methods=['GET'])
+@csrf.exempt
+@login_required
+def get_todo(todo_id):
+    """Get a specific todo by ID"""
+    # Get the todo and verify ownership
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return jsonify({'success': False, 'message': 'Todo not found'}), 404
+    
+    # Get latest status
+    latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(desc(Tracker.timestamp)).first()
+    status = 'pending'
+    if latest_tracker:
+        status_obj = Status.query.get(latest_tracker.status_id)
+        if status_obj:
+            status = status_obj.name
+    
+    # Prepare reminder data
+    reminder_data = {
+        'reminder_enabled': todo.reminder_enabled or False,
+        'reminder_time': None,
+        'reminder_type': 'custom',
+        'reminder_before_minutes': 30,
+        'reminder_before_unit': 'minutes'
+    }
+    
+    if todo.reminder_enabled and todo.reminder_time:
+        # Convert reminder time to user's timezone
+        from app.timezone_utils import convert_to_user_timezone
+        try:
+            user_tz = getattr(current_user, 'timezone', 'UTC') if current_user.is_authenticated else 'UTC'
+            user_time = convert_to_user_timezone(todo.reminder_time, user_tz)
+            if user_time:
+                # Format as YYYY-MM-DDTHH:MM for Flatpickr compatibility
+                reminder_data['reminder_time'] = user_time.strftime('%Y-%m-%dT%H:%M')
+        except Exception:
+            # Fallback to UTC if timezone conversion fails
+            reminder_data['reminder_time'] = todo.reminder_time.strftime('%Y-%m-%dT%H:%M')
+    
+    # Determine schedule type
+    schedule = 'today'
+    custom_date = None
+    
+    if todo.modified:
+        from datetime import date
+        today = date.today()
+        todo_date = todo.modified.date()
+        
+        if todo_date == today:
+            schedule = 'today'
+        elif todo_date == today.replace(day=today.day + 1):
+            schedule = 'tomorrow'
+        else:
+            schedule = 'custom_day'
+            custom_date = todo_date.isoformat()
+    
+    return jsonify({
+        'success': True,
+        'id': todo.id,
+        'title': todo.name,
+        'description': todo.details,
+        'status': status,
+        'created_at': todo.timestamp.isoformat(),
+        'modified_at': todo.modified.isoformat(),
+        'schedule': schedule,
+        'custom_date': custom_date,
+        **reminder_data
+    })
 
 @app.route('/api/todo/<int:todo_id>', methods=['PUT'])
 @csrf.exempt
@@ -1227,6 +1298,9 @@ def delete(todo_id):
 @login_required
 def add():
     if request.method == "POST":
+        # DEBUG: Log all form data received
+        logging.debug(f"[REMINDER DEBUG] Form data received: {dict(request.form)}")
+        
         getTitle = (request.form.get("title") or "").strip()
         getActivities = (request.form.get("activities") or "").strip()
         getActivities_html = clean(markdown.markdown(getActivities, extensions=['fenced_code']), 
@@ -1242,6 +1316,14 @@ def add():
         reminder_datetime = request.form.get("reminder_datetime")
         reminder_before_minutes = request.form.get("reminder_before_minutes")
         reminder_before_unit = request.form.get("reminder_before_unit")
+        
+        # DEBUG: Log reminder data parsing
+        logging.debug(f"[REMINDER DEBUG] Parsed reminder data:")
+        logging.debug(f"  - reminder_enabled: {reminder_enabled} (raw: '{request.form.get('reminder_enabled')}')")
+        logging.debug(f"  - reminder_type: {reminder_type}")
+        logging.debug(f"  - reminder_datetime: {reminder_datetime}")
+        logging.debug(f"  - reminder_before_minutes: {reminder_before_minutes}")
+        logging.debug(f"  - reminder_before_unit: {reminder_before_unit}")
         
         # Calculate target date based on schedule selection
         if schedule_day == "tomorrow":
@@ -1298,6 +1380,10 @@ def add():
                         reminder_dt_utc = convert_from_user_timezone(reminder_dt, current_user.timezone)
                         t.reminder_time = reminder_dt_utc
                         t.reminder_enabled = True
+                        # Initialize reminder tracking fields for new todo
+                        t.reminder_sent = False
+                        t.reminder_notification_count = 0
+                        t.reminder_first_notification_time = None
                     except ValueError as e:
                         logging.debug(f"Invalid reminder datetime format: {reminder_datetime} - {str(e)}")
                 elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
@@ -1315,6 +1401,10 @@ def add():
                         
                         t.reminder_time = reminder_dt
                         t.reminder_enabled = True
+                        # Initialize reminder tracking fields for new todo
+                        t.reminder_sent = False
+                        t.reminder_notification_count = 0
+                        t.reminder_first_notification_time = None
                     except (ValueError, TypeError):
                         logging.debug("Invalid reminder before parameters")
 
@@ -1343,16 +1433,35 @@ def add():
 
             # Handle reminder updates
             if reminder_enabled and reminder_type:
+                logging.debug(f"[REMINDER DEBUG] Processing reminder update for todo {todo_id}")
+                logging.debug(f"  - reminder_enabled: {reminder_enabled}")
+                logging.debug(f"  - reminder_type: {reminder_type}")
+                
                 if reminder_type == "custom" and reminder_datetime:
                     try:
+                        logging.debug(f"  - Processing custom reminder_datetime: {reminder_datetime}")
                         from app.timezone_utils import convert_from_user_timezone
                         reminder_dt = datetime.fromisoformat(reminder_datetime)
+                        logging.debug(f"  - Parsed datetime: {reminder_dt}")
                         # Convert from user's timezone to UTC
                         reminder_dt_utc = convert_from_user_timezone(reminder_dt, current_user.timezone)
+                        logging.debug(f"  - Converted to UTC: {reminder_dt_utc}")
+                        
+                        # Store old values for comparison
+                        old_time = t.reminder_time
+                        old_enabled = t.reminder_enabled
+                        
                         t.reminder_time = reminder_dt_utc
                         t.reminder_enabled = True
-                        # Reset reminder_sent flag so the new reminder will trigger
+                        # Reset reminder tracking fields so the new reminder will trigger
                         t.reminder_sent = False
+                        t.reminder_notification_count = 0
+                        t.reminder_first_notification_time = None
+                        
+                        logging.debug(f"  - Updated reminder_time: {old_time} -> {reminder_dt_utc}")
+                        logging.debug(f"  - Updated reminder_enabled: {old_enabled} -> True")
+                        logging.debug(f"  - Reset reminder tracking fields")
+                        
                     except ValueError as e:
                         logging.debug(f"Failed to parse reminder datetime: {reminder_datetime} - {str(e)}")
                 elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
@@ -1369,8 +1478,10 @@ def add():
                         
                         t.reminder_time = reminder_dt
                         t.reminder_enabled = True
-                        # Reset reminder_sent flag so the new reminder will trigger
+                        # Reset reminder tracking fields so the new reminder will trigger
                         t.reminder_sent = False
+                        t.reminder_notification_count = 0
+                        t.reminder_first_notification_time = None
                     except (ValueError, TypeError):
                         logging.debug("Failed to parse reminder before parameters")
             else:
@@ -1378,6 +1489,8 @@ def add():
                 t.reminder_enabled = False
                 t.reminder_time = None
                 t.reminder_sent = False
+                t.reminder_notification_count = 0
+                t.reminder_first_notification_time = None
 
             if getTitle == title and getActivities == activites :
                 if schedule_day != "today" or getTomorrow == '1':
@@ -1386,24 +1499,29 @@ def add():
                     db.session.commit()  # type: ignore[attr-defined]
                     Tracker.add(todo_id, 8, target_date)  # Status 8 = re-assign
                 elif byPass == '1':
+                    logging.debug(f"[REMINDER DEBUG] Taking byPass path for todo {todo_id}")
                     t.modified = datetime.now()
                     db.session.commit()  # type: ignore[attr-defined]
+                    logging.debug(f"[REMINDER DEBUG] byPass commit successful for todo {todo_id}")
                 else:
                     # Check if the todo's current date is different from today
                     # If so, reschedule it to today
                     if t.modified.date() != datetime.now().date():
+                        logging.debug(f"[REMINDER DEBUG] Date mismatch path for todo {todo_id}")
                         t.modified = datetime.now()
                         db.session.commit()  # type: ignore[attr-defined]
                         Tracker.add(todo_id, 8, datetime.now())  # Status 8 = re-assign
+                        logging.debug(f"[REMINDER DEBUG] Date mismatch commit successful, returning success")
                         return jsonify({
                             'status': 'success'
                         }), 200
                     else:
                         # Even if title/content didn't change, we still need to save reminder changes
+                        logging.debug(f"[REMINDER DEBUG] Same date path for todo {todo_id} - committing reminder changes")
                         db.session.commit()  # type: ignore[attr-defined]
+                        logging.debug(f"[REMINDER DEBUG] Reminder-only commit successful, returning success")
                         return jsonify({
-                            'status': 'failed',
-                            'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>'
+                            'status': 'success'
                         }), 200
             else:
                 t.name = getTitle
@@ -1474,7 +1592,8 @@ def getTodo(id):
         if t.reminder_time:
             from app.timezone_utils import convert_to_user_timezone
             reminder_dt_user = convert_to_user_timezone(t.reminder_time, current_user.timezone)
-            reminder_time_display = reminder_dt_user.isoformat() if reminder_dt_user else None
+            # Format as YYYY-MM-DDTHH:MM for Flatpickr compatibility
+            reminder_time_display = reminder_dt_user.strftime('%Y-%m-%dT%H:%M') if reminder_dt_user else None
         
         return jsonify({
             'status': 'Success',

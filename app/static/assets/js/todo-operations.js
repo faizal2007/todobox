@@ -55,31 +55,157 @@ var TodoOperations = (function() {
                 $button.prop('disabled', true);
             }
             
-            $.post('/' + $(this).data('id') + '/todo', {
-                '_csrf_token': csrfToken
-            },
-            function(data){
-                $('#info-header-modal').modal('show');
-                $('#title-input-normal').val(data['title']);
-                $("input[name='todo_id']").val(data['id']);
-                simplemde.value(data['activities']);
+            // Try new GET API endpoint first, fallback to old POST route
+            var todoId = $(this).data('id');
+            console.log('Raw Todo ID from data attribute:', todoId);
+            
+            // Ensure we extract just the numeric ID if it contains path information
+            var numericId = String(todoId).split('/').pop();
+            console.log('Cleaned numeric ID:', numericId);
+            
+            // Use absolute paths for API endpoints (not relative to current page)
+            var newApiUrl = '/api/todo/' + numericId;
+            var fallbackUrl = '/' + numericId + '/todo';
+            
+            console.log('Attempting to fetch todo data...');
+            console.log('New API URL:', newApiUrl);
+            console.log('Fallback URL:', fallbackUrl);
+            console.log('Cleaned Todo ID:', numericId);
+            
+            $.ajax({
+                url: newApiUrl,
+                method: 'GET',
+                dataType: 'json',
+                timeout: 10000
+            })
+            .done(function(data){
+                if (data.success) {
+                    $('#info-header-modal').modal('show');
+                    $('#title-input-normal').val(data['title'] || '');
+                    $("input[name='todo_id']").val(data['id']);
+                    simplemde.value(data['description'] || '');
+                    
+                    // Set schedule
+                    var scheduleInput = $('input[name="schedule_day"][value="' + (data['schedule'] || 'today') + '"]');
+                    if (scheduleInput.length > 0) {
+                        scheduleInput.prop('checked', true);
+                        scheduleInput.trigger('change');
+                    }
+                    
+                    // Set custom date if needed
+                    if (data['schedule'] === 'custom_day' && data['custom_date']) {
+                        $('#custom_date').val(data['custom_date']);
+                        $('#custom-date-picker').show();
+                    }
+                    
+                    // Handle reminder data - enhanced version
+                    if (data['reminder_enabled']) {
+                        $('#reminder-enabled').prop('checked', true);
+                        $('#reminder-options').show();
+                        
+                        // Set reminder datetime
+                        if (data['reminder_time']) {
+                            // Backend now sends format YYYY-MM-DDTHH:MM directly for Flatpickr
+                            $('#reminder-datetime').val(data['reminder_time']);
+                            
+                            // Initialize Flatpickr if not already done
+                            var reminderInput = document.getElementById('reminder-datetime');
+                            if (reminderInput && !reminderInput._flatpickr) {
+                                flatpickr('#reminder-datetime', {
+                                    enableTime: true,
+                                    dateFormat: 'Y-m-d\\TH:i',
+                                    altInput: true,
+                                    altFormat: 'Y-m-d h:i K',
+                                    time_24hr: false,
+                                    minuteIncrement: 1,
+                                    minDate: 'today',
+                                    static: false,
+                                    inline: false,
+                                    mode: 'single',
+                                    theme: 'light',
+                                    weekNumbers: true,
+                                    allowInput: true
+                                });
+                            }
+                            
+                            // Set the value in Flatpickr
+                            if (reminderInput._flatpickr) {
+                                reminderInput._flatpickr.setDate(data['reminder_time']);
+                            }
+                        }
+                        
+                        // Set reminder type
+                        if (data['reminder_type']) {
+                            var reminderTypeRadio = $('#reminder-' + data['reminder_type']);
+                            if (reminderTypeRadio.length > 0) {
+                                reminderTypeRadio.prop('checked', true);
+                                reminderTypeRadio.trigger('change');
+                            }
+                        }
+                        
+                        // Set reminder before values
+                        if (data['reminder_before_minutes']) {
+                            $('#reminder-before-minutes').val(data['reminder_before_minutes']);
+                        }
+                        if (data['reminder_before_unit']) {
+                            $('#reminder-before-unit').val(data['reminder_before_unit']);
+                        }
+                    } else {
+                        // Ensure reminder is unchecked
+                        $('#reminder-enabled').prop('checked', false);
+                        $('#reminder-options').hide();
+                    }
+                } else {
+                    console.error('Failed to fetch todo data:', data.message);
+                }
                 
-                // Load reminder data
-                loadReminderData(data);
-                
-                // Hide loading state if it was shown
+                // Hide loading state
                 if (showLoadingState) {
                     $icon.show();
                     $loading.hide();
                     $button.prop('disabled', false);
                 }
-            }).fail(function() {
-                // Hide loading state on error
-                if (showLoadingState) {
-                    $icon.show();
-                    $loading.hide();
-                    $button.prop('disabled', false);
-                }
+            })
+            .fail(function(xhr, status, error) {
+                console.log('GET API failed, trying fallback POST route...');
+                console.log('Error details:', { status: status, error: error, statusCode: xhr.status });
+                
+                // Fallback to the original POST route
+                $.post(fallbackUrl, {
+                    '_csrf_token': csrfToken
+                }, function(data) {
+                    console.log('Fallback POST route succeeded');
+                    // Use the old loadReminderData function for this legacy data format
+                    if (data) {
+                        $('#info-header-modal').modal('show');
+                        $('#title-input-normal').val(data['title'] || '');
+                        $("input[name='todo_id']").val(data['id']);
+                        simplemde.value(data['activities'] || '');
+                        
+                        // Load reminder data using the old function
+                        loadReminderData(data);
+                    }
+                    
+                    // Hide loading state
+                    if (showLoadingState) {
+                        $icon.show();
+                        $loading.hide();
+                        $button.prop('disabled', false);
+                    }
+                }).fail(function(xhr, status, error) {
+                    // Both routes failed
+                    if (showLoadingState) {
+                        $icon.show();
+                        $loading.hide();
+                        $button.prop('disabled', false);
+                    }
+                    console.error('Both API routes failed:', {
+                        status: status,
+                        error: error,
+                        statusCode: xhr.status,
+                        responseText: xhr.responseText
+                    });
+                });
             });
         });
     }
