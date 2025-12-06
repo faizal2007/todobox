@@ -103,8 +103,16 @@ def process_google_callback(code):
         
         # SECURITY: Check if this account was recently deleted
         from app.models import DeletedAccount
+        def redact_email(email):
+            """Redact the email for logging (show domain only)"""
+            if isinstance(email, str) and "@" in email:
+                local, domain = email.split("@", 1)
+                return f"***@{domain}"
+            return "***"
         if DeletedAccount.is_blocked(email, google_id):
-            logging.warning(f"Blocked re-registration attempt for recently deleted account: {email}")
+            logging.warning(
+                f"Blocked re-registration attempt for recently deleted account: {redact_email(email)}"
+            )
             return None, False
         
         # Check if user already exists
