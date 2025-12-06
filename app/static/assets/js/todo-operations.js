@@ -63,8 +63,9 @@ var TodoOperations = (function() {
             var numericId = String(todoId).split('/').pop();
             console.log('Cleaned numeric ID:', numericId);
             
-            var newApiUrl = window.SCRIPT_ROOT + 'api/todo/' + numericId;
-            var fallbackUrl = window.SCRIPT_ROOT + numericId + '/todo';
+            // Use absolute paths for API endpoints (not relative to current page)
+            var newApiUrl = '/api/todo/' + numericId;
+            var fallbackUrl = '/' + numericId + '/todo';
             
             console.log('Attempting to fetch todo data...');
             console.log('New API URL:', newApiUrl);
