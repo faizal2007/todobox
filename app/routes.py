@@ -400,10 +400,8 @@ def create_todo():
 @login_required
 def get_todo(todo_id):
     """Get a specific todo by ID"""
-    user = current_user
-    
     # Get the todo and verify ownership
-    todo = Todo.query.filter_by(id=todo_id, user_id=user.id).first()
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
     if not todo:
         return jsonify({'success': False, 'message': 'Todo not found'}), 404
     
