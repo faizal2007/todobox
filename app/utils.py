@@ -8,7 +8,11 @@ class momentjs:
         self.timestamp = timestamp
 
     def render(self, format):
-        return Markup("<script>\ndocument.write(moment(\"%s\").%s);\n</script>" % (self.timestamp, format))
+        # Escape timestamp to prevent XSS injection
+        from html import escape
+        safe_timestamp = escape(str(self.timestamp))
+        safe_format = escape(str(format))
+        return Markup("<script>\ndocument.write(moment(\"%s\").%s);\n</script>" % (safe_timestamp, safe_format))
     
     # Format time
     def format(self, fmt):

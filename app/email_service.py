@@ -101,24 +101,30 @@ def send_sharing_invitation(invitation, from_user):
         accept_url = url_for('accept_share_invitation', token=invitation.token, _external=True)
         decline_url = url_for('decline_share_invitation', token=invitation.token, _external=True)
         
-        # Get sender's display name
-        from_user_name = from_user.fullname or from_user.email
+        # Get sender's display name and escape for safety
+        from html import escape
+        from markupsafe import Markup
         
-        # Render email templates
+        from_user_name = escape(from_user.fullname or from_user.email)
+        from_user_email = escape(from_user.email)
+        
+        # Create safe context for template rendering
+        template_context = {
+            'from_user_name': from_user_name,
+            'from_user_email': from_user_email,
+            'accept_url': accept_url,  # URLs are already safe from url_for
+            'decline_url': decline_url
+        }
+        
+        # Render email templates with escaped data
         html_content = render_template_string(
             INVITATION_TEMPLATE,
-            from_user_name=from_user_name,
-            from_user_email=from_user.email,
-            accept_url=accept_url,
-            decline_url=decline_url
+            **template_context
         )
         
         text_content = render_template_string(
             INVITATION_TEMPLATE_TEXT,
-            from_user_name=from_user_name,
-            from_user_email=from_user.email,
-            accept_url=accept_url,
-            decline_url=decline_url
+            **template_context
         )
         
         # Create email message

@@ -5,6 +5,54 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - Security Hardening and Vulnerability Fixes
+
+### Security
+
+- **CRITICAL: Multiple Security Vulnerabilities Fixed**: Comprehensive security audit and hardening
+- **XSS Prevention**: Added HTML escaping for all user inputs in templates and forms
+  - Fixed XSS vulnerability in `momentjs.render()` function in `utils.py`
+  - Added input sanitization for todo titles and activities with length validation
+  - Implemented HTML escaping in email service templates for user-generated content
+- **Security Headers**: Implemented comprehensive security headers in all responses:
+  - `X-Content-Type-Options: nosniff` - Prevents MIME type sniffing
+  - `X-Frame-Options: DENY` - Prevents clickjacking attacks
+  - `X-XSS-Protection: 1; mode=block` - Enables browser XSS filtering
+  - `Referrer-Policy: strict-origin-when-cross-origin` - Controls referrer information
+  - `Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'` - Restricts resource loading
+- **Enhanced Configuration Security**: Auto-generated secure SECRET_KEY using cryptographically secure random generation
+- **Input Validation**: Added comprehensive input validation with character limits (titles: 255, activities: 10,000)
+
+### Fixed
+
+- **Password Change Test**: Fixed test case to use correct form field names and include required trigger parameter
+- **Form Processing**: Ensured password fields are not HTML-escaped to maintain authentication functionality
+- **Template Security**: All user-generated content in email templates is now properly escaped
+
+### Technical Improvements
+
+- Enhanced error handling for security-related form validation failures
+- Improved form field validation to prevent malicious input while preserving functionality
+- Added warnings for missing SECRET_KEY configuration with auto-fallback to secure generation
+- **Input Validation**: Added length limits and sanitization for form inputs (title: 255 chars, activities: 10K chars)
+- **Dependency Updates**: Updated critical dependencies for security patches:
+  - Flask 2.3.2 → 3.0.0
+  - Flask-SQLAlchemy 2.5.1 → 3.1.1  
+  - SQLAlchemy 1.4.17 → 2.0.23
+  - email-validator 1.1.2 → 2.2.0
+  - oauthlib 2.1.0 → 3.2.2
+- **Secret Key Security**: Auto-generates secure random key if not provided in environment
+- **Documentation**: Added comprehensive SECURITY.md with security measures and best practices
+
+### Files Modified:
+- `app/config.py`: Enhanced secret key generation and security warnings
+- `app/__init__.py`: Added comprehensive security headers
+- `app/routes.py`: Input validation and sanitization improvements  
+- `app/email_service.py`: Template injection prevention with escaped variables
+- `app/utils.py`: Fixed potential XSS in momentjs template rendering
+- `requirements.txt`: Updated security-critical dependencies
+- `SECURITY.md`: New comprehensive security documentation
+
 ## [Unreleased] - Reminder Persistence and Format Fix
 
 ### Fixed
