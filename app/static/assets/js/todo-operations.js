@@ -55,14 +55,21 @@ var TodoOperations = (function() {
                 $button.prop('disabled', true);
             }
             
-            // Use the new GET API endpoint
+            // Try new GET API endpoint first, fallback to old POST route
             var todoId = $(this).data('id');
-            var apiUrl = (window.SCRIPT_ROOT || '') + 'api/todo/' + todoId;
+            var newApiUrl = window.SCRIPT_ROOT + 'api/todo/' + todoId;
+            var fallbackUrl = window.SCRIPT_ROOT + todoId + '/todo';
             
-            console.log('Fetching todo data from:', apiUrl);
+            console.log('Attempting to fetch todo data...');
+            console.log('New API URL:', newApiUrl);
             console.log('Todo ID:', todoId);
             
-            $.get(apiUrl)
+            $.ajax({
+                url: newApiUrl,
+                method: 'GET',
+                dataType: 'json',
+                timeout: 10000
+            })
             .done(function(data){
                 if (data.success) {
                     $('#info-header-modal').modal('show');
@@ -153,17 +160,44 @@ var TodoOperations = (function() {
                 }
             })
             .fail(function(xhr, status, error) {
-                // Hide loading state on error
-                if (showLoadingState) {
-                    $icon.show();
-                    $loading.hide();
-                    $button.prop('disabled', false);
-                }
-                console.error('Error fetching todo data:', {
-                    status: status,
-                    error: error,
-                    statusCode: xhr.status,
-                    responseText: xhr.responseText
+                console.log('GET API failed, trying fallback POST route...');
+                console.log('Error details:', { status: status, error: error, statusCode: xhr.status });
+                
+                // Fallback to the original POST route
+                $.post(fallbackUrl, {
+                    '_csrf_token': csrfToken
+                }, function(data) {
+                    console.log('Fallback POST route succeeded');
+                    // Use the old loadReminderData function for this legacy data format
+                    if (data) {
+                        $('#info-header-modal').modal('show');
+                        $('#title-input-normal').val(data['title'] || '');
+                        $("input[name='todo_id']").val(data['id']);
+                        simplemde.value(data['activities'] || '');
+                        
+                        // Load reminder data using the old function
+                        loadReminderData(data);
+                    }
+                    
+                    // Hide loading state
+                    if (showLoadingState) {
+                        $icon.show();
+                        $loading.hide();
+                        $button.prop('disabled', false);
+                    }
+                }).fail(function(xhr, status, error) {
+                    // Both routes failed
+                    if (showLoadingState) {
+                        $icon.show();
+                        $loading.hide();
+                        $button.prop('disabled', false);
+                    }
+                    console.error('Both API routes failed:', {
+                        status: status,
+                        error: error,
+                        statusCode: xhr.status,
+                        responseText: xhr.responseText
+                    });
                 });
             });
         });
