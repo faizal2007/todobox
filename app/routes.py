@@ -1370,6 +1370,10 @@ def add():
                         reminder_dt_utc = convert_from_user_timezone(reminder_dt, current_user.timezone)
                         t.reminder_time = reminder_dt_utc
                         t.reminder_enabled = True
+                        # Initialize reminder tracking fields for new todo
+                        t.reminder_sent = False
+                        t.reminder_notification_count = 0
+                        t.reminder_first_notification_time = None
                     except ValueError as e:
                         logging.debug(f"Invalid reminder datetime format: {reminder_datetime} - {str(e)}")
                 elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
@@ -1387,6 +1391,10 @@ def add():
                         
                         t.reminder_time = reminder_dt
                         t.reminder_enabled = True
+                        # Initialize reminder tracking fields for new todo
+                        t.reminder_sent = False
+                        t.reminder_notification_count = 0
+                        t.reminder_first_notification_time = None
                     except (ValueError, TypeError):
                         logging.debug("Invalid reminder before parameters")
 
@@ -1423,8 +1431,10 @@ def add():
                         reminder_dt_utc = convert_from_user_timezone(reminder_dt, current_user.timezone)
                         t.reminder_time = reminder_dt_utc
                         t.reminder_enabled = True
-                        # Reset reminder_sent flag so the new reminder will trigger
+                        # Reset reminder tracking fields so the new reminder will trigger
                         t.reminder_sent = False
+                        t.reminder_notification_count = 0
+                        t.reminder_first_notification_time = None
                     except ValueError as e:
                         logging.debug(f"Failed to parse reminder datetime: {reminder_datetime} - {str(e)}")
                 elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
@@ -1441,8 +1451,10 @@ def add():
                         
                         t.reminder_time = reminder_dt
                         t.reminder_enabled = True
-                        # Reset reminder_sent flag so the new reminder will trigger
+                        # Reset reminder tracking fields so the new reminder will trigger
                         t.reminder_sent = False
+                        t.reminder_notification_count = 0
+                        t.reminder_first_notification_time = None
                     except (ValueError, TypeError):
                         logging.debug("Failed to parse reminder before parameters")
             else:
@@ -1450,6 +1462,8 @@ def add():
                 t.reminder_enabled = False
                 t.reminder_time = None
                 t.reminder_sent = False
+                t.reminder_notification_count = 0
+                t.reminder_first_notification_time = None
 
             if getTitle == title and getActivities == activites :
                 if schedule_day != "today" or getTomorrow == '1':
@@ -1474,8 +1488,7 @@ def add():
                         # Even if title/content didn't change, we still need to save reminder changes
                         db.session.commit()  # type: ignore[attr-defined]
                         return jsonify({
-                            'status': 'failed',
-                            'button':' <button type="button" class="btn btn-primary" id="save"> Save </button>'
+                            'status': 'success'
                         }), 200
             else:
                 t.name = getTitle
