@@ -85,17 +85,22 @@ var TodoOperations = (function() {
                     $("input[name='todo_id']").val(data['id']);
                     simplemde.value(data['description'] || '');
                     
-                    // Set schedule
-                    var scheduleInput = $('input[name="schedule_day"][value="' + (data['schedule'] || 'today') + '"]');
+                    // Set schedule and ensure proper active state
+                    var schedule = data['schedule'] || 'today';
+                    var scheduleInput = $('input[name="schedule_day"][value="' + schedule + '"]');
                     if (scheduleInput.length > 0) {
                         scheduleInput.prop('checked', true);
                         scheduleInput.trigger('change');
                     }
                     
-                    // Set custom date if needed
-                    if (data['schedule'] === 'custom_day' && data['custom_date']) {
+                    // Set custom date if needed (handle both 'custom' and 'custom_day' values from backend)
+                    if ((schedule === 'custom' || schedule === 'custom_day') && data['custom_date']) {
                         $('#custom_date').val(data['custom_date']);
                         $('#custom-date-picker').show();
+                        // Ensure custom date button is active if schedule is a custom type
+                        $('label[for="today"], label[for="tomorrow"], label[for="custom_day"]').removeClass('active');
+                        $('label[for="custom_day"]').addClass('active');
+                        $('#custom_day').prop('checked', true);
                     }
                     
                     // Handle reminder data - enhanced version
@@ -317,6 +322,11 @@ var TodoOperations = (function() {
     function setupScheduleHandlers() {
         // Handle schedule day radio change
         $('input[name="schedule_day"]').change(function() {
+            // Remove active class from all labels first
+            $('label[for="today"], label[for="tomorrow"], label[for="custom_day"]').removeClass('active');
+            // Add active class to parent label of checked radio
+            $(this).closest('label').addClass('active');
+            
             if ($(this).val() === 'custom') {
                 $('#custom-date-picker').show();
             } else {
@@ -324,22 +334,32 @@ var TodoOperations = (function() {
             }
         });
 
-        // Handle label clicks for button group
-        $('label[for="today"], label[for="tomorrow"], label[for="custom_day"]').click(function() {
+        // Handle label clicks for button group (ensure radio gets checked)
+        $('label[for="today"], label[for="tomorrow"], label[for="custom_day"]').click(function(e) {
             const targetInput = $(this).attr('for');
-            const inputValue = $('#' + targetInput).val();
+            const radio = $('#' + targetInput);
             
-            // Remove active class from all labels
-            $('label[for="today"], label[for="tomorrow"], label[for="custom_day"]').removeClass('active');
-            // Add active class to clicked label
-            $(this).addClass('active');
+            // Ensure radio button is checked
+            radio.prop('checked', true).trigger('change');
             
-            if (inputValue === 'custom') {
-                $('#custom-date-picker').show();
-            } else {
-                $('#custom-date-picker').hide();
-            }
+            // Prevent default if needed
+            e.preventDefault();
         });
+        
+        // Initialize active state on page load based on current selection
+        const checkedRadio = $('input[name="schedule_day"]:checked');
+        if (checkedRadio.length > 0) {
+            $('label[for="today"], label[for="tomorrow"], label[for="custom_day"]').removeClass('active');
+            checkedRadio.closest('label').addClass('active');
+        } else {
+            // If no radio is checked, check if we should default to custom based on other indicators
+            // For example, if custom date picker is visible or has a value
+            if ($('#custom-date-picker').is(':visible') || $('#custom_date').val()) {
+                $('#custom_day').prop('checked', true);
+                $('label[for="custom_day"]').addClass('active');
+                $('#custom-date-picker').show();
+            }
+        }
     }
 
     /**

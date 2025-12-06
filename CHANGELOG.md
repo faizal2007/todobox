@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Enhanced UX and Security
 
+### Fixed
+
+- **Fixed Date Display in Undone Tasks**: Corrected date shown for undone todos
+  - Undone tasks now show the target schedule date instead of creation timestamp
+  - Changed from `list.Tracker.timestamp` to `list.Todo.modified` in undone.html
+  - Resolves confusion where tasks scheduled for "Tomorrow" incorrectly showed creation date (e.g., "Wednesday")
+  - Applied to both regular undone tasks and KIV (Keep In View) tasks for consistency
+
 ### Added
 
 - **Enhanced Schedule Button Display**: Updated Today/Tomorrow buttons to show actual dates
@@ -14,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated across all templates: `todo_add.html`, `todo.html`, and `view.html`
   - Dynamic date updates using JavaScript with proper timezone handling
   - Improves user awareness of when tasks are scheduled
+
+- **Active State Visual Feedback for Schedule Buttons**: Enhanced button selection indicators
+  - Today/Tomorrow/Custom Date buttons now show clear active state when selected
+  - Implemented Bootstrap button group styling with custom CSS enhancements
+  - Added JavaScript logic to manage active classes across schedule options
+  - Improves user experience by clearly indicating which schedule option is currently selected
 
 <<<<<<< HEAD
 ## [Unreleased] - Security Hardening and Vulnerability Fixes

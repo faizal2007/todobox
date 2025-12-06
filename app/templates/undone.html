@@ -71,7 +71,7 @@
                                                     <p class="card-text">{{ list.Todo.details_html|safe }}</p>
                                                     <footer class="blockquote-footer"> 
                                                         <i class="mdi mdi-clock-outline mr-1"></i>
-                                                        {{ momentjs(list.Tracker.timestamp).calendar() }}
+                                                        {{ momentjs(list.Todo.modified).calendar() }}
                                                         {% if list.Tracker.status_id == 1 %}
                                                             <span class="badge badge-warning ml-2">Pending</span>
                                                         {% elif list.Tracker.status_id == 3 %}
@@ -121,7 +121,7 @@
                                                     <p class="card-text">{{ list.Todo.details_html|safe }}</p>
                                                     <footer class="blockquote-footer">
                                                         <i class="mdi mdi-clock-outline mr-1"></i>
-                                                        {{ momentjs(list.Tracker.timestamp).calendar() }}
+                                                        {{ momentjs(list.Todo.modified).calendar() }}
                                                         <span class="badge badge-secondary ml-2">KIV</span>
                                                     </footer>
                                                 </div>

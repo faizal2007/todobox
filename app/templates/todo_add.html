@@ -64,6 +64,18 @@
 								<input type="radio" name="schedule_day" id="custom_day" value="custom" autocomplete="off"> Custom Date
 							</label>
 						</div>
+						<!-- Add some custom CSS for better visual feedback -->
+						<style>
+							.btn-group-toggle .btn.active {
+								background-color: #007bff !important;
+								border-color: #007bff !important;
+								color: #fff !important;
+							}
+							.btn-group-toggle .btn:not(.active) {
+								background-color: transparent;
+								color: #007bff;
+							}
+						</style>
 						<div class="mt-2" id="custom-date-picker" style="display: none;">
 							<input type="date" class="form-control form-control-sm" id="custom_date" name="custom_date">
 						</div>
@@ -110,7 +122,12 @@
 										day: 'numeric' 
 									});
 									const todayRadio = todayButton.querySelector('input[type="radio"]');
+									const isActive = todayButton.classList.contains('active');
 									todayButton.innerHTML = todayRadio.outerHTML + ` Today (${todayFormatted})`;
+									// Restore active state if it was active
+									if (isActive) {
+										todayButton.classList.add('active');
+									}
 								}
 								
 								if (tomorrowButton) {
@@ -122,7 +139,12 @@
 										day: 'numeric' 
 									});
 									const tomorrowRadio = tomorrowButton.querySelector('input[type="radio"]');
+									const isActive = tomorrowButton.classList.contains('active');
 									tomorrowButton.innerHTML = tomorrowRadio.outerHTML + ` Tomorrow (${tomorrowFormatted})`;
+									// Restore active state if it was active
+									if (isActive) {
+										tomorrowButton.classList.add('active');
+									}
 								}
 							}
 							
@@ -171,7 +193,12 @@
 											day: 'numeric' 
 										});
 										const todayRadio = todayButton.querySelector('input[type="radio"]');
+										const isActive = todayButton.classList.contains('active');
 										todayButton.innerHTML = todayRadio.outerHTML + ` Today (${todayFormatted})`;
+										// Restore active state if it was active
+										if (isActive) {
+											todayButton.classList.add('active');
+										}
 									}
 									
 									if (tomorrowButton) {
@@ -183,7 +210,12 @@
 											day: 'numeric' 
 										});
 										const tomorrowRadio = tomorrowButton.querySelector('input[type="radio"]');
+										const isActive = tomorrowButton.classList.contains('active');
 										tomorrowButton.innerHTML = tomorrowRadio.outerHTML + ` Tomorrow (${tomorrowFormatted})`;
+										// Restore active state if it was active
+										if (isActive) {
+											tomorrowButton.classList.add('active');
+										}
 									}
 									
 									const reminderInput = document.getElementById('reminder-datetime');
