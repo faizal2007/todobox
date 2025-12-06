@@ -5,6 +5,16 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - Enhanced UX and Security
+
+### Added
+
+- **Enhanced Schedule Button Display**: Updated Today/Tomorrow buttons to show actual dates
+  - Schedule buttons now display formatted dates (e.g., "Today (Sat, Dec 6)" instead of just "Today")
+  - Updated across all templates: `todo_add.html`, `todo.html`, and `view.html`
+  - Dynamic date updates using JavaScript with proper timezone handling
+  - Improves user awareness of when tasks are scheduled
+
 <<<<<<< HEAD
 ## [Unreleased] - Security Hardening and Vulnerability Fixes
 

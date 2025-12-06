@@ -55,10 +55,10 @@
 						<label>Schedule for:</label>
 						<div class="btn-group btn-group-toggle d-block" data-toggle="buttons">
 							<label class="btn btn-outline-primary btn-sm active" for="today">
-								<input type="radio" name="schedule_day" id="today" value="today" checked autocomplete="off"> Today
+								<input type="radio" name="schedule_day" id="today" value="today" checked autocomplete="off"> <span id="today-label">Today</span>
 							</label>
 							<label class="btn btn-outline-primary btn-sm" for="tomorrow">
-								<input type="radio" name="schedule_day" id="tomorrow" value="tomorrow" autocomplete="off"> Tomorrow
+								<input type="radio" name="schedule_day" id="tomorrow" value="tomorrow" autocomplete="off"> <span id="tomorrow-label">Tomorrow</span>
 							</label>
 							<label class="btn btn-outline-primary btn-sm" for="custom_day">
 								<input type="radio" name="schedule_day" id="custom_day" value="custom" autocomplete="off"> Custom Date
@@ -97,6 +97,36 @@
 					</div>
 					<script>
 						document.addEventListener('DOMContentLoaded', function() {
+							// Update schedule button labels with actual dates
+							function updateScheduleLabels() {
+								const todayLabel = document.getElementById('today-label');
+								const tomorrowLabel = document.getElementById('tomorrow-label');
+								
+								if (todayLabel) {
+									const today = new Date();
+									const todayFormatted = today.toLocaleDateString('en-US', { 
+										weekday: 'short',
+										month: 'short', 
+										day: 'numeric' 
+									});
+									todayLabel.textContent = `Today (${todayFormatted})`;
+								}
+								
+								if (tomorrowLabel) {
+									const tomorrow = new Date();
+									tomorrow.setDate(tomorrow.getDate() + 1);
+									const tomorrowFormatted = tomorrow.toLocaleDateString('en-US', { 
+										weekday: 'short',
+										month: 'short', 
+										day: 'numeric' 
+									});
+									tomorrowLabel.textContent = `Tomorrow (${tomorrowFormatted})`;
+								}
+							}
+							
+							// Update labels on page load
+							updateScheduleLabels();
+							
 							// Initialize Flatpickr for date and time selection
 							const reminderInput = document.getElementById('reminder-datetime');
 							
@@ -127,6 +157,31 @@
 						document.addEventListener('DOMContentLoaded', function() {
 							document.addEventListener('shown.bs.modal', function(event) {
 								if (event.target && event.target.id === 'info-header-modal') {
+									// Update schedule button labels when modal opens
+									const todayLabel = document.getElementById('today-label');
+									const tomorrowLabel = document.getElementById('tomorrow-label');
+									
+									if (todayLabel) {
+										const today = new Date();
+										const todayFormatted = today.toLocaleDateString('en-US', { 
+											weekday: 'short',
+											month: 'short', 
+											day: 'numeric' 
+										});
+										todayLabel.textContent = `Today (${todayFormatted})`;
+									}
+									
+									if (tomorrowLabel) {
+										const tomorrow = new Date();
+										tomorrow.setDate(tomorrow.getDate() + 1);
+										const tomorrowFormatted = tomorrow.toLocaleDateString('en-US', { 
+											weekday: 'short',
+											month: 'short', 
+											day: 'numeric' 
+										});
+										tomorrowLabel.textContent = `Tomorrow (${tomorrowFormatted})`;
+									}
+									
 									const reminderInput = document.getElementById('reminder-datetime');
 									if (reminderInput && !reminderInput._flatpickr) {
 										flatpickr('#reminder-datetime', {
