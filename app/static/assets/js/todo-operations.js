@@ -56,9 +56,13 @@ var TodoOperations = (function() {
             }
             
             // Use the new GET API endpoint
-            $.get(window.SCRIPT_ROOT + 'api/todo/' + $(this).data('id'), {
-                '_csrf_token': csrfToken
-            })
+            var todoId = $(this).data('id');
+            var apiUrl = (window.SCRIPT_ROOT || '') + 'api/todo/' + todoId;
+            
+            console.log('Fetching todo data from:', apiUrl);
+            console.log('Todo ID:', todoId);
+            
+            $.get(apiUrl)
             .done(function(data){
                 if (data.success) {
                     $('#info-header-modal').modal('show');
@@ -148,14 +152,19 @@ var TodoOperations = (function() {
                     $button.prop('disabled', false);
                 }
             })
-            .fail(function() {
+            .fail(function(xhr, status, error) {
                 // Hide loading state on error
                 if (showLoadingState) {
                     $icon.show();
                     $loading.hide();
                     $button.prop('disabled', false);
                 }
-                console.error('Error fetching todo data');
+                console.error('Error fetching todo data:', {
+                    status: status,
+                    error: error,
+                    statusCode: xhr.status,
+                    responseText: xhr.responseText
+                });
             });
         });
     }
