@@ -59,7 +59,7 @@ This document outlines the security measures implemented in TodoBox to protect a
 
 ### For Development:
 1. Never commit credentials or secrets to version control
-2. Use `.env` file for local environment variables
+2. Use `.flaskenv` file for local environment variables
 3. Regularly update dependencies for security patches
 4. Test with security headers enabled
 
