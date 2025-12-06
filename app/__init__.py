@@ -49,39 +49,9 @@ def md5_filter(text):
 
 # Add cache-busting headers for static files in development
 @app.after_request
-def add_header(response):
-    """Add cache-busting headers to prevent JavaScript caching issues"""
-    if app.debug:
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
-    return response
-
-login = LoginManager(app)
-login.login_view = 'login' # type: ignore[attr-defined]
-login.refresh_view = 'relogin' # type: ignore[attr-defined]
-
-login.needs_refresh_message = (u"Session timedout, please re-login")
-login.needs_refresh_message_category = "info"
-
-# Return JSON 401 for API requests, redirect for others
-from flask import jsonify, request, url_for, redirect, send_from_directory
-@login.unauthorized_handler
-def unauthorized():
-    if request.path.startswith('/api/'):
-        return jsonify({'error': 'Unauthorized'}), 401
-    return redirect(url_for('login'))
-
-# Disable all caching for mobile - all requests go directly online
-@app.before_request
-def disable_cache():
-    """Disable caching on all responses to ensure direct online queries"""
-    pass
-
-@app.after_request
 def add_security_headers(response):
-    """Add security and cache-busting headers"""
-    # Cache control for development
+    """Add security headers and cache-busting headers"""
+    # Cache control for development and production
     if app.debug:
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
@@ -112,6 +82,27 @@ def add_security_headers(response):
         )
     
     return response
+
+login = LoginManager(app)
+login.login_view = 'login' # type: ignore[attr-defined]
+login.refresh_view = 'relogin' # type: ignore[attr-defined]
+
+login.needs_refresh_message = (u"Session timedout, please re-login")
+login.needs_refresh_message_category = "info"
+
+# Return JSON 401 for API requests, redirect for others
+from flask import jsonify, request, url_for, redirect, send_from_directory
+@login.unauthorized_handler
+def unauthorized():
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    return redirect(url_for('login'))
+
+# Disable all caching for mobile - all requests go directly online
+@app.before_request
+def disable_cache():
+    """Disable caching on all responses to ensure direct online queries"""
+    pass
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
