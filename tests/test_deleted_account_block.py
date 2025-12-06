@@ -48,7 +48,7 @@ def test_deleted_account_blocking():
         if is_blocked_oauth:
             print(f"✓ OAuth ID {test_oauth_id} is correctly blocked")
         else:
-            print(f"✗ ERROR: OAuth ID {test_oauth_id} should be blocked but isn't!")
+            print("✗ ERROR: OAuth ID [REDACTED] should be blocked but isn't!")
             return False
         
         # Test 4: Check that non-deleted email is not blocked
