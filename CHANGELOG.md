@@ -5,9 +5,16 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - Reminder Persistence and Format Fix
+## [Unreleased] - Critical Reminder Form Fix
 
 ### Fixed
+
+- **CRITICAL: Flatpickr Infinite Recursion Preventing Reminder Saves**: Fixed critical JavaScript error causing "too much recursion" in Flatpickr date/time picker
+  - Root cause: Multiple Flatpickr initializations on same element when todo_add.html modal opened repeatedly  
+  - JavaScript error was crashing the form submission process, causing "save but nothing save" behavior
+  - Solution: Added duplicate initialization prevention and proper instance cleanup
+  - Impact: Reminder date/time updates now work correctly without JavaScript crashes
+  - Files Modified: `todo_add.html`, `list.html`, `undone.html`
 
 - **CRITICAL: Reminder Date/Time Updates Not Saving**: Fixed critical bug where updating reminder dates and times in existing todos would fail to save properly
   - Root cause: When editing todos with only reminder changes (no title/description changes), the system returned 'failed' status instead of 'success'
