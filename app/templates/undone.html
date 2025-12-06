@@ -167,20 +167,30 @@
 <!-- Centralized Todo Operations -->
 <script src='{{ url_for('static', filename='assets/js/todo-operations.js') }}'></script>
 <script>
-     let simplemde = new SimpleMDE({ 
-        spellChecker: false,
-        toolbarTips: true,
-        toolbar: [
-                        "bold", 
-                        "italic", 
-                        "unordered-list", 
-                        "ordered-list", "|", 
-                        "quote",
-                        "link",
-                        "preview"
-                    ],
-        element: $("#details-textarea")[0] });
-        simplemde.render();
+     document.addEventListener('DOMContentLoaded', function() {
+          // Initialize SimpleMDE editor
+          let simplemde = new SimpleMDE({ 
+               spellChecker: false,
+               toolbarTips: true,
+               toolbar: [
+                            "bold", 
+                            "italic", 
+                            "unordered-list", 
+                            "ordered-list", "|", 
+                            "quote",
+                            "link",
+                            "preview"
+                        ],
+               element: document.getElementById("details-textarea")
+          });
+          
+          if (simplemde) {
+               simplemde.render();
+          }
+          
+          // Make simplemde globally available
+          window.simplemde = simplemde;
+     });
 </script>
 
 <script>
@@ -282,7 +292,7 @@
                }
           });
 
-          // Initialize centralized todo operations
+          // Initialize centralized todo operations (no jQuery needed)
           TodoOperations.initialize({
                simplemde: simplemde,
                csrfToken: '{{ csrf_token() }}',
@@ -290,43 +300,77 @@
                showLoadingState: false
           });
 
-          // Reset form when modal is closed
-          $('#info-header-modal').on('hidden.bs.modal', function() {
-               // Reset reminder section
-               $('#reminder-enabled').prop('checked', false);
-               $('#reminder-options').hide();
-               
-               // Clear Flatpickr properly and destroy to prevent conflicts
-               var reminderInput = document.getElementById('reminder-datetime');
-               if (reminderInput && reminderInput._flatpickr) {
-                    reminderInput._flatpickr.destroy();
+          // Reset form when modal is closed - use vanilla JS event delegation since jQuery may not be loaded yet
+          // This will be enhanced by jQuery modal handlers in main.html after vendor scripts load
+          document.addEventListener('hidden.bs.modal', function(event) {
+               if (event.target && event.target.id === 'info-header-modal') {
+                    // Reset reminder section using vanilla JS
+                    var reminderEnabled = document.getElementById('reminder-enabled');
+                    if (reminderEnabled) reminderEnabled.checked = false;
+                    
+                    var reminderOptions = document.getElementById('reminder-options');
+                    if (reminderOptions) reminderOptions.style.display = 'none';
+                    
+                    // Clear Flatpickr properly and destroy to prevent conflicts
+                    var reminderInput = document.getElementById('reminder-datetime');
+                    if (reminderInput && reminderInput._flatpickr) {
+                         reminderInput._flatpickr.destroy();
+                    }
+                    if (reminderInput) reminderInput.value = '';
+                    
+                    var reminderMinutes = document.getElementById('reminder-before-minutes');
+                    if (reminderMinutes) reminderMinutes.value = '30';
+                    
+                    var reminderUnit = document.getElementById('reminder-before-unit');
+                    if (reminderUnit) reminderUnit.value = 'minutes';
+                    
+                    // Reset reminder type to "custom"
+                    var reminderCustom = document.getElementById('reminder-custom');
+                    if (reminderCustom) {
+                         reminderCustom.checked = true;
+                         // Trigger change event
+                         var event = new Event('change', { bubbles: true });
+                         reminderCustom.dispatchEvent(event);
+                    }
+                    
+                    var reminderCustomTime = document.getElementById('reminder-custom-time');
+                    if (reminderCustomTime) reminderCustomTime.style.display = '';
+                    
+                    var reminderBeforeOptions = document.getElementById('reminder-before-options');
+                    if (reminderBeforeOptions) reminderBeforeOptions.style.display = 'none';
+                    
+                    // Reset schedule day to "today"
+                    var todayOption = document.getElementById('today');
+                    if (todayOption) {
+                         todayOption.checked = true;
+                         var event = new Event('change', { bubbles: true });
+                         todayOption.dispatchEvent(event);
+                    }
+                    
+                    var customDatePicker = document.getElementById('custom-date-picker');
+                    if (customDatePicker) customDatePicker.style.display = 'none';
+                    
+                    var customDate = document.getElementById('custom_date');
+                    if (customDate) customDate.value = '';
+                    
+                    // Reset form fields
+                    var titleInput = document.getElementById('title-input-normal');
+                    if (titleInput) titleInput.value = '';
+                    
+                    var todoIdInput = document.querySelector("input[name='todo_id']");
+                    if (todoIdInput) todoIdInput.value = '';
+                    
+                    // Reset SimpleMDE editor if it exists
+                    if (typeof simplemde !== 'undefined' && simplemde) {
+                         simplemde.value('');
+                    }
+                    
+                    // Reset other form states
+                    var formControls = document.querySelectorAll('.form-control');
+                    formControls.forEach(function(control) {
+                         control.classList.remove('is-invalid');
+                    });
                }
-               $('#reminder-datetime').val('');
-               
-               $('#reminder-before-minutes').val('30');
-               $('#reminder-before-unit').val('minutes');
-               
-               // Reset reminder type to "custom"
-               $('#reminder-custom').prop('checked', true).trigger('change');
-               $('#reminder-custom-time').show();
-               $('#reminder-before-options').hide();
-               
-               // Reset schedule day to "today"
-               $('#today').prop('checked', true).trigger('change');
-               $('#custom-date-picker').hide();
-               $('#custom_date').val('');
-               
-               // Reset form fields
-               $('#title-input-normal').val('');
-               $("input[name='todo_id']").val('');
-               
-               // Reset SimpleMDE editor if it exists
-               if (typeof simplemde !== 'undefined' && simplemde) {
-                    simplemde.value('');
-               }
-               
-               // Reset other form states
-               $('.form-control').removeClass('is-invalid');
           });
      });
 </script>

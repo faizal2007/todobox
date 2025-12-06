@@ -425,15 +425,15 @@ def get_todo(todo_id):
     if todo.reminder_enabled and todo.reminder_time:
         # Convert reminder time to user's timezone
         from app.timezone_utils import convert_to_user_timezone
-        from flask_login import current_user
         try:
             user_tz = getattr(current_user, 'timezone', 'UTC') if current_user.is_authenticated else 'UTC'
             user_time = convert_to_user_timezone(todo.reminder_time, user_tz)
             if user_time:
-                reminder_data['reminder_time'] = user_time.isoformat()
+                # Format as YYYY-MM-DDTHH:MM for Flatpickr compatibility
+                reminder_data['reminder_time'] = user_time.strftime('%Y-%m-%dT%H:%M')
         except Exception:
             # Fallback to UTC if timezone conversion fails
-            reminder_data['reminder_time'] = todo.reminder_time.isoformat()
+            reminder_data['reminder_time'] = todo.reminder_time.strftime('%Y-%m-%dT%H:%M')
     
     # Determine schedule type
     schedule = 'today'
@@ -1592,7 +1592,8 @@ def getTodo(id):
         if t.reminder_time:
             from app.timezone_utils import convert_to_user_timezone
             reminder_dt_user = convert_to_user_timezone(t.reminder_time, current_user.timezone)
-            reminder_time_display = reminder_dt_user.isoformat() if reminder_dt_user else None
+            # Format as YYYY-MM-DDTHH:MM for Flatpickr compatibility
+            reminder_time_display = reminder_dt_user.strftime('%Y-%m-%dT%H:%M') if reminder_dt_user else None
         
         return jsonify({
             'status': 'Success',

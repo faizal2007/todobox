@@ -105,9 +105,8 @@ var TodoOperations = (function() {
                         
                         // Set reminder datetime
                         if (data['reminder_time']) {
-                            // Extract first 16 chars for Flatpickr (YYYY-MM-DDTHH:MM)
-                            var flatpickrValue = data['reminder_time'].substring(0, 16);
-                            $('#reminder-datetime').val(flatpickrValue);
+                            // Backend now sends format YYYY-MM-DDTHH:MM directly for Flatpickr
+                            $('#reminder-datetime').val(data['reminder_time']);
                             
                             // Initialize Flatpickr if not already done
                             var reminderInput = document.getElementById('reminder-datetime');
@@ -131,7 +130,7 @@ var TodoOperations = (function() {
                             
                             // Set the value in Flatpickr
                             if (reminderInput._flatpickr) {
-                                reminderInput._flatpickr.setDate(flatpickrValue);
+                                reminderInput._flatpickr.setDate(data['reminder_time']);
                             }
                         }
                         

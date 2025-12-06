@@ -123,27 +123,32 @@
 						});
 						
 						// Also initialize when modal is shown (for dynamic content)
-						$(document).on('shown.bs.modal', '#info-header-modal', function() {
-							const reminderInput = document.getElementById('reminder-datetime');
-							if (reminderInput && !reminderInput._flatpickr) {
-								flatpickr('#reminder-datetime', {
-									enableTime: true,
-									dateFormat: 'Y-m-d\\TH:i',
-									altInput: true,
-									altFormat: 'Y-m-d h:i K',
-									time_24hr: false,
-									minuteIncrement: 1,
-									minDate: 'today',
-									defaultDate: new Date(),
-									static: false,
-									inline: false,
-									mode: 'single',
-									theme: 'light',
-									weekNumbers: true,
-									allowInput: true,
-									closeOnSelect: true
-								});
-							}
+						// Use vanilla JavaScript since jQuery may not be loaded yet
+						document.addEventListener('DOMContentLoaded', function() {
+							document.addEventListener('shown.bs.modal', function(event) {
+								if (event.target && event.target.id === 'info-header-modal') {
+									const reminderInput = document.getElementById('reminder-datetime');
+									if (reminderInput && !reminderInput._flatpickr) {
+										flatpickr('#reminder-datetime', {
+											enableTime: true,
+											dateFormat: 'Y-m-d\\TH:i',
+											altInput: true,
+											altFormat: 'Y-m-d h:i K',
+											time_24hr: false,
+											minuteIncrement: 1,
+											minDate: 'today',
+											defaultDate: new Date(),
+											static: false,
+											inline: false,
+											mode: 'single',
+											theme: 'light',
+											weekNumbers: true,
+											allowInput: true,
+											closeOnSelect: true
+										});
+									}
+								}
+							});
 						});
 					</script>						<!-- Before target date options -->
 						<div id="reminder-before-options" style="display: none;" class="mb-3">
