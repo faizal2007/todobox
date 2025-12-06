@@ -54,11 +54,11 @@
 					<div class="form-group">
 						<label>Schedule for:</label>
 						<div class="btn-group btn-group-toggle d-block" data-toggle="buttons">
-							<label class="btn btn-outline-primary btn-sm active" for="today">
-								<input type="radio" name="schedule_day" id="today" value="today" checked autocomplete="off"> <span id="today-label">Today</span>
+							<label class="btn btn-outline-primary btn-sm active" for="today" id="today-button">
+								<input type="radio" name="schedule_day" id="today" value="today" checked autocomplete="off"> Today
 							</label>
-							<label class="btn btn-outline-primary btn-sm" for="tomorrow">
-								<input type="radio" name="schedule_day" id="tomorrow" value="tomorrow" autocomplete="off"> <span id="tomorrow-label">Tomorrow</span>
+							<label class="btn btn-outline-primary btn-sm" for="tomorrow" id="tomorrow-button">
+								<input type="radio" name="schedule_day" id="tomorrow" value="tomorrow" autocomplete="off"> Tomorrow
 							</label>
 							<label class="btn btn-outline-primary btn-sm" for="custom_day">
 								<input type="radio" name="schedule_day" id="custom_day" value="custom" autocomplete="off"> Custom Date
@@ -99,20 +99,21 @@
 						document.addEventListener('DOMContentLoaded', function() {
 							// Update schedule button labels with actual dates
 							function updateScheduleLabels() {
-								const todayLabel = document.getElementById('today-label');
-								const tomorrowLabel = document.getElementById('tomorrow-label');
+								const todayButton = document.getElementById('today-button');
+								const tomorrowButton = document.getElementById('tomorrow-button');
 								
-								if (todayLabel) {
+								if (todayButton) {
 									const today = new Date();
 									const todayFormatted = today.toLocaleDateString('en-US', { 
 										weekday: 'short',
 										month: 'short', 
 										day: 'numeric' 
 									});
-									todayLabel.textContent = `Today (${todayFormatted})`;
+									const todayRadio = todayButton.querySelector('input[type="radio"]');
+									todayButton.innerHTML = todayRadio.outerHTML + ` Today (${todayFormatted})`;
 								}
 								
-								if (tomorrowLabel) {
+								if (tomorrowButton) {
 									const tomorrow = new Date();
 									tomorrow.setDate(tomorrow.getDate() + 1);
 									const tomorrowFormatted = tomorrow.toLocaleDateString('en-US', { 
@@ -120,7 +121,8 @@
 										month: 'short', 
 										day: 'numeric' 
 									});
-									tomorrowLabel.textContent = `Tomorrow (${tomorrowFormatted})`;
+									const tomorrowRadio = tomorrowButton.querySelector('input[type="radio"]');
+									tomorrowButton.innerHTML = tomorrowRadio.outerHTML + ` Tomorrow (${tomorrowFormatted})`;
 								}
 							}
 							
@@ -158,20 +160,21 @@
 							document.addEventListener('shown.bs.modal', function(event) {
 								if (event.target && event.target.id === 'info-header-modal') {
 									// Update schedule button labels when modal opens
-									const todayLabel = document.getElementById('today-label');
-									const tomorrowLabel = document.getElementById('tomorrow-label');
+									const todayButton = document.getElementById('today-button');
+									const tomorrowButton = document.getElementById('tomorrow-button');
 									
-									if (todayLabel) {
+									if (todayButton) {
 										const today = new Date();
 										const todayFormatted = today.toLocaleDateString('en-US', { 
 											weekday: 'short',
 											month: 'short', 
 											day: 'numeric' 
 										});
-										todayLabel.textContent = `Today (${todayFormatted})`;
+										const todayRadio = todayButton.querySelector('input[type="radio"]');
+										todayButton.innerHTML = todayRadio.outerHTML + ` Today (${todayFormatted})`;
 									}
 									
-									if (tomorrowLabel) {
+									if (tomorrowButton) {
 										const tomorrow = new Date();
 										tomorrow.setDate(tomorrow.getDate() + 1);
 										const tomorrowFormatted = tomorrow.toLocaleDateString('en-US', { 
@@ -179,7 +182,8 @@
 											month: 'short', 
 											day: 'numeric' 
 										});
-										tomorrowLabel.textContent = `Tomorrow (${tomorrowFormatted})`;
+										const tomorrowRadio = tomorrowButton.querySelector('input[type="radio"]');
+										tomorrowButton.innerHTML = tomorrowRadio.outerHTML + ` Tomorrow (${tomorrowFormatted})`;
 									}
 									
 									const reminderInput = document.getElementById('reminder-datetime');

@@ -91,8 +91,8 @@
                             </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" id="today"><span id="today-btn">Today</span></button>
-                        <button type="button" class="btn btn-secondary" id="tomorrow"><span id="tomorrow-btn">Tomorrow</span></button>
+                        <button type="button" class="btn btn-primary" id="today">Today</button>
+                        <button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>
                     </div>
                 </form>
             </div>
@@ -123,36 +123,6 @@
         simplemde.render();
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Update Today/Tomorrow button labels with actual dates
-        function updateButtonLabels() {
-            const todayBtn = document.getElementById('today-btn');
-            const tomorrowBtn = document.getElementById('tomorrow-btn');
-            
-            if (todayBtn) {
-                const today = new Date();
-                const todayFormatted = today.toLocaleDateString('en-US', { 
-                    weekday: 'short',
-                    month: 'short', 
-                    day: 'numeric' 
-                });
-                todayBtn.textContent = `Today (${todayFormatted})`;
-            }
-            
-            if (tomorrowBtn) {
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowFormatted = tomorrow.toLocaleDateString('en-US', { 
-                    weekday: 'short',
-                    month: 'short', 
-                    day: 'numeric' 
-                });
-                tomorrowBtn.textContent = `Tomorrow (${tomorrowFormatted})`;
-            }
-        }
-        
-        // Update button labels on page load
-        updateButtonLabels();
-        
         // Delete todo
         document.querySelectorAll('.close').forEach(function(btn) {
             btn.addEventListener('click', function(e) {

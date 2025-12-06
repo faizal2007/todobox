@@ -67,8 +67,8 @@
                             </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" id="today"><span id="today-btn-view">Today</span></button>
-                        <button type="button" class="btn btn-secondary" id="tomorrow"><span id="tomorrow-btn-view">Tomorrow</span></button>
+                        <button type="button" class="btn btn-primary" id="today">Today</button>
+                        <button type="button" class="btn btn-secondary" id="tomorrow">Tomorrow</button>
                     </div>
                 </form>
             </div>
@@ -81,38 +81,6 @@
     src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js">
     </script>
     <script>
-        // Update Today/Tomorrow button labels with actual dates
-        document.addEventListener('DOMContentLoaded', function() {
-            function updateButtonLabels() {
-                const todayBtn = document.getElementById('today-btn-view');
-                const tomorrowBtn = document.getElementById('tomorrow-btn-view');
-                
-                if (todayBtn) {
-                    const today = new Date();
-                    const todayFormatted = today.toLocaleDateString('en-US', { 
-                        weekday: 'short',
-                        month: 'short', 
-                        day: 'numeric' 
-                    });
-                    todayBtn.textContent = `Today (${todayFormatted})`;
-                }
-                
-                if (tomorrowBtn) {
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    const tomorrowFormatted = tomorrow.toLocaleDateString('en-US', { 
-                        weekday: 'short',
-                        month: 'short', 
-                        day: 'numeric' 
-                    });
-                    tomorrowBtn.textContent = `Tomorrow (${tomorrowFormatted})`;
-                }
-            }
-            
-            // Update button labels on page load
-            updateButtonLabels();
-        });
-        
         function todo_add(data, byPass=0){
             /**
              * Function to add todo using Fetch API
