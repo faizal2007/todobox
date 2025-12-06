@@ -196,9 +196,10 @@ class TestUserSettingsRoutes:
         client, user = auth_user
         
         response = client.post('/settings', data={
-            'current_password': 'TestPass123!',
-            'new_password': 'NewPass456!',
-            'confirm_password': 'NewPass456!'
+            'oldPassword': 'TestPass123!',
+            'password': 'NewPass456!',
+            'confirm': 'NewPass456!',
+            'change_password': 'change_password'
         }, follow_redirects=True)
         
         assert response.status_code == 200

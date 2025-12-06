@@ -8,7 +8,11 @@ load_dotenv()
 
 SALT = os.environ.get('SALT', 'default-salt-change-in-production')
 TITLE = os.environ.get('TITLE', 'My Sandbox')
-SECRET_KEY = os.environ.get('SECRET_KEY', 'change-me-in-production')
+# Security: Generate a random secret key if not provided
+import secrets
+SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_urlsafe(32)
+if not os.environ.get('SECRET_KEY'):
+    print("WARNING: SECRET_KEY not set in environment. Using generated key. Set SECRET_KEY in production!")
 DATABASE_NAME = os.environ.get('DATABASE_NAME', 'todobox.db')
 DATABASE_DEFAULT = os.environ.get('DATABASE_DEFAULT', 'sqlite') # sqlite, mysql, or postgres
 

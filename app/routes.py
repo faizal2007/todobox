@@ -1301,8 +1301,16 @@ def add():
         # DEBUG: Log all form data received
         logging.debug(f"[REMINDER DEBUG] Form data received: {dict(request.form)}")
         
-        getTitle = (request.form.get("title") or "").strip()
-        getActivities = (request.form.get("activities") or "").strip()
+        # Input validation and sanitization
+        from html import escape
+        getTitle = escape((request.form.get("title") or "").strip())
+        getActivities = escape((request.form.get("activities") or "").strip())
+        
+        # Additional validation - limit input length for security
+        if len(getTitle) > 255:
+            getTitle = getTitle[:255]
+        if len(getActivities) > 10000:
+            getActivities = getActivities[:10000]
         getActivities_html = clean(markdown.markdown(getActivities, extensions=['fenced_code']), 
                                    tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
         

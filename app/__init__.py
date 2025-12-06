@@ -49,12 +49,38 @@ def md5_filter(text):
 
 # Add cache-busting headers for static files in development
 @app.after_request
-def add_header(response):
-    """Add cache-busting headers to prevent JavaScript caching issues"""
+def add_security_headers(response):
+    """Add security headers and cache-busting headers"""
+    # Cache control for development and production
     if app.debug:
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
+    else:
+        # Production cache control - no caching for dynamic content
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0, private'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    
+    # Security headers
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # Content Security Policy (basic but secure)
+    if not app.debug:
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' https: data:; "
+            "connect-src 'self'; "
+            "font-src 'self' data:; "
+            "object-src 'none'; "
+            "base-uri 'self';"
+        )
+    
     return response
 
 login = LoginManager(app)
@@ -77,14 +103,6 @@ def unauthorized():
 def disable_cache():
     """Disable caching on all responses to ensure direct online queries"""
     pass
-
-@app.after_request
-def add_no_cache_headers(response):
-    """Add no-cache headers to prevent browser/mobile caching"""
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0, private'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
-    return response
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
