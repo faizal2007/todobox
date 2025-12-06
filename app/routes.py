@@ -131,14 +131,15 @@ def get_quote():
             data = resp.read()
             parsed = json.loads(data)
             # ZenQuotes returns a list with objects containing 'q' (quote) and 'a' (author)
-            if isinstance(parsed, list) and parsed:
+            if parsed and type(parsed) == list and len(parsed) > 0:
                 item = parsed[0]
-                quote = item.get('q')
-                author = item.get('a')
-                if quote:
-                    # Include author if present
-                    return jsonify({'quote': quote, 'author': author})
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError):
+                if type(item) == dict:
+                    quote = item.get('q')
+                    author = item.get('a')
+                    if quote:
+                        # Include author if present
+                        return jsonify({'quote': quote, 'author': author})
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError, json.JSONDecodeError, TypeError):
         pass
 
     # Fallback
