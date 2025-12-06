@@ -296,10 +296,10 @@
                $('#reminder-enabled').prop('checked', false);
                $('#reminder-options').hide();
                
-               // Clear Flatpickr properly
+               // Clear Flatpickr properly and destroy to prevent conflicts
                var reminderInput = document.getElementById('reminder-datetime');
                if (reminderInput && reminderInput._flatpickr) {
-                    reminderInput._flatpickr.clear();
+                    reminderInput._flatpickr.destroy();
                }
                $('#reminder-datetime').val('');
                
