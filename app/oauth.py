@@ -111,7 +111,7 @@ def process_google_callback(code):
             return "***"
         if DeletedAccount.is_blocked(email, google_id):
             logging.warning(
-                f"Blocked re-registration attempt for recently deleted account: {redact_email(email)}"
+                "Blocked re-registration attempt for recently deleted account: [REDACTED]"
             )
             return None, False
         
