@@ -55,31 +55,107 @@ var TodoOperations = (function() {
                 $button.prop('disabled', true);
             }
             
-            $.post('/' + $(this).data('id') + '/todo', {
+            // Use the new GET API endpoint
+            $.get(window.SCRIPT_ROOT + 'api/todo/' + $(this).data('id'), {
                 '_csrf_token': csrfToken
-            },
-            function(data){
-                $('#info-header-modal').modal('show');
-                $('#title-input-normal').val(data['title']);
-                $("input[name='todo_id']").val(data['id']);
-                simplemde.value(data['activities']);
+            })
+            .done(function(data){
+                if (data.success) {
+                    $('#info-header-modal').modal('show');
+                    $('#title-input-normal').val(data['title'] || '');
+                    $("input[name='todo_id']").val(data['id']);
+                    simplemde.value(data['description'] || '');
+                    
+                    // Set schedule
+                    var scheduleInput = $('input[name="schedule_day"][value="' + (data['schedule'] || 'today') + '"]');
+                    if (scheduleInput.length > 0) {
+                        scheduleInput.prop('checked', true);
+                        scheduleInput.trigger('change');
+                    }
+                    
+                    // Set custom date if needed
+                    if (data['schedule'] === 'custom_day' && data['custom_date']) {
+                        $('#custom_date').val(data['custom_date']);
+                        $('#custom-date-picker').show();
+                    }
+                    
+                    // Handle reminder data - enhanced version
+                    if (data['reminder_enabled']) {
+                        $('#reminder-enabled').prop('checked', true);
+                        $('#reminder-options').show();
+                        
+                        // Set reminder datetime
+                        if (data['reminder_time']) {
+                            // Extract first 16 chars for Flatpickr (YYYY-MM-DDTHH:MM)
+                            var flatpickrValue = data['reminder_time'].substring(0, 16);
+                            $('#reminder-datetime').val(flatpickrValue);
+                            
+                            // Initialize Flatpickr if not already done
+                            var reminderInput = document.getElementById('reminder-datetime');
+                            if (reminderInput && !reminderInput._flatpickr) {
+                                flatpickr('#reminder-datetime', {
+                                    enableTime: true,
+                                    dateFormat: 'Y-m-d\\TH:i',
+                                    altInput: true,
+                                    altFormat: 'Y-m-d h:i K',
+                                    time_24hr: false,
+                                    minuteIncrement: 1,
+                                    minDate: 'today',
+                                    static: false,
+                                    inline: false,
+                                    mode: 'single',
+                                    theme: 'light',
+                                    weekNumbers: true,
+                                    allowInput: true
+                                });
+                            }
+                            
+                            // Set the value in Flatpickr
+                            if (reminderInput._flatpickr) {
+                                reminderInput._flatpickr.setDate(flatpickrValue);
+                            }
+                        }
+                        
+                        // Set reminder type
+                        if (data['reminder_type']) {
+                            var reminderTypeRadio = $('#reminder-' + data['reminder_type']);
+                            if (reminderTypeRadio.length > 0) {
+                                reminderTypeRadio.prop('checked', true);
+                                reminderTypeRadio.trigger('change');
+                            }
+                        }
+                        
+                        // Set reminder before values
+                        if (data['reminder_before_minutes']) {
+                            $('#reminder-before-minutes').val(data['reminder_before_minutes']);
+                        }
+                        if (data['reminder_before_unit']) {
+                            $('#reminder-before-unit').val(data['reminder_before_unit']);
+                        }
+                    } else {
+                        // Ensure reminder is unchecked
+                        $('#reminder-enabled').prop('checked', false);
+                        $('#reminder-options').hide();
+                    }
+                } else {
+                    console.error('Failed to fetch todo data:', data.message);
+                }
                 
-                // Load reminder data
-                loadReminderData(data);
-                
-                // Hide loading state if it was shown
+                // Hide loading state
                 if (showLoadingState) {
                     $icon.show();
                     $loading.hide();
                     $button.prop('disabled', false);
                 }
-            }).fail(function() {
+            })
+            .fail(function() {
                 // Hide loading state on error
                 if (showLoadingState) {
                     $icon.show();
                     $loading.hide();
                     $button.prop('disabled', false);
                 }
+                console.error('Error fetching todo data');
             });
         });
     }

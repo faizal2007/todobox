@@ -394,6 +394,78 @@ def create_todo():
         'modified_at': todo.modified.isoformat()
     }), 201
 
+@app.route('/api/todo/<int:todo_id>', methods=['GET'])
+@csrf.exempt
+@login_required
+def get_todo(todo_id):
+    """Get a specific todo by ID"""
+    user = current_user
+    
+    # Get the todo and verify ownership
+    todo = Todo.query.filter_by(id=todo_id, user_id=user.id).first()
+    if not todo:
+        return jsonify({'success': False, 'message': 'Todo not found'}), 404
+    
+    # Get latest status
+    latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(desc(Tracker.timestamp)).first()
+    status = 'pending'
+    if latest_tracker:
+        status_obj = Status.query.get(latest_tracker.status_id)
+        if status_obj:
+            status = status_obj.name
+    
+    # Prepare reminder data
+    reminder_data = {
+        'reminder_enabled': todo.reminder_enabled or False,
+        'reminder_time': None,
+        'reminder_type': 'custom',
+        'reminder_before_minutes': 30,
+        'reminder_before_unit': 'minutes'
+    }
+    
+    if todo.reminder_enabled and todo.reminder_time:
+        # Convert reminder time to user's timezone
+        from app.timezone_utils import convert_to_user_timezone
+        from flask_login import current_user
+        try:
+            user_tz = getattr(current_user, 'timezone', 'UTC') if current_user.is_authenticated else 'UTC'
+            user_time = convert_to_user_timezone(todo.reminder_time, user_tz)
+            if user_time:
+                reminder_data['reminder_time'] = user_time.isoformat()
+        except Exception:
+            # Fallback to UTC if timezone conversion fails
+            reminder_data['reminder_time'] = todo.reminder_time.isoformat()
+    
+    # Determine schedule type
+    schedule = 'today'
+    custom_date = None
+    
+    if todo.modified:
+        from datetime import date
+        today = date.today()
+        todo_date = todo.modified.date()
+        
+        if todo_date == today:
+            schedule = 'today'
+        elif todo_date == today.replace(day=today.day + 1):
+            schedule = 'tomorrow'
+        else:
+            schedule = 'custom_day'
+            custom_date = todo_date.isoformat()
+    
+    return jsonify({
+        'success': True,
+        'id': todo.id,
+        'title': todo.name,
+        'description': todo.details,
+        'status': status,
+        'created_at': todo.timestamp.isoformat(),
+        'modified_at': todo.modified.isoformat(),
+        'schedule': schedule,
+        'custom_date': custom_date,
+        **reminder_data
+    })
+
 @app.route('/api/todo/<int:todo_id>', methods=['PUT'])
 @csrf.exempt
 @require_api_token

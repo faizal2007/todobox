@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Flatpickr Modal Reset Error**: Fixed JavaScript TypeError `flatpickr.getInstance is not a function` that occurred when closing reminder modals
+  - Root cause: `flatpickr.getInstance()` is not a valid API method
+  - Solution: Use correct Flatpickr API `element._flatpickr` to access instance
+  - Fixed in both `list.html` and `undone.html` modal reset handlers
+  - Maintains proper Flatpickr clearing functionality without JavaScript errors
+  - Files Modified: `list.html`, `undone.html`
+
 - **Reminder Datetime Format Incompatibility**: Fixed critical issue where reminder datetimes were not being saved when editing todos. Root cause: Flatpickr was outputting user-friendly display format (e.g., "2025-12-06 2:30 PM") which Python's `datetime.fromisoformat()` could not parse, causing silent failures in the backend.
 - **Solution**: Implemented dual-format Flatpickr configuration:
   - `dateFormat: 'Y-m-d\\TH:i'` - Stores ISO format internally (e.g., "2025-12-06T14:30") for backend compatibility
