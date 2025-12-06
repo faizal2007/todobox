@@ -34,7 +34,8 @@ def test_cooldown_expiry_flow():
         db.session.commit()
         print(f"   ✓ Account marked as deleted")
         print(f"   - Email: {deleted.email}")
-        print(f"   - OAuth ID: {deleted.oauth_id}")
+        # Don't log full OAuth ID, mask most info
+        print(f"   - OAuth ID: [REDACTED] (ends with ...{str(deleted.oauth_id)[-4:]})" if deleted.oauth_id else "   - OAuth ID: [REDACTED]")
         print(f"   - Deleted at: {deleted.deleted_at}")
         print(f"   - Cooldown until: {deleted.cooldown_until}")
         
@@ -96,7 +97,8 @@ def test_cooldown_expiry_flow():
             print(f"   - User ID: {new_user.id}")
             print(f"   - Email: {new_user.email}")
             print(f"   - Full Name: {new_user.fullname}")
-            print(f"   - OAuth ID: {new_user.oauth_id}")
+            # Don't log full OAuth ID, mask most info
+            print(f"   - OAuth ID: [REDACTED] (ends with ...{str(new_user.oauth_id)[-4:]})" if new_user.oauth_id else "   - OAuth ID: [REDACTED]")
         except Exception as e:
             print(f"   ✗ FAIL: Re-registration failed with error: {str(e)}")
             return False
