@@ -98,22 +98,56 @@
 					<script>
 						document.addEventListener('DOMContentLoaded', function() {
 							// Initialize Flatpickr for date and time selection
-							flatpickr('#reminder-datetime', {
-								enableTime: true,
-								dateFormat: 'Y-m-d\\TH:i',
-								altInput: true,
-								altFormat: 'Y-m-d h:i K',
-								time_24hr: false,
-								minuteIncrement: 1,
-								minDate: 'today',
-								defaultDate: new Date(),
-								static: false,
-								inline: false,
-								mode: 'single',
-								theme: 'light',
-								weekNumbers: true,
-								allowInput: true,
-								closeOnSelect: true
+							const reminderInput = document.getElementById('reminder-datetime');
+							
+							// Check if Flatpickr is already initialized to prevent recursion
+							if (reminderInput && !reminderInput._flatpickr) {
+								flatpickr('#reminder-datetime', {
+									enableTime: true,
+									dateFormat: 'Y-m-d\\TH:i',
+									altInput: true,
+									altFormat: 'Y-m-d h:i K',
+									time_24hr: false,
+									minuteIncrement: 1,
+									minDate: 'today',
+									defaultDate: new Date(),
+									static: false,
+									inline: false,
+									mode: 'single',
+									theme: 'light',
+									weekNumbers: true,
+									allowInput: true,
+									closeOnSelect: true
+								});
+							}
+						});
+						
+						// Also initialize when modal is shown (for dynamic content)
+						// Use vanilla JavaScript since jQuery may not be loaded yet
+						document.addEventListener('DOMContentLoaded', function() {
+							document.addEventListener('shown.bs.modal', function(event) {
+								if (event.target && event.target.id === 'info-header-modal') {
+									const reminderInput = document.getElementById('reminder-datetime');
+									if (reminderInput && !reminderInput._flatpickr) {
+										flatpickr('#reminder-datetime', {
+											enableTime: true,
+											dateFormat: 'Y-m-d\\TH:i',
+											altInput: true,
+											altFormat: 'Y-m-d h:i K',
+											time_24hr: false,
+											minuteIncrement: 1,
+											minDate: 'today',
+											defaultDate: new Date(),
+											static: false,
+											inline: false,
+											mode: 'single',
+											theme: 'light',
+											weekNumbers: true,
+											allowInput: true,
+											closeOnSelect: true
+										});
+									}
+								}
 							});
 						});
 					</script>						<!-- Before target date options -->

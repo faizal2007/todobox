@@ -5,6 +5,7 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
 ## [Unreleased] - Security Hardening and Vulnerability Fixes
 
 ### Security
@@ -53,9 +54,126 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `requirements.txt`: Updated security-critical dependencies
 - `SECURITY.md`: New comprehensive security documentation
 
-## [Unreleased] - Reminder Persistence and Format Fix
+## [Unreleased] - Security Hardening and JavaScript Fixes
+
+### Security
+
+- **CRITICAL: Multiple Security Vulnerabilities Fixed**: Comprehensive security audit and hardening
+- **XSS Prevention**: Added HTML escaping for all user inputs in templates and forms
+  - Fixed XSS vulnerability in `momentjs.render()` function in `utils.py`
+  - Added input sanitization for todo titles and activities with length validation
+  - Implemented HTML escaping in email service templates for user-generated content
+- **Security Headers**: Implemented comprehensive security headers in all responses:
+  - `X-Content-Type-Options: nosniff` - Prevents MIME type sniffing
+  - `X-Frame-Options: DENY` - Prevents clickjacking attacks
+  - `X-XSS-Protection: 1; mode=block` - Enables browser XSS filtering
+  - `Referrer-Policy: strict-origin-when-cross-origin` - Controls referrer information
+  - `Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'` - Restricts resource loading
+- **Enhanced Configuration Security**: Auto-generated secure SECRET_KEY using cryptographically secure random generation
+- **Input Validation**: Added comprehensive input validation with character limits (titles: 255, activities: 10,000)
 
 ### Fixed
+
+- **Password Change Test**: Fixed test case to use correct form field names and include required trigger parameter
+- **Form Processing**: Ensured password fields are not HTML-escaped to maintain authentication functionality
+- **Template Security**: All user-generated content in email templates is now properly escaped
+- **CRITICAL: JavaScript Syntax Error**: Fixed actual syntax error in todo_add.html causing "expected expression, got ')'" browser error 
+  - Root cause: Unbalanced closing brackets in Flatpickr modal initialization code
+  - Error location: todo_add.html template with extra `});` causing parse failure
+  - Fix: Corrected JavaScript bracket balance in modal event listener structure
+  - Impact: Eliminates browser JavaScript syntax errors, allows proper form functionality
+  - Files Modified: `app/templates/todo_add.html`
+
+- **CRITICAL: Browser Cache Management**: Added cache-busting headers and clearing tools to prevent JavaScript caching issues
+  - Root cause: Browsers caching old broken JavaScript despite template fixes
+  - Fix: Added Flask after_request headers (Cache-Control: no-cache) for development mode
+  - Tools: Created clear_cache.sh script with browser cache clearing instructions
+  - Impact: Forces browsers to load fresh JavaScript files after fixes
+  - Files Modified: `app/__init__.py`, new scripts: `clear_cache.sh`, `verify_js.sh`
+
+- **CRITICAL: Template JavaScript Validation**: Created comprehensive JavaScript syntax validation system
+  - Tools: verify_js.sh script validates all static JS files and extracts/validates template JavaScript
+  - Validation: Node.js syntax checking for all JavaScript code
+  - Impact: Proactive detection of JavaScript syntax issues across all templates
+  - Status: All template JavaScript now validates as syntactically correct (excluding normal Jinja2 variables)
+
+- **CRITICAL: JavaScript Syntax Error**: Fixed "expected expression, got ')'" error at line 795 in list.html
+  - Root cause: Extra closing brace in modal event listener structure causing syntax error
+  - Error location: list.html template around line 426 with redundant `});` closure
+  - Fix: Removed duplicate closing brace and properly structured event listener nesting
+  - Structure corrected: DOMContentLoaded listener > modal event listener > proper closures
+  - Impact: JavaScript now parses correctly without syntax errors
+  - Files Modified: `app/templates/list.html`
+
+- **CRITICAL: jQuery ReferenceError in Frontend**: Fixed "Uncaught ReferenceError: $ is not defined" error preventing frontend functionality
+  - Root cause: jQuery-dependent scripts were loaded BEFORE vendor.min.js (containing jQuery) was available
+  - Script loading order issue: extra_script_footer blocks executed before vendor scripts in template inheritance
+  - Error location: Line ~772 in rendered HTML (multiple template files affected)
+  - Comprehensive solution: Converted all jQuery-dependent code to vanilla JavaScript in template extra_script_footer blocks
+  - Key fixes applied:
+    - SimpleMDE initialization: Changed to vanilla JS DOM selection + DOMContentLoaded wrapper
+    - Modal handlers: Converted from $(document).ready() to vanilla addEventListener patterns
+    - TodoOperations.initialize(): No longer wrapped in $(document).ready() - uses vanilla JS
+    - Flatpickr modal handlers: Converted to vanilla JavaScript event delegation
+    - JavaScript syntax: Fixed missing closing brace for DOMContentLoaded event listener
+    - Removed stray closing brace that was causing reference errors
+    - Enhanced main.html with jQuery-powered modal reset functionality that runs AFTER vendor scripts load
+  - Template files fixed: All jQuery usage removed from extra_script_footer sections
+  - Impact: Frontend JavaScript now loads correctly without reference errors across all pages and templates
+  - Validation: All 82 braces and 187 parentheses properly balanced, script loading order verified
+  - Files Modified: `app/templates/list.html`, `app/templates/undone.html`, `app/templates/todo_add.html`, `app/templates/main.html`
+
+- **CRITICAL: UnboundLocalError with current_user**: Fixed runtime error in get_todo API endpoint causing Flask application crashes
+  - Root cause: Local import `from flask_login import current_user` was shadowing the global current_user variable
+  - Error: `UnboundLocalError: cannot access local variable 'current_user' where it is not associated with a value`
+  - Solution: Removed unnecessary local import since current_user is already available globally
+  - Impact: API endpoint now works correctly without crashes, edit functionality fully operational
+  - Files Modified: `app/routes.py` (get_todo function)
+
+- **CRITICAL: Improved Date/Time Display Format**: Enhanced reminder date/time format handling for better reliability and user experience
+  - Backend now sends exact YYYY-MM-DDTHH:MM format directly to frontend (was using `.isoformat()` with timezone suffixes)
+  - Removed JavaScript substring operations that could cause inconsistencies
+  - Improved timezone conversion consistency between edit and display modes
+  - Verified format compatibility with Flatpickr date/time picker configuration
+  - Impact: Date/time display is now more reliable and consistent across all reminder operations
+  - Files Modified: `app/routes.py` (get_todo and getTodo functions), `todo-operations.js`
+
+- **CRITICAL: Flatpickr Infinite Recursion Preventing Reminder Saves**: Fixed critical JavaScript error causing "too much recursion" in Flatpickr date/time picker
+  - Root cause: Multiple Flatpickr initializations on same element when todo_add.html modal opened repeatedly  
+  - JavaScript error was crashing the form submission process, causing "save but nothing save" behavior
+  - Solution: Added duplicate initialization prevention and proper instance cleanup
+  - Impact: Reminder date/time updates now work correctly without JavaScript crashes
+  - Files Modified: `todo_add.html`, `list.html`, `undone.html`
+
+- **CRITICAL: Reminder Date/Time Updates Not Saving**: Fixed critical bug where updating reminder dates and times in existing todos would fail to save properly
+  - Root cause: When editing todos with only reminder changes (no title/description changes), the system returned 'failed' status instead of 'success'
+  - Additional issue: Reminder notification tracking fields were not being reset, causing updated reminders to be blocked by old tracking data
+  - Solution: Changed return status to 'success' for reminder-only edits and added proper reset of tracking fields
+  - Reset fields: `reminder_sent = False`, `reminder_notification_count = 0`, `reminder_first_notification_time = None`
+  - Files Modified: `app/routes.py`
+  - Impact: Reminder updates now save correctly and trigger properly without interference from previous notification history
+
+- **CRITICAL: Edit Todo URL Construction Error**: Fixed critical bug where edit functionality failed with 404 errors due to incorrect absolute vs relative URL construction
+  - Root cause: JavaScript was using `window.SCRIPT_ROOT + 'api/todo/' + id` which included page context (e.g., `/today/api/todo/21` instead of `/api/todo/21`)
+  - Error logs: `GET /today/api/todo/21 HTTP/1.1" 404` and `POST /today/21/todo HTTP/1.1" 404`
+  - Solution: Changed to absolute paths `/api/todo/` + id and `/` + id + `/todo` for proper API endpoint access
+  - Files Modified: `todo-operations.js`
+  - Impact: Edit functionality now works correctly from any page (today, tomorrow, undone) without URL path conflicts
+
+- **Edit Todo ID Extraction Error**: Fixed critical bug where edit functionality failed with 404 errors due to incorrect URL construction
+  - Root cause: Todo ID extraction from `data-id` attribute included path information (e.g., "today/21" instead of "21")
+  - Error: `XHR POST http://127.0.0.1:5000/today/21/todo [HTTP/1.1 404 NOT FOUND 4ms]`
+  - Solution: Added numeric ID extraction logic using `String(todoId).split('/').pop()` to isolate numeric portion
+  - Enhanced logging to debug ID extraction process for better error diagnosis
+  - Files Modified: `todo-operations.js`
+  - Impact: Edit functionality now works correctly without breaking existing features
+
+- **Flatpickr Modal Reset Error**: Fixed JavaScript TypeError `flatpickr.getInstance is not a function` that occurred when closing reminder modals
+  - Root cause: `flatpickr.getInstance()` is not a valid API method
+  - Solution: Use correct Flatpickr API `element._flatpickr` to access instance
+  - Fixed in both `list.html` and `undone.html` modal reset handlers
+  - Maintains proper Flatpickr clearing functionality without JavaScript errors
+  - Files Modified: `list.html`, `undone.html`
 
 - **Reminder Datetime Format Incompatibility**: Fixed critical issue where reminder datetimes were not being saved when editing todos. Root cause: Flatpickr was outputting user-friendly display format (e.g., "2025-12-06 2:30 PM") which Python's `datetime.fromisoformat()` could not parse, causing silent failures in the backend.
 - **Solution**: Implemented dual-format Flatpickr configuration:

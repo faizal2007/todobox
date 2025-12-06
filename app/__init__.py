@@ -47,6 +47,16 @@ app.jinja_env.globals['momentjs'] = momentjs
 def md5_filter(text):
     return hashlib.md5(text.encode('utf-8')).hexdigest()
 
+# Add cache-busting headers for static files in development
+@app.after_request
+def add_header(response):
+    """Add cache-busting headers to prevent JavaScript caching issues"""
+    if app.debug:
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    return response
+
 login = LoginManager(app)
 login.login_view = 'login' # type: ignore[attr-defined]
 login.refresh_view = 'relogin' # type: ignore[attr-defined]
