@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Edit Todo ID Extraction Error**: Fixed critical bug where edit functionality failed with 404 errors due to incorrect URL construction
+  - Root cause: Todo ID extraction from `data-id` attribute included path information (e.g., "today/21" instead of "21")
+  - Error: `XHR POST http://127.0.0.1:5000/today/21/todo [HTTP/1.1 404 NOT FOUND 4ms]`
+  - Solution: Added numeric ID extraction logic using `String(todoId).split('/').pop()` to isolate numeric portion
+  - Enhanced logging to debug ID extraction process for better error diagnosis
+  - Files Modified: `todo-operations.js`
+  - Impact: Edit functionality now works correctly without breaking existing features
+
 - **Flatpickr Modal Reset Error**: Fixed JavaScript TypeError `flatpickr.getInstance is not a function` that occurred when closing reminder modals
   - Root cause: `flatpickr.getInstance()` is not a valid API method
   - Solution: Use correct Flatpickr API `element._flatpickr` to access instance
