@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **CRITICAL: Edit Todo URL Construction Error**: Fixed critical bug where edit functionality failed with 404 errors due to incorrect absolute vs relative URL construction
+  - Root cause: JavaScript was using `window.SCRIPT_ROOT + 'api/todo/' + id` which included page context (e.g., `/today/api/todo/21` instead of `/api/todo/21`)
+  - Error logs: `GET /today/api/todo/21 HTTP/1.1" 404` and `POST /today/21/todo HTTP/1.1" 404`
+  - Solution: Changed to absolute paths `/api/todo/` + id and `/` + id + `/todo` for proper API endpoint access
+  - Files Modified: `todo-operations.js`
+  - Impact: Edit functionality now works correctly from any page (today, tomorrow, undone) without URL path conflicts
+
 - **Edit Todo ID Extraction Error**: Fixed critical bug where edit functionality failed with 404 errors due to incorrect URL construction
   - Root cause: Todo ID extraction from `data-id` attribute included path information (e.g., "today/21" instead of "21")
   - Error: `XHR POST http://127.0.0.1:5000/today/21/todo [HTTP/1.1 404 NOT FOUND 4ms]`
