@@ -54,16 +54,28 @@
 					<div class="form-group">
 						<label>Schedule for:</label>
 						<div class="btn-group btn-group-toggle d-block" data-toggle="buttons">
-							<label class="btn btn-outline-primary btn-sm active" for="today">
+							<label class="btn btn-outline-primary btn-sm active" for="today" id="today-button">
 								<input type="radio" name="schedule_day" id="today" value="today" checked autocomplete="off"> Today
 							</label>
-							<label class="btn btn-outline-primary btn-sm" for="tomorrow">
+							<label class="btn btn-outline-primary btn-sm" for="tomorrow" id="tomorrow-button">
 								<input type="radio" name="schedule_day" id="tomorrow" value="tomorrow" autocomplete="off"> Tomorrow
 							</label>
 							<label class="btn btn-outline-primary btn-sm" for="custom_day">
 								<input type="radio" name="schedule_day" id="custom_day" value="custom" autocomplete="off"> Custom Date
 							</label>
 						</div>
+						<!-- Add some custom CSS for better visual feedback -->
+						<style>
+							.btn-group-toggle .btn.active {
+								background-color: #007bff !important;
+								border-color: #007bff !important;
+								color: #fff !important;
+							}
+							.btn-group-toggle .btn:not(.active) {
+								background-color: transparent;
+								color: #007bff;
+							}
+						</style>
 						<div class="mt-2" id="custom-date-picker" style="display: none;">
 							<input type="date" class="form-control form-control-sm" id="custom_date" name="custom_date">
 						</div>
@@ -97,6 +109,48 @@
 					</div>
 					<script>
 						document.addEventListener('DOMContentLoaded', function() {
+							// Update schedule button labels with actual dates
+							function updateScheduleLabels() {
+								const todayButton = document.getElementById('today-button');
+								const tomorrowButton = document.getElementById('tomorrow-button');
+								
+								if (todayButton) {
+									const today = new Date();
+									const todayFormatted = today.toLocaleDateString('en-US', { 
+										weekday: 'short',
+										month: 'short', 
+										day: 'numeric' 
+									});
+									const todayRadio = todayButton.querySelector('input[type="radio"]');
+									const isActive = todayButton.classList.contains('active');
+									todayButton.innerHTML = todayRadio.outerHTML + ` Today (${todayFormatted})`;
+									// Restore active state if it was active
+									if (isActive) {
+										todayButton.classList.add('active');
+									}
+								}
+								
+								if (tomorrowButton) {
+									const tomorrow = new Date();
+									tomorrow.setDate(tomorrow.getDate() + 1);
+									const tomorrowFormatted = tomorrow.toLocaleDateString('en-US', { 
+										weekday: 'short',
+										month: 'short', 
+										day: 'numeric' 
+									});
+									const tomorrowRadio = tomorrowButton.querySelector('input[type="radio"]');
+									const isActive = tomorrowButton.classList.contains('active');
+									tomorrowButton.innerHTML = tomorrowRadio.outerHTML + ` Tomorrow (${tomorrowFormatted})`;
+									// Restore active state if it was active
+									if (isActive) {
+										tomorrowButton.classList.add('active');
+									}
+								}
+							}
+							
+							// Update labels on page load
+							updateScheduleLabels();
+							
 							// Initialize Flatpickr for date and time selection
 							const reminderInput = document.getElementById('reminder-datetime');
 							
@@ -127,6 +181,43 @@
 						document.addEventListener('DOMContentLoaded', function() {
 							document.addEventListener('shown.bs.modal', function(event) {
 								if (event.target && event.target.id === 'info-header-modal') {
+									// Update schedule button labels when modal opens
+									const todayButton = document.getElementById('today-button');
+									const tomorrowButton = document.getElementById('tomorrow-button');
+									
+									if (todayButton) {
+										const today = new Date();
+										const todayFormatted = today.toLocaleDateString('en-US', { 
+											weekday: 'short',
+											month: 'short', 
+											day: 'numeric' 
+										});
+										const todayRadio = todayButton.querySelector('input[type="radio"]');
+										const isActive = todayButton.classList.contains('active');
+										todayButton.innerHTML = todayRadio.outerHTML + ` Today (${todayFormatted})`;
+										// Restore active state if it was active
+										if (isActive) {
+											todayButton.classList.add('active');
+										}
+									}
+									
+									if (tomorrowButton) {
+										const tomorrow = new Date();
+										tomorrow.setDate(tomorrow.getDate() + 1);
+										const tomorrowFormatted = tomorrow.toLocaleDateString('en-US', { 
+											weekday: 'short',
+											month: 'short', 
+											day: 'numeric' 
+										});
+										const tomorrowRadio = tomorrowButton.querySelector('input[type="radio"]');
+										const isActive = tomorrowButton.classList.contains('active');
+										tomorrowButton.innerHTML = tomorrowRadio.outerHTML + ` Tomorrow (${tomorrowFormatted})`;
+										// Restore active state if it was active
+										if (isActive) {
+											tomorrowButton.classList.add('active');
+										}
+									}
+									
 									const reminderInput = document.getElementById('reminder-datetime');
 									if (reminderInput && !reminderInput._flatpickr) {
 										flatpickr('#reminder-datetime', {
