@@ -4,8 +4,8 @@
 
 Complete documentation for the TodoBox Flask application is available in the `/docs` folder, covering all features, setup, deployment, and maintenance.
 
-**Last Updated:** December 5, 2025  
-**Documentation Version:** 1.6  
+**Last Updated:** December 7, 2025  
+**Documentation Version:** 1.7  
 **Application Version:** 1.7.0
 
 ---
@@ -70,13 +70,13 @@ Complete documentation for the TodoBox Flask application is available in the `/d
 | Metric | Value |
 |--------|-------|
 | Total files | 24 |
-| Total documentation | ~250 KB |
+| Total documentation | ~240 KB |
 | Code examples | 135+ |
 | Diagrams | 10+ |
 | Tables | 35+ |
 | Issues identified | 15 |
-| Sections | 185+ |
-| Read time (full suite) | ~3.7 hours |
+| Sections | 180+ |
+| Read time (full suite) | ~3.5 hours |
 
 ---
 

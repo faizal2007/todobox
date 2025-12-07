@@ -1,8 +1,8 @@
 # TodoBox Complete Documentation Index
 
-**Last Updated:** December 5, 2025  
-**Version:** 1.6  
-**Status:** Updated with KIV Status Feature Documentation
+**Last Updated:** December 7, 2025  
+**Version:** 1.7  
+**Status:** Updated with Recent Changes
 
 ---
 
@@ -765,10 +765,11 @@ docs/
 ├── README_MIGRATIONS.md                         ← Migration quick ref
 ├── MIGRATION_FIX_GUIDE.md                       ← Migration troubleshooting
 │
-└── screenshots/                                 ← Application screenshots
+├── screenshots/                                 ← Application screenshots
+└── archive/                                     ← Archived analysis documents
 ```
 
-**Total:** 24 documentation files
+**Total:** 24 documentation files + archive
 
 ---
 
@@ -823,14 +824,14 @@ docs/
 
 ## Version Information
 
-- **Documentation Version:** 1.5
-- **Last Updated:** December 4, 2025
-- **Application Version:** 1.6.3
+- **Documentation Version:** 1.7
+- **Last Updated:** December 7, 2025
+- **Application Version:** 1.7.0
 - **Status:** Complete & Production Ready
 
 ---
 
-**Total Documentation:** 24 files | ~250 KB | 185+ sections | 135+ examples
+**Total Documentation:** 24 files + archive | ~240 KB | 180+ sections | 135+ examples
 
 👉 **Start with:** `README.md`
 
