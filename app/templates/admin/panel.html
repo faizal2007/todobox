@@ -74,11 +74,15 @@
                             </thead>
                             <tbody>
                                 {% for user in users %}
-                                <tr class="{{ 'table-danger' if user.is_blocked else '' }}">
+                                <tr class="{{ 'table-danger' if user.is_blocked else '' }} {{ 'table-warning' if user.id == current_user.id else '' }}">
                                     <td>
                                         {% set is_protected_admin = (user.email is none or user.email == '') %}
                                         {% if user.id != current_user.id and not is_protected_admin %}
                                         <input type="checkbox" class="user-checkbox" value="{{ user.id }}" data-email="{{ user.email }}">
+                                        {% elif user.id == current_user.id %}
+                                        <span class="text-muted" title="Cannot delete yourself"><i class="mdi mdi-account-lock"></i></span>
+                                        {% else %}
+                                        <span class="text-muted" title="Protected admin"><i class="mdi mdi-shield-account"></i></span>
                                         {% endif %}
                                     </td>
                                     <td>{{ user.id }}</td>
@@ -203,6 +207,7 @@
                     <div class="row mt-2">
                         <div class="col-12">
                             <p class="mb-0"><strong>Bulk Operations:</strong> Select multiple users using checkboxes and use the "Bulk Delete" button to delete multiple users at once.</p>
+                            <p class="mb-0 text-warning"><i class="mdi mdi-alert-circle mr-1"></i><strong>Protection:</strong> You cannot select or delete yourself, and protected administrators (users without email) cannot be deleted.</p>
                         </div>
                     </div>
                     <hr>
