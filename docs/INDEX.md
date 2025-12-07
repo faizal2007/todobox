@@ -180,7 +180,7 @@ docs/
 └── Migrations
     ├── README_MIGRATIONS.md
     └── MIGRATION_FIX_GUIDE.md
-```yaml
+```
 
 ---
 
@@ -219,7 +219,7 @@ flask list-users            # List all users
 
 # Production
 gunicorn -w 4 todobox:app  # Start with Gunicorn
-```yaml
+```
 
 ---
 

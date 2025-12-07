@@ -15,7 +15,7 @@ TodoBox is a well-structured Flask learning project demonstrating good fundament
 ```python
 SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
 SECRET_KEY = 'you-will-never-guess'
-```python
+```
 
 **Issue:** Sensitive values are hardcoded in source control.
 
@@ -29,7 +29,7 @@ load_dotenv()
 
 SALT = os.environ.get('SALT', 'default-salt')
 SECRET_KEY = os.environ.get('SECRET_KEY', 'change-me-in-production')
-```python
+```
 
 **Impact:** High - Security vulnerability
 
@@ -59,7 +59,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'change-me-in-production')
 ```python
 def getList(type, start, end):
     # Parameters passed directly
-```python
+```
 
 **Issue:** String parameters used in query filtering could be vulnerable if not properly sanitized.
 
@@ -72,7 +72,7 @@ def getList(type, start, end):
     if type not in valid_types:
         raise ValueError(f"Invalid type: {type}")
     # ... rest of query
-```python
+```
 
 **Impact:** Medium - Current implementation uses ORM which mitigates risk
 
@@ -85,7 +85,7 @@ def getList(type, start, end):
 ```python
 getActivities = request.form.get("activities").strip()
 getActivities_html = markdown.markdown(getActivities, extensions=['fenced_code'])
-```python
+```
 
 **Issue:** Markdown is converted to HTML without sanitization, risking XSS attacks.
 
@@ -95,7 +95,7 @@ getActivities_html = markdown.markdown(getActivities, extensions=['fenced_code']
 from bleach import clean
 ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li']
 getActivities_html = clean(markdown.markdown(getActivities), tags=ALLOWED_TAGS)
-```python
+```
 
 **Impact:** High - XSS vulnerability
 
@@ -111,7 +111,7 @@ getActivities_html = clean(markdown.markdown(getActivities), tags=ALLOWED_TAGS)
 todo = Todo.query.filter_by(id=todo_id).first()
 # No check if todo is None
 t.name = getTitle  # Could fail if todo doesn't exist
-```python
+```
 
 **Recommendation:**
 
@@ -119,7 +119,7 @@ t.name = getTitle  # Could fail if todo doesn't exist
 todo = Todo.query.filter_by(id=todo_id).first()
 if not todo:
     abort(404)
-```python
+```
 
 **Impact:** Medium - Runtime errors and poor user experience
 
@@ -134,7 +134,7 @@ class UpdateAccount(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     # Validation code is commented out!
-```python
+```
 
 **Issue:** Duplicate username/email validation is commented out, allowing duplicates.
 
@@ -145,7 +145,7 @@ def validate_username(self, username):
     user = User.query.filter_by(username=username.data).first()
     if user is not None and user.id != current_user.id:
         raise ValidationError('Username already taken')
-```python
+```
 
 **Impact:** High - Data integrity issue
 
@@ -159,7 +159,7 @@ def validate_username(self, username):
 def add(todo_id, status_id, timestamp=datetime.now()):
     # Missing @staticmethod decorator
     db.session.add(Tracker(todo_id=todo_id, status_id=status_id, timestamp=timestamp))
-```python
+```
 
 **Issue:** Methods lack `@staticmethod` decorator, causing them to fail when called on class.
 
@@ -171,7 +171,7 @@ def add(todo_id, status_id, timestamp=None):
     if timestamp is None:
         timestamp = datetime.now()
     # ... rest of method
-```python
+```
 
 **Impact:** Medium - Code works but violates Python conventions
 
@@ -183,7 +183,7 @@ def add(todo_id, status_id, timestamp=None):
 
 ```python
 def add(todo_id, status_id, timestamp=datetime.now()):
-```python
+```
 
 **Issue:** `datetime.now()` is evaluated once at function definition, not at each call.
 
@@ -194,7 +194,7 @@ def add(todo_id, status_id, timestamp=datetime.now()):
 def add(todo_id, status_id, timestamp=None):
     if timestamp is None:
         timestamp = datetime.now()
-```python
+```
 
 **Impact:** Medium - Can cause unexpected behavior
 
@@ -222,7 +222,7 @@ def add(todo_id, status_id, timestamp=None):
 start = '{} {}'.format(query_date, '00:00')  # Old style
 # vs.
 f'{query_date} 00:00'  # f-string style
-```python
+```
 
 **Recommendation:** Use f-strings consistently (Python 3.6+)
 
@@ -243,7 +243,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.info(f'User {user_id} logged in')
-```python
+```
 
 **Impact:** Low - Affects debugging and production monitoring
 
@@ -256,7 +256,7 @@ logger.info(f'User {user_id} logged in')
 ```python
 user = User.query.filter_by(username=form.username.data).first()
 # No try-except
-```python
+```
 
 **Recommendation:** Wrap database operations:
 
@@ -267,7 +267,7 @@ except Exception as e:
     logger.error(f"Database error: {e}")
     flash('An error occurred. Please try again.')
     return redirect(url_for('login'))
-```python
+```
 
 **Impact:** Low - Improves error handling and debugging
 
@@ -281,7 +281,7 @@ except Exception as e:
 Tracker.add(t.id, 1, tomorrow)  # What do 1 and 2 mean?
 todo.status_id != 1
 todo.status_id == 2
-```python
+```
 
 **Recommendation:** Use named constants:
 
@@ -292,7 +292,7 @@ STATUS_FAILED = 3
 STATUS_REASSIGN = 4
 
 Tracker.add(t.id, STATUS_NEW, tomorrow)
-```python
+```
 
 **Impact:** Low - Affects code readability
 
@@ -305,7 +305,7 @@ Tracker.add(t.id, STATUS_NEW, tomorrow)
 ```python
 TITLE = 'My Sandbox'
 DATABASE_NAME = 'todobox.db'
-```python
+```
 
 **Recommendation:** Move to environment variables for multi-environment support.
 
@@ -319,7 +319,7 @@ DATABASE_NAME = 'todobox.db'
 
 ```python
 def getList(type, start, end):  # No type hints
-```python
+```
 
 **Recommendation:**
 
@@ -328,7 +328,7 @@ from typing import List, Optional, Query as SQLQuery
 
 @staticmethod
 def getList(type: str, start: str, end: str) -> SQLQuery:
-```python
+```
 
 **Impact:** Low - Improves IDE support and documentation
 
@@ -408,7 +408,7 @@ def test_user_set_password():
     user.set_password('password123')
     assert user.check_password('password123')
     assert not user.check_password('wrongpassword')
-```python
+```
 
 ## Dependencies to Update
 
@@ -425,7 +425,7 @@ bleach==6.0.0          # HTML sanitization
 python-validators==1.0 # Better validation
 gunicorn==21.0.0       # Production server
 python-dotenv==1.0.0   # Environment variables
-```python
+```
 
 ## Best Practices Applied
 

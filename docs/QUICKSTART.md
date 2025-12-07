@@ -20,7 +20,7 @@ flask db upgrade
 
 # 5. Run application
 flask run
-```python
+```
 
 **Access:** [http://localhost:5000](http://localhost:5000)  
 *The application runs on port 5000 by default. Configure the PORT variable in `.flaskenv` to change it.*
@@ -49,7 +49,7 @@ flask db history
 
 # Generate secure salt
 python3 -c "from app.config import generate_salt; print(generate_salt())"
-```python
+```
 
 ### Database Commands
 
@@ -62,7 +62,7 @@ mysql -u todobox -p -h localhost todobox
 
 # Access PostgreSQL database
 psql -U todobox -h localhost todobox
-```python
+```
 
 ### Gunicorn Commands
 
@@ -75,7 +75,7 @@ gunicorn -w 4 -b 0.0.0.0:5000 --reload todobox:app
 
 # Run with access logging
 gunicorn -w 4 -b 0.0.0.0:5000 --access-logfile - todobox:app
-```sql
+```
 
 ---
 
@@ -142,7 +142,7 @@ gunicorn -w 4 -b 0.0.0.0:5000 --access-logfile - todobox:app
 ```bash
 FLASK_APP=todobox.py
 DATABASE_DEFAULT=mysql   # or sqlite (default), postgres
-```python
+```
 
 ### Optional
 
@@ -151,7 +151,7 @@ FLASK_ENV=development     # or production
 FLASK_DEBUG=1            # Enable debug mode
 BIND_ADDRESS=127.0.0.1   # Server bind address
 PORT=9191                # Server port
-```python
+```
 
 ### MySQL/PostgreSQL Configuration
 
@@ -161,7 +161,7 @@ DB_URL=localhost         # Database host/IP
 DB_USER=username         # Database user
 DB_PASSWORD=password     # Database password (or use DB_PW)
 DB_NAME=todobox        # Database name
-```sql
+```
 
 **Note:** When using SQLite, `instance/` folder is created automatically. When using MySQL/PostgreSQL, `instance/` is not needed.
 
@@ -187,7 +187,7 @@ DB_NAME=todobox        # Database name
 export FLASK_ENV=development
 export FLASK_DEBUG=1
 flask run
-```python
+```
 
 ### Check Application Health
 
@@ -202,7 +202,7 @@ curl http://127.0.0.1:9191/
 flask shell
 >>> from app import db
 >>> db.session.execute('SELECT 1')
-```python
+```
 
 ### Common Issues
 
@@ -247,7 +247,7 @@ git commit -m "Add new feature"
 
 # 5. Push and create PR
 git push origin feature/new-feature
-```python
+```
 
 ### Database Changes
 
@@ -267,7 +267,7 @@ flask db upgrade
 # 6. Commit migration file
 git add migrations/
 git commit -m "Add migration"
-```python
+```
 
 ---
 
@@ -281,7 +281,7 @@ from wtforms import StringField, PasswordField, validators
 
 class MyForm(FlaskForm):
     field_name = StringField('Label', validators=[validators.DataRequired()])
-```python
+```
 
 ### Using in Template
 
@@ -299,7 +299,7 @@ class MyForm(FlaskForm):
     {% endif %}
     {{ form.submit() }}
 </form>
-```yaml
+```
 
 ---
 
@@ -320,7 +320,7 @@ class MyForm(FlaskForm):
 <!-- Inherited templates -->
 {% extends "base.html" %}
 {% block content %}...{% endblock %}
-```yaml
+```
 
 ### Common Filters
 
@@ -331,7 +331,7 @@ class MyForm(FlaskForm):
 {{ items|length }}        <!-- Length -->
 {{ items|join(', ') }}    <!-- Join -->
 {{ date|strftime('%Y-%m-%d') }}  <!-- Format date -->
-```yaml
+```
 
 ---
 

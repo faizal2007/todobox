@@ -31,7 +31,7 @@ The TodoBox application now has complete timezone support for reminders. Users c
 User sets reminder: 2:00 PM EST (local)
 Convert to UTC: 7:00 PM UTC
 Store in DB: 2025-01-15 19:00:00
-```python
+```
 
 #### When Displaying Reminder
 
@@ -45,7 +45,7 @@ Stored in DB: 2025-01-15 19:00:00 UTC
 User timezone: America/New_York
 Convert to user: 2:00 PM EST
 Display in form: Shows as 2:00 PM local time
-```python
+```
 
 #### When Checking Pending Reminders
 
@@ -100,14 +100,14 @@ Display in form: Shows as 2:00 PM local time
 #### User Model
 ```python
 timezone = db.Column(db.String(50), default='UTC')
-```python
+```
 
 #### Todo Model
 ```python
 reminder_enabled = db.Column(db.Boolean, default=False)
 reminder_time = db.Column(db.DateTime)  # Always stored in UTC
 reminder_sent = db.Column(db.Boolean, default=False)
-```python
+```
 
 ### 5. UI Components
 

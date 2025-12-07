@@ -85,7 +85,7 @@ TodoBox is a server-rendered Flask application that uses HTML forms and HTTP red
   "modified": "2024-01-15 10:30:00",
   "button": "<button>Save</button>"
 }
-```sql
+```
 
 - **Status Code**: 200
 
@@ -109,7 +109,7 @@ TodoBox is a server-rendered Flask application that uses HTML forms and HTTP red
 {
   "status": "success"
 }
-```sql
+```
 
 #### Error Response
 
@@ -118,7 +118,7 @@ TodoBox is a server-rendered Flask application that uses HTML forms and HTTP red
   "status": "failed",
   "msg": "Title Required."
 }
-```yaml
+```
 
 ### Mark Todo as Done
 
@@ -135,7 +135,7 @@ TodoBox is a server-rendered Flask application that uses HTML forms and HTTP red
   "status": "Success",
   "todo_id": 1
 }
-```yaml
+```
 
 - **Status Code**: 200
 
@@ -153,7 +153,7 @@ TodoBox is a server-rendered Flask application that uses HTML forms and HTTP red
   "status": "Success",
   "todo_id": 1
 }
-```yaml
+```
 
 - **Status Code**: 200
 - **Alternative Route**: `POST /<id>/<todo_id>/kiv` (with date context)
@@ -252,7 +252,7 @@ All POST requests must include valid CSRF token:
   {{ csrf_token() }}
   <!-- form fields -->
 </form>
-```yaml
+```
 
 Token is automatically included in all Flask-WTF forms.
 
@@ -272,7 +272,7 @@ No rate limiting currently implemented. Consider adding for production use.
   <textarea name="activities">Milk, eggs, bread</textarea>
   <button type="submit">Save</button>
 </form>
-```json
+```
 
 ### Fetch Todo via AJAX
 
@@ -286,7 +286,7 @@ fetch('/' + todoId + '/todo', {
 })
 .then(response => response.json())
 .then(data => console.log(data));
-```yaml
+```
 
 ### Mark Todo as Done via AJAX
 
@@ -299,4 +299,4 @@ fetch('/today/' + todoId + '/done', {
 })
 .then(response => response.json())
 .then(data => console.log(data));
-```yaml
+```

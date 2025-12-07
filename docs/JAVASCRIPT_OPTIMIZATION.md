@@ -49,7 +49,7 @@ $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 if (!window.SCRIPT_ROOT) { 
     window.SCRIPT_ROOT = {{ request.script_root|tojson|safe }}; 
 }
-```json
+```
 
 ### list.html (50+ lines)
 **Issues:** Multiple $.ajax requests in loop (N→1), jQuery form handlers, unused variables  
@@ -160,7 +160,7 @@ fetch('/api/endpoint', {
 .catch(error => {
     console.error('Error:', error);
 });
-```yaml
+```
 
 ### Event Listener Pattern
 ```javascript
@@ -170,7 +170,7 @@ document.querySelectorAll('.btn-delete').forEach(function(btn) {
         // handler code
     });
 });
-```yaml
+```
 
 ### Modal Manipulation Pattern (Bootstrap 4)
 ```javascript
@@ -184,7 +184,7 @@ document.body.classList.add('modal-open');
 modal.classList.remove('show');
 modal.style.display = 'none';
 document.body.classList.remove('modal-open');
-```yaml
+```
 
 ---
 
