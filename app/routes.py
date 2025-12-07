@@ -1037,15 +1037,20 @@ def delete_account():
         todo_ids = [t.id for t in user.todo.all()]
         
         if todo_ids:
-            # Delete all trackers for this user's todos
+            # Delete in order respecting foreign key constraints:
+            # 1. Delete KIV records (Keep In View - references todos)
+            from app.models import KIV
+            KIV.query.filter(KIV.todo_id.in_(todo_ids)).delete(synchronize_session=False)  # type: ignore[attr-defined]
+            
+            # 2. Delete all trackers for this user's todos
             for tid in todo_ids:
                 Tracker.query.filter_by(todo_id=tid).delete()  # type: ignore[attr-defined]
             
-            # Delete all todo shares (both as owner and shared with)
+            # 3. Delete all todo shares (both as owner and shared with)
             TodoShare.query.filter_by(owner_id=user.id).delete()  # type: ignore[attr-defined]
             TodoShare.query.filter_by(shared_with_id=user.id).delete()  # type: ignore[attr-defined]
             
-            # Delete all todos for this user
+            # 4. Delete all todos for this user
             Todo.query.filter_by(user_id=user.id).delete()  # type: ignore[attr-defined]
         
         # Record the deletion to prevent immediate re-registration
