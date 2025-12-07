@@ -273,10 +273,42 @@ var TodoOperations = (function() {
                 function(data) {
                     // Determine redirect URL
                     let targetUrl;
-                    if (typeof redirectUrl === 'function') {
-                        targetUrl = redirectUrl(schedule_day);
+                    
+                    // If todo exited KIV status, redirect to the scheduled date's list
+                    if (data.exitedKIV) {
+                        // Redirect to the date the task was scheduled to
+                        if (data.scheduledDate) {
+                            const today = new Date().toISOString().split('T')[0];
+                            const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+                            
+                            if (data.scheduledDate === today) {
+                                targetUrl = '/today/list';
+                            } else if (data.scheduledDate === tomorrow) {
+                                targetUrl = '/tomorrow/list';
+                            } else {
+                                // For other dates, go to the specific date view if available, otherwise go to dashboard
+                                targetUrl = '/today/list';
+                            }
+                        } else {
+                            // Fallback to today if no date provided
+                            targetUrl = '/today/list';
+                        }
                     } else {
-                        targetUrl = redirectUrl;
+                        // For non-KIV exits, use the redirect URL with schedule_day
+                        if (typeof redirectUrl === 'function') {
+                            targetUrl = redirectUrl(schedule_day);
+                        } else if (schedule_day === 'tomorrow') {
+                            // If we scheduled to tomorrow but redirectUrl is not a function,
+                            // redirect to tomorrow list instead of using the string URL
+                            targetUrl = '/tomorrow/list';
+                        } else if (schedule_day === 'custom') {
+                            // If custom date, check if we should redirect to a specific list
+                            // For now, use the provided redirectUrl
+                            targetUrl = typeof redirectUrl === 'function' ? redirectUrl(schedule_day) : redirectUrl;
+                        } else {
+                            // Default case: use the provided redirectUrl
+                            targetUrl = redirectUrl;
+                        }
                     }
                     window.location.href = targetUrl;
                 }).fail(function() {

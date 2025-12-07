@@ -245,7 +245,7 @@
                          body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
                     })
                     .then(function() {
-                         window.location.href = "{{ url_for('list', id='today') }}";
+                         window.location.href = "{{ url_for('undone') }}?tab=kiv";
                     })
                     .catch(function(error) {
                          console.error('Error marking todo as kiv:', error);

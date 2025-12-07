@@ -2,7 +2,7 @@
 from flask import render_template, request, redirect, url_for, make_response, jsonify, abort, flash, session, g, send_from_directory
 from flask_login import current_user, login_user, login_required, logout_user
 from app import app, db, csrf
-from app.models import Todo, User, Status, Tracker, ShareInvitation, TodoShare
+from app.models import Todo, User, Status, Tracker, ShareInvitation, TodoShare, KIV
 from app.forms import (
     LoginForm, SetupAccountForm, ChangePassword, UpdateAccount, 
     ShareInvitationForm, SharingSettingsForm, DeleteAccountForm
@@ -711,14 +711,14 @@ def dashboard():
     
     # Get recent undone todos for activity feed (filtered by current user and not completed)
     # Status 6 = 'done' (see Status.seed() in models.py)
-    recent_todos = db.session.query(Todo).join(  # type: ignore[attr-defined]
+    # Get the most recent tracker for each todo (not completed)
+    recent_todos = db.session.query(Todo).filter(  # type: ignore[attr-defined]
+        Todo.user_id == current_user.id  # type: ignore[attr-defined]
+    ).outerjoin(
         Tracker, Todo.id == Tracker.todo_id  # type: ignore[attr-defined]
     ).filter(
-        Todo.user_id == current_user.id,
-        Tracker.timestamp == Todo.modified,  # type: ignore[attr-defined]
-        Tracker.status_id != 6,  # type: ignore[attr-defined]
-        Tracker.status_id != 9   # Status 9 = kiv
-    ).order_by(Todo.modified.desc()).limit(5).all()
+        (Tracker.status_id != 6) | (Tracker.status_id == None)  # type: ignore[attr-defined]
+    ).order_by(Todo.modified.desc()).distinct().limit(5).all()
     
     return render_template('dashboard.html', 
                          chart_segments=chart_segments,
@@ -1200,14 +1200,18 @@ def undone():
     all_todos = Todo.query.filter_by(user_id=current_user.id).order_by(Todo.modified.desc()).all()
     
     for todo in all_todos:
-        # Get the latest tracker entry for this todo
-        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc()).first()  # type: ignore[attr-defined]
+        # Double-check todo belongs to current user (safety measure)
+        if todo.user_id != current_user.id:
+            continue
+            
+        # Get the latest tracker entry for this todo (order by timestamp desc, then id desc for tiebreaker)
+        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc(), Tracker.id.desc()).first()  # type: ignore[attr-defined]
         
         if latest_tracker:
-            if latest_tracker.status_id != 6 and latest_tracker.status_id != 9:
+            if latest_tracker.status_id != 6 and not KIV.is_kiv(todo.id):
                 # Uncompleted tasks
                 undone_todos.append((todo, latest_tracker))
-            elif latest_tracker.status_id == 9:
+            elif KIV.is_kiv(todo.id):
                 # KIV tasks
                 kiv_todos.append((todo, latest_tracker))
     
@@ -1243,6 +1247,11 @@ def mark_kiv(todo_id):
         date_entry = datetime.now()
         todo.modified = date_entry
         db.session.commit()  # type: ignore[attr-defined]
+        
+        # Add to KIV table (source of truth for KIV status)
+        KIV.add(todo.id, current_user.id)
+        
+        # Also add Tracker entry for history
         Tracker.add(todo.id, 9, date_entry)  # Status 9 = KIV
 
         return jsonify({
@@ -1361,7 +1370,9 @@ def add():
         else:
             getTomorrow = 0
 
-        if request.form.get("todo_id") == '':
+        # Check if creating new todo (todo_id not provided or empty)
+        todo_id_param = request.form.get("todo_id")
+        if not todo_id_param:  # Handles: None, '', empty string
             # Creating new todo
             t = Todo(name=getTitle, details=getActivities, user_id=current_user.id, details_html=getActivities_html)
             
@@ -1505,32 +1516,75 @@ def add():
                     # For tomorrow or custom date, use target_date
                     t.modified = target_date
                     db.session.commit()  # type: ignore[attr-defined]
-                    Tracker.add(todo_id, 8, target_date)  # Status 8 = re-assign
+                    
+                    # Check if todo is currently KIV and exit it since it's being scheduled
+                    if KIV.is_kiv(todo_id):
+                        # Exit KIV status when scheduling to a specific date
+                        KIV.remove(todo_id)
+                        Tracker.add(todo_id, 5, target_date)  # Status 5 = new
+                        return jsonify({
+                            'status': 'success',
+                            'exitedKIV': True,
+                            'scheduledDate': target_date.strftime('%Y-%m-%d') if target_date else datetime.now().strftime('%Y-%m-%d')
+                        }), 200
+                    else:
+                        Tracker.add(todo_id, 8, target_date)  # Status 8 = re-assign
+                        return jsonify({
+                            'status': 'success',
+                            'exitedKIV': False
+                        }), 200
                 elif byPass == '1':
                     logging.debug(f"[REMINDER DEBUG] Taking byPass path for todo {todo_id}")
                     t.modified = datetime.now()
                     db.session.commit()  # type: ignore[attr-defined]
                     logging.debug(f"[REMINDER DEBUG] byPass commit successful for todo {todo_id}")
                 else:
-                    # Check if the todo's current date is different from today
-                    # If so, reschedule it to today
+                    # When scheduling to today and title/content didn't change,
+                    # check if we need to exit KIV status
+                    latest_tracker = Tracker.query.filter_by(todo_id=todo_id).order_by(Tracker.timestamp.desc(), Tracker.id.desc()).first()  # type: ignore[attr-defined]
+                    
+                    # Check if todo's current date is different from today or if it's KIV
                     if t.modified.date() != datetime.now().date():
                         logging.debug(f"[REMINDER DEBUG] Date mismatch path for todo {todo_id}")
                         t.modified = datetime.now()
                         db.session.commit()  # type: ignore[attr-defined]
-                        Tracker.add(todo_id, 8, datetime.now())  # Status 8 = re-assign
-                        logging.debug(f"[REMINDER DEBUG] Date mismatch commit successful, returning success")
-                        return jsonify({
-                            'status': 'success'
-                        }), 200
+                        
+                        # Check if we should exit KIV when rescheduling to today
+                        if KIV.is_kiv(todo_id):
+                            KIV.remove(todo_id)
+                            Tracker.add(todo_id, 5, datetime.now())  # Exit KIV with status 5 (new)
+                            return jsonify({
+                                'status': 'success',
+                                'exitedKIV': True
+                            }), 200
+                        else:
+                            Tracker.add(todo_id, 8, datetime.now())  # Status 8 = re-assign
+                            return jsonify({
+                                'status': 'success',
+                                'exitedKIV': False
+                            }), 200
                     else:
-                        # Even if title/content didn't change, we still need to save reminder changes
-                        logging.debug(f"[REMINDER DEBUG] Same date path for todo {todo_id} - committing reminder changes")
-                        db.session.commit()  # type: ignore[attr-defined]
-                        logging.debug(f"[REMINDER DEBUG] Reminder-only commit successful, returning success")
-                        return jsonify({
-                            'status': 'success'
-                        }), 200
+                        # Same date - check if it's KIV and needs to exit
+                        if KIV.is_kiv(todo_id):
+                            # This is a KIV todo being moved to today - exit KIV status
+                            logging.debug(f"[REMINDER DEBUG] Exiting KIV status for todo {todo_id} when scheduling to today")
+                            t.modified = datetime.now()
+                            db.session.commit()  # type: ignore[attr-defined]
+                            KIV.remove(todo_id)
+                            Tracker.add(todo_id, 5, datetime.now())  # Exit KIV with status 5 (new)
+                            return jsonify({
+                                'status': 'success',
+                                'exitedKIV': True
+                            }), 200
+                        else:
+                            # Even if title/content didn't change, we still need to save reminder changes
+                            logging.debug(f"[REMINDER DEBUG] Same date path for todo {todo_id} - committing reminder changes")
+                            db.session.commit()  # type: ignore[attr-defined]
+                            logging.debug(f"[REMINDER DEBUG] Reminder-only commit successful, returning success")
+                            return jsonify({
+                                'status': 'success',
+                                'exitedKIV': False
+                            }), 200
             else:
                 t.name = getTitle
                 t.details = getActivities
@@ -1539,15 +1593,32 @@ def add():
                     # For tomorrow or custom date, use target_date
                     t.modified = target_date
                     db.session.commit()  # type: ignore[attr-defined]
-                    Tracker.add(todo_id, 8, target_date)  # Status 8 = re-assign
+                    
+                    # Check if todo is currently KIV and exit it since it's being scheduled
+                    if KIV.is_kiv(todo_id):
+                        # Exit KIV status when scheduling to a specific date
+                        KIV.remove(todo_id)
+                        Tracker.add(todo_id, 5, target_date)  # Status 5 = new
+                        return jsonify({
+                            'status': 'success',
+                            'exitedKIV': True,
+                            'scheduledDate': target_date.strftime('%Y-%m-%d') if target_date else datetime.now().strftime('%Y-%m-%d')
+                        }), 200
+                    else:
+                        Tracker.add(todo_id, 8, target_date)  # Status 8 = re-assign
+                        return jsonify({
+                            'status': 'success',
+                            'exitedKIV': False
+                        }), 200
                 else:
                     t.modified = datetime.now()
                     db.session.commit()  # type: ignore[attr-defined]
                     Tracker.add(todo_id, 5, datetime.now())  # Status 5 = new
-                
-                return jsonify({
-                    'status': 'success'
-                }), 200
+                    
+                    return jsonify({
+                        'status': 'success',
+                        'exitedKIV': False
+                    }), 200
 
 
     return redirect(url_for('list', id='today'))
