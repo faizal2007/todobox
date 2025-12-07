@@ -238,9 +238,17 @@ document.addEventListener('DOMContentLoaded', function() {
             var form = this.closest('form');
             var email = this.dataset.email;
             
+            // Escape HTML characters to prevent XSS
+            var escapedEmail = email.replace(/&/g, '&amp;')
+                                   .replace(/</g, '&lt;')
+                                   .replace(/>/g, '&gt;')
+                                   .replace(/"/g, '&quot;')
+                                   .replace(/'/g, '&#x27;')
+                                   .replace(/\//g, '&#x2F;');
+            
             showConfirmModal(
                 'Delete User',
-                'Are you sure you want to delete user "' + email + '"? This action cannot be undone and will delete all their data.',
+                'Are you sure you want to delete user "' + escapedEmail + '"? This action cannot be undone and will delete all their data.',
                 function() {
                     form.submit();
                 },
@@ -292,9 +300,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedEmails = Array.from(checkedBoxes).map(cb => cb.dataset.email);
         const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
 
+        // Escape HTML characters to prevent XSS
+        const escapeHtml = (text) => {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+
+        const escapedEmails = selectedEmails.map(email => escapeHtml(email));
+        const emailList = escapedEmails.join('\n');
+
         showConfirmModal(
             'Bulk Delete Users',
-            `Are you sure you want to delete ${checkedBoxes.length} user(s)?\n\nSelected users:\n${selectedEmails.join('\n')}\n\nThis action cannot be undone and will delete all their data.`,
+            `Are you sure you want to delete ${checkedBoxes.length} user(s)?\n\nSelected users:\n${emailList}\n\nThis action cannot be undone and will delete all their data.`,
             function() {
                 // Create form and submit
                 const form = document.createElement('form');
