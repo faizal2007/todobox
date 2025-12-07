@@ -79,7 +79,9 @@ This email was sent from TodoBox. If you didn't expect this invitation, you can 
 
 def is_email_configured():
     """Check if email sending is properly configured"""
-    return all([SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM_EMAIL])
+    # SMTP_SERVER and SMTP_PORT are required, but USERNAME/PASSWORD are optional (for MailHog)
+    # SMTP_FROM_EMAIL is required to send from
+    return all([SMTP_SERVER, SMTP_PORT, SMTP_FROM_EMAIL])
 
 
 def send_sharing_invitation(invitation, from_user):
@@ -141,8 +143,11 @@ def send_sharing_invitation(invitation, from_user):
         
         # Send email via SMTP
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            # Only use TLS and login if credentials are provided (not needed for MailHog)
+            if SMTP_USERNAME and SMTP_PASSWORD:
+                server.starttls()
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            
             server.sendmail(SMTP_FROM_EMAIL, invitation.to_email, msg.as_string())
         
         return True, None
