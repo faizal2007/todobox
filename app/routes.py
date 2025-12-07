@@ -711,13 +711,14 @@ def dashboard():
     
     # Get recent undone todos for activity feed (filtered by current user and not completed)
     # Status 6 = 'done' (see Status.seed() in models.py)
-    recent_todos = db.session.query(Todo).join(  # type: ignore[attr-defined]
+    # Get the most recent tracker for each todo (not completed)
+    recent_todos = db.session.query(Todo).filter(  # type: ignore[attr-defined]
+        Todo.user_id == current_user.id  # type: ignore[attr-defined]
+    ).outerjoin(
         Tracker, Todo.id == Tracker.todo_id  # type: ignore[attr-defined]
     ).filter(
-        Todo.user_id == current_user.id,
-        Tracker.timestamp == Todo.modified,  # type: ignore[attr-defined]
-        Tracker.status_id != 6  # type: ignore[attr-defined]
-    ).order_by(Todo.modified.desc()).limit(5).all()
+        (Tracker.status_id != 6) | (Tracker.status_id == None)  # type: ignore[attr-defined]
+    ).order_by(Todo.modified.desc()).distinct().limit(5).all()
     
     return render_template('dashboard.html', 
                          chart_segments=chart_segments,

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Latest] - 2025-12-07
 
+### FIXED: Dashboard Recent Todos Not Displaying Dates
+
+**Issue**: Recent Todos on `/dashboard` showed todo names but dates were not visible.
+
+**Root Cause**: Query filtering was overly strict with condition `Tracker.timestamp == Todo.modified`, which rarely matched and excluded valid todos from the results.
+
+**Solution**: Simplified query to:
+- Use `outerjoin` instead of `join` to include todos even if no tracker exists
+- Filter by status_id != 6 (done) without exact timestamp matching
+- Order by `Todo.modified.desc()` to get most recent todos
+- Use `.distinct()` to avoid duplicates
+
+**Result**: Dashboard now correctly displays all recent undone todos with their dates.
+
+**Testing**: All 25 comprehensive tests pass - no regressions introduced.
+
+---
+
 ### NEW: Comprehensive Accurate Test Suite - Real MySQL Database Testing
 
 #### What's New
