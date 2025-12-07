@@ -2252,6 +2252,107 @@ def admin_delete_user(user_id):
     return redirect(url_for('admin_panel'))
 
 
+@app.route('/admin/bulk-delete-users', methods=['POST'])
+@login_required
+@require_admin
+def admin_bulk_delete_users():
+    """Bulk delete multiple users"""
+    user_ids = request.form.getlist('user_ids', type=int)
+    
+    if not user_ids:
+        flash('No users selected for deletion.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    # Validate users exist and can be deleted
+    users_to_delete = []
+    invalid_users = []
+    
+    for user_id in user_ids:
+        user = User.query.get(user_id)
+        if not user:
+            invalid_users.append(f"User ID {user_id} not found")
+            continue
+        
+        # Cannot delete yourself
+        if user.id == current_user.id:
+            invalid_users.append(f"Cannot delete yourself ({user.email})")
+            continue
+        
+        # Cannot delete protected admins (users without email)
+        if is_protected_admin(user):
+            invalid_users.append(f"Cannot delete protected admin ({user.email or 'no email'})")
+            continue
+        
+        users_to_delete.append(user)
+    
+    if invalid_users:
+        flash(f'Some users could not be deleted: {" | ".join(invalid_users)}', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    if not users_to_delete:
+        flash('No valid users to delete.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    # Perform bulk deletion
+    deleted_count = 0
+    deleted_emails = []
+    
+    try:
+        for user in users_to_delete:
+            user_email = user.email
+            user_oauth_id = user.oauth_id
+            
+            # Delete user's todos and related data (same logic as single delete)
+            user_todo_ids = [t.id for t in user.todo.all()]
+            if user_todo_ids:
+                # Delete KIV records first (foreign key constraint)
+                from app.models import KIV
+                KIV.query.filter(KIV.todo_id.in_(user_todo_ids)).delete(synchronize_session=False)
+                
+                # Delete trackers
+                Tracker.query.filter(Tracker.todo_id.in_(user_todo_ids)).delete(synchronize_session=False)
+                
+                # Delete todos
+                Todo.query.filter_by(user_id=user.id).delete()
+            
+            # Delete sharing relationships
+            TodoShare.query.filter(
+                or_(TodoShare.owner_id == user.id, TodoShare.shared_with_id == user.id)
+            ).delete(synchronize_session=False)
+            
+            # Delete share invitations
+            if user.email:
+                ShareInvitation.query.filter(
+                    or_(ShareInvitation.from_user_id == user.id, ShareInvitation.to_email == user.email)
+                ).delete(synchronize_session=False)
+            else:
+                ShareInvitation.query.filter(ShareInvitation.from_user_id == user.id).delete(synchronize_session=False)
+            
+            # Record the deletion to prevent immediate re-registration
+            from app.models import DeletedAccount
+            deleted_record = DeletedAccount(
+                email=user_email,
+                oauth_id=user_oauth_id,
+                cooldown_days=7
+            )
+            db.session.add(deleted_record)
+            
+            # Delete the user
+            db.session.delete(user)
+            deleted_count += 1
+            deleted_emails.append(user_email or f"User {user.id}")
+        
+        db.session.commit()
+        
+        flash(f'Successfully deleted {deleted_count} user(s): {", ".join(deleted_emails)}', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error during bulk deletion: {str(e)}', 'error')
+    
+    return redirect(url_for('admin_panel'))
+
+
 @app.route('/admin/user/<int:user_id>/toggle-admin', methods=['POST'])
 @login_required
 @require_admin
