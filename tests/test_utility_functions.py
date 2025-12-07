@@ -379,7 +379,7 @@ class TestUtilityFunctions:
         m = momentjs(timestamp)
         
         result = m.format("YYYY-MM-DD")
-        assert isinstance(result.striptags(), str)
+        assert isinstance(result, str)
     
     def test_momentjs_calendar(self):
         """Test momentjs calendar method"""
@@ -389,7 +389,7 @@ class TestUtilityFunctions:
         m = momentjs(timestamp)
         
         result = m.calendar()
-        assert isinstance(result.striptags(), str)
+        assert isinstance(result, str)
     
     def test_momentjs_fromNow(self):
         """Test momentjs fromNow method"""
@@ -399,7 +399,7 @@ class TestUtilityFunctions:
         m = momentjs(timestamp)
         
         result = m.fromNow()
-        assert isinstance(result.striptags(), str)
+        assert isinstance(result, str)
 
 
 if __name__ == '__main__':

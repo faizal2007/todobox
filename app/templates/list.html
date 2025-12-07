@@ -3,6 +3,7 @@
 	<link href='{{ url_for('static', filename='assets/css/vendor/simplemde.min.css') }}' rel="stylesheet" type="text/css" />
 {% endblock %}
 {% block content %}
+<main role="main">
      {% set active_page = title %}
                <!-- Start Content-->
                <div class="container-fluid">
@@ -94,6 +95,7 @@
           {% include "todo_add.html" %}
           {% include "confirm_modal.html" %}
      </div>
+</main>
 {% endblock %}  
 {% block extra_script_footer %}
 <!-- SimpleMDE js -->

@@ -228,9 +228,10 @@ class TestSharingRoutes:
         client, user = auth_user
         
         # Enable sharing
-        response = client.post('/sharing/toggle', data={
-            'enabled': 'true'
-        }, follow_redirects=True)
+        response = client.post('/sharing/toggle', 
+                             json={'sharing_enabled': True}, 
+                             content_type='application/json',
+                             follow_redirects=True)
         
         assert response.status_code == 200
         

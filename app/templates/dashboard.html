@@ -71,6 +71,7 @@
 {% endblock %}
 
 {% block content %}
+<main role="main">
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -201,7 +202,7 @@
                                      style="width: {{ completion_rate }}%" 
                                      aria-valuemin="0" 
                                      aria-valuemax="100"
-                                     aria-label="Completion rate: {{ completion_rate }}%">
+                                     aria-label="Completion rate {{ (completion_rate | round(0)) }} percent">
                                     {{ completion_rate }}%
                                 </div>
                             </div>
@@ -328,6 +329,7 @@
         </div>
     </div>
 </div>
+</main>
 {% endblock %}
 
 {% block extra_script_footer %}
@@ -340,6 +342,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const widthPercent = progressBar.style.width;
         const ariaValue = parseInt(widthPercent, 10) || 0;
         progressBar.setAttribute('aria-valuenow', ariaValue);
+        progressBar.setAttribute('aria-label', `Completion rate ${ariaValue} percent`);
     }
     
     // Check if Chart.js is available

@@ -14,7 +14,7 @@ from app import db
 
 def get_google_provider_config():
     """Fetch Google OAuth configuration"""
-    return requests.get(current_app.config['GOOGLE_DISCOVERY_URL']).json()
+    return requests.get(current_app.config['GOOGLE_DISCOVERY_URL'], timeout=10).json()
 
 def get_oauth_redirect_uri():
     """Get the OAuth redirect URI from config or generate dynamically"""
@@ -81,7 +81,7 @@ def process_google_callback(code):
             "grant_type": "authorization_code",
         }
         
-        token_response = requests.post(token_endpoint, data=token_request_body)
+        token_response = requests.post(token_endpoint, data=token_request_body, timeout=10)
         tokens = token_response.json()
         
         if "error" in tokens:

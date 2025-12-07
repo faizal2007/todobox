@@ -126,20 +126,19 @@ def get_quote():
     # Try external API first (ZenQuotes), fall back to LOCAL_QUOTES on any error
     api_url = 'https://zenquotes.io/api/random'
     try:
-        req = urllib.request.Request(api_url, headers={'User-Agent': 'TodoBox/1.0'})
-        with urllib.request.urlopen(req, timeout=3) as resp:
-            data = resp.read()
-            parsed = json.loads(data)
-            # ZenQuotes returns a list with objects containing 'q' (quote) and 'a' (author)
-            if parsed and type(parsed) == list and len(parsed) > 0:
-                item = parsed[0]
-                if type(item) == dict:
-                    quote = item.get('q')
-                    author = item.get('a')
-                    if quote:
-                        # Include author if present
-                        return jsonify({'quote': quote, 'author': author})
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError, json.JSONDecodeError, TypeError):
+        response = requests.get(api_url, headers={'User-Agent': 'TodoBox/1.0'}, timeout=3)
+        response.raise_for_status()
+        parsed = response.json()
+        # ZenQuotes returns a list with objects containing 'q' (quote) and 'a' (author)
+        if parsed and type(parsed) == list and len(parsed) > 0:
+            item = parsed[0]
+            if type(item) == dict:
+                quote = item.get('q')
+                author = item.get('a')
+                if quote:
+                    # Include author if present
+                    return jsonify({'quote': quote, 'author': author})
+    except (requests.RequestException, ValueError, TypeError):
         pass
 
     # Fallback

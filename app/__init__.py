@@ -45,7 +45,7 @@ app.jinja_env.globals['momentjs'] = momentjs
 # Add md5 filter for Gravatar
 @app.template_filter('md5')
 def md5_filter(text):
-    return hashlib.md5(text.encode('utf-8')).hexdigest()
+    return hashlib.md5(text.encode('utf-8')).hexdigest()  # nosec - Used only for Gravatar avatar generation, not for security
 
 # Add cache-busting headers for static files in development
 @app.after_request
