@@ -117,4 +117,4 @@ if __name__ == '__main__':
     print("🧪 Starting KIV tab test server...")
     print("📋 Visit: http://localhost:8000")
     print("📋 Test URL: http://localhost:8000?tab=kiv")
-    app.run(host='localhost', port=8000, debug=True)
+    app.run(host='localhost', port=8000, debug=False)
