@@ -1171,15 +1171,26 @@ def delete_user():
         
         # Delete user and all related data
         try:
-            # Delete all todos and related trackers
+            from app.models import Tracker, TodoShare, Todo, KIV
+            
+            # Delete in order respecting foreign key constraints:
             todo_ids = [t.id for t in user.todo.all()]
             if todo_ids:
+                # 1. Delete KIV records (Keep In View - references todos)
+                KIV.query.filter(KIV.todo_id.in_(todo_ids)).delete(synchronize_session=False)
+                
+                # 2. Delete all trackers for this user's todos
                 for tid in todo_ids:
-                    from app.models import Tracker, TodoShare, Todo
                     Tracker.query.filter_by(todo_id=tid).delete()
+                
+                # 3. Delete all todo shares (both as owner and shared with)
                 TodoShare.query.filter_by(owner_id=user.id).delete()
                 TodoShare.query.filter_by(shared_with_id=user.id).delete()
+                
+                # 4. Delete all todos for this user
                 Todo.query.filter_by(user_id=user.id).delete()
+            
+            # 5. Delete the user account itself
             db.session.delete(user)  # type: ignore[union-attr]
             db.session.commit()  # type: ignore[union-attr]
             print(f"\n✅ User '{email}' and all related data deleted successfully!")
