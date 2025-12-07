@@ -7,534 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Latest] - 2025-12-07
 
-### FIXED: Mark as KIV not working on /undone page
+### Fixed
 
-**Issue**: "Mark as KIV" button on `/undone` page wasn't working. Old bug returned.
+- **Mark as KIV button**: Fixed "Mark as KIV" button on `/undone` page. Updated `mark_kiv` route to add todo to KIV table and create Tracker entry
+- **Dashboard dates**: Fixed dates showing as script tags. Refactored `momentjs` class to render dates server-side using Python datetime
+- **Dashboard Recent Todos**: Fixed recent todos not displaying dates. Simplified query with `outerjoin` and proper filtering
+- **KIV Table Separation**: Separated KIV status from regular status tracking with dedicated `kiv` table
+- **Route Format**: Fixed `/list/tomorrow` to correct format `/tomorrow/list`
+- **Redirect Logic**: Fixed KIV task edit redirect to correct date view after scheduling
+- **Test Suite**: Added comprehensive test suite (`test_accurate_comprehensive.py`) with 25 tests against real MySQL database
 
-**Root Cause**: The `mark_kiv` route was only adding a Tracker entry with status_id=9 but was NOT adding the todo to the KIV table. The KIV table is now the source of truth for KIV status, not the Tracker.
+### Changed
 
-**Solution**: Updated `mark_kiv` route to:
-1. Call `KIV.add(todo.id, current_user.id)` to add todo to KIV table (NEW)
-2. Keep calling `Tracker.add()` for history tracking
+- Reorganized temporary/analysis documents to `docs/archive/` folder
+- Improved documentation structure and clarity
 
-**Changes**:
-- app/routes.py: Updated mark_kiv() route (line 1241-1263)
-  - Added `KIV.add()` call to mark todo as KIV in the KIV table
-  - Kept Tracker entry for history
+### Added
 
-**Result**: Mark as KIV button now works correctly on /undone page.
-
-**Testing**: 
-- All 25 comprehensive tests pass ✓
-- mark_kiv logic tested directly ✓
-- Verified KIV entry created in KIV table ✓
-- Verified Tracker entry created with status_id=9 ✓
-
----
-
-### FIXED: Dashboard dates showing as script tags instead of formatted dates
-
-**Issue**: Recent Todos displayed dates as `<script>document.write(...)</script>` instead of formatted dates.
-
-**Root Cause**: The `momentjs` utility was using client-side `document.write()` which:
-- Executes late in page load and can overwrite content
-- Displays as raw script tags instead of rendered dates
-
-**Solution**: Refactored `momentjs` class to render dates server-side using Python's datetime:
-- Replaced client-side JavaScript rendering with server-side Python datetime formatting
-- Added format conversion map: moment.js → Python strftime formats
-- Implemented proper parsing for string timestamps
-- Added error handling and None checks
-- Implemented calendar() and fromNow() methods with Python logic
-
-**Changes**:
-- app/utils.py: Complete rewrite of momentjs class
-  - `render()`: Now uses Python datetime.strftime() instead of document.write()
-  - `format()`: Direct date formatting with format conversion
-  - `calendar()`: Server-side logic for "Today at", "Tomorrow at", etc.
-  - `fromNow()`: Server-side relative time ("2 hours ago", "in 3 days", etc.)
-
-**Result**: Dashboard displays formatted dates correctly without script tags.
-
-**Testing**: All 25 comprehensive tests pass ✓
-
----
-
-### FIXED: Dashboard Recent Todos Not Displaying Dates
-
-**Issue**: Recent Todos on `/dashboard` showed todo names but dates were not visible.
-
-**Root Cause**: Query filtering was overly strict with condition `Tracker.timestamp == Todo.modified`, which rarely matched and excluded valid todos from the results.
-
-**Solution**: Simplified query to:
-- Use `outerjoin` instead of `join` to include todos even if no tracker exists
-- Filter by status_id != 6 (done) without exact timestamp matching
-- Order by `Todo.modified.desc()` to get most recent todos
-- Use `.distinct()` to avoid duplicates
-
-**Result**: Dashboard now correctly displays all recent undone todos with their dates.
-
-**Testing**: All 25 comprehensive tests pass - no regressions introduced.
-
----
-
-### NEW: Comprehensive Accurate Test Suite - Real MySQL Database Testing
-
-#### What's New
-Created **`test_accurate_comprehensive.py`** - a comprehensive test suite that validates against your actual MySQL database instead of in-memory SQLite.
-
-#### Problem It Solves
-- ❌ In-memory SQLite tests give false confidence ("tests pass but system breaks")
-- ❌ In-memory tests don't catch persistence bugs
-- ❌ In-memory tests don't catch MySQL-specific issues
-- ✅ New suite tests against REAL database
-
-#### Features
-- ✅ 25 comprehensive tests covering all critical functionality
-- ✅ Tests against actual MySQL database (not in-memory)
-- ✅ Validates data persistence across session boundaries
-- ✅ Tests user isolation and security
-- ✅ Validates data integrity constraints
-- ✅ Tests error handling and edge cases
-- ✅ Automatic cleanup of test data
-- ✅ Colored output for easy reading
-- ✅ Detailed pass/fail reporting
-
-#### Test Coverage (25 Total Tests)
-1. **Database Persistence** (2 tests)
-   - Data persists in same session
-   - Data persists across session boundaries
-
-2. **KIV Table Functionality** (4 tests)
-   - KIV.add() creates entries
-   - KIV.is_kiv() detects status
-   - KIV.remove() removes from KIV
-   - KIV status persists across sessions
-
-3. **User Isolation** (2 tests)
-   - User1 can't see User2's todos
-   - User2 can't see User1's todos
-
-4. **Tracker & Status** (3 tests)
-   - Tracker.add() creates entries
-   - Latest tracker query returns correct status
-   - Tracker history preserved
-
-5. **Todo Scheduling** (3 tests)
-   - Todo created with today's date
-   - Schedule updated to tomorrow
-   - Schedule updated to specific date
-
-6. **Query Filters** (3 tests)
-   - Find undone todos
-   - Exclude KIV todos
-   - Find KIV todos
-
-7. **Route Functionality** (2 tests)
-   - Route query logic works
-   - KIV routing logic works
-
-8. **Data Integrity** (3 tests)
-   - Foreign key constraints enforced
-   - KIV unique constraint maintained
-   - Cascading delete works
-
-9. **Error Handling** (3 tests)
-   - Handle non-existent todo gracefully
-   - Handle non-existent tracker gracefully
-   - Multiple rapid operations safe
-
-#### How to Use
-```bash
-# Run all tests
-python test_accurate_comprehensive.py
-
-# All 25 tests pass - system is stable!
-# If any fail - debug before pushing
-```
-
-#### Test Results
-```
-Total Tests: 25
-Passed: 25
-Failed: 0
-
-✓ ALL TESTS PASSED! (100.0%)
-```
-
-#### Files Created
-- `test_accurate_comprehensive.py` - Main test suite (670 lines)
-- `TEST_ACCURATE_COMPREHENSIVE_README.md` - Documentation
-
-#### Key Benefits
-- ✅ Catch real bugs before deployment
-- ✅ Validate new patches don't break existing code
-- ✅ Test against production-like environment
-- ✅ Confidence in stability before deploying
-- ✅ Easy to extend with more tests
-- ✅ Automatic test data cleanup
-
-#### When to Run
-- ✅ Before committing code
-- ✅ After pulling changes
-- ✅ Before deploying to production
-- ✅ When debugging issues
-- ✅ During development (frequently)
-
-#### Why This Matters
-With this test suite, you can:
-1. Make changes confidently knowing tests will catch regressions
-2. Validate that new patches don't break stable functionality
-3. Quickly identify bugs before they reach production
-4. Document expected behavior through tests
+- **Test Suite**: Comprehensive test suite (`test_accurate_comprehensive.py`) with 25 tests
+  - Tests against actual MySQL database (not in-memory)
+  - Validates data persistence across session boundaries
+  - Tests user isolation and security
+  - All 25 tests passing ✓
 
 ---
 
 ## [Previous] - 2025-12-07
 
-### MAJOR REFACTOR: KIV Table Separation - Eliminate Mixed Status/KIV Design
+### Fixed
 
+- **KIV Table Separation**: Created separate `kiv` table to cleanly manage KIV todos. Separated KIV status from regular status tracking
+- **Route Format**: Fixed route URLs from `/list/today` to `/today/list` format
+- **KIV Task Redirect**: Fixed redirect logic when exiting KIV status - tasks now go to correct date view
+- **Regular Task Redirect**: Fixed redirect when editing tasks from undone page and scheduling to tomorrow
+- **Test Suite Accuracy**: Fixed in-memory SQLite tests missing real database issues
 
-#### Problem (Root Cause of Cascade Bugs)
-KIV (Keep In View) was stored as **status_id=9** mixed with regular statuses (5,6,8):
-- ❌ KIV confused with regular status tracking
-- ❌ Caused "can't save KIV todo to today/tomorrow" bug
-- ❌ Made code complex and hard to maintain
-- ❌ Multiple redirect issues cascaded from this design flaw
+### Changed
 
-#### Solution
-Created **separate KIV table** to cleanly manage KIV todos:
-- ✅ New `kiv` table with: todo_id (unique FK), user_id (FK), entered_at, exited_at, is_active
-- ✅ KIV model with methods: `add()`, `remove()`, `is_kiv()`
-- ✅ Updated all 7 routes.py locations to use `KIV.is_kiv(todo_id)` and `KIV.remove(todo_id)`
-- ✅ Cleaner separation of concerns: KIV logic separate from status tracking
-
-#### Files Modified
-1. **app/models.py** - Added complete KIV model class (lines 212-261)
-   - `KIV.add(todo_id, user_id)` - Add todo to KIV
-   - `KIV.remove(todo_id)` - Remove todo from KIV
-   - `KIV.is_kiv(todo_id)` - Check if todo is in KIV
-   - Indexes on: user_id, is_active, entered_at
-
-2. **app/routes.py** - Updated 7 locations to use new KIV table
-   - Line 720: Removed `status_id != 9` from dashboard query
-   - Lines 1211-1214: Updated undone route to use `KIV.is_kiv()`
-   - Lines 1517-1519: First KIV check in /add route → uses `KIV.is_kiv()` and `KIV.remove()`
-   - Lines 1548-1552: Second KIV check → uses new methods
-   - Lines 1562-1566: Third KIV check → uses new methods
-   - Lines 1592-1596: Fourth KIV check → uses new methods
-   - Added `KIV` to imports (line 4)
-
-3. **migrations/versions/kiv_table_migration.py** - New migration file
-   - Creates `kiv` table with proper schema and indexes
-   - Migrates existing status_id=9 todos to new KIV table
-   - Includes downgrade logic for rollback
-
-#### Before vs After
-
-**Before (Mixed Status/KIV)**:
-```python
-# Check if KIV
-if latest_tracker.status_id == 9:
-    # Do KIV logic
-    Tracker.add(todo_id, 5, date)  # Exit KIV by changing status
-```
-
-**After (Separate KIV Table)**:
-```python
-# Check if KIV
-if KIV.is_kiv(todo_id):
-    # Do KIV logic
-    KIV.remove(todo_id)  # Explicitly remove from KIV
-    Tracker.add(todo_id, 5, date)  # Add regular status
-```
-
-#### Benefits
-- ✅ Clear intent: KIV management separate from status tracking
-- ✅ Fixes cascade of bugs (can't save KIV task to today/tomorrow)
-- ✅ Easier to query: `KIV.query.filter(is_active=True).all()`
-- ✅ Better history: `exited_at` field tracks when todo left KIV
-- ✅ Cleaner transitions: KIV → today/tomorrow clearly defined
-- ✅ Less confusion: No more "is 9 a status or KIV?" questions
-
-#### Impact on Bug Fixes
-- ✅ Fixes: "Cannot save KIV todo to today" (KIV exit logic now clear)
-- ✅ Fixes: "Cannot save KIV todo to tomorrow" (proper KIV removal before rescheduling)
-- ✅ Fixes: KIV redirect confusion (clearer transitions)
-- ✅ Enables: Future KIV history tracking (`exited_at` timestamps)
-
-#### Next Steps
-1. Run migration: `flask db upgrade`
-   - Creates kiv table
-   - Migrates existing status_id=9 todos to KIV table
-2. Test thoroughly: Save KIV task to today/tomorrow
-3. Verify: KIV todos properly tracked in new table
-4. (Future) Remove old status_id=9 from Status table after validation
-
-#### Database Migration
-```bash
-cd /storage/linux/Projects/python/mysandbox
-source venv/bin/activate
-flask db upgrade
-```
-
-This will:
-- ✅ Create `kiv` table with proper indexes
-- ✅ Migrate all existing status_id=9 todos to KIV table
-- ✅ Preserve backward compatibility (status_id=9 still exists)
+- Updated all 7 locations in `app/routes.py` to use new KIV table methods
+- Added `KIV` model with `add()`, `remove()`, and `is_kiv()` methods
+- Created migration for `kiv` table with proper schema and indexes
 
 ---
 
 ## [Previous] - 2025-12-07
 
-### CRITICAL: Wrong Route Format - Fixed `/list/tomorrow` to `/tomorrow/list`
-
-#### Problem
-After fixing redirect logic, discovered the route URLs were using WRONG FORMAT:
-- ❌ Frontend was redirecting to: `/list/today`, `/list/tomorrow`
-- ✓ But actual routes are: `/today/list`, `/tomorrow/list`
-- Result: 404 errors - routes don't exist!
-
-#### Root Cause
-The frontend JavaScript hardcoded URLs in wrong format:
-```javascript
-// WRONG FORMAT:
-targetUrl = '/list/today';      // ❌ 404
-targetUrl = '/list/tomorrow';   // ❌ 404
-
-// CORRECT FORMAT (from @app.route('/<path:id>/list')):
-targetUrl = '/today/list';      // ✓ Works
-targetUrl = '/tomorrow/list';   // ✓ Works
-```
-
-#### Solution
-Updated ALL hardcoded URLs in frontend to use correct format:
-
-**File**: `app/static/assets/js/todo-operations.js`
-
-**Changes**:
-- Line 285: `/list/today` → `/today/list`
-- Line 287: `/list/tomorrow` → `/tomorrow/list`
-- Line 290: `/list/today` → `/today/list`
-- Line 294: `/list/today` → `/today/list`
-- Line 303: `/list/tomorrow` → `/tomorrow/list`
-
-#### Impact
-- Tasks now redirect to correct working routes
-- No more 404 errors
-- Users see their tasks after editing and saving
-- System now functionally correct
-
-#### Testing
-- Edit task, schedule to tomorrow → Redirects to `/tomorrow/list` ✓
-- Edit task, schedule to today → Redirects to `/today/list` ✓
-- Edit KIV task → Redirects appropriately ✓
-
----
-
-### CRITICAL: Regular Task Edit Redirect to Wrong Route (Tomorrow Tasks)
-
-#### Problem
-When editing a regular task (or KIV task with "tomorrow" button) from undone page and saving with "tomorrow" schedule:
-1. ✓ Task is correctly updated in database
-2. ✗ But redirects to `/undone` (KIV page) instead of `/list/tomorrow`
-3. Result: User sees empty KIV page, can't find their rescheduled task
-
-#### Root Cause
-The frontend redirect logic had a flaw:
-- When `redirectUrl` is a **string** (e.g., `/undone` from undone.html), the code ignored `schedule_day`
-- Even though the form data included `schedule_day: 'tomorrow'`, it was never used
-- Frontend always used the string URL instead of respecting the schedule selection
-
-**Example Flow**:
-```
-Edit task from undone.html page
-  ↓
-Select schedule: "tomorrow"
-  ↓
-Click Save
-  ↓
-Backend returns success
-  ↓
-Frontend check redirectUrl type:
-  - Is it a function? NO (it's string "/undone")
-  - So use the string directly
-  ↓
-Redirect to /undone ❌ (should be /tomorrow/list)
-```
-
-#### Solution
-Updated the frontend redirect logic to:
-1. Check if exiting KIV (use scheduledDate) ← For KIV tasks
-2. **NEW**: Check if redirectUrl is a function → Use it (already worked)
-3. **NEW**: If redirectUrl is a string BUT schedule_day is 'tomorrow' → Go to `/tomorrow/list`
-4. **NEW**: If redirectUrl is a string BUT schedule_day is 'custom' → Use redirectUrl
-5. **NEW**: Otherwise → Use redirectUrl as-is
-
-#### Code Changes
-
-**File**: `app/static/assets/js/todo-operations.js` (Lines 273-318)
-
-**Before** (Lines 295-297):
-```javascript
-} else if (typeof redirectUrl === 'function') {
-    targetUrl = redirectUrl(schedule_day);
-} else {
-    targetUrl = redirectUrl;  // ❌ Ignored schedule_day
-}
-```
-
-**After** (Lines 295-312):
-```javascript
-} else {
-    // For non-KIV exits, use the redirect URL with schedule_day
-    if (typeof redirectUrl === 'function') {
-        targetUrl = redirectUrl(schedule_day);
-    } else if (schedule_day === 'tomorrow') {
-        // ✅ NEW: If we scheduled to tomorrow, go to tomorrow list
-        targetUrl = '/list/tomorrow';
-    } else if (schedule_day === 'custom') {
-        // ✅ NEW: For custom dates, respect schedule_day when possible
-        targetUrl = typeof redirectUrl === 'function' ? redirectUrl(schedule_day) : redirectUrl;
-    } else {
-        // Default case: use the provided redirectUrl
-        targetUrl = redirectUrl;
-    }
-}
-```
-
-#### Test Scenarios Fixed
-- ✅ Edit task from `list.html`, schedule to tomorrow → `/list/tomorrow`
-- ✅ Edit KIV task from `undone.html`, schedule to tomorrow → `/list/tomorrow`
-- ✅ Edit KIV task from `undone.html`, keep in KIV → `/undone`
-- ✅ Edit task from `list.html`, custom date → Correct redirect
-- ✅ Edit task from `list.html`, today → Correct redirect
-
-#### Why Tests Didn't Catch This
-
-**In-Memory SQLite Tests** (current test suite):
-- Tests don't actually visit the HTML pages
-- Tests don't check `redirectUrl` values
-- Tests don't verify redirect URLs are correct
-- Tests only check HTTP 200 status code
-- False positive: "System works" when redirect is broken
-
-**Real Database Tests** would catch this because they:
-- Verify actual redirect URL changes
-- Check that tasks appear in the correct date view
-- Validate cross-page navigation
-- Ensure user sees task after save
-
-#### Files Modified
-- `app/static/assets/js/todo-operations.js`: Lines 273-318 - Enhanced redirect logic for non-KIV cases
-
-#### Impact
-- Users editing tasks from KIV page now see their rescheduled tasks
-- Better UX: tasks appear where users expect them
-- Consistent behavior across all pages (list.html, undone.html)
-- No breaking changes to other functionality
-
----
-
-### Fixed: KIV Task Edit Redirect to Wrong Route
-
-#### Problem
-When editing a KIV task and scheduling it to tomorrow or a custom date, the system would:
-1. Exit KIV status correctly (task becomes scheduled)
-2. But redirect to `/list/today` instead of the date it was scheduled to
-3. User would see empty today list and confused about where their task went
-
-#### Root Cause
-- Backend returned `exitedKIV: True` but didn't include the scheduled date
-- Frontend always redirected to `/list/today` regardless of actual scheduled date
-
-#### Solution
-1. **Backend (routes.py)**: Updated `/add` route to include `scheduledDate` in response when exiting KIV
-2. **Frontend (todo-operations.js)**: Updated redirect logic to check the scheduled date and redirect to correct view
-   - If scheduled for today → `/list/today`
-   - If scheduled for tomorrow → `/list/tomorrow`
-   - If scheduled for other dates → `/list/today` (fallback)
-
-#### Files Modified
-- `app/routes.py`: Lines 1519 (first case) and 1600 (second case) - Added `scheduledDate` to JSON response
-- `app/static/assets/js/todo-operations.js`: Lines 276-290 - Updated redirect logic to use scheduled date
-
-#### Testing
-- Edit a KIV task and schedule to tomorrow → Should redirect to `/list/tomorrow`
-- Edit a KIV task and schedule to specific date → Should redirect appropriately
-- Edit a KIV task with only reminder changes → Should redirect back to undone/KIV page
-
----
-
-### CRITICAL: Test Suite Accuracy Overhaul & Silent Failure Fix
-
-#### Problem Identified
-- Existing test suite uses in-memory SQLite (`sqlite:///:memory:`), causing all tests to claim success even when system breaks in production
-- Silent failures in routes go undetected - /add route was not creating todos but tests passed anyway
-- No verification of actual database persistence
-- False positives: tests pass but app fails with real MySQL database
-
-#### Root Cause Bug Fixed
-**`/add` Route Silent Failure (Line 1369 in routes.py)**:
-- Was checking: `if request.form.get("todo_id") == '':`
-- Problem: When `todo_id` not sent, returns `None` (not `''`), so condition is `False`
-- Result: New todos never created, route fails silently with no error message
-- Fix: Changed to `if not todo_id_param:` which handles `None`, `''`, and empty strings correctly
-
-#### Solution Implemented
-1. **Created test_system_accuracy.py** - Accurate test suite testing real MySQL database:
-   - Database persistence across session boundaries ✓
-   - KIV exit logic validation ✓
-   - User isolation enforcement ✓
-   - Tracker query ordering with same-timestamp tiebreaker ✓
-   - Todo schedule date persistence ✓
-   - Route data creation verification ✓
-   - Query filter accuracy ✓
-   - **ALL 18 TESTS NOW PASSING** ✓
-
-2. **Documentation Created**:
-   - `TEST_ACCURACY_ANALYSIS.md`: Comprehensive analysis of why tests fail
-   - `WHY_TESTS_FAIL.md`: Visual proof comparing broken vs accurate tests
-
-#### Key Takeaway
-Tests were claiming 100% success while system actually broke. This was **NOT** a code quality issue - it was a **test quality issue**. The new accurate test suite catches real problems that in-memory SQLite tests miss.
-
 ### Fixed
-- **CRITICAL: /add Route Silent Failure**: Route now correctly detects missing `todo_id` parameter and creates new todos
-- Fixed Tracker query race condition with deterministic ID-based ordering
-- Improved Tracker ordering to handle same-timestamp entries consistently
-- Enhanced KIV exit logic in /add route
-- User isolation preserved in all database queries
 
-### Technical Details
-- Fixed todo creation check in routes.py line 1369: `if not request.form.get("todo_id"):`
-- Ensured Tracker queries use: `.order_by(Tracker.timestamp.desc(), Tracker.id.desc())`
-- Maintained user_id filtering throughout to prevent cross-user data access
-- Added comprehensive test validation against real MySQL database
-
----
-
-## [Latest] - 2025-12-07
-
-### Fixed
-- **KIV Tab Switching**: Resolved issue where "Mark as KIV" button would not automatically switch to KIV tab after marking todo as KIV
-- **User Filtering**: Fixed KIV tab displaying todos from other users - now properly filters to show only current user's KIV todos  
-- **KIV Status Exit Logic**: Implemented automatic KIV status removal when todo is scheduled to today or tomorrow - KIV todos now properly exit KIV tab when given a schedule
-- **KIV Todo Edit from KIV Tab**: Fixed issue where editing a KIV todo from the KIV tab and scheduling it to today would keep it in KIV - now properly redirects to today's todo list when KIV status exits
-- **Tracker Query Accuracy**: Fixed race condition where multiple Tracker entries with same timestamp could return incorrect status by adding ID descending as tiebreaker
-- **Custom Date Button**: Fixed Custom Date schedule button not maintaining active state when selected
-- **Date Display Logic**: Corrected date display showing "Wednesday" instead of "Tomorrow" for next day todos
-- **KIV Button Visibility**: KIV button only appears on uncompleted todos (working as intended)
-
-### Technical Details
-- Enhanced undone.html with improved tab switching logic using Bootstrap API
-- Added user safety checks in undone route to prevent cross-user data leakage
-- Fixed JavaScript timing issues for tab parameter detection and URL cleanup
-- Improved schedule button active state management across todo operations
-- Added KIV exit logic in /add route: when todo is currently KIV (status 9) and user schedules it to today/tomorrow, status changes to 5 (new) instead of 8 (re-assign)
-- Updated Tracker queries throughout to use `.order_by(Tracker.timestamp.desc(), Tracker.id.desc())` for deterministic ordering
-- Added `exitedKIV` flag in /add route responses to notify frontend when a KIV todo has exited KIV status
-- Updated JavaScript setupSaveHandler to redirect to `/list/today` when a KIV todo exits, ensuring user sees the updated todo list instead of staying on KIV tab
+- **KIV Task Edit Redirect**: Fixed redirect logic when exiting KIV status
+- **Frontend Redirect Logic**: Updated redirect logic to respect schedule selection when editing tasks
+- **Test Suite**: Created `test_system_accuracy.py` - accurate test suite testing real MySQL database (18 tests passing)
+- **Route Bug**: Fixed `/add` route silent failure when `todo_id` parameter is missing
 
 ---
 
@@ -542,130 +65,18 @@ Tests were claiming 100% success while system actually broke. This was **NOT** a
 
 ### Fixed
 
-- **CRITICAL: Restored KIV Tab Auto-Switch Functionality**: Fixed regression where marking todos as KIV didn't automatically show the KIV tab
-  - KIV action now redirects to `/undone?tab=kiv` instead of just `/undone`
-  - Added JavaScript to detect URL parameter and auto-switch to KIV tab
-  - Applied fix to both `undone.html` and `list.html` templates
-  - Users now immediately see their todo moved to KIV section instead of having to manually click the tab
-  - Prevents similar regressions with centralized status action management
-  - Resolves frustrating UX where users thought KIV functionality was broken
-
-- **Fixed Date Display in Undone Tasks**: Corrected date shown for undone todos
-  - Undone tasks now show the target schedule date instead of creation timestamp
-  - Changed from `list.Tracker.timestamp` to `list.Todo.modified` in undone.html
-  - Resolves confusion where tasks scheduled for "Tomorrow" incorrectly showed creation date (e.g., "Wednesday")
-  - Applied to both regular undone tasks and KIV (Keep In View) tasks for consistency
-
-### Added
-
-- **Enhanced Schedule Button Display**: Updated Today/Tomorrow buttons to show actual dates
-  - Schedule buttons now display formatted dates (e.g., "Today (Sat, Dec 6)" instead of just "Today")
-  - Updated across all templates: `todo_add.html`, `todo.html`, and `view.html`
-  - Dynamic date updates using JavaScript with proper timezone handling
-  - Improves user awareness of when tasks are scheduled
-
-- **Active State Visual Feedback for Schedule Buttons**: Enhanced button selection indicators
-  - Today/Tomorrow/Custom Date buttons now show clear active state when selected
-  - Implemented Bootstrap button group styling with custom CSS enhancements
-  - Added JavaScript logic to manage active classes across schedule options
-  - Improves user experience by clearly indicating which schedule option is currently selected
-
-<<<<<<< HEAD
-## [Unreleased] - Security Hardening and Vulnerability Fixes
+- **KIV Tab Auto-Switch**: Fixed KIV tab not automatically showing after marking todo as KIV
+- **Date Display**: Fixed undone tasks showing creation timestamp instead of schedule date
+- **Tracker Query**: Fixed race condition in Tracker queries by adding ID-based ordering
+- **Custom Date Button**: Fixed schedule button active state management
 
 ### Security
 
-- **CRITICAL: Multiple Security Vulnerabilities Fixed**: Comprehensive security audit and hardening
-- **XSS Prevention**: Added HTML escaping for all user inputs in templates and forms
-  - Fixed XSS vulnerability in `momentjs.render()` function in `utils.py`
-  - Added input sanitization for todo titles and activities with length validation
-  - Implemented HTML escaping in email service templates for user-generated content
-- **Security Headers**: Implemented comprehensive security headers in all responses:
-  - `X-Content-Type-Options: nosniff` - Prevents MIME type sniffing
-  - `X-Frame-Options: DENY` - Prevents clickjacking attacks
-  - `X-XSS-Protection: 1; mode=block` - Enables browser XSS filtering
-  - `Referrer-Policy: strict-origin-when-cross-origin` - Controls referrer information
-  - `Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'` - Restricts resource loading
-- **Enhanced Configuration Security**: Auto-generated secure SECRET_KEY using cryptographically secure random generation
-- **Input Validation**: Added comprehensive input validation with character limits (titles: 255, activities: 10,000)
-
-### Fixed
-
-- **Password Change Test**: Fixed test case to use correct form field names and include required trigger parameter
-- **Form Processing**: Ensured password fields are not HTML-escaped to maintain authentication functionality
-- **Template Security**: All user-generated content in email templates is now properly escaped
-
-### Technical Improvements
-
-- Enhanced error handling for security-related form validation failures
-- Improved form field validation to prevent malicious input while preserving functionality
-- Added warnings for missing SECRET_KEY configuration with auto-fallback to secure generation
-- **Input Validation**: Added length limits and sanitization for form inputs (title: 255 chars, activities: 10K chars)
-- **Dependency Updates**: Updated critical dependencies for security patches:
-  - Flask 2.3.2 → 3.0.0
-  - Flask-SQLAlchemy 2.5.1 → 3.1.1  
-  - SQLAlchemy 1.4.17 → 2.0.23
-  - email-validator 1.1.2 → 2.2.0
-  - oauthlib 2.1.0 → 3.2.2
-- **Secret Key Security**: Auto-generates secure random key if not provided in environment
-- **Documentation**: Added comprehensive SECURITY.md with security measures and best practices
-
-### Files Modified:
-- `app/config.py`: Enhanced secret key generation and security warnings
-- `app/__init__.py`: Added comprehensive security headers
-- `app/routes.py`: Input validation and sanitization improvements  
-- `app/email_service.py`: Template injection prevention with escaped variables
-- `app/utils.py`: Fixed potential XSS in momentjs template rendering
-- `requirements.txt`: Updated security-critical dependencies
-- `SECURITY.md`: New comprehensive security documentation
-
-## [Unreleased] - Security Hardening and JavaScript Fixes
-
-### Security
-
-- **CRITICAL: Multiple Security Vulnerabilities Fixed**: Comprehensive security audit and hardening
-- **XSS Prevention**: Added HTML escaping for all user inputs in templates and forms
-  - Fixed XSS vulnerability in `momentjs.render()` function in `utils.py`
-  - Added input sanitization for todo titles and activities with length validation
-  - Implemented HTML escaping in email service templates for user-generated content
-- **Security Headers**: Implemented comprehensive security headers in all responses:
-  - `X-Content-Type-Options: nosniff` - Prevents MIME type sniffing
-  - `X-Frame-Options: DENY` - Prevents clickjacking attacks
-  - `X-XSS-Protection: 1; mode=block` - Enables browser XSS filtering
-  - `Referrer-Policy: strict-origin-when-cross-origin` - Controls referrer information
-  - `Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'` - Restricts resource loading
-- **Enhanced Configuration Security**: Auto-generated secure SECRET_KEY using cryptographically secure random generation
-- **Input Validation**: Added comprehensive input validation with character limits (titles: 255, activities: 10,000)
-
-### Fixed
-
-- **Password Change Test**: Fixed test case to use correct form field names and include required trigger parameter
-- **Form Processing**: Ensured password fields are not HTML-escaped to maintain authentication functionality
-- **Template Security**: All user-generated content in email templates is now properly escaped
-- **CRITICAL: JavaScript Syntax Error**: Fixed actual syntax error in todo_add.html causing "expected expression, got ')'" browser error 
-  - Root cause: Unbalanced closing brackets in Flatpickr modal initialization code
-  - Error location: todo_add.html template with extra `});` causing parse failure
-  - Fix: Corrected JavaScript bracket balance in modal event listener structure
-  - Impact: Eliminates browser JavaScript syntax errors, allows proper form functionality
-  - Files Modified: `app/templates/todo_add.html`
-
-- **CRITICAL: Browser Cache Management**: Added cache-busting headers and clearing tools to prevent JavaScript caching issues
-  - Root cause: Browsers caching old broken JavaScript despite template fixes
-  - Fix: Added Flask after_request headers (Cache-Control: no-cache) for development mode
-  - Tools: Created clear_cache.sh script with browser cache clearing instructions
-  - Impact: Forces browsers to load fresh JavaScript files after fixes
-  - Files Modified: `app/__init__.py`, new scripts: `clear_cache.sh`, `verify_js.sh`
-
-- **CRITICAL: Template JavaScript Validation**: Created comprehensive JavaScript syntax validation system
-  - Tools: verify_js.sh script validates all static JS files and extracts/validates template JavaScript
-  - Validation: Node.js syntax checking for all JavaScript code
-  - Impact: Proactive detection of JavaScript syntax issues across all templates
-  - Status: All template JavaScript now validates as syntactically correct (excluding normal Jinja2 variables)
-
-- **CRITICAL: JavaScript Syntax Error**: Fixed "expected expression, got ')'" error at line 795 in list.html
-  - Root cause: Extra closing brace in modal event listener structure causing syntax error
-  - Error location: list.html template around line 426 with redundant `});` closure
-  - Fix: Removed duplicate closing brace and properly structured event listener nesting
+- **XSS Prevention**: Added HTML escaping for user inputs, fixed `momentjs.render()` vulnerability
+- **Security Headers**: Implemented comprehensive security headers (X-Content-Type-Options, X-Frame-Options, CSP)
+- **Input Validation**: Added length limits (titles: 255 chars, activities: 10K chars)
+- **Auto-generated SECRET_KEY**: Secure key generation if not provided in environment
+- **JavaScript Fixes**: Fixed syntax errors in templates, added cache-busting headers
   - Structure corrected: DOMContentLoaded listener > modal event listener > proper closures
   - Impact: JavaScript now parses correctly without syntax errors
   - Files Modified: `app/templates/list.html`
