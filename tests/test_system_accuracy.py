@@ -10,7 +10,7 @@ from datetime import datetime, date, timedelta
 from contextlib import contextmanager
 
 # Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import app, db
 from app.models import User, Todo, Tracker, Status

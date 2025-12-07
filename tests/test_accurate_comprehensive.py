@@ -24,8 +24,8 @@ import time
 from datetime import datetime, timedelta
 from contextlib import contextmanager
 
-# Add the app to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add the parent directory (project root) to path to import app
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import app, db
 from app.models import Todo, User, Tracker, Status, KIV

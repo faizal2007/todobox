@@ -9,10 +9,10 @@ echo "
 📋 AVAILABLE TESTS:
 
 1. Comprehensive Accurate Test Suite (RECOMMENDED)
-   File: test_accurate_comprehensive.py
+   File: tests/test_accurate_comprehensive.py
    Tests: 25 comprehensive tests against real MySQL database
    
-   Run: python test_accurate_comprehensive.py
+   Run: python tests/test_accurate_comprehensive.py
    
    Coverage:
    • Database persistence across sessions ✓
@@ -31,21 +31,21 @@ echo "
 
 1. Before Committing Code
    ────────────────────
-   \$ python test_accurate_comprehensive.py
+   $ python tests/test_accurate_comprehensive.py
    
    Expected: All 25 tests pass ✓
    If failed: Debug and fix before committing
 
 2. After Pulling Changes
    ─────────────────────
-   \$ python test_accurate_comprehensive.py
+   $ python tests/test_accurate_comprehensive.py
    
    Expected: All 25 tests pass ✓
    If failed: Investigate which tests broke
 
 3. Before Deploying to Production
    ──────────────────────────────
-   \$ python test_accurate_comprehensive.py
+   $ python tests/test_accurate_comprehensive.py
    
    Expected: All 25 tests pass ✓
    If failed: Do not deploy - fix first
@@ -102,7 +102,7 @@ Q: Can I skip tests?
 A: No. If tests fail, your code is broken. Fix it first.
 
 Q: How do I add more tests?
-A: Edit test_accurate_comprehensive.py and add a new test function.
+A: Edit tests/test_accurate_comprehensive.py and add a new test function.
    See TEST_ACCURATE_COMPREHENSIVE_README.md for examples.
 
 ═══════════════════════════════════════════════════════════════════════════════
@@ -110,9 +110,9 @@ A: Edit test_accurate_comprehensive.py and add a new test function.
 📚 DOCUMENTATION:
 
 For detailed information, see:
-  • TEST_ACCURATE_COMPREHENSIVE_README.md - Full documentation
+  • docs/TEST_ACCURATE_COMPREHENSIVE_README.md - Full documentation
   • CHANGELOG.md - What's new and recent changes
-  • test_accurate_comprehensive.py - Test source code (well commented)
+  • tests/test_accurate_comprehensive.py - Test source code (well commented)
 
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -133,6 +133,6 @@ With accurate tests:
 
 ═══════════════════════════════════════════════════════════════════════════════
 
-✓ Ready to test! Run: python test_accurate_comprehensive.py
+✓ Ready to test! Run: python tests/test_accurate_comprehensive.py
 
 "
