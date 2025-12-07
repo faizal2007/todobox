@@ -12,7 +12,30 @@ from flask import current_app, url_for, render_template_string
 # Setup logging
 logger = logging.getLogger(__name__)
 
-# Email configuration from environment variables
+# Email configuration from Flask config (will be set when Flask app is initialized)
+# We'll use a function to get these dynamically from Flask config in production
+def _get_smtp_config():
+    """Get SMTP configuration from Flask app config or environment"""
+    try:
+        # Try to get from Flask config first
+        return {
+            'server': current_app.config.get('SMTP_SERVER', os.environ.get('SMTP_SERVER', 'smtp.gmail.com')),
+            'port': int(current_app.config.get('SMTP_PORT', os.environ.get('SMTP_PORT', '587'))),
+            'username': current_app.config.get('SMTP_USERNAME', os.environ.get('SMTP_USERNAME', '')),
+            'password': current_app.config.get('SMTP_PASSWORD', os.environ.get('SMTP_PASSWORD', '')),
+            'from_email': current_app.config.get('SMTP_FROM_EMAIL', os.environ.get('SMTP_FROM_EMAIL', ''))
+        }
+    except RuntimeError:
+        # No Flask app context, use environment directly
+        return {
+            'server': os.environ.get('SMTP_SERVER', 'smtp.gmail.com'),
+            'port': int(os.environ.get('SMTP_PORT', '587')),
+            'username': os.environ.get('SMTP_USERNAME', ''),
+            'password': os.environ.get('SMTP_PASSWORD', ''),
+            'from_email': os.environ.get('SMTP_FROM_EMAIL', '')
+        }
+
+# Keep module-level defaults for backwards compatibility
 SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
 SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
 SMTP_USERNAME = os.environ.get('SMTP_USERNAME', '')
@@ -85,8 +108,9 @@ def is_email_configured():
     """Check if email sending is properly configured"""
     # SMTP_SERVER and SMTP_PORT are required, but USERNAME/PASSWORD are optional (for MailHog)
     # SMTP_FROM_EMAIL is required to send from
-    configured = all([SMTP_SERVER, SMTP_PORT, SMTP_FROM_EMAIL])
-    logger.debug(f"Email configured check: {configured} (server={SMTP_SERVER}, port={SMTP_PORT}, from={SMTP_FROM_EMAIL})")
+    config = _get_smtp_config()
+    configured = all([config['server'], config['port'], config['from_email']])
+    logger.debug(f"Email configured check: {configured} (server={config['server']}, port={config['port']}, from={config['from_email']})")
     return configured
 
 
@@ -101,6 +125,7 @@ def send_sharing_invitation(invitation, from_user):
     Returns:
         tuple: (success: bool, error_message: str or None)
     """
+    config = _get_smtp_config()
     logger.info(f"Attempting to send email to {invitation.to_email} from {from_user.email}")
     
     if not is_email_configured():
@@ -109,7 +134,7 @@ def send_sharing_invitation(invitation, from_user):
         return False, msg
     
     try:
-        logger.debug(f"Connecting to SMTP server {SMTP_SERVER}:{SMTP_PORT}")
+        logger.debug(f"Connecting to SMTP server {config['server']}:{config['port']}")
         
         # Generate URLs for accept/decline actions
         accept_url = url_for('accept_share_invitation', token=invitation.token, _external=True)
@@ -144,7 +169,7 @@ def send_sharing_invitation(invitation, from_user):
         # Create email message
         msg = MIMEMultipart('alternative')
         msg['Subject'] = f"{from_user_name} wants to share their todos with you"
-        msg['From'] = SMTP_FROM_EMAIL
+        msg['From'] = config['from_email']
         msg['To'] = invitation.to_email
         
         # Attach both plain text and HTML versions
@@ -154,19 +179,19 @@ def send_sharing_invitation(invitation, from_user):
         msg.attach(part2)
         
         # Send email via SMTP
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            logger.debug(f"Connected to SMTP server {SMTP_SERVER}:{SMTP_PORT}")
+        with smtplib.SMTP(config['server'], config['port']) as server:
+            logger.debug(f"Connected to SMTP server {config['server']}:{config['port']}")
             
             # Only use TLS and login if credentials are provided (not needed for MailHog)
-            if SMTP_USERNAME and SMTP_PASSWORD:
+            if config['username'] and config['password']:
                 logger.debug("Using TLS and authentication")
                 server.starttls()
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.login(config['username'], config['password'])
             else:
                 logger.debug("No credentials provided, sending without authentication (MailHog mode)")
             
-            logger.info(f"Sending email from {SMTP_FROM_EMAIL} to {invitation.to_email}")
-            server.sendmail(SMTP_FROM_EMAIL, invitation.to_email, msg.as_string())
+            logger.info(f"Sending email from {config['from_email']} to {invitation.to_email}")
+            server.sendmail(config['from_email'], invitation.to_email, msg.as_string())
             logger.info(f"Email sent successfully to {invitation.to_email}")
         
         return True, None
