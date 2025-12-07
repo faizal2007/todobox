@@ -3,9 +3,18 @@
 
 import sys
 import os
+import pytest
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Skip this test in CI environments or when SMTP is not properly configured
+@pytest.mark.skipif(
+    os.environ.get('CI') == 'true' or 
+    os.environ.get('GITHUB_ACTIONS') == 'true' or
+    not os.path.exists(os.path.join(os.path.dirname(__file__), '..', '.flaskenv')),
+    reason="Email integration test skipped in CI or when .flaskenv is missing"
+)
 
 # Create Flask app and initialize config
 from app import app
