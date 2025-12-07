@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Latest] - 2025-12-07
 
+### FIXED: Dashboard dates showing as script tags instead of formatted dates
+
+**Issue**: Recent Todos displayed dates as `<script>document.write(...)</script>` instead of formatted dates.
+
+**Root Cause**: The `momentjs` utility was using client-side `document.write()` which:
+- Executes late in page load and can overwrite content
+- Displays as raw script tags instead of rendered dates
+
+**Solution**: Refactored `momentjs` class to render dates server-side using Python's datetime:
+- Replaced client-side JavaScript rendering with server-side Python datetime formatting
+- Added format conversion map: moment.js → Python strftime formats
+- Implemented proper parsing for string timestamps
+- Added error handling and None checks
+- Implemented calendar() and fromNow() methods with Python logic
+
+**Changes**:
+- app/utils.py: Complete rewrite of momentjs class
+  - `render()`: Now uses Python datetime.strftime() instead of document.write()
+  - `format()`: Direct date formatting with format conversion
+  - `calendar()`: Server-side logic for "Today at", "Tomorrow at", etc.
+  - `fromNow()`: Server-side relative time ("2 hours ago", "in 3 days", etc.)
+
+**Result**: Dashboard displays formatted dates correctly without script tags.
+
+**Testing**: All 25 comprehensive tests pass ✓
+
+---
+
 ### FIXED: Dashboard Recent Todos Not Displaying Dates
 
 **Issue**: Recent Todos on `/dashboard` showed todo names but dates were not visible.
