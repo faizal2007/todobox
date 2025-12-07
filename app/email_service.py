@@ -4,9 +4,13 @@ Email Service for sending sharing invitation links via Gmail API
 
 import os
 import smtplib
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import current_app, url_for, render_template_string
+
+# Setup logging
+logger = logging.getLogger(__name__)
 
 # Email configuration from environment variables
 SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
@@ -81,7 +85,9 @@ def is_email_configured():
     """Check if email sending is properly configured"""
     # SMTP_SERVER and SMTP_PORT are required, but USERNAME/PASSWORD are optional (for MailHog)
     # SMTP_FROM_EMAIL is required to send from
-    return all([SMTP_SERVER, SMTP_PORT, SMTP_FROM_EMAIL])
+    configured = all([SMTP_SERVER, SMTP_PORT, SMTP_FROM_EMAIL])
+    logger.debug(f"Email configured check: {configured} (server={SMTP_SERVER}, port={SMTP_PORT}, from={SMTP_FROM_EMAIL})")
+    return configured
 
 
 def send_sharing_invitation(invitation, from_user):
@@ -95,10 +101,16 @@ def send_sharing_invitation(invitation, from_user):
     Returns:
         tuple: (success: bool, error_message: str or None)
     """
+    logger.info(f"Attempting to send email to {invitation.to_email} from {from_user.email}")
+    
     if not is_email_configured():
-        return False, "Email service is not configured. Please configure SMTP settings."
+        msg = "Email service is not configured. Please configure SMTP settings."
+        logger.error(msg)
+        return False, msg
     
     try:
+        logger.debug(f"Connecting to SMTP server {SMTP_SERVER}:{SMTP_PORT}")
+        
         # Generate URLs for accept/decline actions
         accept_url = url_for('accept_share_invitation', token=invitation.token, _external=True)
         decline_url = url_for('decline_share_invitation', token=invitation.token, _external=True)
@@ -143,23 +155,38 @@ def send_sharing_invitation(invitation, from_user):
         
         # Send email via SMTP
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            logger.debug(f"Connected to SMTP server {SMTP_SERVER}:{SMTP_PORT}")
+            
             # Only use TLS and login if credentials are provided (not needed for MailHog)
             if SMTP_USERNAME and SMTP_PASSWORD:
+                logger.debug("Using TLS and authentication")
                 server.starttls()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            else:
+                logger.debug("No credentials provided, sending without authentication (MailHog mode)")
             
+            logger.info(f"Sending email from {SMTP_FROM_EMAIL} to {invitation.to_email}")
             server.sendmail(SMTP_FROM_EMAIL, invitation.to_email, msg.as_string())
+            logger.info(f"Email sent successfully to {invitation.to_email}")
         
         return True, None
         
-    except smtplib.SMTPAuthenticationError:
-        return False, "Failed to authenticate with email server. Please check SMTP credentials."
-    except smtplib.SMTPRecipientsRefused:
-        return False, f"The email address {invitation.to_email} was rejected by the server."
+    except smtplib.SMTPAuthenticationError as e:
+        msg = "Failed to authenticate with email server. Please check SMTP credentials."
+        logger.error(f"SMTP Auth Error: {str(e)}")
+        return False, msg
+    except smtplib.SMTPRecipientsRefused as e:
+        msg = f"The email address {invitation.to_email} was rejected by the server."
+        logger.error(f"SMTP Recipients Refused: {str(e)}")
+        return False, msg
     except smtplib.SMTPException as e:
-        return False, f"Failed to send email: {str(e)}"
+        msg = f"Failed to send email: {str(e)}"
+        logger.error(f"SMTP Exception: {str(e)}")
+        return False, msg
     except Exception as e:
-        return False, f"An unexpected error occurred: {str(e)}"
+        msg = f"An unexpected error occurred: {str(e)}"
+        logger.exception(f"Unexpected error sending email: {str(e)}")
+        return False, msg
 
 
 def get_invitation_link(invitation):
