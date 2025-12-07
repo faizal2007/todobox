@@ -204,34 +204,62 @@
             console.log('Detected tab=kiv parameter, auto-switching to KIV tab');
             // Use a small delay to ensure DOM is fully loaded
             setTimeout(function() {
-                const kivTab = document.querySelector('#taskTabs a[href="#kiv"]');
-                const kivPane = document.getElementById('kiv');
-                const uncompletedTab = document.querySelector('#taskTabs a[href="#uncompleted"]');
-                const uncompletedPane = document.getElementById('uncompleted');
-                
-                console.log('KIV tab element:', kivTab);
-                console.log('KIV pane element:', kivPane);
-                
-                if (kivTab && kivPane) {
-                    // Remove active states from uncompleted tab/pane
-                    if (uncompletedTab) uncompletedTab.classList.remove('active');
-                    if (uncompletedPane) {
-                        uncompletedPane.classList.remove('show', 'active');
-                    }
-                    
-                    // Add active states to KIV tab/pane
-                    kivTab.classList.add('active');
-                    kivTab.setAttribute('aria-selected', 'true');
-                    kivPane.classList.add('show', 'active');
-                    
-                    console.log('Successfully switched to KIV tab');
-                } else {
-                    console.error('Could not find KIV tab or pane elements');
+                // Try multiple selectors to find the KIV tab
+                let kivTab = document.getElementById('kiv-tab');
+                if (!kivTab) {
+                    kivTab = document.querySelector('#taskTabs a[href="#kiv"]');
+                }
+                if (!kivTab) {
+                    kivTab = document.querySelector('.nav-link[href="#kiv"]');
                 }
                 
-                // Clean up URL parameter
-                window.history.replaceState({}, '', window.location.pathname);
-            }, 100);
+                console.log('KIV tab element:', kivTab);
+                console.log('All tab elements:', document.querySelectorAll('#taskTabs .nav-link'));
+                console.log('KIV pane element:', document.getElementById('kiv'));
+                
+                if (kivTab) {
+                    // Try Bootstrap tab API first
+                    if (typeof $ !== 'undefined' && $.fn.tab) {
+                        console.log('Using Bootstrap tab API');
+                        $(kivTab).tab('show');
+                    } else {
+                        // Fallback to manual tab switching
+                        console.log('Using manual tab switching');
+                        const kivPane = document.getElementById('kiv');
+                        const uncompletedTab = document.getElementById('uncompleted-tab') || document.querySelector('#taskTabs a[href="#uncompleted"]');
+                        const uncompletedPane = document.getElementById('uncompleted');
+                        
+                        // Remove active states from uncompleted tab/pane
+                        if (uncompletedTab) {
+                            uncompletedTab.classList.remove('active');
+                            uncompletedTab.setAttribute('aria-selected', 'false');
+                        }
+                        if (uncompletedPane) {
+                            uncompletedPane.classList.remove('show', 'active');
+                        }
+                        
+                        // Add active states to KIV tab/pane
+                        kivTab.classList.add('active');
+                        kivTab.setAttribute('aria-selected', 'true');
+                        if (kivPane) {
+                            kivPane.classList.add('show', 'active');
+                        }
+                    }
+                    
+                    console.log('Successfully switched to KIV tab');
+                    
+                    // Clean up URL parameter AFTER tab switching is complete
+                    setTimeout(function() {
+                        window.history.replaceState({}, '', window.location.pathname);
+                    }, 300);
+                } else {
+                    console.error('Could not find KIV tab element');
+                    console.log('Available elements with "kiv" in ID or class:');
+                    document.querySelectorAll('[id*="kiv"], [class*="kiv"]').forEach(el => {
+                        console.log(' - Element:', el.tagName, 'ID:', el.id, 'Class:', el.className);
+                    });
+                }
+            }, 150);
         }
         
         // Ensure tab switching works even if Bootstrap JS isn't active

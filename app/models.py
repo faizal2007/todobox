@@ -213,6 +213,52 @@ class Tracker(db.Model): # type: ignore[attr-defined]
         db.session.query(Todo).filter(Todo.id == todo_id).delete() # type: ignore[attr-defined]
         db.session.commit() # type: ignore[attr-defined]
 
+class KIV(db.Model): # type: ignore[attr-defined]
+    """
+    Keep In View (KIV) - separate table to manage KIV todos cleanly
+    This replaces the previous status_id=9 approach
+    """
+    id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
+    todo_id = db.Column(db.Integer, db.ForeignKey('todo.id'), unique=True, nullable=False) # type: ignore[attr-defined]
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True) # type: ignore[attr-defined]
+    entered_at = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]  # When entered KIV
+    exited_at = db.Column(db.DateTime, nullable=True) # type: ignore[attr-defined]  # When exited KIV (for history)
+    is_active = db.Column(db.Boolean, default=True, index=True) # type: ignore[attr-defined]  # Whether currently in KIV
+
+    def __init__(self, todo_id, user_id, entered_at=None):
+        self.todo_id = todo_id
+        self.user_id = user_id
+        self.entered_at = entered_at if entered_at is not None else datetime.now()
+        self.is_active = True
+
+    @classmethod
+    def add(cls, todo_id, user_id):
+        """Add a todo to KIV"""
+        kiv = cls.query.filter_by(todo_id=todo_id).first() # type: ignore[attr-defined]
+        if kiv:
+            # Reactivate if it was previously KIV
+            kiv.is_active = True
+            kiv.exited_at = None
+        else:
+            kiv = cls(todo_id=todo_id, user_id=user_id)
+        db.session.add(kiv) # type: ignore[attr-defined]
+        db.session.commit() # type: ignore[attr-defined]
+
+    @classmethod
+    def remove(cls, todo_id):
+        """Remove a todo from KIV (mark as exited)"""
+        kiv = cls.query.filter_by(todo_id=todo_id).first() # type: ignore[attr-defined]
+        if kiv:
+            kiv.is_active = False
+            kiv.exited_at = datetime.now()
+            db.session.commit() # type: ignore[attr-defined]
+
+    @classmethod
+    def is_kiv(cls, todo_id):
+        """Check if a todo is currently in KIV"""
+        kiv = cls.query.filter_by(todo_id=todo_id, is_active=True).first() # type: ignore[attr-defined]
+        return kiv is not None
+
 class Todo(db.Model): # type: ignore[attr-defined]
     id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
     # Encrypted fields - use Text to accommodate encrypted data (larger than plaintext)

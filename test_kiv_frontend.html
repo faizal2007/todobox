@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KIV Tab Switching Test</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>KIV Tab Switching Test</h2>
+        
+        <div class="alert alert-info">
+            <strong>Testing Steps:</strong>
+            <ol>
+                <li>Open browser console (F12)</li>
+                <li>Click the "Simulate KIV Button Click" button</li>
+                <li>Watch console messages</li>
+                <li>See if tab switches automatically to KIV</li>
+            </ol>
+        </div>
+        
+        <!-- Simulate the tab structure from undone.html -->
+        <ul class="nav nav-tabs" id="taskTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="uncompleted-tab" data-bs-toggle="tab" href="#uncompleted" role="tab" aria-controls="uncompleted" aria-selected="true">
+                    Uncompleted Tasks <span class="badge badge-secondary">3</span>
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="kiv-tab" data-bs-toggle="tab" href="#kiv" role="tab" aria-controls="kiv" aria-selected="false">
+                    KIV <span class="badge badge-secondary">3</span>
+                </a>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="taskTabsContent">
+            <div class="tab-pane fade show active" id="uncompleted" role="tabpanel" aria-labelledby="uncompleted-tab">
+                <div class="mt-3">
+                    <h4>Uncompleted Tasks</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Test Todo</h5>
+                            <p>This is a test todo item</p>
+                            <button class="btn btn-warning btn-sm" onclick="simulateKivClick()">Simulate KIV Button Click</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-pane fade" id="kiv" role="tabpanel" aria-labelledby="kiv-tab">
+                <div class="mt-3">
+                    <h4>KIV Tasks</h4>
+                    <div class="alert alert-success">
+                        <strong>Success!</strong> You're now viewing the KIV tab.
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>KIV Todo 1</h5>
+                            <p>This todo has been marked as KIV</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        function simulateKivClick() {
+            console.log('🔄 Starting KIV simulation...');
+            
+            // Simulate the redirect with tab parameter
+            const newUrl = window.location.origin + window.location.pathname + '?tab=kiv';
+            console.log('📍 Simulating redirect to:', newUrl);
+            
+            // Update URL without reload (like the actual app does)
+            window.history.pushState({}, '', newUrl);
+            console.log('✅ URL updated to:', window.location.href);
+            
+            // Simulate the tab switching logic from undone.html
+            setTimeout(function() {
+                console.log('⏰ Starting tab switch logic...');
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                const activeTab = urlParams.get('tab');
+                console.log('🔍 Detected tab parameter:', activeTab);
+                
+                if (activeTab === 'kiv') {
+                    console.log('🎯 Tab parameter is "kiv", attempting to switch...');
+                    
+                    const kivTab = document.getElementById('kiv-tab');
+                    const kivPane = document.getElementById('kiv');
+                    
+                    console.log('📋 KIV tab element:', kivTab);
+                    console.log('📋 KIV pane element:', kivPane);
+                    
+                    if (kivTab) {
+                        console.log('🔧 Using Bootstrap tab API to switch...');
+                        
+                        try {
+                            // Use Bootstrap 4 tab API
+                            $(kivTab).tab('show');
+                            console.log('✅ Bootstrap tab show executed');
+                            
+                            // Verify the switch worked
+                            setTimeout(function() {
+                                if (kivTab.classList.contains('active')) {
+                                    console.log('🎉 SUCCESS: KIV tab is now active');
+                                } else {
+                                    console.log('❌ FAILURE: KIV tab switch failed');
+                                }
+                            }, 100);
+                            
+                        } catch (error) {
+                            console.error('❌ Bootstrap tab API error:', error);
+                            
+                            // Fallback manual switching
+                            console.log('🔧 Attempting manual tab switching...');
+                            
+                            // Remove active from all tabs and panes
+                            document.querySelectorAll('.nav-link').forEach(tab => {
+                                tab.classList.remove('active');
+                                tab.setAttribute('aria-selected', 'false');
+                            });
+                            document.querySelectorAll('.tab-pane').forEach(pane => {
+                                pane.classList.remove('show', 'active');
+                            });
+                            
+                            // Activate KIV tab
+                            kivTab.classList.add('active');
+                            kivTab.setAttribute('aria-selected', 'true');
+                            kivPane.classList.add('show', 'active');
+                            
+                            console.log('✅ Manual tab switching completed');
+                        }
+                        
+                    } else {
+                        console.error('❌ KIV tab element not found!');
+                    }
+                    
+                    // Clean up URL after delay
+                    setTimeout(function() {
+                        console.log('🧹 Cleaning up URL parameter...');
+                        const cleanUrl = window.location.origin + window.location.pathname;
+                        window.history.replaceState({}, '', cleanUrl);
+                        console.log('✅ URL cleaned:', window.location.href);
+                    }, 300);
+                } else {
+                    console.log('ℹ️  No tab parameter or not "kiv"');
+                }
+            }, 100);
+        }
+        
+        // Test URL parameter detection on page load
+        $(document).ready(function() {
+            console.log('📄 Page loaded');
+            console.log('🔍 Current URL:', window.location.href);
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+            console.log('🎯 Tab parameter on load:', tabParam);
+            
+            if (tabParam === 'kiv') {
+                console.log('🚀 Auto-switching to KIV tab on page load...');
+                simulateKivClick();
+            }
+        });
+    </script>
+</body>
+</html>
