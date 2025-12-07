@@ -1178,8 +1178,10 @@ TodoBox Team'''
         
         try:
             with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-                server.starttls()
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                # Only use TLS and login if credentials are provided (not needed for MailHog)
+                if SMTP_USERNAME and SMTP_PASSWORD:
+                    server.starttls()
+                    server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 server.sendmail(SMTP_FROM_EMAIL, [current_user.email], msg.as_string())
             flash(f'A verification code has been sent to {current_user.email}. Check your inbox and enter it below to confirm account deletion.', 'info')
         except Exception as e:
