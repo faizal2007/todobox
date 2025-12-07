@@ -4,11 +4,38 @@ Email Service for sending sharing invitation links via Gmail API
 
 import os
 import smtplib
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import current_app, url_for, render_template_string
 
-# Email configuration from environment variables
+# Setup logging
+logger = logging.getLogger(__name__)
+
+# Email configuration from Flask config (will be set when Flask app is initialized)
+# We'll use a function to get these dynamically from Flask config in production
+def _get_smtp_config():
+    """Get SMTP configuration from Flask app config or environment"""
+    try:
+        # Try to get from Flask config first
+        return {
+            'server': current_app.config.get('SMTP_SERVER', os.environ.get('SMTP_SERVER', 'smtp.gmail.com')),
+            'port': int(current_app.config.get('SMTP_PORT', os.environ.get('SMTP_PORT', '587'))),
+            'username': current_app.config.get('SMTP_USERNAME', os.environ.get('SMTP_USERNAME', '')),
+            'password': current_app.config.get('SMTP_PASSWORD', os.environ.get('SMTP_PASSWORD', '')),
+            'from_email': current_app.config.get('SMTP_FROM_EMAIL', os.environ.get('SMTP_FROM_EMAIL', ''))
+        }
+    except RuntimeError:
+        # No Flask app context, use environment directly
+        return {
+            'server': os.environ.get('SMTP_SERVER', 'smtp.gmail.com'),
+            'port': int(os.environ.get('SMTP_PORT', '587')),
+            'username': os.environ.get('SMTP_USERNAME', ''),
+            'password': os.environ.get('SMTP_PASSWORD', ''),
+            'from_email': os.environ.get('SMTP_FROM_EMAIL', '')
+        }
+
+# Keep module-level defaults for backwards compatibility
 SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
 SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
 SMTP_USERNAME = os.environ.get('SMTP_USERNAME', '')
@@ -79,7 +106,12 @@ This email was sent from TodoBox. If you didn't expect this invitation, you can 
 
 def is_email_configured():
     """Check if email sending is properly configured"""
-    return all([SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM_EMAIL])
+    # SMTP_SERVER and SMTP_PORT are required, but USERNAME/PASSWORD are optional (for MailHog)
+    # SMTP_FROM_EMAIL is required to send from
+    config = _get_smtp_config()
+    configured = all([config['server'], config['port'], config['from_email']])
+    logger.debug(f"Email configured check: {configured} (server={config['server']}, port={config['port']}, from={config['from_email']})")
+    return configured
 
 
 def send_sharing_invitation(invitation, from_user):
@@ -93,13 +125,32 @@ def send_sharing_invitation(invitation, from_user):
     Returns:
         tuple: (success: bool, error_message: str or None)
     """
+    config = _get_smtp_config()
+    logger.info(f"Attempting to send email to {invitation.to_email} from {from_user.email}")
+    
     if not is_email_configured():
-        return False, "Email service is not configured. Please configure SMTP settings."
+        msg = "Email service is not configured. Please configure SMTP settings."
+        logger.error(msg)
+        return False, msg
     
     try:
+        logger.debug(f"Connecting to SMTP server {config['server']}:{config['port']}")
+        
         # Generate URLs for accept/decline actions
-        accept_url = url_for('accept_share_invitation', token=invitation.token, _external=True)
-        decline_url = url_for('decline_share_invitation', token=invitation.token, _external=True)
+        try:
+            # Try to generate URLs with proper request context
+            accept_url = url_for('accept_share_invitation', token=invitation.token, _external=True)
+            decline_url = url_for('decline_share_invitation', token=invitation.token, _external=True)
+        except RuntimeError:
+            # Outside request context - build URL manually
+            logger.debug("Building URLs outside request context")
+            scheme = current_app.config.get('PREFERRED_URL_SCHEME', 'https')
+            server_name = current_app.config.get('SERVER_NAME', 'localhost:5000')
+            base_url = f"{scheme}://{server_name}"
+            accept_url = f"{base_url}/accept_invitation/{invitation.token}"
+            decline_url = f"{base_url}/decline_invitation/{invitation.token}"
+            logger.debug(f"Generated manual URLs: accept={accept_url}, decline={decline_url}")
+        
         
         # Get sender's display name and escape for safety
         from html import escape
@@ -130,7 +181,7 @@ def send_sharing_invitation(invitation, from_user):
         # Create email message
         msg = MIMEMultipart('alternative')
         msg['Subject'] = f"{from_user_name} wants to share their todos with you"
-        msg['From'] = SMTP_FROM_EMAIL
+        msg['From'] = config['from_email']
         msg['To'] = invitation.to_email
         
         # Attach both plain text and HTML versions
@@ -140,21 +191,39 @@ def send_sharing_invitation(invitation, from_user):
         msg.attach(part2)
         
         # Send email via SMTP
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.sendmail(SMTP_FROM_EMAIL, invitation.to_email, msg.as_string())
+        with smtplib.SMTP(config['server'], config['port']) as server:
+            logger.debug(f"Connected to SMTP server {config['server']}:{config['port']}")
+            
+            # Only use TLS and login if credentials are provided (not needed for MailHog)
+            if config['username'] and config['password']:
+                logger.debug("Using TLS and authentication")
+                server.starttls()
+                server.login(config['username'], config['password'])
+            else:
+                logger.debug("No credentials provided, sending without authentication (MailHog mode)")
+            
+            logger.info(f"Sending email from {config['from_email']} to {invitation.to_email}")
+            server.sendmail(config['from_email'], invitation.to_email, msg.as_string())
+            logger.info(f"Email sent successfully to {invitation.to_email}")
         
         return True, None
         
-    except smtplib.SMTPAuthenticationError:
-        return False, "Failed to authenticate with email server. Please check SMTP credentials."
-    except smtplib.SMTPRecipientsRefused:
-        return False, f"The email address {invitation.to_email} was rejected by the server."
+    except smtplib.SMTPAuthenticationError as e:
+        msg = "Failed to authenticate with email server. Please check SMTP credentials."
+        logger.error(f"SMTP Auth Error: {str(e)}")
+        return False, msg
+    except smtplib.SMTPRecipientsRefused as e:
+        msg = f"The email address {invitation.to_email} was rejected by the server."
+        logger.error(f"SMTP Recipients Refused: {str(e)}")
+        return False, msg
     except smtplib.SMTPException as e:
-        return False, f"Failed to send email: {str(e)}"
+        msg = f"Failed to send email: {str(e)}"
+        logger.error(f"SMTP Exception: {str(e)}")
+        return False, msg
     except Exception as e:
-        return False, f"An unexpected error occurred: {str(e)}"
+        msg = f"An unexpected error occurred: {str(e)}"
+        logger.exception(f"Unexpected error sending email: {str(e)}")
+        return False, msg
 
 
 def get_invitation_link(invitation):

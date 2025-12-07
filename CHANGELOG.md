@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Accessibility Compliance**: Added semantic `<main role="main">` landmarks to all content templates for WCAG 2.1 AA compliance
+  - Fixed templates: `dashboard.html`, `list.html`, `settings.html`, `account.html`, `sharing.html`, `undone.html`, `shared_todos.html`
+- **Progress Bar ARIA**: Fixed progress bar ARIA attributes to use JavaScript-set values without symbols for screen reader compatibility
+- **Sharing Toggle Test**: Fixed test_sharing_toggle to send JSON data instead of form data, matching the API endpoint expectations
 - **Mark as KIV button**: Fixed "Mark as KIV" button on `/undone` page. Updated `mark_kiv` route to add todo to KIV table and create Tracker entry
 - **Dashboard dates**: Fixed dates showing as script tags. Refactored `momentjs` class to render dates server-side using Python datetime
 - **Dashboard Recent Todos**: Fixed recent todos not displaying dates. Simplified query with `outerjoin` and proper filtering

@@ -47,14 +47,26 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted mb-4">
-                        Manage all users in the system. You can block users to prevent login, delete users, or grant admin privileges.
-                    </p>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <p class="text-muted mb-0">
+                                Manage all users in the system. You can block users to prevent login, delete users, or grant admin privileges.
+                            </p>
+                        </div>
+                        <div>
+                            <button type="button" id="bulk-delete-btn" class="btn btn-danger btn-sm" disabled>
+                                <i class="mdi mdi-delete-multiple mr-1"></i>Bulk Delete
+                            </button>
+                        </div>
+                    </div>
 
                     <div class="table-responsive">
                         <table class="table table-hover table-striped">
                             <thead class="thead-dark">
                                 <tr>
+                                    <th width="40">
+                                        <input type="checkbox" id="select-all-users" title="Select all users">
+                                    </th>
                                     <th>ID</th>
                                     <th>Email</th>
                                     <th>Full Name</th>
@@ -66,7 +78,17 @@
                             </thead>
                             <tbody>
                                 {% for user in users %}
-                                <tr class="{{ 'table-danger' if user.is_blocked else '' }}">
+                                <tr class="{{ 'table-danger' if user.is_blocked else '' }} {{ 'table-warning' if user.id == current_user.id else '' }}">
+                                    <td>
+                                        {% set is_protected_admin = (user.email is none or user.email == '') %}
+                                        {% if user.id != current_user.id and not is_protected_admin %}
+                                        <input type="checkbox" class="user-checkbox" value="{{ user.id }}" data-email="{{ user.email }}">
+                                        {% elif user.id == current_user.id %}
+                                        <span class="text-muted" title="Cannot delete yourself"><i class="mdi mdi-account-lock"></i></span>
+                                        {% else %}
+                                        <span class="text-muted" title="Protected admin"><i class="mdi mdi-shield-account"></i></span>
+                                        {% endif %}
+                                    </td>
                                     <td>{{ user.id }}</td>
                                     <td>
                                         <strong>{{ user.email }}</strong>
@@ -186,6 +208,12 @@
                             <p><button class="btn btn-danger btn-sm"><i class="mdi mdi-delete"></i></button> Delete user - Remove permanently</p>
                         </div>
                     </div>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <p class="mb-0"><strong>Bulk Operations:</strong> Select multiple users using checkboxes and use the "Bulk Delete" button to delete multiple users at once.</p>
+                            <p class="mb-0 text-warning"><i class="mdi mdi-alert-circle mr-1"></i><strong>Protection:</strong> You cannot select or delete yourself, and protected administrators (users without email) cannot be deleted.</p>
+                        </div>
+                    </div>
                     <hr>
                     <p class="mb-0 text-muted">
                         <strong>Note:</strong> Users without an email address are considered system administrators and cannot be blocked, deleted, or demoted.
@@ -210,9 +238,17 @@ document.addEventListener('DOMContentLoaded', function() {
             var form = this.closest('form');
             var email = this.dataset.email;
             
+            // Escape HTML characters to prevent XSS
+            var escapedEmail = email.replace(/&/g, '&amp;')
+                                   .replace(/</g, '&lt;')
+                                   .replace(/>/g, '&gt;')
+                                   .replace(/"/g, '&quot;')
+                                   .replace(/'/g, '&#x27;')
+                                   .replace(/\//g, '&#x2F;');
+            
             showConfirmModal(
                 'Delete User',
-                'Are you sure you want to delete user "' + email + '"? This action cannot be undone and will delete all their data.',
+                'Are you sure you want to delete user "' + escapedEmail + '"? This action cannot be undone and will delete all their data.',
                 function() {
                     form.submit();
                 },
@@ -221,6 +257,91 @@ document.addEventListener('DOMContentLoaded', function() {
                 'bg-danger text-white'
             );
         });
+    });
+
+    // Bulk selection functionality
+    const selectAllCheckbox = document.getElementById('select-all-users');
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+
+    // Handle select all checkbox
+    selectAllCheckbox.addEventListener('change', function() {
+        const isChecked = this.checked;
+        userCheckboxes.forEach(function(checkbox) {
+            checkbox.checked = isChecked;
+        });
+        updateBulkDeleteButton();
+    });
+
+    // Handle individual checkboxes
+    userCheckboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            updateBulkDeleteButton();
+            // Update select all checkbox state
+            const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+            selectAllCheckbox.checked = checkedBoxes.length === userCheckboxes.length;
+            selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < userCheckboxes.length;
+        });
+    });
+
+    // Update bulk delete button state
+    function updateBulkDeleteButton() {
+        const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+        bulkDeleteBtn.disabled = checkedBoxes.length === 0;
+        bulkDeleteBtn.textContent = checkedBoxes.length > 0 ? 
+            `Bulk Delete (${checkedBoxes.length})` : 'Bulk Delete';
+    }
+
+    // Handle bulk delete button
+    bulkDeleteBtn.addEventListener('click', function() {
+        const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+        if (checkedBoxes.length === 0) return;
+
+        const selectedEmails = Array.from(checkedBoxes).map(cb => cb.dataset.email);
+        const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+        // Escape HTML characters to prevent XSS
+        const escapeHtml = (text) => {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+
+        const escapedEmails = selectedEmails.map(email => escapeHtml(email));
+        const emailList = escapedEmails.join('\n');
+
+        showConfirmModal(
+            'Bulk Delete Users',
+            `Are you sure you want to delete ${checkedBoxes.length} user(s)?\n\nSelected users:\n${emailList}\n\nThis action cannot be undone and will delete all their data.`,
+            function() {
+                // Create form and submit
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ url_for("admin_bulk_delete_users") }}';
+                
+                // Add CSRF token
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrf_token';
+                csrfInput.value = '{{ csrf_token() }}';
+                form.appendChild(csrfInput);
+                
+                // Add selected user IDs
+                selectedIds.forEach(function(id) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'user_ids';
+                    input.value = id;
+                    form.appendChild(input);
+                });
+                
+                document.body.appendChild(form);
+                form.submit();
+            },
+            'Delete All',
+            'btn-danger',
+            'bg-danger text-white'
+        );
     });
 });
 </script>

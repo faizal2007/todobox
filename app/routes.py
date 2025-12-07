@@ -126,20 +126,19 @@ def get_quote():
     # Try external API first (ZenQuotes), fall back to LOCAL_QUOTES on any error
     api_url = 'https://zenquotes.io/api/random'
     try:
-        req = urllib.request.Request(api_url, headers={'User-Agent': 'TodoBox/1.0'})
-        with urllib.request.urlopen(req, timeout=3) as resp:
-            data = resp.read()
-            parsed = json.loads(data)
-            # ZenQuotes returns a list with objects containing 'q' (quote) and 'a' (author)
-            if parsed and type(parsed) == list and len(parsed) > 0:
-                item = parsed[0]
-                if type(item) == dict:
-                    quote = item.get('q')
-                    author = item.get('a')
-                    if quote:
-                        # Include author if present
-                        return jsonify({'quote': quote, 'author': author})
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError, json.JSONDecodeError, TypeError):
+        response = requests.get(api_url, headers={'User-Agent': 'TodoBox/1.0'}, timeout=3)
+        response.raise_for_status()
+        parsed = response.json()
+        # ZenQuotes returns a list with objects containing 'q' (quote) and 'a' (author)
+        if parsed and type(parsed) == list and len(parsed) > 0:
+            item = parsed[0]
+            if type(item) == dict:
+                quote = item.get('q')
+                author = item.get('a')
+                if quote:
+                    # Include author if present
+                    return jsonify({'quote': quote, 'author': author})
+    except (requests.RequestException, ValueError, TypeError):
         pass
 
     # Fallback
@@ -1037,15 +1036,20 @@ def delete_account():
         todo_ids = [t.id for t in user.todo.all()]
         
         if todo_ids:
-            # Delete all trackers for this user's todos
+            # Delete in order respecting foreign key constraints:
+            # 1. Delete KIV records (Keep In View - references todos)
+            from app.models import KIV
+            KIV.query.filter(KIV.todo_id.in_(todo_ids)).delete(synchronize_session=False)  # type: ignore[attr-defined]
+            
+            # 2. Delete all trackers for this user's todos
             for tid in todo_ids:
                 Tracker.query.filter_by(todo_id=tid).delete()  # type: ignore[attr-defined]
             
-            # Delete all todo shares (both as owner and shared with)
+            # 3. Delete all todo shares (both as owner and shared with)
             TodoShare.query.filter_by(owner_id=user.id).delete()  # type: ignore[attr-defined]
             TodoShare.query.filter_by(shared_with_id=user.id).delete()  # type: ignore[attr-defined]
             
-            # Delete all todos for this user
+            # 4. Delete all todos for this user
             Todo.query.filter_by(user_id=user.id).delete()  # type: ignore[attr-defined]
         
         # Record the deletion to prevent immediate re-registration
@@ -1178,8 +1182,10 @@ TodoBox Team'''
         
         try:
             with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-                server.starttls()
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                # Only use TLS and login if credentials are provided (not needed for MailHog)
+                if SMTP_USERNAME and SMTP_PASSWORD:
+                    server.starttls()
+                    server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 server.sendmail(SMTP_FROM_EMAIL, [current_user.email], msg.as_string())
             flash(f'A verification code has been sent to {current_user.email}. Check your inbox and enter it below to confirm account deletion.', 'info')
         except Exception as e:
@@ -2242,6 +2248,107 @@ def admin_delete_user(user_id):
     db.session.commit()  # type: ignore[attr-defined]
     
     flash(f'User "{label}" and all their data have been deleted.', 'success')
+    return redirect(url_for('admin_panel'))
+
+
+@app.route('/admin/bulk-delete-users', methods=['POST'])
+@login_required
+@require_admin
+def admin_bulk_delete_users():
+    """Bulk delete multiple users"""
+    user_ids = request.form.getlist('user_ids', type=int)
+    
+    if not user_ids:
+        flash('No users selected for deletion.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    # Validate users exist and can be deleted
+    users_to_delete = []
+    invalid_users = []
+    
+    for user_id in user_ids:
+        user = User.query.get(user_id)
+        if not user:
+            invalid_users.append(f"User ID {user_id} not found")
+            continue
+        
+        # Cannot delete yourself
+        if user.id == current_user.id:
+            invalid_users.append(f"Cannot delete yourself ({user.email})")
+            continue
+        
+        # Cannot delete protected admins (users without email)
+        if is_protected_admin(user):
+            invalid_users.append(f"Cannot delete protected admin ({user.email or 'no email'})")
+            continue
+        
+        users_to_delete.append(user)
+    
+    if invalid_users:
+        flash(f'Some users could not be deleted: {" | ".join(invalid_users)}', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    if not users_to_delete:
+        flash('No valid users to delete.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    # Perform bulk deletion
+    deleted_count = 0
+    deleted_emails = []
+    
+    try:
+        for user in users_to_delete:
+            user_email = user.email
+            user_oauth_id = user.oauth_id
+            
+            # Delete user's todos and related data (same logic as single delete)
+            user_todo_ids = [t.id for t in user.todo.all()]
+            if user_todo_ids:
+                # Delete KIV records first (foreign key constraint)
+                from app.models import KIV
+                KIV.query.filter(KIV.todo_id.in_(user_todo_ids)).delete(synchronize_session=False)
+                
+                # Delete trackers
+                Tracker.query.filter(Tracker.todo_id.in_(user_todo_ids)).delete(synchronize_session=False)
+                
+                # Delete todos
+                Todo.query.filter_by(user_id=user.id).delete()
+            
+            # Delete sharing relationships
+            TodoShare.query.filter(
+                or_(TodoShare.owner_id == user.id, TodoShare.shared_with_id == user.id)
+            ).delete(synchronize_session=False)
+            
+            # Delete share invitations
+            if user.email:
+                ShareInvitation.query.filter(
+                    or_(ShareInvitation.from_user_id == user.id, ShareInvitation.to_email == user.email)
+                ).delete(synchronize_session=False)
+            else:
+                ShareInvitation.query.filter(ShareInvitation.from_user_id == user.id).delete(synchronize_session=False)
+            
+            # Record the deletion to prevent immediate re-registration
+            from app.models import DeletedAccount
+            deleted_record = DeletedAccount(
+                email=user_email,
+                oauth_id=user_oauth_id,
+                cooldown_days=7
+            )
+            db.session.add(deleted_record)
+            
+            # Delete the user
+            db.session.delete(user)
+            deleted_count += 1
+            deleted_emails.append(user_email or f"User {user.id}")
+        
+        db.session.commit()
+        
+        flash(f'Successfully deleted {deleted_count} user(s): {", ".join(deleted_emails)}', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error during bulk deletion: {str(e)}', 'error')
+    
     return redirect(url_for('admin_panel'))
 
 

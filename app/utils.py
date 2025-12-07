@@ -1,5 +1,5 @@
 #from jinja2 import Markup
-from markupsafe import Markup
+# from markupsafe import Markup
 
 from datetime import datetime
 
@@ -10,7 +10,7 @@ class momentjs:
     def render(self, format):
         """Render date on server-side using Python datetime instead of client-side JavaScript"""
         if self.timestamp is None:
-            return Markup("")
+            return ""
         
         # Ensure timestamp is a datetime object
         if isinstance(self.timestamp, str):
@@ -22,7 +22,7 @@ class momentjs:
                     # Fallback to strptime for other formats
                     dt = datetime.strptime(self.timestamp, '%Y-%m-%d %H:%M:%S')
                 except (ValueError, TypeError):
-                    return Markup("")
+                    return ""
         else:
             dt = self.timestamp
         
@@ -41,9 +41,9 @@ class momentjs:
         python_format = format_map.get(format, format)
         
         try:
-            return Markup(dt.strftime(python_format))
+            return dt.strftime(python_format)
         except (ValueError, TypeError):
-            return Markup("")
+            return ""
     
     # Format time
     def format(self, fmt):
@@ -52,7 +52,7 @@ class momentjs:
     def calendar(self):
         """Calendar format: today/tomorrow at time, etc"""
         if self.timestamp is None:
-            return Markup("")
+            return ""
         
         if isinstance(self.timestamp, str):
             try:
@@ -61,7 +61,7 @@ class momentjs:
                 try:
                     dt = datetime.strptime(self.timestamp, '%Y-%m-%d %H:%M:%S')
                 except (ValueError, TypeError):
-                    return Markup("")
+                    return ""
         else:
             dt = self.timestamp
         
@@ -69,16 +69,16 @@ class momentjs:
         tomorrow = today.replace(day=today.day + 1) if today.day < 28 else today.replace(day=1, month=today.month + 1)
         
         if dt.date() == today:
-            return Markup(f"Today at {dt.strftime('%I:%M %p')}")
+            return f"Today at {dt.strftime('%I:%M %p')}"
         elif dt.date() == tomorrow:
-            return Markup(f"Tomorrow at {dt.strftime('%I:%M %p')}")
+            return f"Tomorrow at {dt.strftime('%I:%M %p')}"
         else:
-            return Markup(dt.strftime('%B %d, %Y at %I:%M %p'))
+            return dt.strftime('%B %d, %Y at %I:%M %p')
 
     def fromNow(self):
         """Relative time: 2 hours ago, in 3 days, etc"""
         if self.timestamp is None:
-            return Markup("")
+            return ""
         
         if isinstance(self.timestamp, str):
             try:
@@ -87,7 +87,7 @@ class momentjs:
                 try:
                     dt = datetime.strptime(self.timestamp, '%Y-%m-%d %H:%M:%S')
                 except (ValueError, TypeError):
-                    return Markup("")
+                    return ""
         else:
             dt = self.timestamp
         
@@ -100,29 +100,29 @@ class momentjs:
             # Past
             abs_seconds = abs(total_seconds)
             if abs_seconds < 60:
-                return Markup("just now")
+                return "just now"
             elif abs_seconds < 3600:
                 minutes = abs_seconds // 60
-                return Markup(f"{minutes} minute{'s' if minutes > 1 else ''} ago")
+                return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
             elif abs_seconds < 86400:
                 hours = abs_seconds // 3600
-                return Markup(f"{hours} hour{'s' if hours > 1 else ''} ago")
+                return f"{hours} hour{'s' if hours > 1 else ''} ago"
             else:
                 days = abs_seconds // 86400
-                return Markup(f"{days} day{'s' if days > 1 else ''} ago")
+                return f"{days} day{'s' if days > 1 else ''} ago"
         else:
             # Future
             if total_seconds < 60:
-                return Markup("in a few seconds")
+                return "in a few seconds"
             elif total_seconds < 3600:
                 minutes = total_seconds // 60
-                return Markup(f"in {minutes} minute{'s' if minutes > 1 else ''}")
+                return f"in {minutes} minute{'s' if minutes > 1 else ''}"
             elif total_seconds < 86400:
                 hours = total_seconds // 3600
-                return Markup(f"in {hours} hour{'s' if hours > 1 else ''}")
+                return f"in {hours} hour{'s' if hours > 1 else ''}"
             else:
                 days = total_seconds // 86400
-                return Markup(f"in {days} day{'s' if days > 1 else ''}")
+                return f"in {days} day{'s' if days > 1 else ''}"
 
  
         

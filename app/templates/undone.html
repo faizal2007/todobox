@@ -4,6 +4,7 @@
 {% endblock %}
 {% block content %}
      {% set active_page = title %}
+     <main role="main">
                <!-- Start Content-->
                <div class="container-fluid">
                     <!-- start page title -->
@@ -156,6 +157,7 @@
                     {% endif %}
                </div>
           </div>
+     </main>
           {% include "todo_add.html" %}
           {% include "confirm_modal.html" %}
      </div>
