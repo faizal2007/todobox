@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Latest] - 2025-12-07
 
+### FIXED: Mark as KIV not working on /undone page
+
+**Issue**: "Mark as KIV" button on `/undone` page wasn't working. Old bug returned.
+
+**Root Cause**: The `mark_kiv` route was only adding a Tracker entry with status_id=9 but was NOT adding the todo to the KIV table. The KIV table is now the source of truth for KIV status, not the Tracker.
+
+**Solution**: Updated `mark_kiv` route to:
+1. Call `KIV.add(todo.id, current_user.id)` to add todo to KIV table (NEW)
+2. Keep calling `Tracker.add()` for history tracking
+
+**Changes**:
+- app/routes.py: Updated mark_kiv() route (line 1241-1263)
+  - Added `KIV.add()` call to mark todo as KIV in the KIV table
+  - Kept Tracker entry for history
+
+**Result**: Mark as KIV button now works correctly on /undone page.
+
+**Testing**: 
+- All 25 comprehensive tests pass ✓
+- mark_kiv logic tested directly ✓
+- Verified KIV entry created in KIV table ✓
+- Verified Tracker entry created with status_id=9 ✓
+
+---
+
 ### FIXED: Dashboard dates showing as script tags instead of formatted dates
 
 **Issue**: Recent Todos displayed dates as `<script>document.write(...)</script>` instead of formatted dates.

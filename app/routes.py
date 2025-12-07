@@ -1247,6 +1247,11 @@ def mark_kiv(todo_id):
         date_entry = datetime.now()
         todo.modified = date_entry
         db.session.commit()  # type: ignore[attr-defined]
+        
+        # Add to KIV table (source of truth for KIV status)
+        KIV.add(todo.id, current_user.id)
+        
+        # Also add Tracker entry for history
         Tracker.add(todo.id, 9, date_entry)  # Status 9 = KIV
 
         return jsonify({
