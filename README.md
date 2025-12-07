@@ -356,13 +356,25 @@ curl -X POST -H "Authorization: Bearer YOUR_API_TOKEN" \
 
 See [CHANGELOG.md](CHANGELOG.md) for all recent changes including:
 
-- KIV (Keep In View) status feature with dedicated tab
-- Wisdom quotes integration (ZenQuotes + local fallback)
-- Salt generator function
-- Todo grid layout reorganization
-- Setup wizard implementation
-- Configuration consolidation
-- CORS fixes
+- **Latest Fixes** (December 2025):
+  - Fixed Mark as KIV button on undone page
+  - Fixed dashboard date display issues
+  - Created comprehensive test suite against real MySQL database
+  - Reorganized documentation structure
+  
+- **Previous Updates**:
+  - KIV (Keep In View) status feature with dedicated tab
+  - Separated KIV table from status tracking
+  - Fixed route redirect logic
+  - Enhanced test suite accuracy
+  
+- **Security & Performance**:
+  - XSS prevention and security headers
+  - JavaScript optimization (jQuery to vanilla JS)
+  - Input validation and sanitization
+  - Auto-generated secure SECRET_KEY
+
+For detailed changelog, see [CHANGELOG.md](CHANGELOG.md)
 
 ## Quick Tips
 
