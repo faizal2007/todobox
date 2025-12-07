@@ -53,7 +53,7 @@
 ```bash
 # Ubuntu/Debian
 sudo apt-get install python3 python3-pip python3-venv mysql-server nginx
-```
+```python
 
 #### Deployment Steps
 
@@ -62,14 +62,14 @@ sudo apt-get install python3 python3-pip python3-venv mysql-server nginx
    ```bash
    sudo useradd -m -s /bin/bash todobox
    sudo -u todobox mkdir -p /var/www/todobox
-   ```
+```python
 
 2. **Clone Repository**
 
    ```bash
    cd /var/www/todobox
    git clone <repository-url> .
-   ```
+```python
 
 3. **Setup Virtual Environment**
 
@@ -77,7 +77,7 @@ sudo apt-get install python3 python3-pip python3-venv mysql-server nginx
    python3 -m venv venv
    source venv/bin/activate
    pip install -r requirements.txt
-   ```
+```python
 
 4. **Configure Application**
 
@@ -85,7 +85,7 @@ sudo apt-get install python3 python3-pip python3-venv mysql-server nginx
    cp .flaskenv.example .flaskenv
    # Edit .flaskenv with production settings
    nano .flaskenv
-   ```
+```python
 
 5. **Create Systemd Service**
 
@@ -111,7 +111,7 @@ sudo apt-get install python3 python3-pip python3-venv mysql-server nginx
    sudo systemctl daemon-reload
    sudo systemctl enable todobox
    sudo systemctl start todobox
-   ```
+```yaml
 
 6. **Configure Nginx**
 
@@ -138,14 +138,14 @@ sudo apt-get install python3 python3-pip python3-venv mysql-server nginx
    sudo ln -s /etc/nginx/sites-available/todobox /etc/nginx/sites-enabled/
    sudo nginx -t
    sudo systemctl restart nginx
-   ```
+```python
 
 7. **Setup SSL with Let's Encrypt**
 
    ```bash
    sudo apt-get install certbot python3-certbot-nginx
    sudo certbot --nginx -d yourdomain.com
-   ```
+```python
 
 8. **Initialize Database**
 
@@ -153,7 +153,7 @@ sudo apt-get install python3 python3-pip python3-venv mysql-server nginx
    cd /var/www/todobox
    source venv/bin/activate
    flask db upgrade
-   ```
+```python
 
 ### Option 2: Docker Deployment
 
@@ -188,7 +188,7 @@ ENV FLASK_ENV=production
 
 # Run application
 CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:9191", "todobox:app"]
-```
+```python
 
 #### docker-compose.yml
 
@@ -229,14 +229,14 @@ services:
 
 volumes:
   db_data:
-```
+```yaml
 
 #### Deploy Docker
 
 ```bash
 docker-compose build
 docker-compose up -d
-```
+```yaml
 
 ### Option 3: Cloud Deployment
 
@@ -260,7 +260,7 @@ echo "python-3.9.10" > runtime.txt
 
 # Deploy
 git push heroku main
-```
+```python
 
 #### DigitalOcean Deployment
 
@@ -335,7 +335,7 @@ if not app.debug and not app.testing:
     app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
     app.logger.info('TodoBox startup')
-```
+```python
 
 ### Key Metrics to Monitor
 
@@ -382,13 +382,13 @@ mysqldump -u todobox -p todobox | gzip > backup_$(date +%Y%m%d).sql.gz
 # Automated daily backup
 0 2 * * * mysqldump -u todobox -p'password' todobox | \
     gzip > /backups/todobox_$(date +\%Y\%m\%d).sql.gz
-```
+```sql
 
 **Database Restore:**
 
 ```bash
 mysql -u todobox -p todobox < backup_20240115.sql
-```
+```sql
 
 ### Application Backup
 
@@ -398,7 +398,7 @@ tar -czf app_backup_$(date +%Y%m%d).tar.gz /var/www/todobox
 
 # Backup instance data
 tar -czf instance_backup_$(date +%Y%m%d).tar.gz /var/www/todobox/instance
-```
+```sql
 
 ### Backup Schedule
 
@@ -421,7 +421,7 @@ systemctl restart todobox
 
 # 4. Check logs
 tail -f /var/log/syslog | grep todobox
-```
+```sql
 
 ## Performance Optimization
 
@@ -434,7 +434,7 @@ WHERE user_id = 1 AND modified > DATE_SUB(NOW(), INTERVAL 7 DAY);
 
 -- Add indexes if needed
 CREATE INDEX idx_user_modified ON todo(user_id, modified);
-```
+```sql
 
 ### Application Optimization
 
@@ -451,7 +451,7 @@ CREATE INDEX idx_user_modified ON todo(user_id, modified);
 gzip on;
 gzip_types text/plain text/css text/javascript application/json;
 gzip_min_length 1000;
-```
+```json
 
 ## Scaling Strategies
 
@@ -464,7 +464,7 @@ Load Balancer
 └─ App Server 3
        ↓
   MySQL Cluster (with replication)
-```
+```sql
 
 ### Vertical Scaling
 
@@ -481,7 +481,7 @@ App Server
 Redis Cache (sessions, queries)
     ↓
 Database
-```
+```yaml
 
 ## Troubleshooting
 
@@ -498,7 +498,7 @@ sudo journalctl -u todobox -n 50
 cd /var/www/todobox
 source venv/bin/activate
 python todobox.py
-```
+```python
 
 ### Database Connection Error
 
@@ -511,7 +511,7 @@ grep DATABASE .flaskenv
 
 # Verify database user permissions
 SHOW GRANTS FOR 'todobox'@'localhost';
-```
+```python
 
 ### High Memory Usage
 
@@ -521,7 +521,7 @@ ps aux | grep gunicorn
 
 # Reduce workers or memory limit
 # Edit systemd service or docker config
-```
+```sql
 
 ### Slow Queries
 
@@ -532,7 +532,7 @@ SET GLOBAL long_query_time = 2;
 
 -- Analyze slow queries
 SELECT * FROM mysql.slow_log;
-```
+```sql
 
 ## Security Maintenance
 
@@ -551,7 +551,7 @@ SELECT * FROM mysql.slow_log;
 ```bash
 pip list --outdated
 pip install --upgrade package-name
-```
+```sql
 
 ### Log Monitoring for Security
 
@@ -561,7 +561,7 @@ grep "Invalid username" /var/log/todobox.log
 
 # Check for brute force attempts
 grep "login" /var/log/todobox.log | grep -c failed
-```
+```yaml
 
 ## Upgrade Procedure
 
@@ -597,7 +597,7 @@ sudo systemctl start todobox
 
 # 7. Verify
 curl http://127.0.0.1:9191
-```
+```sql
 
 ### After Upgrade
 

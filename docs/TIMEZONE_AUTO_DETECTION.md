@@ -54,21 +54,21 @@ COUNTRY_TO_TIMEZONE = {
     'MY': 'Asia/Kuala_Lumpur',
     # ... 20+ more countries
 }
-```
+```python
 
 ## File Structure
 
 ### New Files
 ```
 app/geolocation.py          # Core geolocation and timezone detection module
-```
+```python
 
 ### Updated Files
 ```
 app/routes.py               # setup_account() - added timezone detection
 app/oauth.py                # process_google_callback() - added timezone detection
 app/templates/settings.html # Added user notification about auto-detection
-```
+```python
 
 ## Available Timezones
 
@@ -97,7 +97,7 @@ Examples:
 [Auto-sets timezone to Asia/Kuala_Lumpur]
     ↓
 [User sees notification: "Your timezone is automatically detected..."]
-```
+```sql
 
 ### Changing Timezone
 Users can always change their timezone in Settings:
@@ -145,7 +145,7 @@ response = requests.get(
     'https://your-api.com/json/{ip}',
     # ... configure parameters
 )
-```
+```python
 
 ## Testing
 
@@ -163,7 +163,7 @@ with app.test_request_context(environ_base={'REMOTE_ADDR': '8.8.8.8'}):
 # Test timezone correction
 tz = get_timezone_for_user('Invalid/Zone')
 print(f"Corrected: {tz}")  # Output: UTC or detected timezone
-```
+```python
 
 ## Future Enhancements
 

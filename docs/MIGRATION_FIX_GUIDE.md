@@ -25,7 +25,7 @@ c682ef478e45 (Remove token_created_at)
     ↓
 d1f2e3c4b5a6 (Fix: Ensure api_token exists) ← NEW
 
-```
+```python
 
 ## Solution: Step-by-Step Fix for Production
 
@@ -46,7 +46,7 @@ flask db upgrade
 # 4. Seed initial data
 flask seed-db
 
-```
+```sql
 
 ### Option B: Existing Database (In-Place Fix)
 
@@ -61,14 +61,14 @@ mysql -u username -p database_name
 
 # In MySQL console:
 SHOW COLUMNS FROM user;
-```
+```sql
 
 If `api_token` column is missing, run:
 
 ```sql
 ALTER TABLE user ADD COLUMN api_token VARCHAR(255) UNIQUE INDEX NULL;
 CREATE UNIQUE INDEX ix_user_api_token ON user(api_token);
-```
+```sql
 
 Then run:
 
@@ -79,7 +79,7 @@ flask db current  # Check current state
 # 4. Run the fix migration
 flask db upgrade
 
-```
+```sql
 
 ### Option C: Manual Schema Reconstruction (Most Thorough)
 
@@ -100,7 +100,7 @@ ALTER TABLE user ADD INDEX IF NOT EXISTS ix_user_api_token (api_token);
 # 4. Verify schema
 DESCRIBE user;
 SHOW INDEXES FROM user;
-```
+```sql
 
 ## How to Apply the Fix
 
@@ -117,7 +117,7 @@ flask db upgrade
 
 # 3. Seed initial data
 python -c "from app import db; from app.models import User, Status; User.seed(); Status.seed()"
-```
+```python
 
 ### For Production Environment
 
@@ -133,7 +133,7 @@ flask db upgrade
 
 # 4. Verify schema
 mysql -u your_user -p your_database -e "DESCRIBE user; SHOW INDEXES FROM user WHERE Column_name='api_token';"
-```
+```sql
 
 ## Verification Checklist
 
@@ -151,7 +151,7 @@ flask run
 
 # 4. Query should work without error
 mysql -u user -p database -e "SELECT id, username, email, api_token FROM user;"
-```
+```python
 
 ## Files Modified
 
@@ -170,7 +170,7 @@ mysql -u user -p database -e "SELECT id, username, email, api_token FROM user;"
    mysql -u user -p -e "create database test_db; use test_db; source production_backup.sql;" 
    flask db upgrade --target d1f2e3c4b5a6
 
-```
+```python
 
 1. **Validate model-to-database schema match**:
 
@@ -180,7 +180,7 @@ mysql -u user -p database -e "SELECT id, username, email, api_token FROM user;"
    inspector = inspect(db.engine)
    print(inspector.get_columns('user'))
 
-```
+```python
 
 ## Troubleshooting
 
@@ -202,7 +202,7 @@ flask db upgrade
 # Force re-apply specific migration
 flask db upgrade d1f2e3c4b5a6
 
-```
+```yaml
 
 ## Database Schema Reference
 

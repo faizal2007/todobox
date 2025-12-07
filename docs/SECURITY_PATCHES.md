@@ -32,14 +32,14 @@ Applied patches for all 4 critical issues identified in CODE_REVIEW.md:
 ```python
 SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
 SECRET_KEY = 'you-will-never-guess'
-```
+```python
 
 **After:**
 
 ```python
 SALT = os.environ.get('SALT', 'default-salt-change-in-production')
 SECRET_KEY = os.environ.get('SECRET_KEY', 'change-me-in-production')
-```
+```python
 
 **Next Step:** Set real secrets in `.flaskenv`:
 
@@ -47,7 +47,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'change-me-in-production')
 cp .flaskenv.example .flaskenv
 # Edit .flaskenv with secure values
 nano .flaskenv
-```
+```python
 
 ---
 
@@ -65,7 +65,7 @@ nano .flaskenv
 
 ```python
 getActivities_html = markdown.markdown(getActivities, extensions=['fenced_code'])
-```
+```python
 
 **After:**
 
@@ -82,7 +82,7 @@ getActivities_html = clean(
     markdown.markdown(getActivities, extensions=['fenced_code']),
     tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES
 )
-```
+```python
 
 **Security Impact:** Prevents XSS attacks through Markdown injection
 
@@ -104,7 +104,7 @@ getActivities_html = clean(
 def getList(type, start, end):
     done = 2
     # ... no validation
-```
+```python
 
 **After:**
 
@@ -117,7 +117,7 @@ def getList(type, start, end):
     
     done = 2
     # ... rest of method
-```
+```python
 
 **Security Impact:** Prevents invalid/malicious type values from being processed
 
@@ -141,7 +141,7 @@ class UpdateAccount(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     # Validation code was commented out
-```
+```python
 
 **After:**
 
@@ -161,7 +161,7 @@ class UpdateAccount(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user is not None and user.id != current_user.id:
             raise ValidationError('Email already in use')
-```
+```python
 
 **Data Integrity Impact:** Prevents duplicate usernames and emails
 
@@ -190,7 +190,7 @@ class UpdateAccount(FlaskForm):
 # Login and create a todo with XSS payload
 # Payload: <script>alert('XSS')</script>
 # Expected: Script tags removed, no alert shown
-```
+```sql
 
 ### Test Form Validation
 
@@ -200,7 +200,7 @@ class UpdateAccount(FlaskForm):
 
 # Try to update account with duplicate email
 # Expected: ValidationError - "Email already in use"
-```
+```python
 
 ### Test getList Input Validation
 
@@ -209,7 +209,7 @@ class UpdateAccount(FlaskForm):
 from app.models import Todo
 Todo.getList('invalid', '2024-01-15 00:00', '2024-01-15 23:59')
 # Expected: ValueError - "Invalid type: invalid"
-```
+```python
 
 ### Test Environment Variable Loading
 
@@ -219,7 +219,7 @@ flask shell
 >>> from app import app
 >>> app.config['SECRET_KEY']
 # Should show value from .flaskenv, not hardcoded
-```
+```python
 
 ---
 
@@ -229,7 +229,7 @@ flask shell
 
 ```bash
 pip install -r requirements.txt
-```
+```python
 
 ### 2. Configure Environment
 
@@ -237,20 +237,20 @@ pip install -r requirements.txt
 cp .flaskenv.example .flaskenv
 # Edit with your secure values
 nano .flaskenv
-```
+```yaml
 
 Set secure values:
 
 ```bash
 SECRET_KEY="generate-a-secure-random-key-here"
 SALT="generate-a-secure-salt-here"
-```
+```yaml
 
 ### 3. Restart Application
 
 ```bash
 flask run
-```
+```yaml
 
 ---
 
@@ -274,7 +274,7 @@ def seed():
     u.set_password('admin1234')  # ← Change this password after first login
     db.session.add(u)
     db.session.commit()
-```
+```python
 
 ---
 
@@ -333,7 +333,7 @@ If you need to revert these changes:
 ```bash
 git checkout app/config.py app/routes.py app/forms.py app/models.py
 git checkout requirements.txt .flaskenv.example
-```
+```python
 
 ---
 

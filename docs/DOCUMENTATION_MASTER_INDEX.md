@@ -623,7 +623,7 @@ python3 create_user.py
 
 # 4. Start app
 flask run
-```
+```python
 
 ### Option 2: Detailed Setup
 
@@ -639,7 +639,7 @@ python3 create_user.py
 
 # 4. Start app
 flask run
-```
+```python
 
 ### Option 3: Use Quick Start
 
@@ -652,7 +652,7 @@ source venv/bin/activate
 flask db upgrade
 python3 create_user.py
 flask run
-```
+```python
 
 ---
 
@@ -767,7 +767,7 @@ docs/
 │
 ├── screenshots/                                 ← Application screenshots
 └── archive/                                     ← Archived analysis documents
-```
+```yaml
 
 **Total:** 24 documentation files + archive
 

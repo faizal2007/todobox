@@ -8,7 +8,7 @@ First, install the required packages:
 
 ```bash
 pip install -r requirements.txt
-```
+```yaml
 
 The following packages are required for OAuth:
 
@@ -42,7 +42,7 @@ Add the following to your `.flaskenv` or `.env` file:
 GOOGLE_CLIENT_ID=your_client_id_here
 GOOGLE_CLIENT_SECRET=your_client_secret_here
 OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google
-```
+```yaml
 
 For production:
 
@@ -50,7 +50,7 @@ For production:
 GOOGLE_CLIENT_ID=your_client_id_here
 GOOGLE_CLIENT_SECRET=your_client_secret_here
 OAUTH_REDIRECT_URI=https://yourdomain.com/auth/callback/google
-```
+```yaml
 
 ## Step 4: Run Database Migration
 
@@ -59,7 +59,7 @@ If you're updating an existing database, you need to add the new columns to the 
 ```bash
 flask db migrate -m "Add OAuth columns to User model"
 flask db upgrade
-```
+```yaml
 
 For fresh installations, the columns will be created automatically.
 
@@ -69,7 +69,7 @@ For fresh installations, the columns will be created automatically.
 
 ```bash
 python todobox.py
-```
+```python
 
 #### 2. Navigate to the login page: `http://localhost:5000/login`
 

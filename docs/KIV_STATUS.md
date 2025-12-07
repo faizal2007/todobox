@@ -69,7 +69,7 @@ From the KIV Tasks tab, you can:
 
 ```sql
 id = 9, name = 'kiv'
-```
+```sql
 
 The KIV status is stored as status ID 9 in the status table.
 
@@ -81,7 +81,7 @@ The KIV status is stored as status ID 9 in the status table.
 POST /<todo_id>/kiv
 Authorization: Session-based authentication
 Content-Type: application/x-www-form-urlencoded
-```
+```sql
 
 **Response (200 OK)**:
 
@@ -90,13 +90,13 @@ Content-Type: application/x-www-form-urlencoded
   "status": "Success",
   "todo_id": "task-id"
 }
-```
+```yaml
 
 #### Alternative Endpoint (with date context)
 
 ```http
 POST /<date_id>/<todo_id>/kiv
-```
+```sql
 
 Where `date_id` can be 'today', 'tomorrow', etc.
 
@@ -114,7 +114,7 @@ Where `date_id` can be 'today', 'tomorrow', etc.
     </span>
     <span class="sr-only">Mark as KIV</span>
 </a>
-```
+```yaml
 
 **JavaScript Handler**:
 
@@ -151,7 +151,7 @@ document.querySelectorAll('.kiv').forEach(function(button) {
         });
     });
 });
-```
+```python
 
 ### Backend Implementation
 
@@ -173,7 +173,7 @@ def mark_kiv(todo_id):
             'status': 'Success',
             'todo_id': todo.id if todo else None
         }), 200
-```
+```python
 
 **Filtering KIV Tasks** (app/routes.py):
 
@@ -204,7 +204,7 @@ def undone():
                          title='Undone Tasks',
                          todos=undone_todos,
                          kiv_todos=kiv_todos)
-```
+```python
 
 ## UI Design
 
@@ -264,7 +264,7 @@ recent_todos = db.session.query(Todo, Tracker).join(
     Tracker.status_id != 6,  # Not done
     Tracker.status_id != 9   # Not KIV
 ).order_by(Todo.modified.desc()).limit(5).all()
-```
+```python
 
 ## Best Practices
 

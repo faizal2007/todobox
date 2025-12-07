@@ -17,7 +17,7 @@ All ARIA attributes that accept numeric values must use numbers, NOT strings wit
      aria-valuemax="100%">
     75.5%
 </div>
-```
+```yaml
 
 **✅ CORRECT:**
 
@@ -28,7 +28,7 @@ All ARIA attributes that accept numeric values must use numbers, NOT strings wit
      aria-valuemax="100">
     75.5%
 </div>
-```
+```sql
 
 **Key Points:**
 
@@ -48,7 +48,7 @@ When using Jinja2 templates with dynamic values, set ARIA attributes via JavaScr
      aria-valuenow="{{ completion_rate | round(0) }}">
     {{ completion_rate }}%
 </div>
-```
+```yaml
 
 **✅ CORRECT:**
 
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-```
+```yaml
 
 ### 3. Form Labels and Accessibility
 
@@ -81,14 +81,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 ```html
 <input type="text" placeholder="Enter your name">
-```
+```yaml
 
 **✅ CORRECT:**
 
 ```html
 <label for="userName">Name:</label>
 <input type="text" id="userName" placeholder="Enter your name">
-```
+```json
 
 ### 4. Image Alt Text
 
@@ -96,13 +96,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 ```html
 <img src="icon.png">
-```
+```json
 
 **✅ CORRECT:**
 
 ```html
 <img src="icon.png" alt="Description of image">
-```
+```json
 
 ### 5. Button Accessibility
 
@@ -110,13 +110,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 ```html
 <div class="btn" onclick="doSomething()">Click me</div>
-```
+```json
 
 **✅ CORRECT:**
 
 ```html
 <button type="button" onclick="doSomething()">Click me</button>
-```
+```json
 
 ### 6. Color Contrast
 
@@ -126,13 +126,13 @@ Ensure text has sufficient contrast ratio (minimum 4.5:1 for normal text, 3:1 fo
 
 ```html
 <p style="color: #999; background: #f5f5f5;">Light gray on light background</p>
-```
+```json
 
 **✅ CORRECT:**
 
 ```html
 <p style="color: #333; background: #f5f5f5;">Dark gray on light background</p>
-```
+```json
 
 ### 7. Heading Hierarchy
 
@@ -142,7 +142,7 @@ Ensure text has sufficient contrast ratio (minimum 4.5:1 for normal text, 3:1 fo
 <h1>Main Title</h1>
 <h3>Subsection</h3>  <!-- Missing h2 -->
 <h2>Another Section</h2>
-```
+```yaml
 
 **✅ CORRECT:**
 
@@ -150,7 +150,7 @@ Ensure text has sufficient contrast ratio (minimum 4.5:1 for normal text, 3:1 fo
 <h1>Main Title</h1>
 <h2>Subsection</h2>
 <h2>Another Section</h2>
-```
+```yaml
 
 ### 8. Navigation and Landmarks
 
@@ -161,7 +161,7 @@ Ensure text has sufficient contrast ratio (minimum 4.5:1 for normal text, 3:1 fo
     <a href="#">Home</a>
     <a href="#">About</a>
 </div>
-```
+```json
 
 **✅ CORRECT:**
 
@@ -170,7 +170,7 @@ Ensure text has sufficient contrast ratio (minimum 4.5:1 for normal text, 3:1 fo
     <a href="#">Home</a>
     <a href="#">About</a>
 </nav>
-```
+```yaml
 
 ### 9. Links - Must Have Meaningful Text
 
@@ -179,14 +179,14 @@ Ensure text has sufficient contrast ratio (minimum 4.5:1 for normal text, 3:1 fo
 ```html
 <a href="/more">Click here</a>
 <a href="/info">Read more</a>
-```
+```yaml
 
 **✅ CORRECT:**
 
 ```html
 <a href="/more">Learn more about our services</a>
 <a href="/info">Read product information</a>
-```
+```yaml
 
 ### 10. Form Inputs - Proper Types
 
@@ -195,14 +195,14 @@ Ensure text has sufficient contrast ratio (minimum 4.5:1 for normal text, 3:1 fo
 ```html
 <input type="text" placeholder="Email">
 <input type="text" placeholder="Phone">
-```
+```yaml
 
 **✅ CORRECT:**
 
 ```html
 <input type="email" placeholder="Email">
 <input type="tel" placeholder="Phone">
-```
+```yaml
 
 ## Template Checklist
 
@@ -234,7 +234,7 @@ Before creating a new template, verify:
 // Convert percentage string to integer
 const value = parseInt("75.5%", 10); // Result: 75
 element.setAttribute('aria-valuenow', value);
-```
+```yaml
 
 ### Error: color-contrast: Elements must have sufficiently contrasting colors
 
@@ -248,7 +248,7 @@ color: #aaa; /* Too light */
 
 /* Good */
 color: #333; /* Dark enough */
-```
+```yaml
 
 ### Error: label: Form elements must have associated labels
 
@@ -259,7 +259,7 @@ color: #333; /* Dark enough */
 ```html
 <label for="email">Email:</label>
 <input type="email" id="email">
-```
+```yaml
 
 ### Error: link-name: Links must have discernible text
 
@@ -273,7 +273,7 @@ color: #333; /* Dark enough */
 
 <!-- Good -->
 <a href="/page">Go to next page ➜</a>
-```
+```yaml
 
 ## Testing Checklist
 
@@ -308,7 +308,7 @@ For each new template:
      aria-valuemax="100"
      style="width: {{ completion_rate }}%">
 </div>
-```
+```yaml
 
 ### In JavaScript (Set after page load)
 
@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const percent = parseInt(bar.style.width, 10);
     bar.setAttribute('aria-valuenow', percent);
 });
-```
+```yaml
 
 ## Summary
 

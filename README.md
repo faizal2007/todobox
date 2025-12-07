@@ -16,7 +16,7 @@ flask db upgrade
 
 # 4. Run the application
 flask run
-```
+```yaml
 
 Visit `http://localhost:5000` in your browser.
 
@@ -63,7 +63,7 @@ python3 -c "from app.config import generate_salt; print(generate_salt())"  # Gen
 
 # Production
 gunicorn -w 4 todobox:app  # Start with Gunicorn
-```
+```python
 
 ## Documentation
 
@@ -141,7 +141,7 @@ todobox/
 ├── requirements.txt        # Python dependencies
 ├── CHANGELOG.md            # Recent changes and updates
 └── docs/                   # Documentation (if available)
-```
+```python
 
 ## API Endpoints
 
@@ -154,7 +154,7 @@ All API endpoints return **JSON** responses and require Bearer token authenticat
 ```http
 POST /api/auth/token
 Authorization: Bearer <session-based or valid API token>
-```
+```python
 
 **Response (201 Created):**
 
@@ -163,7 +163,7 @@ Authorization: Bearer <session-based or valid API token>
   "token": "9IXlqQjNYjk5xfhfmOKWGDWh6PTnY9g1",
   "message": "API token generated successfully. Keep this token secure!"
 }
-```
+```yaml
 
 ### Todo Management
 
@@ -172,7 +172,7 @@ Authorization: Bearer <session-based or valid API token>
 ```http
 GET /api/todo
 Authorization: Bearer YOUR_API_TOKEN
-```
+```json
 
 **Response (200 OK):**
 
@@ -189,7 +189,7 @@ Authorization: Bearer YOUR_API_TOKEN
     }
   ]
 }
-```
+```yaml
 
 #### Create New Todo
 
@@ -202,7 +202,7 @@ Content-Type: application/json
   "title": "New Task",
   "details": "Optional task details (supports Markdown)"
 }
-```
+```yaml
 
 **Response (201 Created):**
 
@@ -215,7 +215,7 @@ Content-Type: application/json
   "created_at": "2025-11-26T06:49:12",
   "modified_at": "2025-11-26T06:49:12"
 }
-```
+```sql
 
 #### Update Todo
 
@@ -229,7 +229,7 @@ Content-Type: application/json
   "details": "Updated details",
   "status": "done"
 }
-```
+```sql
 
 **Response (200 OK):**
 
@@ -242,14 +242,14 @@ Content-Type: application/json
   "created_at": "2025-11-26T06:49:12",
   "modified_at": "2025-11-26T07:15:33"
 }
-```
+```yaml
 
 #### Delete Todo
 
 ```http
 DELETE /api/todo/<id>
 Authorization: Bearer YOUR_API_TOKEN
-```
+```yaml
 
 **Response (200 OK):**
 
@@ -257,7 +257,7 @@ Authorization: Bearer YOUR_API_TOKEN
 {
   "message": "Todo deleted successfully"
 }
-```
+```json
 
 ### Wisdom Quotes
 
@@ -265,7 +265,7 @@ Authorization: Bearer YOUR_API_TOKEN
 
 ```http
 GET /api/quote
-```
+```json
 
 **Response (200 OK):**
 
@@ -273,7 +273,7 @@ GET /api/quote
 {
   "quote": "Stay focused"
 }
-```
+```yaml
 
 ### Web Interface Routes
 
@@ -302,7 +302,7 @@ DATABASE_DEFAULT=sqlite
 GOOGLE_CLIENT_ID=your-client-id
 GOOGLE_CLIENT_SECRET=your-client-secret
 OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google
-```
+```python
 
 ## Database Setup
 
@@ -316,7 +316,7 @@ Auto-created on first run - no additional setup needed.
 CREATE DATABASE todobox_db;
 CREATE USER 'user'@'localhost' IDENTIFIED BY 'password';
 GRANT ALL PRIVILEGES ON todobox_db.* TO 'user'@'localhost';
-```
+```sql
 
 ### PostgreSQL
 
@@ -350,7 +350,7 @@ curl -X POST -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"title": "New Task", "details": "Task details"}' \
   http://localhost:5000/api/todo
-```
+```yaml
 
 ## Recent Updates
 

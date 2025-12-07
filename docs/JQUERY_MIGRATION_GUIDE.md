@@ -20,7 +20,7 @@ Quick reference guide for developers maintaining TodoBox after the jQuery optimi
 ```javascript
 $('.btn-delete').click(function() { ... });
 $(document.body).on('click', '#save', function() { ... });
-```
+```yaml
 
 **New (Vanilla):**
 ```javascript
@@ -31,7 +31,7 @@ document.querySelectorAll('.btn-delete').forEach(function(btn) {
 document.addEventListener('click', function(e) {
     if (e.target && e.target.id === 'save') { ... }
 });
-```
+```yaml
 
 ### 2. AJAX Requests
 
@@ -45,7 +45,7 @@ $.post('/api/endpoint', {
 }).fail(function(error) {
     console.error(error);
 });
-```
+```yaml
 
 **New (Vanilla):**
 ```javascript
@@ -63,7 +63,7 @@ fetch('/api/endpoint', {
 .then(response => response.json())
 .then(data => console.log(data))
 .catch(error => console.error(error));
-```
+```yaml
 
 ### 3. DOM Manipulation
 
@@ -74,7 +74,7 @@ $('#element').prop('disabled', true);
 $('#element').addClass('active');
 $('#element').hide();
 $('.items').each(function() { ... });
-```
+```json
 
 **New (Vanilla):**
 ```javascript
@@ -83,7 +83,7 @@ document.getElementById('element').disabled = true;
 document.getElementById('element').classList.add('active');
 document.getElementById('element').style.display = 'none';
 document.querySelectorAll('.items').forEach(function(item) { ... });
-```
+```json
 
 ### 4. Data Attributes
 
@@ -91,13 +91,13 @@ document.querySelectorAll('.items').forEach(function(item) { ... });
 ```javascript
 var id = $button.data('id');
 $button.data('email', 'user@example.com');
-```
+```json
 
 **New (Vanilla):**
 ```javascript
 var id = button.dataset.id;
 button.dataset.email = 'user@example.com';
-```
+```json
 
 ### 5. Modal Operations (Bootstrap 4)
 
@@ -105,7 +105,7 @@ button.dataset.email = 'user@example.com';
 ```javascript
 $('#modal').modal('show');
 $('#modal').modal('hide');
-```
+```javascript
 
 **New (Vanilla):**
 ```javascript
@@ -119,7 +119,7 @@ document.body.classList.add('modal-open');
 modal.classList.remove('show');
 modal.style.display = 'none';
 document.body.classList.remove('modal-open');
-```
+```yaml
 
 ---
 
@@ -135,7 +135,7 @@ var element = document.querySelector('.class');
 // Multiple elements
 var elements = document.querySelectorAll('.class');
 var elements = document.getElementsByClassName('class');
-```
+```yaml
 
 ### Checking if Element Has Class
 
@@ -145,7 +145,7 @@ if ($element.hasClass('active')) { ... }
 
 // Vanilla
 if (element.classList.contains('active')) { ... }
-```
+```json
 
 ### Getting Text Content
 
@@ -155,7 +155,7 @@ var text = $element.text();
 
 // Vanilla
 var text = element.textContent;
-```
+```json
 
 ### Setting HTML
 
@@ -165,7 +165,7 @@ $element.html('<div>content</div>');
 
 // Vanilla
 element.innerHTML = '<div>content</div>';
-```
+```html
 
 ### Finding Parent/Sibling
 
@@ -177,7 +177,7 @@ var next = $element.next();
 // Vanilla
 var parent = element.closest('.parent');
 var next = element.nextElementSibling;
-```
+```python
 
 ---
 
@@ -199,7 +199,7 @@ if (element.classList.contains('active')) { ... }
 // Add/remove multiple classes
 element.classList.add('active', 'primary');
 element.classList.remove('active', 'primary');
-```
+```yaml
 
 ---
 
@@ -223,7 +223,7 @@ var params = new URLSearchParams({
     'key1': 'value1',
     'key2': 'value2'
 });
-```
+```yaml
 
 ---
 
@@ -235,7 +235,7 @@ button.addEventListener('click', function(e) {
     e.preventDefault();
     // handler code
 });
-```
+```yaml
 
 ### Multiple Elements
 ```javascript
@@ -244,7 +244,7 @@ document.querySelectorAll('.btn').forEach(function(btn) {
         // handler code
     });
 });
-```
+```yaml
 
 ### Event Delegation
 ```javascript
@@ -256,7 +256,7 @@ document.addEventListener('click', function(e) {
         // handler code
     }
 });
-```
+```yaml
 
 ---
 
@@ -268,7 +268,7 @@ fetch(url)
     .then(response => response.json())
     .then(data => console.log(data))
     .catch(error => console.error(error));
-```
+```yaml
 
 ### Sequential Operations
 ```javascript
@@ -281,7 +281,7 @@ fetch(url1)
     .then(response => response.json())
     .then(data => console.log(data))
     .catch(error => console.error(error));
-```
+```python
 
 ### Parallel Operations
 ```javascript
@@ -293,7 +293,7 @@ Promise.all([
     console.log(data1, data2);
 })
 .catch(error => console.error(error));
-```
+```yaml
 
 ---
 
@@ -312,7 +312,7 @@ document.addEventListener('click', function(e) {
         handler();
     }
 });
-```
+```json
 
 ### Issue: CSRF token not sent in POST request
 
@@ -327,7 +327,7 @@ fetch(url, {
         '_csrf_token': '{{ csrf_token() }}'   // Or add to body
     })
 });
-```
+```yaml
 
 ### Issue: Modal not displaying after fetch
 
@@ -342,7 +342,7 @@ document.body.classList.add('modal-open');
 var backdrop = document.createElement('div');
 backdrop.className = 'modal-backdrop fade show';
 document.body.appendChild(backdrop);
-```
+```yaml
 
 ### Issue: Form data not submitting correctly
 
@@ -356,7 +356,7 @@ fetch(url, {
     method: 'POST',
     body: params
 });
-```
+```yaml
 
 ---
 

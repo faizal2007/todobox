@@ -48,7 +48,7 @@ New fields added to `Todo` model:
 ```python
 reminder_notification_count = db.Column(db.Integer, default=0)
 reminder_first_notification_time = db.Column(db.DateTime, nullable=True)
-```
+```python
 
 **Migration**: `i1234567890_add_reminder_notification_tracking.py`
 
@@ -66,7 +66,7 @@ def should_auto_close_reminder(self):
         if elapsed_time.total_seconds() <= 30 * 60:  # 30 minutes = 1800 seconds
             return True
     return False
-```
+```python
 
 #### `app/reminder_service.py` - ReminderService
 
@@ -100,7 +100,7 @@ Response now includes:
     }
   ]
 }
-```
+```yaml
 
 **New Fields**:
 - `notification_count`: How many times user has been notified (0, 1, 2, or 3)
@@ -123,7 +123,7 @@ Response includes notification count and auto-close info:
     }
   ]
 }
-```
+```yaml
 
 **Enhanced Message**: Message now includes:
 - `(1st reminder)` for first notification
@@ -183,7 +183,7 @@ Response includes notification count and auto-close info:
 ```sql
 ALTER TABLE todo ADD COLUMN reminder_notification_count INT DEFAULT 0;
 ALTER TABLE todo ADD COLUMN reminder_first_notification_time DATETIME;
-```
+```sql
 
 ## Configuration
 

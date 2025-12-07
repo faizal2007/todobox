@@ -16,7 +16,7 @@ User (1) -----> (Many) Todo
                     |
                     v
                 Status
-```
+```python
 
 ## User Model
 
@@ -42,7 +42,7 @@ Stores user account information and authentication credentials.
 
 ```python
 User.seed()
-```
+```python
 
 Creates default admin user:
 
@@ -52,25 +52,25 @@ Creates default admin user:
 
 ```python
 set_password(password: str)
-```
+```python
 
 Hashes password using Werkzeug and stores in `password_hash`
 
 ```python
 check_password(password: str) -> bool
-```
+```python
 
 Verifies password against stored hash
 
 ```python
 check_username(username: str) -> bool
-```
+```python
 
 Checks if provided username matches user's username
 
 ```python
 check_email(email: str) -> bool
-```
+```python
 
 Checks if provided email matches user's email
 
@@ -88,7 +88,7 @@ user = User.query.filter_by(username='john').first()
 if user and user.check_password('securepassword'):
     # Login successful
     pass
-```
+```python
 
 ## Todo Model
 
@@ -117,7 +117,7 @@ Stores individual todo/task items.
 
 ```python
 Todo.getList(type: str, start: str, end: str) -> Query
-```
+```python
 
 Retrieves todo items for specified date range.
 
@@ -138,7 +138,7 @@ Retrieves todo items for specified date range.
 ```python
 def __repr__(self):
     return f'<Todo {self.name}'
-```
+```python
 
 ### Todo Usage Example
 
@@ -156,7 +156,7 @@ db.session.commit()
 # Query todos
 user_todos = Todo.query.filter_by(user_id=1).all()
 today_todos = Todo.getList('today', start, end)
-```
+```python
 
 ## Status Model
 
@@ -187,7 +187,7 @@ Defines todo item status types.
 
 ```python
 Status.seed()
-```
+```python
 
 Populates the status table with default status types.
 
@@ -196,7 +196,7 @@ Populates the status table with default status types.
 ```python
 def __repr__(self):
     return f'<Todo {self.name}'
-```
+```python
 
 ### Status Usage Example
 
@@ -207,7 +207,7 @@ Status.seed()
 # Query specific status
 done_status = Status.query.filter_by(name='done').first()
 print(done_status.id)  # Output: 2
-```
+```python
 
 ## Tracker Model
 
@@ -229,13 +229,13 @@ Many-to-many relationship table tracking todo status changes over time.
 ```python
 class Tracker(object):
     def __init__(self, todo_id, status_id, timestamp=datetime.now())
-```
+```python
 
 ### Tracker Static Methods
 
 ```python
 Tracker.add(todo_id: int, status_id: int, timestamp=datetime.now())
-```
+```python
 
 Creates new tracker entry and commits to database.
 
@@ -244,11 +244,11 @@ Creates new tracker entry and commits to database.
 ```python
 # Mark todo as done
 Tracker.add(todo_id=1, status_id=2, timestamp=datetime.now())
-```
+```python
 
 ```python
 Tracker.getId(todo_id: int) -> int
-```
+```python
 
 Gets the tracker ID for the latest status change of a todo item.
 
@@ -256,7 +256,7 @@ Gets the tracker ID for the latest status change of a todo item.
 
 ```python
 Tracker.delete(todo_id: int)
-```
+```python
 
 Deletes all tracker entries and the todo item itself.
 
@@ -267,7 +267,7 @@ Deletes all tracker entries and the todo item itself.
 ```python
 # Delete todo and its history
 Tracker.delete(todo_id=1)
-```
+```python
 
 ### Tracker Usage Example
 
@@ -283,7 +283,7 @@ Tracker.add(todo.id, 2, datetime.now())  # Status: done
 
 # Get latest status change
 latest_id = Tracker.getId(todo.id)
-```
+```python
 
 ## Foreign Key Relationships
 
@@ -329,13 +329,13 @@ The following columns are indexed for query performance:
 ```python
 # Automatic creation in instance directory
 instance/todobox.db
-```
+```python
 
 ### MySQL/PostgreSQL
 
 ```bash
 flask db upgrade
-```
+```python
 
 This runs Alembic migrations to create tables and indexes.
 
@@ -360,7 +360,7 @@ When a todo is deleted via `Tracker.delete()`:
 ```python
 user = User.query.get(1)
 todos = user.todo.all()
-```
+```python
 
 ### Get Today's Pending Tasks
 
@@ -370,20 +370,20 @@ query_date = date.today()
 start = f'{query_date} 00:00'
 end = f'{query_date} 23:59'
 todos = Todo.getList('today', start, end).order_by(Todo.timestamp.desc()).all()
-```
+```python
 
 ### Get Completed Tasks
 
 ```python
 completed = Todo.query.filter(Todo.tracker.any(Status.name == 'done')).all()
-```
+```python
 
 ### Count User's Todos
 
 ```python
 user_id = 1
 count = Todo.query.filter_by(user_id=user_id).count()
-```
+```python
 
 ### Get Todo Status History
 
@@ -392,4 +392,4 @@ from app import db
 history = db.session.query(Tracker, Status).join(Status).filter(
     Tracker.todo_id == 1
 ).order_by(Tracker.timestamp.desc()).all()
-```
+```python

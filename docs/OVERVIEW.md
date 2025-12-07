@@ -83,7 +83,7 @@ todobox/
 ├── requirements.txt             # Python dependencies
 ├── .flaskenv.example            # Environment variables template
 └── docs/                        # Documentation (this directory)
-```
+```python
 
 ## Architecture Pattern
 

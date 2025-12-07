@@ -54,7 +54,7 @@
 │  │             OR SQLite Database                     │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
-```
+```sql
 
 ## Layered Architecture
 
@@ -128,7 +128,7 @@ The application supports three database backends via environment configuration:
 DATABASE_DEFAULT=sqlite     (Default) - SQLite development database
 DATABASE_DEFAULT=mysql      - MySQL 5.7+ production database
 DATABASE_DEFAULT=postgres   - PostgreSQL production database
-```
+```python
 
 ### Database Selection Logic
 
@@ -141,7 +141,7 @@ elif app.config['DATABASE_DEFAULT'] == 'postgres':
 else:
     # SQLite fallback (default if DATABASE_DEFAULT not set)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/todobox.db'
-```
+```python
 
 ### SQLite Configuration
 
@@ -166,7 +166,7 @@ DB_URL=192.168.1.112
 DB_USER=freakie
 DB_PASSWORD=md711964
 DB_NAME=shimasu_db
-```
+```sql
 
 ### PostgreSQL Configuration
 
@@ -182,7 +182,7 @@ DB_URL=localhost
 DB_USER=todobox
 DB_PASSWORD=password
 DB_NAME=todobox
-```
+```sql
 
 ### Instance Folder Status
 
@@ -263,7 +263,7 @@ todobox/
 ├── requirements.txt             # Python dependencies
 ├── .flaskenv.example            # Environment template
 └── docs/                        # Documentation
-```
+```python
 
 ## Data Flow
 
@@ -285,7 +285,7 @@ todobox/
 7. Return JSON response to client
    ↓
 8. JavaScript updates UI
-```
+```python
 
 ### User Authentication Flow
 
@@ -303,7 +303,7 @@ todobox/
 6. login_user() creates session
    ↓
 7. Redirect to todo list
-```
+```sql
 
 ### Task Status Update Flow
 
@@ -321,7 +321,7 @@ todobox/
 6. Return JSON success response
    ↓
 7. JavaScript removes item from UI
-```
+```python
 
 ## Design Patterns Used
 
@@ -378,7 +378,7 @@ User (1) ─────────► (Many) Todo
                              ├─ id
                              ├─ name (new, done, failed, re-assign)
                              └─ (Many) Todos
-```
+```yaml
 
 ## Request Processing Pipeline
 
@@ -398,7 +398,7 @@ Database Query (models.py, SQLAlchemy)
 Template Rendering or JSON Response
     ↓
 HTTP Response (HTML or JSON)
-```
+```python
 
 ## Configuration Management
 
@@ -428,7 +428,7 @@ app.config.from_pyfile('config.py', silent=True)
 Instance config (overrides)
     ↓
 Final Configuration
-```
+```python
 
 ## Database Connection Flow
 
@@ -452,7 +452,7 @@ Final Configuration
 3. Alembic migrations applied if needed
 
 4. Database ready for queries
-```
+```python
 
 ## Session & State Management
 
@@ -476,7 +476,7 @@ Session validity checked
 User Logout
     ↓
 Session destroyed
-```
+```yaml
 
 ### Server-Side State
 
@@ -504,7 +504,7 @@ Password Security (Werkzeug bcrypt hashing)
 Session Security (httponly cookies, same-site)
     ↓
 Response (Safe)
-```
+```sql
 
 ## Performance Considerations
 
@@ -555,7 +555,7 @@ Load Balancer + Multiple App Servers
 Microservices (Auth service, Todo service)
     ↓
 Containerization (Docker + Kubernetes)
-```
+```sql
 
 ## Third-Party Libraries Architecture
 
@@ -580,7 +580,7 @@ Utilities
 ├─ Markdown (Markdown parsing)
 ├─ python-dotenv (Environment variables)
 └─ gunicorn (Production server)
-```
+```python
 
 ## Deployment Architecture Options
 
@@ -596,7 +596,7 @@ Gunicorn (WSGI server)
 Flask App
     ↓
 MySQL/PostgreSQL
-```
+```sql
 
 ### Option 2: Containerized
 
@@ -608,7 +608,7 @@ Nginx
 Docker Container (Flask + Gunicorn)
     ↓
 External Database
-```
+```sql
 
 ### Option 3: Scalable
 
@@ -622,4 +622,4 @@ Load Balancer
 └─ App Server 3 ─┘
     ↓
 Redis (Session Store)
-```
+```nginx
