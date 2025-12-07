@@ -137,8 +137,20 @@ def send_sharing_invitation(invitation, from_user):
         logger.debug(f"Connecting to SMTP server {config['server']}:{config['port']}")
         
         # Generate URLs for accept/decline actions
-        accept_url = url_for('accept_share_invitation', token=invitation.token, _external=True)
-        decline_url = url_for('decline_share_invitation', token=invitation.token, _external=True)
+        try:
+            # Try to generate URLs with proper request context
+            accept_url = url_for('accept_share_invitation', token=invitation.token, _external=True)
+            decline_url = url_for('decline_share_invitation', token=invitation.token, _external=True)
+        except RuntimeError:
+            # Outside request context - build URL manually
+            logger.debug("Building URLs outside request context")
+            scheme = current_app.config.get('PREFERRED_URL_SCHEME', 'https')
+            server_name = current_app.config.get('SERVER_NAME', 'localhost:5000')
+            base_url = f"{scheme}://{server_name}"
+            accept_url = f"{base_url}/accept_invitation/{invitation.token}"
+            decline_url = f"{base_url}/decline_invitation/{invitation.token}"
+            logger.debug(f"Generated manual URLs: accept={accept_url}, decline={decline_url}")
+        
         
         # Get sender's display name and escape for safety
         from html import escape
