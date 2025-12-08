@@ -27,7 +27,7 @@ source venv/bin/activate
 
 # Run the interactive script
 python3 create_user.py
-```python
+```
 
 ### Features
 
@@ -75,7 +75,7 @@ Create this user? [Y/n]: y
 ============================================================
 ✅ User creation completed successfully!
 ============================================================
-```yaml
+```
 
 #### Admin Already Exists
 
@@ -90,7 +90,7 @@ Options:
   3) Exit
 
 Select option (1-3): 2
-```sql
+```
 
 ### Validation Rules
 
@@ -127,7 +127,7 @@ Confirm user details:
 Create this user? [Y/n]: y
 
 ✅ Admin user 'john_admin' created successfully!
-```yaml
+```
 
 ---
 
@@ -145,7 +145,7 @@ Create this user? [Y/n]: y
 
 ```bash
 flask create-user
-```yaml
+```
 
 **Example:**
 
@@ -170,19 +170,19 @@ Confirm user details:
 Create this user? [y/N]: y
 
 ✅ User "alice" created successfully!
-```yaml
+```
 
 #### Create User (Non-Interactive)
 
 ```bash
 flask create-user --username bob --email bob@company.com --password SecurePass123
-```yaml
+```
 
 #### Reset Password
 
 ```bash
 flask reset-password --username admin
-```yaml
+```
 
 **Example:**
 
@@ -195,13 +195,13 @@ New password: ••••••••••••
 Confirm password: ••••••••••••
 
 ✅ Password for "admin" updated successfully!
-```yaml
+```
 
 #### List All Users
 
 ```bash
 flask list-users
-```yaml
+```
 
 **Output:**
 
@@ -215,13 +215,13 @@ ID    Username             Email                     Full Name
 2     alice                alice@company.com         Alice Smith
 3     bob                  bob@company.com           Bob Jones
 ============================================================
-```yaml
+```
 
 #### Delete User
 
 ```bash
 flask delete-user
-```yaml
+```
 
 **Example:**
 
@@ -233,7 +233,7 @@ Username: bob
 ⚠️  Are you sure you want to delete user "bob"? This cannot be undone. [y/N]: y
 
 ✅ User "bob" deleted successfully!
-```yaml
+```
 
 ---
 
@@ -254,7 +254,7 @@ sqlite3 instance/todobox.db
 # Create user
 sqlite> INSERT INTO "user" (username, email, password_hash) 
 VALUES ('admin', 'admin@examples.com', 'pbkdf2:sha256:...');
-```sql
+```
 
 ### For MySQL
 
@@ -265,7 +265,7 @@ mysql -u freakie -p -h 192.168.1.112 shimasu_db
 # Create user
 INSERT INTO user (username, email, password_hash) 
 VALUES ('admin', 'admin@examples.com', 'pbkdf2:sha256:...');
-```python
+```
 
 **⚠️ Note:** Password hash must be generated using Werkzeug's
 `generate_password_hash()` function. Use Python:
@@ -274,7 +274,7 @@ VALUES ('admin', 'admin@examples.com', 'pbkdf2:sha256:...');
 from werkzeug.security import generate_password_hash
 password_hash = generate_password_hash('admin1234')
 print(password_hash)
-```python
+```
 
 ---
 
@@ -291,7 +291,7 @@ source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
-```yaml
+```
 
 ### Step 2: Configure Database
 
@@ -301,14 +301,14 @@ cp .flaskenv.example .flaskenv
 
 # Edit .flaskenv with your database details
 nano .flaskenv
-```yaml
+```
 
 ### Step 3: Initialize Database
 
 ```bash
 # Run migrations
 flask db upgrade
-```python
+```
 
 ### Step 4: Create Admin User
 
@@ -318,7 +318,7 @@ python3 create_user.py
 
 # OR use Flask CLI
 flask create-user
-```python
+```
 
 ### Step 5: Verify & Start
 
@@ -328,7 +328,7 @@ flask list-users
 
 # Start application
 flask run
-```python
+```
 
 ### Step 6: Login
 
@@ -336,7 +336,7 @@ flask run
 Open browser: http://127.0.0.1:9191
 Username: admin (or your custom username)
 Password: (the password you set)
-```yaml
+```
 
 ### Step 7: Change Password
 
@@ -416,7 +416,7 @@ flask delete-user --username old_admin
 
 # Try again
 python3 create_user.py
-```python
+```
 
 ### "Database not found"
 
@@ -430,7 +430,7 @@ flask db upgrade
 
 # Then create user
 python3 create_user.py
-```python
+```
 
 ### "Password hash mismatch"
 
@@ -445,7 +445,7 @@ flask reset-password --username admin
 # OR delete and recreate user
 flask delete-user --username admin
 python3 create_user.py
-```python
+```
 
 ### "Permission denied"
 
@@ -461,7 +461,7 @@ chmod 644 instance/todobox.db
 
 # Or for directory:
 chmod 755 migrations/versions/
-```yaml
+```
 
 ### "Invalid email format"
 
@@ -492,7 +492,7 @@ flask db upgrade
 python3 create_user.py
 # Select: Use default admin? [Y/n]: y
 # Create admin / admin@examples.com
-```python
+```
 
 ### Scenario 2: Initial Setup with Custom Admin
 
@@ -502,7 +502,7 @@ flask db upgrade
 python3 create_user.py
 # Select: Use default admin? [Y/n]: n
 # Create custom username/email/password
-```python
+```
 
 ### Scenario 3: Add Team Members
 
@@ -518,7 +518,7 @@ flask create-user
 
 # Verify
 flask list-users
-```yaml
+```
 
 ### Scenario 4: Reset Forgotten Password
 
@@ -530,7 +530,7 @@ flask reset-password --username admin
 # Alternative: Delete and recreate
 flask delete-user --username admin
 python3 create_user.py
-```python
+```
 
 ### Scenario 5: Automated Setup (CI/CD)
 
@@ -539,7 +539,7 @@ python3 create_user.py
 source venv/bin/activate
 flask db upgrade
 flask create-user --username admin --email admin@example.com --password AutoGenerated123
-```python
+```
 
 ---
 
@@ -563,7 +563,7 @@ After creating users:
 
    ```bash
    flask run
-```yaml
+```
 
 2. **Login**
    - URL: [http://127.0.0.1:9191](http://127.0.0.1:9191)

@@ -20,7 +20,7 @@ This document outlines best practices for writing and maintaining tests in the T
 
 ### Test Pyramid
 
-```
+```bash
         /\
        /  \      E2E Tests (Few)
       /____\     - Complete workflows
@@ -39,7 +39,7 @@ This document outlines best practices for writing and maintaining tests in the T
 
 ### Directory Structure
 
-```
+```bash
 tests/
 ├── __init__.py                      # Test package initialization
 ├── test_comprehensive.py            # Core model and API tests

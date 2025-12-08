@@ -15,26 +15,26 @@ For Debian/Ubuntu systems:
 
 ```bash
 apt-get install python3-venv default-libmysqlclient-dev
-```python
+```
 
 For macOS:
 
 ```bash
 brew install mysql-client
-```python
+```
 
 ### 2. Create Virtual Environment
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-```python
+```
 
 ### 3. Install Python Dependencies
 
 ```bash
 pip install -r requirements.txt
-```python
+```
 
 ### 4. Configure Environment Variables
 
@@ -42,7 +42,7 @@ Copy the example configuration:
 
 ```bash
 cp .flaskenv.example .flaskenv
-```python
+```
 
 Edit `.flaskenv` with your settings:
 
@@ -65,7 +65,7 @@ DATABASE_DEFAULT=sqlite  # or mysql, postgres
 GOOGLE_CLIENT_ID=your-client-id
 GOOGLE_CLIENT_SECRET=your-client-secret
 OAUTH_REDIRECT_URI=http://localhost:5000/auth/callback/google
-```python
+```
 
 **Important:**
 
@@ -79,7 +79,7 @@ For first-time setup:
 
 ```bash
 flask db upgrade
-```python
+```
 
 This creates the database schema and seeds default data (admin user and status types).
 
@@ -87,13 +87,13 @@ This creates the database schema and seeds default data (admin user and status t
 
 ```bash
 flask run
-```python
+```
 
 Or using the entry point:
 
 ```bash
 python todobox.py
-```python
+```
 
 The application will be available at `http://127.0.0.1:9191`
 
@@ -105,7 +105,7 @@ No additional configuration needed. Database file will be created at:
 
 ```text
 instance/todobox.db
-```python
+```
 
 ### MySQL
 
@@ -116,7 +116,7 @@ instance/todobox.db
    CREATE USER 'todobox'@'localhost' IDENTIFIED BY 'password';
    GRANT ALL PRIVILEGES ON todobox.* TO 'todobox'@'localhost';
    FLUSH PRIVILEGES;
-```sql
+```
 
 1. Configure `.flaskenv`:
 
@@ -126,13 +126,13 @@ instance/todobox.db
    DB_USER=todobox
    DB_PW=password
    DB_NAME=todobox
-```sql
+```
 
 1. Initialize database:
 
    ```bash
    flask db upgrade
-```sql
+```
 
 ### PostgreSQL
 
@@ -141,7 +141,7 @@ instance/todobox.db
    ```sql
    CREATE USER todobox WITH PASSWORD 'password';
    CREATE DATABASE todobox OWNER todobox;
-```sql
+```
 
 1. Configure `.flaskenv`:
 
@@ -151,13 +151,13 @@ instance/todobox.db
    DB_USER=todobox
    DB_PW=password
    DB_NAME=todobox
-```sql
+```
 
 1. Initialize database:
 
    ```bash
    flask db upgrade
-```yaml
+```
 
 ## Running in Production
 
@@ -165,7 +165,7 @@ instance/todobox.db
 
 ```bash
 gunicorn -w 4 -b 0.0.0.0:9191 todobox:app
-```yaml
+```
 
 ### Configuration Options
 
@@ -191,7 +191,7 @@ For development, useful settings:
 ```bash
 FLASK_ENV=development
 FLASK_DEBUG=1
-```python
+```
 
 This enables:
 
@@ -205,25 +205,25 @@ This enables:
 
 ```bash
 flask db migrate -m "Description of changes"
-```yaml
+```
 
 ### Apply Migrations
 
 ```bash
 flask db upgrade
-```yaml
+```
 
 ### Rollback Migration
 
 ```bash
 flask db downgrade
-```yaml
+```
 
 ### View Migration History
 
 ```bash
 flask db history
-```sql
+```
 
 ## Troubleshooting
 
@@ -240,7 +240,7 @@ For SQLite development:
 ```bash
 mkdir instance
 flask db upgrade
-```sql
+```
 
 ### Database Connection Error
 
@@ -252,7 +252,7 @@ mysql -u todobox -p -h localhost todobox
 
 # For PostgreSQL
 psql -U todobox -h localhost todobox
-```python
+```
 
 ### Module Import Errors
 
@@ -261,7 +261,7 @@ Ensure virtual environment is activated and dependencies installed:
 ```bash
 source venv/bin/activate
 pip install -r requirements.txt
-```python
+```
 
 ### Port Already in Use
 
@@ -269,14 +269,14 @@ Change the port in `.flaskenv`:
 
 ```bash
 PORT=9192
-```python
+```
 
 Or kill the process using the port:
 
 ```bash
 lsof -i :9191
 kill -9 <PID>
-```yaml
+```
 
 ## Initial User Credentials
 
@@ -305,7 +305,7 @@ SELECT * FROM "user" WHERE username='admin';
 
 # To reset, delete the admin user and let the app recreate it
 DELETE FROM "user" WHERE username='admin';
-```sql
+```
 
 Then restart the application and re-run `flask db upgrade` to recreate the default user.
 
