@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Latest] - 2025-12-08
 
+### Added
+
+- **OAuth User Password Management**: Disabled password change functionality for Google OAuth users
+  - Added backend validation to prevent password changes for OAuth users
+  - Updated settings template to conditionally hide password change form for Gmail users
+  - Added informational notice directing OAuth users to manage passwords through Google account
+  - Maintained full functionality for direct login users
+  - Added comprehensive tests for OAuth user restrictions
+
 ### Fixed
 
 - **Documentation Markdown**: Fixed 341 mismatched code fences across 24 documentation files
