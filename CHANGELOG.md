@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Dependency Conflict**: Fixed OAuth library version conflict in production
+  - Downgraded oauthlib from 3.2.2 to 2.1.0 for compatibility with Flask-OAuthlib 0.9.6
+  - Resolved pip installation error: "Cannot install flask-oauthlib==0.9.6 and oauthlib==3.2.2"
+  - Maintained compatibility with requests-oauthlib and google-auth-oauthlib
+  - No functional changes to OAuth authentication flow
+
 - **Documentation Markdown**: Fixed 341 mismatched code fences across 24 documentation files
   - All code blocks now have proper language specifiers
   - Fixed incorrect closing fence formats (python, sql, json, yaml as closers)
