@@ -30,7 +30,7 @@ print("=" * 60)
 print(f"\nSMTP_SERVER: {SMTP_SERVER!r}")
 print(f"SMTP_PORT: {SMTP_PORT!r}")
 print(f"SMTP_USERNAME: {SMTP_USERNAME!r}")
-print(f"SMTP_PASSWORD: {SMTP_PASSWORD!r}")
+print(f"SMTP_PASSWORD: {'[REDACTED]' if SMTP_PASSWORD else ''}")
 print(f"SMTP_FROM_EMAIL: {SMTP_FROM_EMAIL!r}")
 print(f"\nis_email_configured(): {is_email_configured()}")
 
