@@ -34,7 +34,8 @@
     {% endwith %}
 
     <div class="row">
-        <!-- Password Change Section -->
+        <!-- Password Change Section - Only show for direct login users -->
+        {% if not current_user.is_gmail_user() %}
         <div class="col-lg-6">
             <div class="card">
                 <div class="card-header bg-warning text-white">
@@ -110,6 +111,31 @@
                 </div>
             </div>
         </div>
+        {% else %}
+        <!-- Google OAuth User Notice -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-google mr-2"></i>Google Account
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="mdi mdi-information mr-2"></i>
+                        <strong>Password Management:</strong> You are logged in with your Google account. 
+                        Password changes are managed through your Google account settings.
+                    </div>
+                    <p class="text-muted mb-0">
+                        To change your password, please visit your 
+                        <a href="https://myaccount.google.com/security" target="_blank" rel="noopener noreferrer">
+                            Google Account security settings <i class="mdi mdi-open-in-new"></i>
+                        </a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- API Token Management Section -->
         <div class="col-lg-6">

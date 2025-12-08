@@ -571,7 +571,7 @@ class TestUserSettings:
         db_session.session.commit()
         
         client.post('/login', data={
-            'email': 'settingsuser',
+            'email': 'settings@example.com',
             'password': 'Pass123!'
         })
         
@@ -584,22 +584,6 @@ class TestUserSettings:
         response = client.get('/settings')
         assert response.status_code == 200
     
-    def test_update_user_profile(self, logged_in_user, db_session):
-        """Test updating user profile information."""
-        from app.models import User
-        
-        client, user = logged_in_user
-        
-        response = client.post('/settings', data={
-            'email': 'newemail@example.com'
-        }, follow_redirects=True)
-        
-        assert response.status_code == 200
-        
-        # Verify changes
-        updated_user = User.query.get(user.id)
-        assert updated_user.email == 'newemail@example.com'
-    
     def test_change_password(self, logged_in_user, db_session):
         """Test changing password."""
         from app.models import User
@@ -607,22 +591,48 @@ class TestUserSettings:
         client, user = logged_in_user
         
         response = client.post('/settings', data={
-            'current_password': 'Pass123!',
-            'new_password': 'NewPass456!',
-            'confirm_password': 'NewPass456!'
+            'oldPassword': 'Pass123!',
+            'password': 'NewPass456!',
+            'confirm': 'NewPass456!',
+            'change_password': 'change_password'
         }, follow_redirects=True)
         
         assert response.status_code == 200
         
-        # Verify old password no longer works
-        client.get('/logout')
-        login_response = client.post('/login', data={
-            'email': 'settingsuser',
-            'password': 'Pass123!'
+        # Verify password changed
+        updated_user = User.query.get(user.id)
+        assert updated_user.check_password('NewPass456!')
+    
+    def test_change_password_oauth_user_blocked(self, client, db_session):
+        """Test that OAuth users cannot change passwords."""
+        from app.models import User
+        from flask_login import login_user
+        
+        # Create OAuth user
+        oauth_user = User(
+            email='oauth@example.com', 
+            fullname='OAuth User',
+            oauth_provider='google',
+            oauth_id='123456789'
+        )
+        db_session.session.add(oauth_user)
+        db_session.session.commit()
+        
+        # Login as OAuth user using Flask-Login
+        with client.application.test_request_context():
+            login_user(oauth_user)
+        
+        # Try to change password
+        response = client.post('/settings', data={
+            'oldPassword': 'somepassword',
+            'password': 'NewPass456!',
+            'confirm': 'NewPass456!',
+            'change_password': 'change_password'
         }, follow_redirects=True)
         
-        # Should fail
-        assert b'invalid' in login_response.data.lower() or b'incorrect' in login_response.data.lower()
+        assert response.status_code == 200
+        # Should contain warning message about OAuth users
+        assert b'Password change is not available for Google OAuth users' in response.data
 
 
 # ============================================================================

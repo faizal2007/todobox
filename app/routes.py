@@ -1772,8 +1772,13 @@ def settings():
     """Settings page for managing password and API tokens"""
     password_form = ChangePassword()
     
-    # Handle password change
+    # Handle password change - only allow for direct login users
     if password_form.validate_on_submit() and 'change_password' in request.form:
+        # Check if user is a Gmail OAuth user
+        if current_user.is_gmail_user():
+            flash('Password change is not available for Google OAuth users. Please manage your password through your Google account.', 'warning')
+            return redirect(url_for('settings'))
+        
         try:
             # Verify old password matches
             user = User.query.filter_by(id=current_user.id).first()
