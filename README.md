@@ -69,48 +69,49 @@ gunicorn -w 4 todobox:app  # Start with Gunicorn
 
 Comprehensive documentation is available in the `docs/` directory:
 
-### Getting Started
+### Quick Start
 
-- **[README.md](docs/README.md)** - Documentation index and quick links
-- **[SETUP.md](docs/SETUP.md)** - Complete installation and configuration guide
-- **[QUICKSTART.md](docs/QUICKSTART.md)** - Quick reference with commands and API examples
-- **[USER_CREATION.md](docs/USER_CREATION.md)** - First-time user setup and management
+- **[docs/README.md](docs/README.md)** - Documentation navigation and quick links
+- **[docs/SETUP.md](docs/SETUP.md)** - Complete installation and configuration guide
+- **[docs/QUICKSTART.md](docs/QUICKSTART.md)** - Quick reference with commands and API examples
+- **[docs/USER_CREATION.md](docs/USER_CREATION.md)** - First-time user setup and management
 
-### Reference Documentation
+### Core Documentation
 
-- **[API.md](docs/API.md)** - Full API reference with all endpoints and parameters
-- **[MODELS.md](docs/MODELS.md)** - Database schema and model documentation
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture and design patterns
-- **[OVERVIEW.md](docs/OVERVIEW.md)** - Project overview, features, and architecture
+- **[docs/API.md](docs/API.md)** - Full API reference with all endpoints and parameters
+- **[docs/MODELS.md](docs/MODELS.md)** - Database schema and model documentation
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture and design patterns
+- **[docs/OVERVIEW.md](docs/OVERVIEW.md)** - Project overview, features, and architecture
 
 ### Operations & Security
 
-- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Deployment options and maintenance guide
-- **[DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md)** - Production deployment checklist
-- **[SECURITY_PATCHES.md](docs/SECURITY_PATCHES.md)** - Security improvements and patches applied
-- **[CODE_REVIEW.md](docs/CODE_REVIEW.md)** - Code review findings and best practices
-
-### OAuth & Authentication
-
-- **[OAUTH_SETUP.md](docs/OAUTH_SETUP.md)** - Google OAuth2 setup and configuration
-
-### Code Quality & Performance
-
-- **[JAVASCRIPT_OPTIMIZATION.md](docs/JAVASCRIPT_OPTIMIZATION.md)** - JavaScript modernization (jQuery to vanilla JS)
-- **[JQUERY_MIGRATION_GUIDE.md](docs/JQUERY_MIGRATION_GUIDE.md)** - Developer guide for JavaScript patterns
-- **[AXE_LINTER_BEST_PRACTICES.md](docs/AXE_LINTER_BEST_PRACTICES.md)** - Accessibility guidelines
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Deployment options and maintenance guide
+- **[docs/DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md)** - Production deployment checklist
+- **[docs/SECURITY_PATCHES.md](docs/SECURITY_PATCHES.md)** - Security improvements and patches applied
+- **[docs/CODE_REVIEW.md](docs/CODE_REVIEW.md)** - Code review findings and best practices
 
 ### Features & Integrations
 
-- **[KIV_STATUS.md](docs/KIV_STATUS.md)** - KIV (Keep In View) status feature documentation
-- **[AUTO_CLOSE_REMINDERS.md](docs/AUTO_CLOSE_REMINDERS.md)** - Auto-close reminder feature documentation
-- **[TIMEZONE_AUTO_DETECTION.md](docs/TIMEZONE_AUTO_DETECTION.md)** - Automatic timezone detection
-- **[TIMEZONE_INTEGRATION.md](docs/TIMEZONE_INTEGRATION.md)** - Timezone integration for reminders
+- **[docs/OAUTH_SETUP.md](docs/OAUTH_SETUP.md)** - Google OAuth2 setup and configuration
+- **[docs/KIV_STATUS.md](docs/KIV_STATUS.md)** - KIV (Keep In View) status feature documentation
+- **[docs/AUTO_CLOSE_REMINDERS.md](docs/AUTO_CLOSE_REMINDERS.md)** - Auto-close reminder feature documentation
+- **[docs/TIMEZONE_AUTO_DETECTION.md](docs/TIMEZONE_AUTO_DETECTION.md)** - Automatic timezone detection
+- **[docs/TIMEZONE_INTEGRATION.md](docs/TIMEZONE_INTEGRATION.md)** - Timezone integration for reminders
+
+### Code Quality & Performance
+
+- **[docs/JAVASCRIPT_OPTIMIZATION.md](docs/JAVASCRIPT_OPTIMIZATION.md)** - JavaScript modernization (jQuery to vanilla JS)
+- **[docs/JQUERY_MIGRATION_GUIDE.md](docs/JQUERY_MIGRATION_GUIDE.md)** - Developer guide for JavaScript patterns
+- **[docs/AXE_LINTER_BEST_PRACTICES.md](docs/AXE_LINTER_BEST_PRACTICES.md)** - Accessibility guidelines
 
 ### Migration Guides
 
-- **[README_MIGRATIONS.md](docs/README_MIGRATIONS.md)** - Database migration documentation
-- **[MIGRATION_FIX_GUIDE.md](docs/MIGRATION_FIX_GUIDE.md)** - Migration troubleshooting guide
+- **[docs/README_MIGRATIONS.md](docs/README_MIGRATIONS.md)** - Database migration documentation
+- **[docs/MIGRATION_FIX_GUIDE.md](docs/MIGRATION_FIX_GUIDE.md)** - Migration troubleshooting guide
+
+### Complete Index
+
+- **[docs/DOCUMENTATION_MASTER_INDEX.md](docs/DOCUMENTATION_MASTER_INDEX.md)** - Comprehensive documentation index with navigation paths and detailed sections
 
 ## Project Structure
 
