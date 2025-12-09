@@ -130,10 +130,9 @@ Archived documents can be found in `docs/archive/` and include:
 
 ### When Adding New Documentation:
 1. Add to appropriate category in `docs/`
-2. Update `docs/INDEX.md` with new file
-3. Update `docs/DOCUMENTATION_MASTER_INDEX.md` with details
-4. Add entry to `docs/README.md` if relevant
-5. Mention in CHANGELOG.md (brief entry)
+2. Update `docs/DOCUMENTATION_MASTER_INDEX.md` with details
+3. Add entry to `docs/README.md` if it's a major document
+4. Mention in CHANGELOG.md (brief entry)
 
 ### When Updating CHANGELOG:
 1. Keep entries concise (2-3 lines per change)

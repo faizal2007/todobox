@@ -599,11 +599,10 @@ This comprehensive index provides complete navigation for all TodoBox documentat
 - ✅ Deployment (DEPLOYMENT.md)
 - ✅ User creation (USER_CREATION.md)
 - ✅ Project overview (OVERVIEW.md)
-- ✅ Progress tracking (PROGRESS_NOVEMBER_2025.md)
-- ✅ Compatibility fixes (WERKZEUG_FIX.md)
 - ✅ Security patches (SECURITY_PATCHES.md)
-- ✅ Index (INDEX.md)
-- ✅ README (README.md)
+- ✅ Documentation reorganization notes (REORGANIZATION_NOTES.md)
+- ✅ Master index (DOCUMENTATION_MASTER_INDEX.md)
+- ✅ Quick navigation (README.md)
 
 ---
 
