@@ -1,103 +1,79 @@
 # TodoBox Documentation
 
-This documentation provides comprehensive information about the TodoBox
-Flask application - a todo management system with user authentication
-and task tracking capabilities.
+Quick navigation guide to TodoBox documentation.
 
-**Last Updated:** December 8, 2025
+**Last Updated:** December 9, 2025
 
-**Note:** All documentation files now follow strict markdown standards as defined in `.copilot-markdown-rules.md`. Code fences are properly formatted with language specifiers and correct closing syntax.
+---
 
-## Contents
+## 📖 Quick Start
 
-### Getting Started
+New to TodoBox? Start here:
 
-- **[OVERVIEW.md](OVERVIEW.md)** - Project overview and feature description
-- **[SETUP.md](SETUP.md)** - Installation and configuration guide
-- **[QUICKSTART.md](QUICKSTART.md)** - Quick reference guide
-- **[USER_CREATION.md](USER_CREATION.md)** - User creation and CLI commands
+1. **[SETUP.md](SETUP.md)** - Installation and configuration (15 min)
+2. **[USER_CREATION.md](USER_CREATION.md)** - Create your first user (5 min)
+3. **[QUICKSTART.md](QUICKSTART.md)** - Common commands and tasks
 
-### Reference Documentation
+---
 
-- **[API.md](API.md)** - Complete API reference and endpoints
-- **[MODELS.md](MODELS.md)** - Database models and data structure
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Project structure and patterns
+## 📚 Documentation Categories
 
-### Operations & Deployment
+### Core Documentation
 
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment and maintenance guide
-- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Production deployment checklist
-- **[OAUTH_SETUP.md](OAUTH_SETUP.md)** - Google OAuth2 setup guide
+- **[OVERVIEW.md](OVERVIEW.md)** - Project overview and features
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and architecture
+- **[API.md](API.md)** - Complete API reference
+- **[MODELS.md](MODELS.md)** - Database schema and models
 
-### Code Quality & Security
+### Setup & Operations
 
-- **[CODE_REVIEW.md](CODE_REVIEW.md)** - Code review findings and recommendations
-- **[SECURITY_PATCHES.md](SECURITY_PATCHES.md)** - Security improvements applied
-- **[AXE_LINTER_BEST_PRACTICES.md](AXE_LINTER_BEST_PRACTICES.md)** - Accessibility guidelines
+- **[SETUP.md](SETUP.md)** - Installation guide
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Production deployment
+- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Deployment checklist
+- **[OAUTH_SETUP.md](OAUTH_SETUP.md)** - Google OAuth setup
 
-### Migration Guides
+### Features
 
-- **[README_MIGRATIONS.md](README_MIGRATIONS.md)** - Migration quick reference
+- **[KIV_STATUS.md](KIV_STATUS.md)** - Keep In View feature
+- **[AUTO_CLOSE_REMINDERS.md](AUTO_CLOSE_REMINDERS.md)** - Smart reminders
+- **[TIMEZONE_AUTO_DETECTION.md](TIMEZONE_AUTO_DETECTION.md)** - Timezone detection
+- **[TIMEZONE_INTEGRATION.md](TIMEZONE_INTEGRATION.md)** - Timezone for reminders
+
+### Code Quality
+
+- **[CODE_REVIEW.md](CODE_REVIEW.md)** - Code review findings
+- **[SECURITY_PATCHES.md](SECURITY_PATCHES.md)** - Security improvements
+- **[AXE_LINTER_BEST_PRACTICES.md](AXE_LINTER_BEST_PRACTICES.md)** - Accessibility
+
+### Performance
+
+- **[JAVASCRIPT_OPTIMIZATION.md](JAVASCRIPT_OPTIMIZATION.md)** - JS modernization
+- **[JQUERY_MIGRATION_GUIDE.md](JQUERY_MIGRATION_GUIDE.md)** - jQuery to vanilla JS
+
+### Migrations
+
+- **[README_MIGRATIONS.md](README_MIGRATIONS.md)** - Database migrations
 - **[MIGRATION_FIX_GUIDE.md](MIGRATION_FIX_GUIDE.md)** - Migration troubleshooting
 
-### Features & Integrations
+---
 
-- **[KIV_STATUS.md](KIV_STATUS.md)** - KIV (Keep In View) status feature
-- **[AUTO_CLOSE_REMINDERS.md](AUTO_CLOSE_REMINDERS.md)** - Auto-close reminder feature documentation
-- **[TIMEZONE_AUTO_DETECTION.md](TIMEZONE_AUTO_DETECTION.md)** - Automatic timezone detection
-- **[TIMEZONE_INTEGRATION.md](TIMEZONE_INTEGRATION.md)** - Timezone integration for reminders
+## 🗺️ Complete Documentation Index
 
-### Performance & Optimization
+For a comprehensive guide with detailed navigation, see:
 
-- **[JAVASCRIPT_OPTIMIZATION.md](JAVASCRIPT_OPTIMIZATION.md)** - JavaScript modernization details
-- **[JQUERY_MIGRATION_GUIDE.md](JQUERY_MIGRATION_GUIDE.md)** - jQuery to vanilla JS patterns
+**[DOCUMENTATION_MASTER_INDEX.md](DOCUMENTATION_MASTER_INDEX.md)** - Complete documentation index with reading paths, quick navigation, and detailed sections
 
-### Documentation Index
+---
 
-- **[INDEX.md](INDEX.md)** - Documentation summary and navigation
-- **[DOCUMENTATION_MASTER_INDEX.md](DOCUMENTATION_MASTER_INDEX.md)** - Complete index
+## 💡 Quick Links
 
-## Quick Links
-
-- [Getting Started](SETUP.md#getting-started)
-- [Database Configuration](SETUP.md#database-configuration)
-- [Available Routes](API.md)
+- [Installation](SETUP.md#getting-started)
+- [API Endpoints](API.md)
 - [Database Schema](MODELS.md#database-schema)
-- [Identified Issues](CODE_REVIEW.md#identified-issues)
+- [Production Deploy](DEPLOYMENT.md)
 
-## Technology Stack
+---
 
-- **Framework**: Flask 2.3.2
-- **Database ORM**: SQLAlchemy 1.4.17
-- **Authentication**: Flask-Login 0.6.3
-- **Database Migrations**: Flask-Migrate 4.1.0 (Alembic 1.13.2)
-- **Form Validation**: WTForms 3.2.1
-- **Security**: Werkzeug 3.0.6, Bleach 6.3.0
-- **Server**: Gunicorn 23.0.0
+## 📸 Screenshots
 
-## Application Features
-
-- User authentication and login management
-- Google OAuth2 authentication support
-- RESTful API with token-based authentication
-- Create, read, and manage todo items
-- Mark tasks as complete or KIV (Keep In View)
-- Task scheduling (today/tomorrow/custom date)
-- Dashboard with statistics and time-period grouping
-- Change password and account management
-- Smart reminders with auto-close functionality
-- Automatic timezone detection
-- PWA support for mobile and desktop
-- Markdown support for task descriptions
-- HTML sanitization for XSS prevention
-- Session management with timeout
-- CSRF protection
-
-## Screenshots
-
-Screenshots are available in the [screenshots](screenshots/) folder:
-
-- `dashboard.png` - Dashboard overview
-- `login.png` - Login page
-- `save-todo.png` - Todo creation
-- `delete-todo.png` - Todo deletion
+Screenshots are available in the [screenshots](screenshots/) folder

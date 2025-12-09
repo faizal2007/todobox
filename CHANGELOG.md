@@ -5,30 +5,39 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Latest] - 2025-12-08
+## [Latest] - 2025-12-09
+
+### Changed
+
+- **Documentation Consolidation**: Streamlined and organized documentation structure
+  - Removed redundant INDEX.md (duplicated content now in DOCUMENTATION_MASTER_INDEX.md)
+  - Simplified docs/README.md as quick navigation guide
+  - Updated all documentation cross-references
+  - Improved readability and organization
+
+---
+
+## [Previous] - 2025-12-08
 
 ### Added
 
-- **OAuth User Password Management**: Disabled password change functionality for Google OAuth users
-  - Added backend validation to prevent password changes for OAuth users
-  - Updated settings template to conditionally hide password change form for Gmail users
-  - Added informational notice directing OAuth users to manage passwords through Google account
-  - Maintained full functionality for direct login users
-  - Added comprehensive tests for OAuth user restrictions
+- **OAuth User Password Management**: Disabled password change for Google OAuth users
+  - Backend validation prevents password changes for OAuth users
+  - Settings template hides password form for Gmail users
+  - Informational notice directs OAuth users to Google account management
+  - Full functionality maintained for direct login users
 
 ### Fixed
 
-- **Dependency Conflict**: Fixed OAuth library version conflict in production
-  - Downgraded oauthlib from 3.2.2 to 2.1.0 for compatibility with Flask-OAuthlib 0.9.6
-  - Resolved pip installation error: "Cannot install flask-oauthlib==0.9.6 and oauthlib==3.2.2"
-  - Maintained compatibility with requests-oauthlib and google-auth-oauthlib
-  - No functional changes to OAuth authentication flow
+- **OAuth Dependency Conflict**: Resolved library version incompatibility
+  - Downgraded oauthlib from 3.2.2 to 2.1.0 for Flask-OAuthlib 0.9.6 compatibility
+  - Fixed pip installation error
+  - Maintained OAuth authentication flow functionality
 
-- **Documentation Markdown**: Fixed 341 mismatched code fences across 24 documentation files
-  - All code blocks now have proper language specifiers
-  - Fixed incorrect closing fence formats (python, sql, json, yaml as closers)
-  - All fences now follow markdown standards (closing with ``` only)
-  - Files updated: README.md and all docs/ markdown files
+- **Documentation Markdown**: Fixed 341 mismatched code fences across 24 files
+  - Added proper language specifiers to all code blocks
+  - Fixed incorrect closing fence formats
+  - All fences follow markdown standards
 
 ---
 
