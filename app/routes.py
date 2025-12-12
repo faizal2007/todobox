@@ -638,7 +638,7 @@ def dashboard():
     time_period_data = _categorize_todos_by_period(all_todos, now)
     
     # Get legacy chart_segments for backward compatibility (overall stats)
-    # Categorization: Check if todo is currently done first, then by reassignment history
+    # Categorization: Check if todo is currently done, then count all others as pending
     chart_segments = {'done': 0, 're-assign': 0, 'pending': 0}
     for todo in all_todos:
         # Get the latest tracker to determine current status
@@ -652,20 +652,24 @@ def dashboard():
         # Check current status: if latest status is 'done' (status_id == 6), it's done
         if latest_tracker.status_id == 6:
             chart_segments['done'] += 1
+        # Check if it's KIV (on hold) - also don't count in pending
+        elif KIV.is_kiv(todo.id):
+            # KIV todos are not shown in overview, but if we were to show them, they'd be separate
+            continue
         else:
-            # For non-done todos, check if they have re-assignments in history
+            # All non-done, non-KIV todos are pending (includes re-assign which are pending reschedules)
+            chart_segments['pending'] += 1
+            
+            # Also track if this pending todo has re-assignment history for info purposes
             todo_trackers = db.session.query(Status.name).join(Tracker).filter(  # type: ignore
                 Tracker.todo_id == todo.id  # type: ignore
             ).order_by(Tracker.timestamp).all()  # type: ignore
             
-            # Count re-assignments in history
+            # Count re-assignments in history (for logging/debugging)
             reassignment_count = sum(1 for (status,) in todo_trackers if status == 're-assign')
-            
-            # Categorize: if has re-assignments, it's 're-assign', otherwise 'pending'
             if reassignment_count > 0:
-                chart_segments['re-assign'] += 1
-            else:
-                chart_segments['pending'] += 1
+                # This pending todo has been rescheduled, but it's still pending
+                pass
     
     # Remove zero values for cleaner chart
     chart_segments = {k: v for k, v in chart_segments.items() if v > 0}
