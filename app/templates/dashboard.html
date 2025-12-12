@@ -376,23 +376,74 @@ document.addEventListener('DOMContentLoaded', function() {
             return null;
         }
         
+        const statusConfig = {
+            'done': { label: 'Done', color: '#28a745' },
+            'pending': { label: 'Pending', color: '#ffc107' },
+            're-assign': { label: 'Re-assign', color: '#fd7e14' }
+        };
+        const orderedStatuses = ['done', 'pending', 're-assign'];
+        const entries = Object.entries(periodData || {});
+        const totalValue = entries.reduce((sum, [, value]) => {
+            return sum + (typeof value === 'number' ? value : 0);
+        }, 0);
+
+        if (totalValue <= 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#6c757d';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('No todos for ' + periodLabel, canvas.width / 2, canvas.height / 2);
+            return null;
+        }
+
+        const labels = [];
+        const data = [];
+        const backgroundColors = [];
+        const addedStatuses = new Set();
+        const appendStatus = (status, value) => {
+            if (addedStatuses.has(status)) {
+                return;
+            }
+            if (typeof value !== 'number' || value <= 0) {
+                return;
+            }
+            const config = statusConfig[status] || {
+                label: status.charAt(0).toUpperCase() + status.slice(1),
+                color: '#6c757d'
+            };
+            labels.push(config.label);
+            data.push(value);
+            backgroundColors.push(config.color);
+            addedStatuses.add(status);
+        };
+
+        orderedStatuses.forEach(status => {
+            appendStatus(status, periodData[status]);
+        });
+
+        entries.forEach(([status, value]) => {
+            appendStatus(status, value);
+        });
+
+        if (labels.length === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#6c757d';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('No todos for ' + periodLabel, canvas.width / 2, canvas.height / 2);
+            return null;
+        }
+
         // Create chart
         return new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: Object.keys(periodData).map(status => {
-                    if (status === 'done') return 'Done';
-                    if (status === 're-assign') return 'Re-assign';
-                    if (status === 'pending') return 'Pending';
-                    return status.charAt(0).toUpperCase() + status.slice(1);
-                }),
+                labels: labels,
                 datasets: [{
-                    data: Object.values(periodData),
-                    backgroundColor: [
-                        '#28a745',  // done - green
-                        '#fd7e14',  // re-assign - orange
-                        '#ffc107'   // pending - yellow
-                    ],
+                    data: data,
+                    backgroundColor: backgroundColors,
                     borderColor: '#fff',
                     borderWidth: 3,
                     hoverBorderWidth: 4,
