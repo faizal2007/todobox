@@ -53,6 +53,7 @@ New to TodoBox? Start here:
 
 ### Testing & Verification
 
+- **[DECISION_KEEP_AS_IS.md](DECISION_KEEP_AS_IS.md)** - ✅ Implementation decision (Option 2)
 - **[STATUS_LOGIC_USER_SUMMARY.md](STATUS_LOGIC_USER_SUMMARY.md)** - 📋 User-friendly summary of analysis
 - **[TODO_STATUS_VERIFICATION_REPORT.md](TODO_STATUS_VERIFICATION_REPORT.md)** - ⚠️ Technical verification report
 - **[TEST_SUITE_COMPREHENSIVE.md](TEST_SUITE_COMPREHENSIVE.md)** - Comprehensive test suite (66 tests)
