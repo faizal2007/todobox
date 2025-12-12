@@ -303,19 +303,20 @@
                 <div class="card-body">
                     {% if recent_todos %}
                         <div class="list-group list-group-flush">
-                            {% for todo in recent_todos %}
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                            {% for item in recent_todos %}
+                            <a href="{{ item.link }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="mb-1">{{ todo.name }}</h6>
-                                    <small class="text-muted">
-                                        <i class="mdi mdi-calendar"></i> 
-                                        {{ momentjs(todo.target_date).format('MMMM Do, YYYY') }}
+                                    <h6 class="mb-1">{{ item.todo.name }}</h6>
+                                    <small class="text-muted d-block">
+                                        <i class="mdi mdi-calendar"></i>
+                                        {{ momentjs(item.todo.target_date).format('MMMM Do, YYYY') }}
+                                        <span class="badge badge-light ml-2">{{ item.destination }}</span>
                                     </small>
                                 </div>
-                                <span class="badge badge-primary badge-pill">
-                                    {{ momentjs(todo.timestamp).format('MMM D') }}
+                                <span class="badge badge-primary badge-pill" aria-label="Created {{ momentjs(item.todo.timestamp).format('MMM D') }}">
+                                    {{ momentjs(item.todo.timestamp).format('MMM D') }}
                                 </span>
-                            </div>
+                            </a>
                             {% endfor %}
                         </div>
                     {% else %}

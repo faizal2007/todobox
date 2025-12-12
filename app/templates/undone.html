@@ -47,7 +47,7 @@
                                     {% for todo_data in todos %}
                                         {% set list = namespace(Todo=todo_data[0], Tracker=todo_data[1]) %}
                                         <div class="col-md-4">
-                                            <div class="card mb-3">
+                                            <div class="card mb-3" id="todo-{{ list.Todo.id }}">
                                                 <div class="card-body">
                                                     <div class="card-widgets">
                                                         <a class="done" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Mark as Done" aria-label="Mark as done">
@@ -101,7 +101,7 @@
                                     {% for todo_data in kiv_todos %}
                                         {% set list = namespace(Todo=todo_data[0], Tracker=todo_data[1]) %}
                                         <div class="col-md-4">
-                                            <div class="card mb-3">
+                                            <div class="card mb-3" id="todo-{{ list.Todo.id }}">
                                                 <div class="card-body">
                                                     <div class="card-widgets">
                                                         <a class="done" data-id='{{ list.Todo.id }}' href="#" data-toggle="tooltip" data-original-title="Mark as Done" aria-label="Mark as done">
