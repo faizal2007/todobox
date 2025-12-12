@@ -638,29 +638,38 @@ def dashboard():
     time_period_data = _categorize_todos_by_period(all_todos, now)
     
     # Get legacy chart_segments for backward compatibility (overall stats)
+    # Categorization: Check if todo is currently done, then count all others as pending
     chart_segments = {'done': 0, 're-assign': 0, 'pending': 0}
     for todo in all_todos:
-        # Get all trackers for this todo to check completion history
-        todo_trackers = db.session.query(Tracker, Status.name).join(Status).filter(  # type: ignore
-            Tracker.todo_id == todo.id  # type: ignore
-        ).order_by(Tracker.timestamp).all()  # type: ignore
+        # Get the latest tracker to determine current status
+        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc(), Tracker.id.desc()).first()  # type: ignore[attr-defined]
         
-        if not todo_trackers:
+        if not latest_tracker:
+            # No tracker yet - it's pending
+            chart_segments['pending'] += 1
             continue
         
-        # Check if todo was ever completed (has 'done' status in history)
-        was_ever_completed = any(status == 'done' for _, status in todo_trackers)
-        
-        # Count re-assignments in history
-        reassignment_count = sum(1 for _, status in todo_trackers if status == 're-assign')
-        
-        # Categorize todo properly
-        if was_ever_completed:
+        # Check current status: if latest status is 'done' (status_id == 6), it's done
+        if latest_tracker.status_id == 6:
             chart_segments['done'] += 1
-        elif reassignment_count > 0:
-            chart_segments['re-assign'] += 1
+        # Check if it's KIV (on hold) - also don't count in pending
+        elif KIV.is_kiv(todo.id):
+            # KIV todos are not shown in overview, but if we were to show them, they'd be separate
+            continue
         else:
+            # All non-done, non-KIV todos are pending (includes re-assign which are pending reschedules)
             chart_segments['pending'] += 1
+            
+            # Also track if this pending todo has re-assignment history for info purposes
+            todo_trackers = db.session.query(Status.name).join(Tracker).filter(  # type: ignore
+                Tracker.todo_id == todo.id  # type: ignore
+            ).order_by(Tracker.timestamp).all()  # type: ignore
+            
+            # Count re-assignments in history (for logging/debugging)
+            reassignment_count = sum(1 for (status,) in todo_trackers if status == 're-assign')
+            if reassignment_count > 0:
+                # This pending todo has been rescheduled, but it's still pending
+                pass
     
     # Remove zero values for cleaner chart
     chart_segments = {k: v for k, v in chart_segments.items() if v > 0}
@@ -1218,13 +1227,18 @@ TodoBox Team'''
 @app.route('/undone')
 @login_required
 def undone():
-    """Show all undone/pending todos across all dates"""
-    # Get all todos that are not completed (status_id != 2)
-    # Use a simpler approach - get all todos and filter by latest tracker status
+    """Show all uncompleted todos EXCLUDING today and tomorrow (those are in pending view)"""
+    # Get todos that are:
+    # 1. Not completed (status_id != 6 = done)
+    # 2. Not KIV (status_id != 9)
+    # 3. NOT from today or tomorrow (those are in the pending views)
     
     undone_todos = []
     kiv_todos = []
     all_todos = Todo.query.filter_by(user_id=current_user.id).order_by(Todo.modified.desc()).all()
+    
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
     
     for todo in all_todos:
         # Double-check todo belongs to current user (safety measure)
@@ -1235,12 +1249,24 @@ def undone():
         latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc(), Tracker.id.desc()).first()  # type: ignore[attr-defined]
         
         if latest_tracker:
-            if latest_tracker.status_id != 6 and not KIV.is_kiv(todo.id):
-                # Uncompleted tasks
-                undone_todos.append((todo, latest_tracker))
-            elif KIV.is_kiv(todo.id):
-                # KIV tasks
+            # Get todo's date
+            todo_date = todo.modified.date() if todo.modified else today
+            
+            # Skip today and tomorrow todos - they appear in the pending views
+            if todo_date == today or todo_date == tomorrow:
+                continue
+            
+            # Check if it's a KIV task
+            if KIV.is_kiv(todo.id):
                 kiv_todos.append((todo, latest_tracker))
+            # Check if it's NOT done (status_id != 6)
+            elif latest_tracker.status_id != 6:
+                # Include uncompleted tasks from past and future dates (excluding today/tomorrow)
+                undone_todos.append((todo, latest_tracker))
+    
+    # Sort by modified date (most recent first)
+    undone_todos.sort(key=lambda x: x[0].modified, reverse=True)
+    kiv_todos.sort(key=lambda x: x[0].modified, reverse=True)
     
     return render_template('undone.html', title='Undone Tasks', todos=undone_todos, kiv_todos=kiv_todos)
 
