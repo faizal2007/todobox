@@ -1218,15 +1218,18 @@ TodoBox Team'''
 @app.route('/undone')
 @login_required
 def undone():
-    """Show all undone/pending todos across all dates (including today and tomorrow)"""
-    # Get all todos that are not completed (status_id != 6) and not KIV (status_id != 9)
-    # This includes today, tomorrow, and other future dates - all pending/undone tasks
+    """Show all uncompleted todos EXCLUDING today and tomorrow (those are in pending view)"""
+    # Get todos that are:
+    # 1. Not completed (status_id != 6 = done)
+    # 2. Not KIV (status_id != 9)
+    # 3. NOT from today or tomorrow (those are in the pending views)
     
     undone_todos = []
     kiv_todos = []
     all_todos = Todo.query.filter_by(user_id=current_user.id).order_by(Todo.modified.desc()).all()
     
     today = date.today()
+    tomorrow = today + timedelta(days=1)
     
     for todo in all_todos:
         # Double-check todo belongs to current user (safety measure)
@@ -1237,16 +1240,22 @@ def undone():
         latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc(), Tracker.id.desc()).first()  # type: ignore[attr-defined]
         
         if latest_tracker:
+            # Get todo's date
+            todo_date = todo.modified.date() if todo.modified else today
+            
+            # Skip today and tomorrow todos - they appear in the pending views
+            if todo_date == today or todo_date == tomorrow:
+                continue
+            
             # Check if it's a KIV task
             if KIV.is_kiv(todo.id):
                 kiv_todos.append((todo, latest_tracker))
             # Check if it's NOT done (status_id != 6)
             elif latest_tracker.status_id != 6:
-                # Include all pending/undone tasks: today, tomorrow, and future dates
-                # Only exclude tasks that are marked as done (status 6)
+                # Include uncompleted tasks from past and future dates (excluding today/tomorrow)
                 undone_todos.append((todo, latest_tracker))
     
-    # Sort by modified date (most recent first) to show today/tomorrow first
+    # Sort by modified date (most recent first)
     undone_todos.sort(key=lambda x: x[0].modified, reverse=True)
     kiv_todos.sort(key=lambda x: x[0].modified, reverse=True)
     
