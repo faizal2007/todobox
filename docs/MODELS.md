@@ -183,6 +183,17 @@ Defines todo item status types.
 | 8 | re-assign | Reassigned task |
 | 9 | kiv | Keep In View - tasks on hold |
 
+### ⚠️ Pending Status Note
+
+**Important:** There is currently NO explicit "pending" status_id in the Status table.
+
+"Pending" is calculated as an **implicit state** in the dashboard:
+
+- A todo is considered "pending" if it has NOT been marked as "done" (id=6) AND has NO re-assignment history
+- This is derived state, not an actual database status
+
+**See:** [REASSIGN_PENDING_LOGIC_ANALYSIS.md](REASSIGN_PENDING_LOGIC_ANALYSIS.md) for details on the potential logic gap and recommended solutions.
+
 ### Status Methods
 
 ```python
@@ -206,7 +217,7 @@ Status.seed()
 
 # Query specific status
 done_status = Status.query.filter_by(name='done').first()
-print(done_status.id)  # Output: 2
+print(done_status.id)  # Output: 6
 ```
 
 ## Tracker Model

@@ -638,29 +638,34 @@ def dashboard():
     time_period_data = _categorize_todos_by_period(all_todos, now)
     
     # Get legacy chart_segments for backward compatibility (overall stats)
+    # Categorization: Check if todo is currently done first, then by reassignment history
     chart_segments = {'done': 0, 're-assign': 0, 'pending': 0}
     for todo in all_todos:
-        # Get all trackers for this todo to check completion history
-        todo_trackers = db.session.query(Tracker, Status.name).join(Status).filter(  # type: ignore
-            Tracker.todo_id == todo.id  # type: ignore
-        ).order_by(Tracker.timestamp).all()  # type: ignore
+        # Get the latest tracker to determine current status
+        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc(), Tracker.id.desc()).first()  # type: ignore[attr-defined]
         
-        if not todo_trackers:
+        if not latest_tracker:
+            # No tracker yet - it's pending
+            chart_segments['pending'] += 1
             continue
         
-        # Check if todo was ever completed (has 'done' status in history)
-        was_ever_completed = any(status == 'done' for _, status in todo_trackers)
-        
-        # Count re-assignments in history
-        reassignment_count = sum(1 for _, status in todo_trackers if status == 're-assign')
-        
-        # Categorize todo properly
-        if was_ever_completed:
+        # Check current status: if latest status is 'done' (status_id == 6), it's done
+        if latest_tracker.status_id == 6:
             chart_segments['done'] += 1
-        elif reassignment_count > 0:
-            chart_segments['re-assign'] += 1
         else:
-            chart_segments['pending'] += 1
+            # For non-done todos, check if they have re-assignments in history
+            todo_trackers = db.session.query(Status.name).join(Tracker).filter(  # type: ignore
+                Tracker.todo_id == todo.id  # type: ignore
+            ).order_by(Tracker.timestamp).all()  # type: ignore
+            
+            # Count re-assignments in history
+            reassignment_count = sum(1 for (status,) in todo_trackers if status == 're-assign')
+            
+            # Categorize: if has re-assignments, it's 're-assign', otherwise 'pending'
+            if reassignment_count > 0:
+                chart_segments['re-assign'] += 1
+            else:
+                chart_segments['pending'] += 1
     
     # Remove zero values for cleaner chart
     chart_segments = {k: v for k, v in chart_segments.items() if v > 0}

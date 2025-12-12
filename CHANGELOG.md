@@ -5,6 +5,21 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Analysis] - 2025-01-16
+
+### Identified
+
+- **Re-Assign & Pending Status Logic Gap**: Comprehensive analysis of todo status workflow
+  - Re-assigned todos (status_id=8) do NOT automatically transition to pending status
+  - Dashboard categorizes "re-assign" and "pending" as separate states
+  - "Pending" is implicit state (todos without re-assign history), not explicit status_id
+  - Documentation created: `docs/REASSIGN_PENDING_LOGIC_ANALYSIS.md`
+  - Recommended solution: Add explicit "pending" status (id=10) in Status table
+  - Impact: Affects todo categorization, dashboard display, undone view filtering
+  - Status: ⚠️ Logic gap confirmed, solution documented, implementation pending
+
+---
+
 ## [Latest] - 2025-12-09
 
 ### Changed

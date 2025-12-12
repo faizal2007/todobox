@@ -39,16 +39,24 @@ New to TodoBox? Start here:
 - **[TIMEZONE_AUTO_DETECTION.md](TIMEZONE_AUTO_DETECTION.md)** - Timezone detection
 - **[TIMEZONE_INTEGRATION.md](TIMEZONE_INTEGRATION.md)** - Timezone for reminders
 
-### Code Quality
+### Code Quality & Analysis
 
 - **[CODE_REVIEW.md](CODE_REVIEW.md)** - Code review findings
 - **[SECURITY_PATCHES.md](SECURITY_PATCHES.md)** - Security improvements
 - **[AXE_LINTER_BEST_PRACTICES.md](AXE_LINTER_BEST_PRACTICES.md)** - Accessibility
+- **[REASSIGN_PENDING_LOGIC_ANALYSIS.md](REASSIGN_PENDING_LOGIC_ANALYSIS.md)** - ⚠️ Status workflow analysis
 
 ### Performance
 
 - **[JAVASCRIPT_OPTIMIZATION.md](JAVASCRIPT_OPTIMIZATION.md)** - JS modernization
 - **[JQUERY_MIGRATION_GUIDE.md](JQUERY_MIGRATION_GUIDE.md)** - jQuery to vanilla JS
+
+### Testing & Verification
+
+- **[STATUS_LOGIC_USER_SUMMARY.md](STATUS_LOGIC_USER_SUMMARY.md)** - 📋 User-friendly summary of analysis
+- **[TODO_STATUS_VERIFICATION_REPORT.md](TODO_STATUS_VERIFICATION_REPORT.md)** - ⚠️ Technical verification report
+- **[TEST_SUITE_COMPREHENSIVE.md](TEST_SUITE_COMPREHENSIVE.md)** - Comprehensive test suite (66 tests)
+- **[TEST_UPDATE_SUMMARY.md](TEST_UPDATE_SUMMARY.md)** - Test updates summary
 
 ### Migrations
 
