@@ -73,11 +73,11 @@ def add_security_headers(response):
         # Allow required third-party CDNs (Flatpickr assets). Keep list minimal for security.
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; "
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-            "img-src 'self' https://cdn.jsdelivr.net data:; "
+            "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://maxcdn.bootstrapcdn.com; "
+            "img-src 'self' https://cdn.jsdelivr.net https://*.geekdo.me https://www.gravatar.com data:; "
             "connect-src 'self'; "
-            "font-src 'self' data: https://cdn.jsdelivr.net; "
+            "font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com https://maxcdn.bootstrapcdn.com; "
             "object-src 'none'; "
             "base-uri 'self';"
         )
