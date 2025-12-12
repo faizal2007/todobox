@@ -75,9 +75,9 @@ def add_security_headers(response):
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-            "img-src 'self' https: data:; "
+            "img-src 'self' https://cdn.jsdelivr.net data:; "
             "connect-src 'self'; "
-            "font-src 'self' data:; "
+            "font-src 'self' data: https://cdn.jsdelivr.net; "
             "object-src 'none'; "
             "base-uri 'self';"
         )
