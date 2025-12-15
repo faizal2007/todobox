@@ -446,6 +446,59 @@ class DeletedAccount(db.Model): # type: ignore[attr-defined]
         return f'<DeletedAccount {self.email}>'
 
 
+class TermsAndDisclaimer(db.Model): # type: ignore[attr-defined]
+    """Terms of Use and Disclaimer that users must accept before registration"""
+    id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
+    terms_of_use = db.Column(db.Text) # type: ignore[attr-defined]  # Rich HTML content for terms
+    disclaimer = db.Column(db.Text) # type: ignore[attr-defined]  # Rich HTML content for disclaimer
+    version = db.Column(db.String(20), default='1.0') # type: ignore[attr-defined]  # Version number (e.g., "1.0", "1.1")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow) # type: ignore[attr-defined]
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow) # type: ignore[attr-defined]
+    is_active = db.Column(db.Boolean, default=True) # type: ignore[attr-defined]  # If False, users must accept new version
+    
+    def __repr__(self):
+        return f'<TermsAndDisclaimer v{self.version}>'
+    
+    @classmethod
+    def get_active(cls):
+        """Get the currently active terms and disclaimer"""
+        return cls.query.filter_by(is_active=True).first()
+    
+    @classmethod
+    def get_or_create_default(cls):
+        """Get active terms or create default if none exist"""
+        active = cls.get_active()
+        if active:
+            return active
+        
+        # Create default terms
+        default_terms = TermsAndDisclaimer(
+            version='1.0',
+            terms_of_use='''<h4>Terms of Use</h4>
+<p>Welcome to TodoBox. By accessing and using this application, you accept and agree to be bound by the terms and provision of this agreement.</p>
+<p><strong>Use License:</strong> Permission is granted to temporarily download one copy of the materials (information or software) on TodoBox for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:</p>
+<ul>
+    <li>Modify or copy the materials</li>
+    <li>Use the materials for any commercial purpose or for any public display</li>
+    <li>Attempt to decompile or reverse engineer any software contained on TodoBox</li>
+    <li>Transfer the materials to another person or "mirror" the materials on any other server</li>
+    <li>Attempt to gain unauthorized access to any portion or feature of the services</li>
+</ul>
+<p><strong>Disclaimer:</strong> The materials on TodoBox are provided on an 'as is' basis. TodoBox makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.</p>
+<p><strong>Limitations:</strong> In no event shall TodoBox or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on TodoBox, even if TodoBox or an authorized representative has been notified orally or in writing of the possibility of such damage.</p>''',
+            disclaimer='''<h4>Disclaimer</h4>
+<p><strong>No Professional Advice:</strong> TodoBox provides a task management application for personal productivity purposes only. The service is provided on an "as-is" basis without any warranties or guarantees of any kind.</p>
+<p><strong>User Responsibility:</strong> Users are solely responsible for maintaining the confidentiality of their account information and passwords. TodoBox will not be responsible for any loss or damage arising from the unauthorized use of your account.</p>
+<p><strong>Data Security:</strong> While we strive to maintain reasonable security measures, no system is completely secure. By using TodoBox, you acknowledge and accept the risks associated with online data storage.</p>
+<p><strong>Limitation of Liability:</strong> To the fullest extent permitted by law, TodoBox shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to, damages for lost profits, revenue, data, or business interruption.</p>
+<p><strong>Changes to Terms:</strong> TodoBox reserves the right to modify these terms and conditions at any time. Your continued use of the service following any changes constitutes your acceptance of the new terms.</p>''',
+            is_active=True
+        )
+        db.session.add(default_terms) # type: ignore[attr-defined]
+        db.session.commit() # type: ignore[attr-defined]
+        return default_terms
+
+
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))

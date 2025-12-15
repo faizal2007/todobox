@@ -868,7 +868,13 @@ def register():
         else:
             flash(f'Registration failed: {error_msg}', 'error')
     
-    return render_template('register.html', title='Register', form=form)
+    # Get active terms and disclaimer
+    from app.models import TermsAndDisclaimer
+    terms_and_disclaimer = TermsAndDisclaimer.get_active()
+    if not terms_and_disclaimer:
+        terms_and_disclaimer = TermsAndDisclaimer.get_or_create_default()
+    
+    return render_template('register.html', title='Register', form=form, terms_and_disclaimer=terms_and_disclaimer)
 
 @app.route('/verify-email/<token>', methods=['GET'])
 def verify_email(token):
@@ -2694,3 +2700,57 @@ def admin_cleanup_expired_blocks():
     count = DeletedAccount.cleanup_expired()
     flash(f'Cleaned up {count} expired cooldown records.', 'success')
     return redirect(url_for('admin_blocked_accounts'))
+
+# ==================== Terms and Disclaimer Routes ====================
+
+@app.route('/admin/terms', methods=['GET', 'POST'])
+@login_required
+@require_admin
+def admin_manage_terms():
+    """Admin panel for managing Terms of Use and Disclaimer"""
+    from app.models import TermsAndDisclaimer
+    
+    current_terms = TermsAndDisclaimer.get_active()
+    if not current_terms:
+        current_terms = TermsAndDisclaimer.get_or_create_default()
+    
+    if request.method == 'POST':
+        try:
+            terms_of_use = request.form.get('terms_of_use', '').strip()
+            disclaimer = request.form.get('disclaimer', '').strip()
+            version = request.form.get('version', '1.0').strip()
+            
+            if not terms_of_use or not disclaimer:
+                flash('Both Terms of Use and Disclaimer are required.', 'error')
+                return redirect(url_for('admin_manage_terms'))
+            
+            # Mark old version as inactive
+            if current_terms:
+                current_terms.is_active = False
+                db.session.commit()  # type: ignore[attr-defined]
+            
+            # Create new version
+            new_terms = TermsAndDisclaimer(
+                terms_of_use=terms_of_use,
+                disclaimer=disclaimer,
+                version=version,
+                is_active=True
+            )
+            db.session.add(new_terms)  # type: ignore[attr-defined]
+            db.session.commit()  # type: ignore[attr-defined]
+            
+            flash(f'Terms and Disclaimer updated successfully (version {version}). Users must accept new terms on next registration.', 'success')
+            return redirect(url_for('admin_manage_terms'))
+        
+        except Exception as e:
+            db.session.rollback()  # type: ignore[attr-defined]
+            app.logger.error(f'Error updating terms: {str(e)}', exc_info=True)
+            flash(f'Error updating terms: {str(e)}', 'error')
+    
+    # Get all versions for history
+    all_versions = TermsAndDisclaimer.query.order_by(TermsAndDisclaimer.created_at.desc()).all()
+    
+    return render_template('admin/manage_terms.html', 
+                          title='Manage Terms and Disclaimer',
+                          current_terms=current_terms,
+                          all_versions=all_versions)

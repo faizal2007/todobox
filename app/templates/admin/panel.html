@@ -10,6 +10,9 @@
                     <i class="mdi mdi-shield-account mr-2"></i>{{ active_page|title }}
                 </h1>
                 <div class="page-title-right">
+                    <a href="{{ url_for('admin_manage_terms') }}" class="btn btn-info">
+                        <i class="mdi mdi-file-document mr-1"></i>Manage Terms
+                    </a>
                     <a href="{{ url_for('admin_blocked_accounts') }}" class="btn btn-warning">
                         <i class="mdi mdi-shield-lock mr-1"></i>Blocked Accounts
                     </a>

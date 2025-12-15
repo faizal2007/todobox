@@ -46,6 +46,8 @@ class RegistrationForm(FlaskForm):
         validators.EqualTo('password', message='Passwords must match')
     ])
     fullname = StringField('Full Name', validators=[Optional()])
+    accept_terms = BooleanField('I agree to the Terms of Use and Disclaimer', 
+                               validators=[DataRequired(message='You must accept the Terms of Use and Disclaimer to continue')])
     submit = SubmitField('Create Account')
     
     def validate_email(self, email):
