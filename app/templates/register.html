@@ -4,7 +4,7 @@
 <main role="main" style="min-height: 100vh; display: flex; align-items: center; padding: 20px 0;">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+            <div class="col-12 col-sm-11 col-md-10 col-lg-8">
                 <div class="card shadow-lg" style="border-radius: 8px;">
                     <div class="card-body p-4">
                         <h2 class="text-center mb-4">Create Account</h2>
@@ -81,12 +81,12 @@
                                         {% if terms_and_disclaimer %}
                                             <div class="mb-3">
                                                 <h5 class="mb-2">Terms of Use</h5>
-                                                {{ terms_and_disclaimer.terms_of_use | safe }}
+                                                {{ terms_and_disclaimer.terms_of_use | render_markdown | safe }}
                                             </div>
                                             <hr>
                                             <div>
                                                 <h5 class="mb-2">Disclaimer</h5>
-                                                {{ terms_and_disclaimer.disclaimer | safe }}
+                                                {{ terms_and_disclaimer.disclaimer | render_markdown | safe }}
                                             </div>
                                         {% else %}
                                             <p class="text-muted">No terms and disclaimer have been set yet.</p>

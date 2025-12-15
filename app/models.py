@@ -21,6 +21,7 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
     is_blocked = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Blocked user flag
     timezone = db.Column(db.String(50), default='UTC') # type: ignore[attr-defined]  # User's timezone (e.g., 'America/New_York')
     created_at = db.Column(db.DateTime, default=datetime.utcnow) # type: ignore[attr-defined]  # Account creation timestamp
+    terms_accepted_version = db.Column(db.String(50)) # type: ignore[attr-defined]  # Version of terms user accepted (None if not accepted)
     todo = db.relationship('Todo', backref='user', lazy='dynamic') # type: ignore[attr-defined]
 
     def __init__(self, email, oauth_provider=None, oauth_id=None, fullname=None):

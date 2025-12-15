@@ -1,0 +1,89 @@
+{% extends "main.html" %}
+
+{% block content %}
+<main role="main" style="min-height: 100vh; display: flex; align-items: center; padding: 20px 0;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-11 col-md-10 col-lg-8">
+                <div class="card shadow-lg" style="border-radius: 8px;">
+                    <div class="card-body p-4">
+                        <h2 class="text-center mb-4">Accept Terms and Disclaimer</h2>
+                        
+                        <p class="text-center text-muted mb-4">
+                            Before you can proceed, please review and accept our Terms of Use and Disclaimer
+                        </p>
+
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <!-- Terms and Disclaimer Section -->
+                        <div class="card bg-light mb-3" style="border-radius: 6px;">
+                            <div class="card-body p-3">
+                                <div class="terms-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; padding: 12px; border-radius: 4px; background-color: white; font-size: 0.9rem; line-height: 1.4;">
+                                    {% if terms_and_disclaimer %}
+                                        <div class="mb-3">
+                                            <h5 class="mb-2">Terms of Use</h5>
+                                            {{ terms_and_disclaimer.terms_of_use | render_markdown | safe }}
+                                        </div>
+                                        <hr>
+                                        <div>
+                                            <h5 class="mb-2">Disclaimer</h5>
+                                            {{ terms_and_disclaimer.disclaimer | render_markdown | safe }}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted">No terms and disclaimer have been set yet.</p>
+                                    {% endif %}
+                                </div>
+
+                                <form method="post" id="acceptTermsForm" style="margin-top: 20px;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" class="form-check-input" id="accept_terms" name="accept_terms" value="1" required>
+                                        <label class="form-check-label" for="accept_terms">
+                                            I agree to the <strong>Terms of Use</strong> and <strong>Disclaimer</strong>
+                                        </label>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary btn-block btn-lg">
+                                        <i class="mdi mdi-check mr-1"></i>Accept and Continue
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-3">
+                            <strong><i class="mdi mdi-information-outline mr-2"></i>Note:</strong>
+                            You are logging in as <strong>{{ user_email }}</strong>. You must accept the terms to continue with your login.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('acceptTermsForm');
+        const checkbox = document.getElementById('accept_terms');
+        
+        form.addEventListener('submit', function(e) {
+            if (!checkbox.checked) {
+                e.preventDefault();
+                alert('You must accept the Terms of Use and Disclaimer to continue.');
+            }
+        });
+    });
+</script>
+{% endblock %}

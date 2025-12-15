@@ -840,6 +840,12 @@ def register():
                 user.fullname = form.fullname.data.strip()
             user.email_verified = False  # Email not verified yet
             
+            # Save terms acceptance version
+            from app.models import TermsAndDisclaimer
+            active_terms = TermsAndDisclaimer.get_active()
+            if active_terms:
+                user.terms_accepted_version = active_terms.version
+            
             # Generate API token
             user.api_token = secrets.token_urlsafe(32)
             
@@ -962,6 +968,49 @@ def request_verification_email():
     
     email = request.args.get('email', '')
     return render_template('resend_verification.html', email=email)
+
+@app.route('/accept-terms-oauth', methods=['GET', 'POST'])
+def accept_terms_oauth():
+    """OAuth users must accept terms before login"""
+    from app.models import TermsAndDisclaimer
+    
+    oauth_user_id = session.get('oauth_user_id')
+    if not oauth_user_id:
+        flash('Invalid session. Please try logging in again.', 'error')
+        return redirect(url_for('login'))
+    
+    user = User.query.filter_by(id=oauth_user_id).first()
+    if not user:
+        flash('User not found. Please try logging in again.', 'error')
+        return redirect(url_for('login'))
+    
+    active_terms = TermsAndDisclaimer.get_active()
+    if not active_terms:
+        active_terms = TermsAndDisclaimer.get_or_create_default()
+    
+    if request.method == 'POST':
+        accept_terms = request.form.get('accept_terms')
+        
+        if not accept_terms:
+            flash('You must accept the Terms of Use and Disclaimer to continue.', 'error')
+        else:
+            # Save terms acceptance
+            user.terms_accepted_version = active_terms.version
+            db.session.commit()  # type: ignore[attr-defined]
+            
+            # Log in the user
+            login_user(user, remember=True, duration=timedelta(days=30))
+            
+            flash('Terms accepted! Welcome to TodoBox!', 'success')
+            next_page = session.pop('oauth_next_page', url_for('dashboard'))
+            session.pop('oauth_user_id', None)
+            
+            return redirect(next_page)
+    
+    return render_template('accept_terms_oauth.html', 
+                          title='Accept Terms and Disclaimer',
+                          terms_and_disclaimer=active_terms,
+                          user_email=user.email)
 
 def send_verification_email(user: User, token: str) -> None:
     """Send email verification link to user"""
@@ -1216,6 +1265,16 @@ def oauth_callback_google():
     if user.is_blocked:
         flash('Your account has been blocked. Please contact an administrator.', 'error')
         return redirect(url_for('login'))
+    
+    # Check if user needs to accept terms (new OAuth users or old users who haven't accepted yet)
+    from app.models import TermsAndDisclaimer
+    active_terms = TermsAndDisclaimer.get_active()
+    
+    if active_terms and not user.terms_accepted_version:
+        # Store next_page in session for after terms acceptance
+        session['oauth_next_page'] = request.args.get('next') or url_for('dashboard')
+        session['oauth_user_id'] = user.id
+        return redirect(url_for('accept_terms_oauth'))
     
     # Log in the user with remember=True to ensure persistent session on mobile
     login_user(user, remember=True, duration=timedelta(days=30))
