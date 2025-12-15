@@ -433,12 +433,12 @@ function showTodoModal(todoId) {
             `;
             
             // Add description if present
-            if (todo.description) {
+            if (todo.description_html) {
                 htmlContent += `
                     <div class="mb-3">
                         <label class="text-muted small font-weight-bold">Description</label>
                         <div class="border rounded p-3 bg-light">
-                            ${escapeHtml(todo.description).replace(/\n/g, '<br>')}
+                            ${todo.description_html}
                         </div>
                     </div>
                 `;

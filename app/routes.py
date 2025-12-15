@@ -50,7 +50,7 @@ def require_api_token(f):
     return decorated_function
 
 # Allowed HTML tags for sanitized Markdown output
-ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a']
+ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a', 'del', 's']
 ALLOWED_ATTRIBUTES = {'a': ['href', 'title']}
 
 # CSRF Error Handler - only for web routes
@@ -375,7 +375,7 @@ def create_todo():
         return jsonify({'error': 'Title cannot be empty'}), 400
     
     # Create todo
-    details_html = clean(markdown.markdown(details, extensions=['fenced_code']), 
+    details_html = clean(markdown.markdown(details, extensions=['fenced_code', 'pymdownx.tilde']), 
                         tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
     
     todo = Todo(name=title, details=details, details_html=details_html, user_id=user.id)
@@ -456,6 +456,7 @@ def get_todo(todo_id):
         'id': todo.id,
         'title': todo.name,
         'description': todo.details,
+        'description_html': todo.details_html,
         'status': status,
         'created_at': todo.timestamp.isoformat(),
         'modified_at': todo.modified.isoformat(),
@@ -489,7 +490,7 @@ def update_todo(todo_id):
     if 'details' in data:
         details = data['details'].strip()
         todo.details = details
-        todo.details_html = clean(markdown.markdown(details, extensions=['fenced_code']), 
+        todo.details_html = clean(markdown.markdown(details, extensions=['fenced_code', 'pymdownx.tilde']), 
                                  tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
     
     if 'status' in data:
@@ -1373,7 +1374,7 @@ def add():
             getTitle = getTitle[:255]
         if len(getActivities) > 10000:
             getActivities = getActivities[:10000]
-        getActivities_html = clean(markdown.markdown(getActivities, extensions=['fenced_code']), 
+        getActivities_html = clean(markdown.markdown(getActivities, extensions=['fenced_code', 'pymdownx.tilde']), 
                                    tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
         
         # Handle new schedule_day parameter
