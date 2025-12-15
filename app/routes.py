@@ -764,14 +764,16 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # Check if any users exist - if not, redirect to setup
+    # Check if any users exist - only redirect to setup if database is accessible AND truly empty
     try:
         user_count = User.query.count()
         if user_count == 0:
             return redirect(url_for('setup'))
-    except Exception:
-        # If database is not accessible, assume no users and redirect to setup
-        return redirect(url_for('setup'))
+    except Exception as db_error:
+        # If database error occurs, log it but continue to login page
+        # Don't assume no users - this could be a connection issue with existing users
+        app.logger.warning(f"Database error checking user count: {str(db_error)}")
+        # Continue to login page instead of redirecting to setup
     
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
@@ -832,7 +834,9 @@ def register():
             
             # Auto-detect timezone from IP address
             from app.geolocation import detect_timezone_from_ip
-            user.timezone = detect_timezone_from_ip(request.remote_addr)
+            detected_tz = detect_timezone_from_ip()
+            if detected_tz:
+                user.timezone = detected_tz
             
             # Add user to database
             db.session.add(user)
@@ -854,11 +858,15 @@ def register():
     
     except Exception as e:
         db.session.rollback()
-        if 'csrf' in str(e).lower():
+        error_msg = str(e)
+        app.logger.error(f'Registration error: {error_msg}', exc_info=True)
+        
+        if 'csrf' in error_msg.lower():
             flash('Session expired. Please try again.', 'warning')
+        elif 'unique constraint' in error_msg.lower() or 'duplicate' in error_msg.lower():
+            flash('Email already registered. Please use a different email or log in.', 'error')
         else:
-            app.logger.error(f'Registration error: {str(e)}')
-            flash('An error occurred during registration. Please try again.', 'error')
+            flash(f'Registration failed: {error_msg}', 'error')
     
     return render_template('register.html', title='Register', form=form)
 
