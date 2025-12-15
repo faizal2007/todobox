@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Terms and Disclaimer Management System**: Admin can create and manage terms of use and disclaimer
+  - New `/admin/terms` admin route for managing terms and disclaimer
+  - TermsAndDisclaimer model with version control system
+  - Admin template for editing terms with rich HTML support
+  - Version history tracking (old versions marked inactive on update)
+  - Default terms and disclaimer auto-generated on first use
+  - Link to Terms management in admin panel
+  - Database migration to create terms_and_disclaimer table
+- **Terms Acceptance in Registration**: Users must accept terms before creating account
+  - Registration form updated with mandatory terms acceptance checkbox
+  - Registration page displays scrollable terms section
+  - Validation error shown if terms not accepted
+  - Registration blocked until terms are accepted
+  - Comprehensive tests for terms model, admin management, and registration flow
 - **User Registration System**: New registration page for users to create accounts with email and password
   - Self-service user registration at `/register`
   - Email verification requirement before login
