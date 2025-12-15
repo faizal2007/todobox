@@ -5,7 +5,7 @@ from app import app, db, csrf
 from app.models import Todo, User, Status, Tracker, ShareInvitation, TodoShare, KIV
 from app.forms import (
     LoginForm, SetupAccountForm, ChangePassword, UpdateAccount, 
-    ShareInvitationForm, SharingSettingsForm, DeleteAccountForm
+    ShareInvitationForm, SharingSettingsForm, DeleteAccountForm, RegistrationForm
 )
 from app.oauth import generate_google_auth_url, process_google_callback
 from app.email_service import (
@@ -765,14 +765,16 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # Check if any users exist - if not, redirect to setup
+    # Check if any users exist - only redirect to setup if database is accessible AND truly empty
     try:
         user_count = User.query.count()
         if user_count == 0:
             return redirect(url_for('setup'))
-    except Exception:
-        # If database is not accessible, assume no users and redirect to setup
-        return redirect(url_for('setup'))
+    except Exception as db_error:
+        # If database error occurs, log it but continue to login page
+        # Don't assume no users - this could be a connection issue with existing users
+        app.logger.warning(f"Database error checking user count: {str(db_error)}")
+        # Continue to login page instead of redirecting to setup
     
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
@@ -784,6 +786,23 @@ def login():
             if user is None or not user.check_password(form.password.data):
                 flash('Invalid email or password')
                 return redirect(url_for('login'))
+            
+            # Check if user's email is verified (for non-OAuth users)
+            # Check email verification
+            # Only require verification for newly registered users (created after verification feature)
+            # Existing users who never went through registration are auto-verified on first login
+            if not user.email_verified and user.oauth_provider is None:
+                # Check if this is a legacy user (created before verification feature)
+                # Legacy users don't need verification - auto-verify them
+                if user.created_at and (datetime.utcnow() - user.created_at).days > 30:
+                    # Auto-verify legacy users who haven't verified after 30 days
+                    user.email_verified = True
+                    db.session.commit()  # type: ignore[attr-defined]
+                else:
+                    # New users must verify their email
+                    flash('Please verify your email before logging in. Check your inbox for verification link.', 'warning')
+                    return redirect(url_for('request_verification_email', email=user.email))
+            
             # Check if user is blocked
             if user.is_blocked:
                 flash('Your account has been blocked. Please contact an administrator.', 'error')
@@ -800,6 +819,263 @@ def login():
         raise
     
     return render_template('login.html', title='Sign In', form=form)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """User registration with email verification"""
+    from app.forms import RegistrationForm
+    from app.verification import VerificationToken
+    
+    # If user is already authenticated, redirect to dashboard
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    form = RegistrationForm()
+    
+    try:
+        if form.validate_on_submit():
+            # Create new user
+            user = User(email=form.email.data.lower())
+            user.set_password(form.password.data)
+            if form.fullname.data and form.fullname.data.strip():
+                user.fullname = form.fullname.data.strip()
+            user.email_verified = False  # Email not verified yet
+            
+            # Save terms acceptance version
+            from app.models import TermsAndDisclaimer
+            active_terms = TermsAndDisclaimer.get_active()
+            if active_terms:
+                user.terms_accepted_version = active_terms.version
+            
+            # Generate API token
+            user.api_token = secrets.token_urlsafe(32)
+            
+            # Auto-detect timezone from IP address
+            from app.geolocation import detect_timezone_from_ip
+            detected_tz = detect_timezone_from_ip()
+            if detected_tz:
+                user.timezone = detected_tz
+            
+            # Add user to database
+            db.session.add(user)
+            db.session.commit()
+            
+            # Generate verification token
+            token, expires_at = VerificationToken.create_verification_token(user)
+            
+            # Send verification email
+            try:
+                send_verification_email(user, token)
+                flash('Registration successful! Check your email to verify your account.', 'success')
+                return redirect(url_for('verification_sent', email=user.email))
+            except Exception as e:
+                # If email fails to send, still allow registration but warn user
+                app.logger.error(f'Failed to send verification email to {user.email}: {str(e)}')
+                flash('Registration successful, but verification email could not be sent. Please contact support.', 'warning')
+                return redirect(url_for('login'))
+    
+    except Exception as e:
+        db.session.rollback()
+        error_msg = str(e)
+        app.logger.error(f'Registration error: {error_msg}', exc_info=True)
+        
+        if 'csrf' in error_msg.lower():
+            flash('Session expired. Please try again.', 'warning')
+        elif 'unique constraint' in error_msg.lower() or 'duplicate' in error_msg.lower():
+            flash('Email already registered. Please use a different email or log in.', 'error')
+        else:
+            flash(f'Registration failed: {error_msg}', 'error')
+    
+    # Get active terms and disclaimer
+    from app.models import TermsAndDisclaimer
+    terms_and_disclaimer = TermsAndDisclaimer.get_active()
+    if not terms_and_disclaimer:
+        terms_and_disclaimer = TermsAndDisclaimer.get_or_create_default()
+    
+    return render_template('register.html', title='Register', form=form, terms_and_disclaimer=terms_and_disclaimer)
+
+@app.route('/verify-email/<token>', methods=['GET'])
+def verify_email(token):
+    """Verify email with token from verification link"""
+    from app.verification import VerificationToken
+    
+    try:
+        # Find user and verify token
+        # Token format: random_urlsafe_part_email_hash
+        # We need to verify the token matches the email
+        
+        # Search for unverified users and check if token is valid for them
+        unverified_users = User.query.filter_by(email_verified=False).all()
+        verified_user = None
+        
+        for user in unverified_users:
+            if VerificationToken.verify_email_token(token, user.email):
+                verified_user = user
+                break
+        
+        if not verified_user:
+            flash('Invalid or expired verification link. Please request a new one.', 'error')
+            return redirect(url_for('request_verification_email'))
+        
+        # Mark email as verified
+        verified_user.email_verified = True
+        db.session.commit()
+        
+        flash('Email verified successfully! You can now log in.', 'success')
+        return redirect(url_for('login'))
+    
+    except Exception as e:
+        app.logger.error(f'Email verification error: {str(e)}')
+        flash('An error occurred during verification. Please try again.', 'error')
+        return redirect(url_for('register'))
+
+@app.route('/verification-sent')
+def verification_sent():
+    """Show page confirming verification email was sent"""
+    email = request.args.get('email', '')
+    return render_template('verification_sent.html', email=email)
+
+@app.route('/resend-verification', methods=['GET', 'POST'])
+def request_verification_email():
+    """Resend verification email for users who haven't verified yet"""
+    from app.verification import VerificationToken
+    
+    if request.method == 'POST':
+        email = request.form.get('email', '').lower()
+        
+        try:
+            user = User.query.filter_by(email=email).first()
+            
+            if not user:
+                flash('Email not found. Please register first.', 'warning')
+                return redirect(url_for('register'))
+            
+            if user.email_verified:
+                flash('Your email is already verified. You can log in.', 'info')
+                return redirect(url_for('login'))
+            
+            # Generate new verification token
+            token, expires_at = VerificationToken.create_verification_token(user)
+            
+            # Send verification email
+            send_verification_email(user, token)
+            
+            flash('Verification email sent! Check your inbox.', 'success')
+            return redirect(url_for('verification_sent', email=user.email))
+        
+        except Exception as e:
+            app.logger.error(f'Error resending verification email: {str(e)}')
+            flash('Failed to resend verification email. Please try again.', 'error')
+    
+    email = request.args.get('email', '')
+    return render_template('resend_verification.html', email=email)
+
+@app.route('/accept-terms-oauth', methods=['GET', 'POST'])
+def accept_terms_oauth():
+    """OAuth users must accept terms before login"""
+    from app.models import TermsAndDisclaimer
+    
+    oauth_user_id = session.get('oauth_user_id')
+    if not oauth_user_id:
+        flash('Invalid session. Please try logging in again.', 'error')
+        return redirect(url_for('login'))
+    
+    user = User.query.filter_by(id=oauth_user_id).first()
+    if not user:
+        flash('User not found. Please try logging in again.', 'error')
+        return redirect(url_for('login'))
+    
+    active_terms = TermsAndDisclaimer.get_active()
+    if not active_terms:
+        active_terms = TermsAndDisclaimer.get_or_create_default()
+    
+    if request.method == 'POST':
+        accept_terms = request.form.get('accept_terms')
+        
+        if not accept_terms:
+            flash('You must accept the Terms of Use and Disclaimer to continue.', 'error')
+        else:
+            # Save terms acceptance
+            user.terms_accepted_version = active_terms.version
+            db.session.commit()  # type: ignore[attr-defined]
+            
+            # Log in the user
+            login_user(user, remember=True, duration=timedelta(days=30))
+            
+            flash('Terms accepted! Welcome to TodoBox!', 'success')
+            next_page = session.pop('oauth_next_page', url_for('dashboard'))
+            session.pop('oauth_user_id', None)
+            
+            return redirect(next_page)
+    
+    return render_template('accept_terms_oauth.html', 
+                          title='Accept Terms and Disclaimer',
+                          terms_and_disclaimer=active_terms,
+                          user_email=user.email)
+
+def send_verification_email(user: User, token: str) -> None:
+    """Send email verification link to user"""
+    try:
+        verification_link = url_for('verify_email', token=token, _external=True)
+        
+        # Plain text version
+        text_content = f"""Hello {user.fullname or user.email.split('@')[0]},
+
+Thank you for registering with TodoBox!
+
+Please verify your email by clicking the link below:
+{verification_link}
+
+This link will expire in 24 hours.
+
+If you did not create this account, please ignore this email.
+
+Best regards,
+TodoBox Team"""
+        
+        # HTML version
+        html_content = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2>Welcome to TodoBox!</h2>
+                    <p>Hi {user.fullname or user.email.split('@')[0]},</p>
+                    <p>Thank you for registering with TodoBox. Please verify your email by clicking the button below:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{verification_link}" style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                            Verify Email
+                        </a>
+                    </div>
+                    <p style="font-size: 12px; color: #666;">Or copy this link: <a href="{verification_link}">{verification_link}</a></p>
+                    <p style="color: #999; font-size: 12px;">This link will expire in 24 hours.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                    <p style="color: #999; font-size: 12px;">If you did not create this account, please ignore this email.</p>
+                </div>
+            </body>
+        </html>
+        """
+        
+        # Create email message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = 'Verify Your TodoBox Email'
+        msg['From'] = SMTP_FROM_EMAIL
+        msg['To'] = user.email
+        
+        part1 = MIMEText(text_content, 'plain')
+        part2 = MIMEText(html_content, 'html')
+        msg.attach(part1)
+        msg.attach(part2)
+        
+        # Send email
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            if SMTP_USERNAME and SMTP_PASSWORD:
+                server.starttls()
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.sendmail(SMTP_FROM_EMAIL, [user.email], msg.as_string())
+    
+    except Exception as e:
+        app.logger.error(f'Error sending verification email to {user.email}: {str(e)}')
+        raise
 
 @app.route('/setup')
 def setup():
@@ -856,6 +1132,7 @@ def setup_account():
             user.set_password(form.password.data)
             if form.fullname.data and form.fullname.data.strip():
                 user.fullname = form.fullname.data.strip()
+            user.email_verified = True  # Admin setup user - auto-verify email
             
             # Auto-detect timezone from IP address
             from app.geolocation import detect_timezone_from_ip
@@ -989,6 +1266,16 @@ def oauth_callback_google():
     if user.is_blocked:
         flash('Your account has been blocked. Please contact an administrator.', 'error')
         return redirect(url_for('login'))
+    
+    # Check if user needs to accept terms (new OAuth users or old users who haven't accepted yet)
+    from app.models import TermsAndDisclaimer
+    active_terms = TermsAndDisclaimer.get_active()
+    
+    if active_terms and not user.terms_accepted_version:
+        # Store next_page in session for after terms acceptance
+        session['oauth_next_page'] = request.args.get('next') or url_for('dashboard')
+        session['oauth_user_id'] = user.id
+        return redirect(url_for('accept_terms_oauth'))
     
     # Log in the user with remember=True to ensure persistent session on mobile
     login_user(user, remember=True, duration=timedelta(days=30))
@@ -2484,3 +2771,57 @@ def admin_cleanup_expired_blocks():
     count = DeletedAccount.cleanup_expired()
     flash(f'Cleaned up {count} expired cooldown records.', 'success')
     return redirect(url_for('admin_blocked_accounts'))
+
+# ==================== Terms and Disclaimer Routes ====================
+
+@app.route('/admin/terms', methods=['GET', 'POST'])
+@login_required
+@require_admin
+def admin_manage_terms():
+    """Admin panel for managing Terms of Use and Disclaimer"""
+    from app.models import TermsAndDisclaimer
+    
+    current_terms = TermsAndDisclaimer.get_active()
+    if not current_terms:
+        current_terms = TermsAndDisclaimer.get_or_create_default()
+    
+    if request.method == 'POST':
+        try:
+            terms_of_use = request.form.get('terms_of_use', '').strip()
+            disclaimer = request.form.get('disclaimer', '').strip()
+            version = request.form.get('version', '1.0').strip()
+            
+            if not terms_of_use or not disclaimer:
+                flash('Both Terms of Use and Disclaimer are required.', 'error')
+                return redirect(url_for('admin_manage_terms'))
+            
+            # Mark old version as inactive
+            if current_terms:
+                current_terms.is_active = False
+                db.session.commit()  # type: ignore[attr-defined]
+            
+            # Create new version
+            new_terms = TermsAndDisclaimer(
+                terms_of_use=terms_of_use,
+                disclaimer=disclaimer,
+                version=version,
+                is_active=True
+            )
+            db.session.add(new_terms)  # type: ignore[attr-defined]
+            db.session.commit()  # type: ignore[attr-defined]
+            
+            flash(f'Terms and Disclaimer updated successfully (version {version}). Users must accept new terms on next registration.', 'success')
+            return redirect(url_for('admin_manage_terms'))
+        
+        except Exception as e:
+            db.session.rollback()  # type: ignore[attr-defined]
+            app.logger.error(f'Error updating terms: {str(e)}', exc_info=True)
+            flash(f'Error updating terms: {str(e)}', 'error')
+    
+    # Get all versions for history
+    all_versions = TermsAndDisclaimer.query.order_by(TermsAndDisclaimer.created_at.desc()).all()
+    
+    return render_template('admin/manage_terms.html', 
+                          title='Manage Terms and Disclaimer',
+                          current_terms=current_terms,
+                          all_versions=all_versions)

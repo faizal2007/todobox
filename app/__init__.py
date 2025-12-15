@@ -47,6 +47,34 @@ app.jinja_env.globals['momentjs'] = momentjs
 def md5_filter(text):
     return hashlib.md5(text.encode('utf-8')).hexdigest()  # nosec - Used only for Gravatar avatar generation, not for security
 
+# Add markdown filter to render markdown as HTML
+@app.template_filter('render_markdown')
+def render_markdown(text):
+    """Render markdown text to HTML"""
+    import markdown
+    from bleach import clean
+    
+    if not text:
+        return ''
+    
+    # Convert markdown to HTML
+    html = markdown.markdown(text, extensions=['fenced_code', 'tables', 'pymdownx.tilde'])
+    
+    # Sanitize HTML to allow safe tags
+    allowed_tags = [
+        'p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'a', 'img', 'hr',
+        'table', 'thead', 'tbody', 'tr', 'th', 'td', 'del', 's', 'strike'
+    ]
+    allowed_attrs = {
+        'a': ['href', 'title'],
+        'img': ['src', 'alt', 'title'],
+        'code': ['class'],
+        'pre': ['class']
+    }
+    
+    return clean(html, tags=allowed_tags, attributes=allowed_attrs, strip=False)
+
 # Add cache-busting headers for static files in development
 @app.after_request
 def add_security_headers(response):

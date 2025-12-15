@@ -1,0 +1,244 @@
+{% extends "main.html" %}
+{% set active_page = title %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h1 class="page-title">
+                    <i class="mdi mdi-file-document mr-2"></i>{{ active_page|title }}
+                </h1>
+                <div class="page-title-right">
+                    <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">
+                        <i class="mdi mdi-arrow-left mr-1"></i>Back to Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            {% set alert_type = 'alert-success' if category == 'success' else 'alert-danger' if category == 'error' else 'alert-warning' if category == 'warning' else 'alert-info' %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert {{ alert_type }} alert-dismissible fade show" role="alert">
+                        <i class="mdi mdi-{{ 'check-circle' if category == 'success' else 'alert-circle' }} mr-2"></i>
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- SimpleMDE CSS -->
+    <link href='{{ url_for('static', filename='assets/css/vendor/simplemde.min.css') }}' rel="stylesheet" type="text/css" />
+
+    <!-- Terms Form -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-file-document-edit mr-2"></i>Edit Terms and Disclaimer
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Create or update the Terms of Use and Disclaimer that users must accept during registration. 
+                        All new content will create a new version and users will need to accept it on their next registration.
+                    </p>
+
+                    <form method="post" id="termsForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="form-group">
+                            <label for="version"><strong>Version Number</strong></label>
+                            <input type="text" class="form-control" id="version" name="version" 
+                                   value="{{ current_terms.version if current_terms else '1.0' }}" 
+                                   placeholder="e.g., 1.0, 1.1, 2.0" required>
+                            <small class="form-text text-muted">Enter version number (e.g., 1.0, 1.1). This helps track updates.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="terms_of_use"><strong>Terms of Use</strong></label>
+                            <textarea class="form-control" id="terms_of_use" name="terms_of_use" 
+                                      placeholder="Enter Terms of Use content">{{ current_terms.terms_of_use if current_terms else '' }}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="disclaimer"><strong>Disclaimer</strong></label>
+                            <textarea class="form-control" id="disclaimer" name="disclaimer" 
+                                      placeholder="Enter Disclaimer content">{{ current_terms.disclaimer if current_terms else '' }}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="mdi mdi-content-save mr-1"></i>Save Terms and Disclaimer
+                            </button>
+                            <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary btn-lg">
+                                <i class="mdi mdi-cancel mr-1"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Version Info -->
+    {% if current_terms %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-information-outline mr-2"></i>Current Active Version
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Version:</strong> {{ current_terms.version }}</p>
+                            <p><strong>Created:</strong> {{ current_terms.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                            <p><strong>Last Updated:</strong> {{ current_terms.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted">
+                                <strong>Status:</strong> 
+                                <span class="badge badge-success">Active</span>
+                            </p>
+                            <p class="text-muted">
+                                New users registering will see this version and must accept it to create an account.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Version History -->
+    {% if all_versions %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-history mr-2"></i>Version History
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Version</th>
+                                    <th>Created</th>
+                                    <th>Last Updated</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for version in all_versions %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ version.version }}</strong>
+                                    </td>
+                                    <td>{{ version.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td>{{ version.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td>
+                                        {% if version.is_active %}
+                                        <span class="badge badge-success">Active</span>
+                                        {% else %}
+                                        <span class="badge badge-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Info Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="mdi mdi-help-circle mr-2"></i>How it Works
+                    </h5>
+                    <ul class="mb-0">
+                        <li>When you update the Terms and Disclaimer, a new version is created</li>
+                        <li>The previous version is marked as inactive</li>
+                        <li>New users will see only the active version during registration</li>
+                        <li>Users must accept the current Terms and Disclaimer to create an account</li>
+                        <li>You can view the version history to see all past versions</li>
+                        <li>HTML formatting is supported for rich text content (headings, lists, etc.)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- SimpleMDE js -->
+<script src='{{ url_for('static', filename='assets/js/vendor/simplemde.min.js') }}'></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize SimpleMDE for Terms of Use
+        let termsEditor = new SimpleMDE({ 
+            element: document.getElementById('terms_of_use'),
+            spellChecker: false,
+            toolbarTips: true,
+            autoDownloadFontAwesome: true,
+            toolbar: ['bold', 'italic', 'strikethrough', 'unordered-list', 'ordered-list', '|', 'quote', 'link', 'preview']
+        });
+
+        // Initialize SimpleMDE for Disclaimer  
+        let disclaimerEditor = new SimpleMDE({ 
+            element: document.getElementById('disclaimer'),
+            spellChecker: false,
+            toolbarTips: true,
+            autoDownloadFontAwesome: true,
+            toolbar: ['bold', 'italic', 'strikethrough', 'unordered-list', 'ordered-list', '|', 'quote', 'link', 'preview']
+        });
+
+        // Render editors
+        if (termsEditor) {
+            termsEditor.render();
+        }
+        if (disclaimerEditor) {
+            disclaimerEditor.render();
+        }
+
+        // Make editors globally available
+        window.termsEditor = termsEditor;
+        window.disclaimerEditor = disclaimerEditor;
+
+        // Handle form submission - capture SimpleMDE content
+        document.getElementById('termsForm').addEventListener('submit', function(e) {
+            // Update textarea with SimpleMDE content before submitting
+            if (termsEditor && termsEditor.codemirror) {
+                document.getElementById('terms_of_use').value = termsEditor.value();
+            }
+            if (disclaimerEditor && disclaimerEditor.codemirror) {
+                document.getElementById('disclaimer').value = disclaimerEditor.value();
+            }
+        });
+    });
+</script>
+{% endblock %}

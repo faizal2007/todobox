@@ -1,0 +1,135 @@
+{% extends "main.html" %}
+
+{% block content %}
+<main role="main" style="min-height: 100vh; display: flex; align-items: center; padding: 20px 0;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-11 col-md-10 col-lg-8">
+                <div class="card shadow-lg" style="border-radius: 8px;">
+                    <div class="card-body p-4">
+                        <h2 class="text-center mb-4">Create Account</h2>
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <form method="post" novalidate id="registerForm">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="form-group">
+                                {{ form.email.label }}
+                                {% if form.email.errors %}
+                                    {{ form.email(size=32, class="form-control is-invalid") }}
+                                    {% for error in form.email.errors %}
+                                        <span style="color: red;">[{{ error }}]</span>
+                                    {% endfor %}
+                                {% else %}
+                                    {{ form.email(size=32, class="form-control", placeholder="your@email.com") }}
+                                    <small class="form-text text-muted">We'll send a verification link to this email</small>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                {{ form.fullname.label }}
+                                {% if form.fullname.errors %}
+                                    {{ form.fullname(size=32, class="form-control is-invalid", placeholder="Full Name (optional)") }}
+                                    {% for error in form.fullname.errors %}
+                                        <span style="color: red;">[{{ error }}]</span>
+                                    {% endfor %}
+                                {% else %}
+                                    {{ form.fullname(size=32, class="form-control", placeholder="Full Name (optional)") }}
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                {{ form.password.label }}
+                                {% if form.password.errors %}
+                                    {{ form.password(size=32, class="form-control is-invalid", type="password") }}
+                                    {% for error in form.password.errors %}
+                                        <span style="color: red;">[{{ error }}]</span>
+                                    {% endfor %}
+                                {% else %}
+                                    {{ form.password(size=32, class="form-control", type="password", placeholder="Minimum 8 characters") }}
+                                    <small class="form-text text-muted">Use at least 8 characters</small>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                {{ form.confirm_password.label }}
+                                {% if form.confirm_password.errors %}
+                                    {{ form.confirm_password(size=32, class="form-control is-invalid", type="password") }}
+                                    {% for error in form.confirm_password.errors %}
+                                        <span style="color: red;">[{{ error }}]</span>
+                                    {% endfor %}
+                                {% else %}
+                                    {{ form.confirm_password(size=32, class="form-control", type="password", placeholder="Confirm password") }}
+                                {% endif %}
+                            </div>
+
+                            <!-- Terms and Disclaimer Section -->
+                            <div class="card bg-light mb-3" style="border-radius: 6px;">
+                                <div class="card-body p-3">
+                                    <div class="terms-container" style="max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; padding: 12px; border-radius: 4px; background-color: white; font-size: 0.9rem; line-height: 1.4;">
+                                        {% if terms_and_disclaimer %}
+                                            <div class="mb-3">
+                                                <h5 class="mb-2">Terms of Use</h5>
+                                                {{ terms_and_disclaimer.terms_of_use | render_markdown | safe }}
+                                            </div>
+                                            <hr>
+                                            <div>
+                                                <h5 class="mb-2">Disclaimer</h5>
+                                                {{ terms_and_disclaimer.disclaimer | render_markdown | safe }}
+                                            </div>
+                                        {% else %}
+                                            <p class="text-muted">No terms and disclaimer have been set yet.</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-group mt-3 mb-0">
+                                        {% if form.accept_terms.errors %}
+                                            <div class="custom-control custom-checkbox">
+                                                {{ form.accept_terms(class="custom-control-input is-invalid") }}
+                                                <label class="custom-control-label text-danger" for="accept_terms">
+                                                    {{ form.accept_terms.label.text }}
+                                                </label>
+                                            </div>
+                                            {% for error in form.accept_terms.errors %}
+                                                <small style="color: red; display: block; margin-top: 5px;">{{ error }}</small>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="custom-control custom-checkbox">
+                                                {{ form.accept_terms(class="custom-control-input") }}
+                                                <label class="custom-control-label" for="accept_terms">
+                                                    {{ form.accept_terms.label.text }}
+                                                </label>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                {{ form.submit(class="btn btn-primary btn-block btn-lg") }}
+                            </div>
+                        </form>
+
+                        <hr>
+
+                        <p class="text-center text-muted mb-0">
+                            Already have an account? <a href="{{ url_for('login') }}">Sign in here</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

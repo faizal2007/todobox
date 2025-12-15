@@ -8,9 +8,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Terms and Disclaimer Management System**: Admin can create and manage terms of use and disclaimer
+  - New `/admin/terms` admin route for managing terms and disclaimer
+  - TermsAndDisclaimer model with version control system
+  - Admin template for editing terms with rich HTML support
+  - Version history tracking (old versions marked inactive on update)
+  - Default terms and disclaimer auto-generated on first use
+  - Link to Terms management in admin panel
+  - Database migration to create terms_and_disclaimer table
+- **Terms Acceptance in Registration**: Users must accept terms before creating account
+  - Registration form updated with mandatory terms acceptance checkbox
+  - Registration page displays scrollable terms section
+  - Validation error shown if terms not accepted
+  - Registration blocked until terms are accepted
+  - Comprehensive tests for terms model, admin management, and registration flow
+- **User Registration System**: New registration page for users to create accounts with email and password
+  - Self-service user registration at `/register`
+  - Email verification requirement before login
+  - Automatic verification token generation and email delivery
+  - Email resend functionality for unverified accounts (`/resend-verification`)
+  - Registration form validation with email uniqueness checking
+  - Minimum password length requirement (8 characters)
+  - Support for full name during registration (optional)
+  - Verification emails with secure token links (24-hour expiration)
+  - User model updated with `email_verified` boolean field (default: False)
+  - Registration templates: register.html, verification_sent.html, resend_verification.html
+  - RegistrationForm with password confirmation and email validation
+  - Login redirect for unverified emails to resend verification link
+  - Admin setup account automatically marked as verified (bypasses email verification)
+  - API verification token utilities (app/verification.py module)
 - Strikethrough button to SimpleMDE editor toolbar in all pages (list.html, todo.html, undone.html)
 - Keyboard shortcuts for strikethrough: Ctrl+Shift+S (Windows/Linux) and Cmd+Shift+S (Mac)
 - Strikethrough formatting wraps selected text with ~~syntax~~ (Markdown standard)
+
+### Changed
+- Login route now checks `email_verified` status for non-OAuth users
+- Setup account flow marks admin user email as pre-verified
+- Modified routes: /login, /setup/account
+- Added routes: /register, /verify-email/<token>, /resend-verification, /verification-sent
+
+### Technical Details
+- Password hashing: Uses werkzeug.security (consistent with existing auth)
+- Token generation: Uses secrets.token_urlsafe() for cryptographic randomness
+- Email service: Uses existing SMTP configuration
+- Database: New column `email_verified` on User model (default: False)
 
 ## [Analysis] - 2025-01-16
 

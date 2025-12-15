@@ -32,6 +32,34 @@ class SetupAccountForm(FlaskForm):
             # If database is not accessible, skip email uniqueness validation
             # The route will handle database connection errors appropriately
             pass
+
+
+class RegistrationForm(FlaskForm):
+    """Form for user registration with email verification"""
+    email = StringField('Email', validators=[DataRequired(), Email(message='Invalid email address')])
+    password = PasswordField('Password', [
+        validators.DataRequired(),
+        validators.Length(min=8, message='Password must be at least 8 characters long')
+    ])
+    confirm_password = PasswordField('Confirm Password', [
+        validators.DataRequired(),
+        validators.EqualTo('password', message='Passwords must match')
+    ])
+    fullname = StringField('Full Name', validators=[Optional()])
+    accept_terms = BooleanField('I agree to the Terms of Use and Disclaimer', 
+                               validators=[DataRequired(message='You must accept the Terms of Use and Disclaimer to continue')])
+    submit = SubmitField('Create Account')
+    
+    def validate_email(self, email):
+        """Check if email is already registered"""
+        try:
+            user = User.query.filter_by(email=email.data.lower()).first()
+            if user is not None:
+                raise ValidationError('Email already registered. Please log in or use a different email.')
+        except Exception:
+            # If database is not accessible, skip email uniqueness validation
+            # The route will handle database connection errors appropriately
+            pass
     
 class ChangePassword(FlaskForm):
     oldPassword = PasswordField('Old Password', validators=[DataRequired()])
