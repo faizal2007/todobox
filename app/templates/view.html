@@ -25,7 +25,7 @@
                         <td>{{ momentjs(todo.timestamp).format("DD/MM/YY h:mm a") }}</td>
                         <td>{{ todo.name }}</td>
                         <td>{{ momentjs(todo.modified).calendar() }}</td>
-                        <td>{{ todo.details }}</td>
+                        <td>{{ todo.details_html | safe }}</td>
                         <td>{{ todo.status_id }}</td>
                     </tr>
                     {% endfor %}

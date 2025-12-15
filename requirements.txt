@@ -33,10 +33,9 @@ email-validator==2.2.0
 WTForms==3.2.1
 bleach==6.3.0
 
-# Utilities
-python-dotenv==1.2.1
-python-dateutil==2.9.0.post0
+# Markdown and Extensions
 Markdown==3.10
+pymdown-extensions==10.9
 click==8.3.1
 cachetools==6.2.2
 cachelib==0.13.0
