@@ -202,18 +202,18 @@
         let termsEditor = new SimpleMDE({ 
             element: document.getElementById('terms_of_use'),
             spellChecker: false,
-            autoDownloadFontAwesome: false,
-            placeholder: 'Enter Terms of Use content here. Use markdown formatting.',
-            toolbar: ['bold', 'italic', 'strikethrough', '|', 'heading', 'code', 'quote', 'unordered-list', 'ordered-list', 'link', 'image', 'table', '|', 'preview', 'side-by-side', 'fullscreen', '|', 'guide']
+            toolbarTips: true,
+            autoDownloadFontAwesome: true,
+            toolbar: ['bold', 'italic', 'strikethrough', '|', 'heading', 'quote', 'unordered-list', 'ordered-list', 'link', 'table', '|', 'preview', 'side-by-side', 'fullscreen', '|', 'guide']
         });
 
         // Initialize SimpleMDE for Disclaimer  
         let disclaimerEditor = new SimpleMDE({ 
             element: document.getElementById('disclaimer'),
             spellChecker: false,
-            autoDownloadFontAwesome: false,
-            placeholder: 'Enter Disclaimer content here. Use markdown formatting.',
-            toolbar: ['bold', 'italic', 'strikethrough', '|', 'heading', 'code', 'quote', 'unordered-list', 'ordered-list', 'link', 'image', 'table', '|', 'preview', 'side-by-side', 'fullscreen', '|', 'guide']
+            toolbarTips: true,
+            autoDownloadFontAwesome: true,
+            toolbar: ['bold', 'italic', 'strikethrough', '|', 'heading', 'quote', 'unordered-list', 'ordered-list', 'link', 'table', '|', 'preview', 'side-by-side', 'fullscreen', '|', 'guide']
         });
 
         // Render editors
