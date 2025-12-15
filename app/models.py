@@ -12,6 +12,7 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
     email = db.Column(db.String(120), index=True, unique=True, nullable=False) # type: ignore[attr-defined]
     fullname = db.Column(db.String(100)) # type: ignore[attr-defined]
     password_hash = db.Column(db.String(255)) # type: ignore[attr-defined]
+    email_verified = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Email verification status
     api_token = db.Column(db.String(255), unique=True, index=True) # type: ignore[attr-defined]  # API token for external access
     oauth_provider = db.Column(db.String(50)) # type: ignore[attr-defined]  # 'google' or None for password auth
     oauth_id = db.Column(db.String(255), index=True) # type: ignore[attr-defined]  # Google subject ID

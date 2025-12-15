@@ -5,7 +5,7 @@ from app import app, db, csrf
 from app.models import Todo, User, Status, Tracker, ShareInvitation, TodoShare, KIV
 from app.forms import (
     LoginForm, SetupAccountForm, ChangePassword, UpdateAccount, 
-    ShareInvitationForm, SharingSettingsForm, DeleteAccountForm
+    ShareInvitationForm, SharingSettingsForm, DeleteAccountForm, RegistrationForm
 )
 from app.oauth import generate_google_auth_url, process_google_callback
 from app.email_service import (
@@ -783,6 +783,12 @@ def login():
             if user is None or not user.check_password(form.password.data):
                 flash('Invalid email or password')
                 return redirect(url_for('login'))
+            
+            # Check if user's email is verified (for non-OAuth users)
+            if not user.email_verified and user.oauth_provider is None:
+                flash('Please verify your email before logging in. Check your inbox for verification link.', 'warning')
+                return redirect(url_for('request_verification_email', email=user.email))
+            
             # Check if user is blocked
             if user.is_blocked:
                 flash('Your account has been blocked. Please contact an administrator.', 'error')
@@ -799,6 +805,202 @@ def login():
         raise
     
     return render_template('login.html', title='Sign In', form=form)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """User registration with email verification"""
+    from app.forms import RegistrationForm
+    from app.verification import VerificationToken
+    
+    # If user is already authenticated, redirect to dashboard
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    form = RegistrationForm()
+    
+    try:
+        if form.validate_on_submit():
+            # Create new user
+            user = User(email=form.email.data.lower())
+            user.set_password(form.password.data)
+            if form.fullname.data and form.fullname.data.strip():
+                user.fullname = form.fullname.data.strip()
+            user.email_verified = False  # Email not verified yet
+            
+            # Generate API token
+            user.api_token = secrets.token_urlsafe(32)
+            
+            # Auto-detect timezone from IP address
+            from app.geolocation import detect_timezone_from_ip
+            user.timezone = detect_timezone_from_ip(request.remote_addr)
+            
+            # Add user to database
+            db.session.add(user)
+            db.session.commit()
+            
+            # Generate verification token
+            token, expires_at = VerificationToken.create_verification_token(user)
+            
+            # Send verification email
+            try:
+                send_verification_email(user, token)
+                flash('Registration successful! Check your email to verify your account.', 'success')
+                return redirect(url_for('verification_sent', email=user.email))
+            except Exception as e:
+                # If email fails to send, still allow registration but warn user
+                app.logger.error(f'Failed to send verification email to {user.email}: {str(e)}')
+                flash('Registration successful, but verification email could not be sent. Please contact support.', 'warning')
+                return redirect(url_for('login'))
+    
+    except Exception as e:
+        db.session.rollback()
+        if 'csrf' in str(e).lower():
+            flash('Session expired. Please try again.', 'warning')
+        else:
+            app.logger.error(f'Registration error: {str(e)}')
+            flash('An error occurred during registration. Please try again.', 'error')
+    
+    return render_template('register.html', title='Register', form=form)
+
+@app.route('/verify-email/<token>', methods=['GET'])
+def verify_email(token):
+    """Verify email with token from verification link"""
+    from app.verification import VerificationToken
+    
+    try:
+        # Find user and verify token
+        # Token format: random_urlsafe_part_email_hash
+        # We need to verify the token matches the email
+        
+        # Search for unverified users and check if token is valid for them
+        unverified_users = User.query.filter_by(email_verified=False).all()
+        verified_user = None
+        
+        for user in unverified_users:
+            if VerificationToken.verify_email_token(token, user.email):
+                verified_user = user
+                break
+        
+        if not verified_user:
+            flash('Invalid or expired verification link. Please request a new one.', 'error')
+            return redirect(url_for('request_verification_email'))
+        
+        # Mark email as verified
+        verified_user.email_verified = True
+        db.session.commit()
+        
+        flash('Email verified successfully! You can now log in.', 'success')
+        return redirect(url_for('login'))
+    
+    except Exception as e:
+        app.logger.error(f'Email verification error: {str(e)}')
+        flash('An error occurred during verification. Please try again.', 'error')
+        return redirect(url_for('register'))
+
+@app.route('/verification-sent')
+def verification_sent():
+    """Show page confirming verification email was sent"""
+    email = request.args.get('email', '')
+    return render_template('verification_sent.html', email=email)
+
+@app.route('/resend-verification', methods=['GET', 'POST'])
+def request_verification_email():
+    """Resend verification email for users who haven't verified yet"""
+    from app.verification import VerificationToken
+    
+    if request.method == 'POST':
+        email = request.form.get('email', '').lower()
+        
+        try:
+            user = User.query.filter_by(email=email).first()
+            
+            if not user:
+                flash('Email not found. Please register first.', 'warning')
+                return redirect(url_for('register'))
+            
+            if user.email_verified:
+                flash('Your email is already verified. You can log in.', 'info')
+                return redirect(url_for('login'))
+            
+            # Generate new verification token
+            token, expires_at = VerificationToken.create_verification_token(user)
+            
+            # Send verification email
+            send_verification_email(user, token)
+            
+            flash('Verification email sent! Check your inbox.', 'success')
+            return redirect(url_for('verification_sent', email=user.email))
+        
+        except Exception as e:
+            app.logger.error(f'Error resending verification email: {str(e)}')
+            flash('Failed to resend verification email. Please try again.', 'error')
+    
+    email = request.args.get('email', '')
+    return render_template('resend_verification.html', email=email)
+
+def send_verification_email(user: User, token: str) -> None:
+    """Send email verification link to user"""
+    try:
+        verification_link = url_for('verify_email', token=token, _external=True)
+        
+        # Plain text version
+        text_content = f"""Hello {user.fullname or user.email.split('@')[0]},
+
+Thank you for registering with TodoBox!
+
+Please verify your email by clicking the link below:
+{verification_link}
+
+This link will expire in 24 hours.
+
+If you did not create this account, please ignore this email.
+
+Best regards,
+TodoBox Team"""
+        
+        # HTML version
+        html_content = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2>Welcome to TodoBox!</h2>
+                    <p>Hi {user.fullname or user.email.split('@')[0]},</p>
+                    <p>Thank you for registering with TodoBox. Please verify your email by clicking the button below:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{verification_link}" style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                            Verify Email
+                        </a>
+                    </div>
+                    <p style="font-size: 12px; color: #666;">Or copy this link: <a href="{verification_link}">{verification_link}</a></p>
+                    <p style="color: #999; font-size: 12px;">This link will expire in 24 hours.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                    <p style="color: #999; font-size: 12px;">If you did not create this account, please ignore this email.</p>
+                </div>
+            </body>
+        </html>
+        """
+        
+        # Create email message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = 'Verify Your TodoBox Email'
+        msg['From'] = SMTP_FROM_EMAIL
+        msg['To'] = user.email
+        
+        part1 = MIMEText(text_content, 'plain')
+        part2 = MIMEText(html_content, 'html')
+        msg.attach(part1)
+        msg.attach(part2)
+        
+        # Send email
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            if SMTP_USERNAME and SMTP_PASSWORD:
+                server.starttls()
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.sendmail(SMTP_FROM_EMAIL, [user.email], msg.as_string())
+    
+    except Exception as e:
+        app.logger.error(f'Error sending verification email to {user.email}: {str(e)}')
+        raise
 
 @app.route('/setup')
 def setup():
@@ -855,6 +1057,7 @@ def setup_account():
             user.set_password(form.password.data)
             if form.fullname.data and form.fullname.data.strip():
                 user.fullname = form.fullname.data.strip()
+            user.email_verified = True  # Admin setup user - auto-verify email
             
             # Auto-detect timezone from IP address
             from app.geolocation import detect_timezone_from_ip
