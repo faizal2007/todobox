@@ -1033,48 +1033,100 @@ If you did not create this account, please ignore this email.
 Best regards,
 TodoBox Team"""
         
-        # HTML version
-        html_content = f"""
-        <html>
-            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h2>Welcome to TodoBox!</h2>
-                    <p>Hi {user.fullname or user.email.split('@')[0]},</p>
-                    <p>Thank you for registering with TodoBox. Please verify your email by clicking the button below:</p>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="{verification_link}" style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                            Verify Email
-                        </a>
-                    </div>
-                    <p style="font-size: 12px; color: #666;">Or copy this link: <a href="{verification_link}">{verification_link}</a></p>
-                    <p style="color: #999; font-size: 12px;">This link will expire in 24 hours.</p>
-                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-                    <p style="color: #999; font-size: 12px;">If you did not create this account, please ignore this email.</p>
-                </div>
-            </body>
-        </html>
+        # HTML version with better formatting
+        html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f5f5f5; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: white; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 5px 5px 0 0; margin: -20px -20px 20px -20px; }}
+        .header h2 {{ margin: 0; font-size: 24px; }}
+        .content {{ padding: 20px 0; }}
+        .button {{ display: inline-block; padding: 12px 32px; margin: 20px 0; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }}
+        .button:hover {{ background-color: #0056b3; }}
+        .footer {{ text-align: center; padding-top: 20px; border-top: 1px solid #eee; color: #999; font-size: 12px; }}
+        a {{ color: #007bff; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Welcome to TodoBox!</h2>
+        </div>
+        <div class="content">
+            <p>Hi {user.fullname or user.email.split('@')[0]},</p>
+            <p>Thank you for registering with TodoBox. Please verify your email by clicking the button below:</p>
+            <div style="text-align: center;">
+                <a href="{verification_link}" class="button">Verify Email Address</a>
+            </div>
+            <p style="text-align: center; font-size: 12px; color: #666;">Or copy this link if the button doesn't work:</p>
+            <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 3px; font-size: 11px;"><a href="{verification_link}">{verification_link}</a></p>
+            <p style="color: #999; font-size: 12px;">This verification link will expire in 24 hours for security reasons.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #999; font-size: 12px;">If you did not create this TodoBox account, please ignore this email. Your email will not be used without your verification.</p>
+        </div>
+        <div class="footer">
+            <p>TodoBox - Task Management Made Simple</p>
+            <p>This is an automated message, please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>
         """
         
-        # Create email message
+        # Create email message with proper headers to avoid spam
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = 'Verify Your TodoBox Email'
+        
+        # Critical headers for deliverability
+        msg['Subject'] = 'Verify Your TodoBox Email Address'
         msg['From'] = SMTP_FROM_EMAIL
         msg['To'] = user.email
+        msg['Reply-To'] = SMTP_FROM_EMAIL
+        msg['X-Priority'] = '3'  # Normal priority
+        msg['X-Mailer'] = 'TodoBox/1.0'
+        msg['Importance'] = 'high'
+        msg['X-MSMail-Priority'] = 'Normal'
         
-        part1 = MIMEText(text_content, 'plain')
-        part2 = MIMEText(html_content, 'html')
+        # Add List-Unsubscribe header (optional but helps deliverability)
+        # This is mainly for marketing emails, but helps with legitimacy
+        msg['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click'
+        
+        # Add Content headers for better formatting
+        msg['MIME-Version'] = '1.0'
+        msg['Content-Type'] = 'multipart/alternative'
+        
+        part1 = MIMEText(text_content, 'plain', 'utf-8')
+        part2 = MIMEText(html_content, 'html', 'utf-8')
+        
+        # Attach in correct order (plain text first, HTML second)
         msg.attach(part1)
         msg.attach(part2)
         
-        # Send email
+        # Send email with proper SMTP settings
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            # Enable security
+            server.starttls()
+            
+            # Set proper timeout
+            server.timeout = 10
+            
+            # Login if credentials provided
             if SMTP_USERNAME and SMTP_PASSWORD:
-                server.starttls()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            
+            # Send with proper sender info
             server.sendmail(SMTP_FROM_EMAIL, [user.email], msg.as_string())
+            
+            app.logger.info(f'Verification email sent successfully to {user.email}')
     
+    except smtplib.SMTPException as e:
+        app.logger.error(f'SMTP Error sending verification email to {user.email}: {str(e)}', exc_info=True)
+        raise
     except Exception as e:
-        app.logger.error(f'Error sending verification email to {user.email}: {str(e)}')
+        app.logger.error(f'Error sending verification email to {user.email}: {str(e)}', exc_info=True)
         raise
 
 @app.route('/setup')
