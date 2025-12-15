@@ -110,18 +110,7 @@
         toolbar: [
                         "bold",
                         "italic",
-                        {
-                            name: "strikethrough",
-                            action: function(editor) {
-                                 var cm = editor.codemirror;
-                                 var selectedText = cm.getSelection();
-                                 cm.replaceSelection(selectedText ? "~~" + selectedText + "~~" : "~~text~~");
-                                 cm.focus();
-                            },
-                            className: "fa fa-strikethrough",
-                            title: "Strikethrough (Ctrl-Shift-S)",
-                            default: true
-                       },
+                        "strikethrough",
                         "heading-1",
                         "heading-2",
                         "heading-3",
@@ -134,20 +123,6 @@
         element: document.getElementById("activitiesFormControlTextArea1") });
         simplemde.render();
         
-        // Add keyboard shortcut for strikethrough (Ctrl+Shift+S)
-        simplemde.codemirror.setOption("extraKeys", {
-             "Ctrl-Shift-S": function(cm) {
-                  var selectedText = cm.getSelection();
-                  cm.replaceSelection(selectedText ? "~~" + selectedText + "~~" : "~~text~~");
-                  cm.focus();
-             },
-             "Cmd-Shift-S": function(cm) {
-                  var selectedText = cm.getSelection();
-                  cm.replaceSelection(selectedText ? "~~" + selectedText + "~~" : "~~text~~");
-                  cm.focus();
-             }
-        });
-
     document.addEventListener('DOMContentLoaded', function() {
         // Delete todo
         document.querySelectorAll('.close').forEach(function(btn) {

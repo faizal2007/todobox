@@ -177,18 +177,7 @@
                toolbar: [
                             "bold", 
                             "italic",
-                            {
-                                 name: "strikethrough",
-                                 action: function(editor) {
-                                      var cm = editor.codemirror;
-                                      var selectedText = cm.getSelection();
-                                      cm.replaceSelection(selectedText ? "~~" + selectedText + "~~" : "~~text~~");
-                                      cm.focus();
-                                 },
-                                 className: "fa fa-strikethrough",
-                                 title: "Strikethrough (Ctrl-Shift-S)",
-                                 default: true
-                            },
+                            "strikethrough",
                             "unordered-list", 
                             "ordered-list", "|", 
                             "quote",
@@ -204,20 +193,6 @@
           
           // Make simplemde globally available
           window.simplemde = simplemde;
-          
-          // Add keyboard shortcut for strikethrough (Ctrl+Shift+S)
-          simplemde.codemirror.setOption("extraKeys", {
-               "Ctrl-Shift-S": function(cm) {
-                    var selectedText = cm.getSelection();
-                    cm.replaceSelection(selectedText ? "~~" + selectedText + "~~" : "~~text~~");
-                    cm.focus();
-               },
-               "Cmd-Shift-S": function(cm) {
-                    var selectedText = cm.getSelection();
-                    cm.replaceSelection(selectedText ? "~~" + selectedText + "~~" : "~~text~~");
-                    cm.focus();
-               }
-          });
      });
 </script>
 
