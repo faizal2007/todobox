@@ -108,8 +108,9 @@
         spellChecker: false,
         toolbarTips: true,
         toolbar: [
-                        "bold", 
-                        "italic", 
+                        "bold",
+                        "italic",
+                        "strikethrough",
                         "heading-1",
                         "heading-2",
                         "heading-3",
@@ -121,7 +122,7 @@
                     ],
         element: document.getElementById("activitiesFormControlTextArea1") });
         simplemde.render();
-
+        
     document.addEventListener('DOMContentLoaded', function() {
         // Delete todo
         document.querySelectorAll('.close').forEach(function(btn) {
