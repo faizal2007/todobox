@@ -37,6 +37,9 @@
     {% endif %}
     {% endwith %}
 
+    <!-- SimpleMDE CSS -->
+    <link href='{{ url_for('static', filename='assets/css/vendor/simplemde.min.css') }}' rel="stylesheet" type="text/css" />
+
     <!-- Terms Form -->
     <div class="row">
         <div class="col-12">
@@ -63,16 +66,14 @@
 
                         <div class="form-group">
                             <label for="terms_of_use"><strong>Terms of Use</strong></label>
-                            <textarea class="form-control" id="terms_of_use" name="terms_of_use" rows="10" 
-                                      placeholder="Enter Terms of Use content (HTML allowed)" required>{{ current_terms.terms_of_use if current_terms else '' }}</textarea>
-                            <small class="form-text text-muted">You can use HTML formatting (h4, p, ul, li, strong, em, etc.)</small>
+                            <textarea class="form-control" id="terms_of_use" name="terms_of_use" 
+                                      placeholder="Enter Terms of Use content">{{ current_terms.terms_of_use if current_terms else '' }}</textarea>
                         </div>
 
                         <div class="form-group">
                             <label for="disclaimer"><strong>Disclaimer</strong></label>
-                            <textarea class="form-control" id="disclaimer" name="disclaimer" rows="10" 
-                                      placeholder="Enter Disclaimer content (HTML allowed)" required>{{ current_terms.disclaimer if current_terms else '' }}</textarea>
-                            <small class="form-text text-muted">You can use HTML formatting (h4, p, ul, li, strong, em, etc.)</small>
+                            <textarea class="form-control" id="disclaimer" name="disclaimer" 
+                                      placeholder="Enter Disclaimer content">{{ current_terms.disclaimer if current_terms else '' }}</textarea>
                         </div>
 
                         <div class="form-group">
@@ -192,10 +193,40 @@
 
 </div>
 
+<!-- SimpleMDE js -->
+<script src='{{ url_for('static', filename='assets/js/vendor/simplemde.min.js') }}'></script>
+
 <script>
-// Optional: Add JavaScript for preview functionality
-document.addEventListener('DOMContentLoaded', function() {
-    // You can add preview functionality here if needed
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize SimpleMDE for Terms of Use
+        let termsEditor = new SimpleMDE({ 
+            element: document.getElementById('terms_of_use'),
+            spellChecker: false,
+            autoDownloadFontAwesome: false,
+            placeholder: 'Enter Terms of Use content here. Use markdown formatting.',
+            toolbar: ['bold', 'italic', 'strikethrough', '|', 'heading', 'code', 'quote', 'unordered-list', 'ordered-list', 'link', 'image', 'table', '|', 'preview', 'side-by-side', 'fullscreen', '|', 'guide']
+        });
+
+        // Initialize SimpleMDE for Disclaimer  
+        let disclaimerEditor = new SimpleMDE({ 
+            element: document.getElementById('disclaimer'),
+            spellChecker: false,
+            autoDownloadFontAwesome: false,
+            placeholder: 'Enter Disclaimer content here. Use markdown formatting.',
+            toolbar: ['bold', 'italic', 'strikethrough', '|', 'heading', 'code', 'quote', 'unordered-list', 'ordered-list', 'link', 'image', 'table', '|', 'preview', 'side-by-side', 'fullscreen', '|', 'guide']
+        });
+
+        // Render editors
+        if (termsEditor) {
+            termsEditor.render();
+        }
+        if (disclaimerEditor) {
+            disclaimerEditor.render();
+        }
+
+        // Make editors globally available
+        window.termsEditor = termsEditor;
+        window.disclaimerEditor = disclaimerEditor;
+    });
 </script>
 {% endblock %}
