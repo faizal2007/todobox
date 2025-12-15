@@ -56,6 +56,7 @@
                     </p>
 
                     <form method="post" id="termsForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="form-group">
                             <label for="version"><strong>Version Number</strong></label>
                             <input type="text" class="form-control" id="version" name="version" 
