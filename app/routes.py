@@ -787,9 +787,20 @@ def login():
                 return redirect(url_for('login'))
             
             # Check if user's email is verified (for non-OAuth users)
+            # Check email verification
+            # Only require verification for newly registered users (created after verification feature)
+            # Existing users who never went through registration are auto-verified on first login
             if not user.email_verified and user.oauth_provider is None:
-                flash('Please verify your email before logging in. Check your inbox for verification link.', 'warning')
-                return redirect(url_for('request_verification_email', email=user.email))
+                # Check if this is a legacy user (created before verification feature)
+                # Legacy users don't need verification - auto-verify them
+                if user.created_at and (datetime.utcnow() - user.created_at).days > 30:
+                    # Auto-verify legacy users who haven't verified after 30 days
+                    user.email_verified = True
+                    db.session.commit()  # type: ignore[attr-defined]
+                else:
+                    # New users must verify their email
+                    flash('Please verify your email before logging in. Check your inbox for verification link.', 'warning')
+                    return redirect(url_for('request_verification_email', email=user.email))
             
             # Check if user is blocked
             if user.is_blocked:
