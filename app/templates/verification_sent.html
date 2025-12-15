@@ -1,16 +1,13 @@
-{% extends "base.html" %}
-
-{% block title %}Verify Your Email{% endblock %}
+{% extends "main.html" %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">Email Verification Sent</h4>
-                </div>
-                <div class="card-body text-center">
+<main role="main" style="min-height: 100vh; display: flex; align-items: center; padding: 20px 0;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+                <div class="card shadow-lg" style="border-radius: 8px;">
+                    <div class="card-body p-4 text-center">
+                        <h2 class="mb-4">Email Verification Sent</h2>
                     <div style="font-size: 3em; color: #28a745; margin: 20px 0;">
                         ✓
                     </div>
@@ -45,11 +42,12 @@
                     </p>
 
                     <div class="mt-4">
-                        <a href="{{ url_for('login') }}" class="btn btn-secondary">Back to Login</a>
+                        <a href="{{ url_for('login') }}" class="btn btn-secondary btn-block btn-lg">Back to Login</a>
+                    </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</main>
 {% endblock %}
