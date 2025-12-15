@@ -227,6 +227,17 @@
         // Make editors globally available
         window.termsEditor = termsEditor;
         window.disclaimerEditor = disclaimerEditor;
+
+        // Handle form submission - capture SimpleMDE content
+        document.getElementById('termsForm').addEventListener('submit', function(e) {
+            // Update textarea with SimpleMDE content before submitting
+            if (termsEditor && termsEditor.codemirror) {
+                document.getElementById('terms_of_use').value = termsEditor.value();
+            }
+            if (disclaimerEditor && disclaimerEditor.codemirror) {
+                document.getElementById('disclaimer').value = disclaimerEditor.value();
+            }
+        });
     });
 </script>
 {% endblock %}
