@@ -3,11 +3,42 @@
 {% block content %}
 <main role="main" style="min-height: 100vh; display: flex; align-items: center; padding: 20px 0;">
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+        <div class="row justify-content-center align-items-center">
+            <!-- Write-up Section (Left) - at bottom on mobile -->
+            <div class="col-12 col-lg-6 mb-4 mb-lg-0 order-2 order-lg-1">
+                <div class="card shadow-sm" style="border-radius: 8px; background: linear-gradient(135deg, #5B9FD8 0%, #4A7FBE 100%); color: white; border: none; height: 100%;">
+                    <div class="card-body p-4">
+                        <h1 class="card-title mb-3" style="font-weight: 600; font-size: 2rem;">{{ config.TITLE }}</h1>
+                        <p class="card-text lead mb-3">
+                            <strong>Your Personal Task Management Companion</strong>
+                        </p>
+                        <p class="card-text" style="font-size: 0.95rem; line-height: 1.6;">
+                            {{ config.TITLE }} is a modern task management application designed to help you organize your daily work, track progress, and stay productive. With intuitive features and a clean interface, managing your to-do list has never been easier.
+                        </p>
+                        <div class="mt-4">
+                            <h6 class="mb-3" style="font-weight: 600;">✨ What You Can Do:</h6>
+                            <ul class="list-unstyled" style="font-size: 0.9rem;">
+                                <li class="mb-2">📝 <strong>Organize Tasks</strong> - Create and manage your to-do items with ease</li>
+                                <li class="mb-2">🕐 <strong>Smart Status Tracking</strong> - Track tasks as new, done, failed, or keep in view (KIV)</li>
+                                <li class="mb-2">⏰ <strong>Reminders</strong> - Get notified about important tasks with timezone support</li>
+                                <li class="mb-2">📊 <strong>Analytics Dashboard</strong> - Visualize your productivity with task charts</li>
+                                <li class="mb-2">🔐 <strong>Secure & Private</strong> - Your data is encrypted and protected</li>
+                                <li class="mb-2">🌍 <strong>Available Anywhere</strong> - Access from desktop, tablet, or mobile</li>
+                            </ul>
+                        </div>
+                        <div class="text-center mt-4" style="font-size: 3rem; opacity: 0.8;">
+                            📋
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login Section (Right) - at top on mobile -->
+            <div class="col-12 col-lg-6 order-1 order-lg-2">
                 <div class="card shadow-lg" style="border-radius: 8px;">
                     <div class="card-body p-4">
-                        <h2 class="text-center mb-4">Sign In</h2>
+                        <h2 class="text-center mb-1">Sign In</h2>
+                        <p class="text-center text-muted mb-4" style="font-size: 0.9rem;">Access your {{ config.TITLE }} account</p>
                         {% with messages = get_flashed_messages(with_categories=true) %}
                             {% if messages %}
                                 {% for category, message in messages %}
