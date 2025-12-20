@@ -621,5 +621,137 @@ class TestSecurityIntegration:
             assert response.status_code in [200, 302, 404]  # Valid status codes
 
 
+# ============================================================================
+# 7. OPEN REDIRECT PROTECTION TESTS
+# ============================================================================
+
+class TestOpenRedirectProtection:
+    """Test protection against open redirect vulnerabilities."""
+    
+    def test_oauth_terms_prevents_external_redirect(self, app, db_session):
+        """Test that OAuth terms acceptance flow prevents external redirects."""
+        from app.models import User, TermsAndDisclaimer
+        from flask import session as flask_session
+        
+        # Create test user
+        user = User(email='test@example.com', fullname='Test User')
+        user.set_password('TestPass123!')
+        db_session.session.add(user)
+        db_session.session.commit()
+        
+        # Create active terms
+        terms = TermsAndDisclaimer(
+            title='Test Terms',
+            content='Test content',
+            version=1,
+            is_active=True
+        )
+        db_session.session.add(terms)
+        db_session.session.commit()
+        
+        client = app.test_client()
+        
+        # Simulate OAuth callback with malicious next parameter
+        with client.session_transaction() as sess:
+            sess['oauth_user_id'] = user.id
+            # Simulate storing a malicious redirect URL
+            sess['oauth_next_page'] = 'https://evil.com/phishing'
+        
+        # Accept terms
+        response = client.post('/accept-terms-oauth', data={
+            'accept_terms': 'true'
+        }, follow_redirects=False)
+        
+        # Should redirect, but not to the external URL
+        assert response.status_code == 302
+        assert 'evil.com' not in response.location
+        assert 'dashboard' in response.location or response.location.endswith('/dashboard')
+    
+    def test_oauth_callback_validates_next_before_storing(self, app, db_session):
+        """Test that OAuth callback validates next parameter before storing in session."""
+        from app.models import User, TermsAndDisclaimer
+        from unittest.mock import patch, MagicMock
+        
+        # Create test user
+        user = User(email='test@example.com', fullname='Test User')
+        user.set_password('TestPass123!')
+        db_session.session.add(user)
+        db_session.session.commit()
+        
+        # Create active terms
+        terms = TermsAndDisclaimer(
+            title='Test Terms',
+            content='Test content',
+            version=1,
+            is_active=True
+        )
+        db_session.session.add(terms)
+        db_session.session.commit()
+        
+        client = app.test_client()
+        
+        # Mock the OAuth callback to return our test user
+        with patch('app.routes.process_google_callback') as mock_callback:
+            mock_callback.return_value = (user, False)  # (user, is_new)
+            
+            # Test with malicious next parameter
+            response = client.get('/oauth-callback?code=testcode&next=https://evil.com/phishing', 
+                                 follow_redirects=False)
+            
+            # Should redirect to accept terms
+            assert response.status_code == 302
+            
+            # Check session - should not contain the malicious URL
+            with client.session_transaction() as sess:
+                stored_next = sess.get('oauth_next_page', '')
+                assert 'evil.com' not in stored_next
+                # Should either be dashboard or not set
+                assert stored_next == '' or 'dashboard' in stored_next
+    
+    def test_login_prevents_external_redirect(self, app, db_session, client):
+        """Test that login flow already prevents external redirects."""
+        from app.models import User
+        
+        # Create test user with verified email
+        user = User(email='test@example.com', fullname='Test User')
+        user.set_password('TestPass123!')
+        user.email_verified = True
+        db_session.session.add(user)
+        db_session.session.commit()
+        
+        # Try to login with malicious next parameter
+        response = client.post('/login?next=https://evil.com/phishing', data={
+            'email': 'test@example.com',
+            'password': 'TestPass123!'
+        }, follow_redirects=False)
+        
+        # Should redirect, but not to external URL
+        assert response.status_code == 302
+        assert 'evil.com' not in response.location
+        assert 'dashboard' in response.location or response.location.endswith('/dashboard')
+    
+    def test_internal_redirects_are_allowed(self, app, db_session, client):
+        """Test that internal redirects (relative paths) are still allowed."""
+        from app.models import User
+        
+        # Create test user with verified email
+        user = User(email='test@example.com', fullname='Test User')
+        user.set_password('TestPass123!')
+        user.email_verified = True
+        db_session.session.add(user)
+        db_session.session.commit()
+        
+        # Try to login with internal next parameter
+        response = client.post('/login?next=/account', data={
+            'email': 'test@example.com',
+            'password': 'TestPass123!'
+        }, follow_redirects=False)
+        
+        # Should redirect to the internal URL
+        assert response.status_code == 302
+        # The redirect should be to /account (internal redirect is allowed)
+        assert '/account' in response.location or response.location.endswith('/account')
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

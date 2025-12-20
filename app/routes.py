@@ -1006,6 +1006,10 @@ def accept_terms_oauth():
             next_page = session.pop('oauth_next_page', url_for('dashboard'))
             session.pop('oauth_user_id', None)
             
+            # Validate next_page to prevent open redirect vulnerability
+            if not next_page or url_parse(next_page).netloc != '':
+                next_page = url_for('dashboard')
+            
             return redirect(next_page)
     
     return render_template('accept_terms_oauth.html', 
@@ -1325,7 +1329,12 @@ def oauth_callback_google():
     
     if active_terms and not user.terms_accepted_version:
         # Store next_page in session for after terms acceptance
-        session['oauth_next_page'] = request.args.get('next') or url_for('dashboard')
+        # Validate next parameter to prevent open redirect vulnerability
+        next_param = request.args.get('next')
+        if next_param and url_parse(next_param).netloc == '':
+            session['oauth_next_page'] = next_param
+        else:
+            session['oauth_next_page'] = url_for('dashboard')
         session['oauth_user_id'] = user.id
         return redirect(url_for('accept_terms_oauth'))
     
