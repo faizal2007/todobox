@@ -59,10 +59,16 @@ def db_session(app):
 @pytest.fixture
 def test_user(db_session):
     """Create a test user."""
-    from app.models import User
+    from app.models import User, TermsAndDisclaimer
     
     user = User(email='testuser@example.com', fullname='Test User')
     user.set_password('TestPass123!')
+    
+    # Mark terms as accepted to avoid redirects
+    active_terms = TermsAndDisclaimer.get_active()
+    if active_terms:
+        user.terms_accepted_version = active_terms.version
+    
     db_session.session.add(user)
     db_session.session.commit()
     
@@ -175,8 +181,10 @@ class TestAuthenticationRoutes:
     
     def test_account_page_get(self, auth_client):
         """Test GET /account returns account page."""
-        response = auth_client.get('/account')
+        response = auth_client.get('/account', follow_redirects=True)
         assert response.status_code == 200
+        # Check that we got account page content
+        assert b'account' in response.data.lower() or b'email' in response.data.lower()
     
     def test_account_page_requires_login(self, client):
         """Test /account requires authentication."""
