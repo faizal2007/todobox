@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Security
-- **CRITICAL: Fixed Open Redirect Vulnerability (CVE-2024-XXXXX)**: Fixed open redirect vulnerability in OAuth terms acceptance flow
+- **CRITICAL: Fixed Open Redirect Vulnerability**: Fixed open redirect vulnerability in OAuth terms acceptance flow
   - Added URL validation before storing `next` parameter in session (line 1333-1338 in routes.py)
   - Added URL validation before redirecting from OAuth terms acceptance (line 1009-1011 in routes.py)
   - Prevents attackers from redirecting users to external malicious sites after OAuth login
