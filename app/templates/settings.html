@@ -137,79 +137,67 @@
         </div>
         {% endif %}
 
-        <!-- API Token Management Section -->
+        <!-- Data Backup Section -->
         <div class="col-lg-6">
             <div class="card">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-secondary text-white">
                     <h5 class="mb-0">
-                        <i class="mdi mdi-api mr-2"></i>API Token Management
+                        <i class="mdi mdi-cloud-download mr-2"></i>Data Backup
                     </h5>
                 </div>
                 <div class="card-body">
                     <p class="text-muted mb-4">
-                        API tokens allow external applications to access your todo data programmatically.
-                        Keep your token secure and never share it publicly.
+                        <i class="mdi mdi-information-outline mr-2"></i>Download a backup of all your todos in your preferred format. 
+                        Backups include all task details, dates, status, and reminders.
                     </p>
-
-                    {% if current_user.api_token %}
-                    <!-- Current Token Display -->
-                    <div class="alert alert-info">
-                        <h6 class="alert-heading">
-                            <i class="mdi mdi-key-variant mr-2"></i>Current API Token
-                        </h6>
-                        <div class="d-flex align-items-center">
-                            <code class="flex-grow-1 mr-3" id="apiToken">{{ current_user.api_token }}</code>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard()">
-                                <i class="mdi mdi-content-copy mr-1"></i>Copy
-                            </button>
+                    
+                    <!-- Backup Options -->
+                    <div class="d-grid gap-2">
+                        <!-- JSON Backup -->
+                        <div class="mb-3">
+                            <h6 class="mb-2">
+                                <i class="mdi mdi-json mr-2"></i>JSON Format
+                            </h6>
+                            <p class="small text-muted mb-3">
+                                Structured format ideal for data interchange and programmatic access. 
+                                Includes metadata and ISO 8601 formatted dates.
+                            </p>
+                            <a href="{{ url_for('backup_todos') }}?format=json" class="btn btn-secondary btn-block">
+                                <i class="mdi mdi-download mr-1"></i>Download JSON Backup
+                            </a>
                         </div>
-                        <small class="form-text text-muted mt-2">
-                            <i class="mdi mdi-shield-alert mr-1"></i>
-                            This token provides full access to your todo data. Keep it secure!
+                        
+                        <!-- CSV Backup -->
+                        <div class="mb-3">
+                            <h6 class="mb-2">
+                                <i class="mdi mdi-file-csv mr-2"></i>CSV Format
+                            </h6>
+                            <p class="small text-muted mb-3">
+                                Spreadsheet-compatible format. Easily import into Excel, Google Sheets, 
+                                or other data analysis tools.
+                            </p>
+                            <a href="{{ url_for('backup_todos') }}?format=csv" class="btn btn-info btn-block">
+                                <i class="mdi mdi-download mr-1"></i>Download CSV Backup
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Backup Info -->
+                    <div class="alert alert-light border mt-4">
+                        <small class="text-muted">
+                            <i class="mdi mdi-shield-account mr-2"></i>
+                            <strong>Privacy:</strong> Backups are generated on-demand and never stored on our servers. 
+                            Files are created fresh each time you request them.
                         </small>
                     </div>
-
-                    <!-- Token Actions -->
-                    <div class="d-flex gap-2">
-                        <form method="POST" class="d-inline" id="generateTokenForm">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <input type="hidden" name="generate_token" value="1"/>
-                            <button type="button" class="btn btn-warning" id="generateTokenBtn">
-                                <i class="mdi mdi-refresh mr-1"></i>Generate New Token
-                            </button>
-                        </form>
-                        <form method="POST" class="d-inline" id="revokeTokenForm">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <input type="hidden" name="revoke_token" value="1"/>
-                            <button type="button" class="btn btn-danger" id="revokeTokenBtn">
-                                <i class="mdi mdi-delete mr-1"></i>Revoke Token
-                            </button>
-                        </form>
-                    </div>
-                    {% else %}
-                    <!-- No Token Message -->
-                    <div class="alert alert-warning">
-                        <h6 class="alert-heading">
-                            <i class="mdi mdi-key-remove mr-2"></i>No API Token
-                        </h6>
-                        <p class="mb-0">You don't have an API token yet. Generate one to enable API access to your todos.</p>
-                    </div>
-
-                    <!-- Generate Token Button -->
-                    <form method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <button type="submit" name="generate_token" class="btn btn-success">
-                            <i class="mdi mdi-key-plus mr-1"></i>Generate API Token
-                        </button>
-                    </form>
-                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Timezone Settings Section -->
+    <!-- Timezone Settings & API Token Management Section -->
     <div class="row mt-4">
+        <!-- Timezone Settings -->
         <div class="col-lg-6">
             <div class="card">
                 <div class="card-header bg-success text-white">
@@ -299,6 +287,76 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Token Management -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="mdi mdi-api mr-2"></i>API Token Management
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        API tokens allow external applications to access your todo data programmatically.
+                        Keep your token secure and never share it publicly.
+                    </p>
+
+                    {% if current_user.api_token %}
+                    <!-- Current Token Display -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="mdi mdi-key-variant mr-2"></i>Current API Token
+                        </h6>
+                        <div class="d-flex align-items-center">
+                            <code class="flex-grow-1 mr-3" id="apiToken">{{ current_user.api_token }}</code>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard()">
+                                <i class="mdi mdi-content-copy mr-1"></i>Copy
+                            </button>
+                        </div>
+                        <small class="form-text text-muted mt-2">
+                            <i class="mdi mdi-shield-alert mr-1"></i>
+                            This token provides full access to your todo data. Keep it secure!
+                        </small>
+                    </div>
+
+                    <!-- Token Actions -->
+                    <div class="d-flex gap-2">
+                        <form method="POST" class="d-inline" id="generateTokenForm">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <input type="hidden" name="generate_token" value="1"/>
+                            <button type="button" class="btn btn-warning" id="generateTokenBtn">
+                                <i class="mdi mdi-refresh mr-1"></i>Generate New Token
+                            </button>
+                        </form>
+                        <form method="POST" class="d-inline" id="revokeTokenForm">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <input type="hidden" name="revoke_token" value="1"/>
+                            <button type="button" class="btn btn-danger" id="revokeTokenBtn">
+                                <i class="mdi mdi-delete mr-1"></i>Revoke Token
+                            </button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <!-- No Token Message -->
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="mdi mdi-key-remove mr-2"></i>No API Token
+                        </h6>
+                        <p class="mb-0">You don't have an API token yet. Generate one to enable API access to your todos.</p>
+                    </div>
+
+                    <!-- Generate Token Button -->
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" name="generate_token" class="btn btn-success">
+                            <i class="mdi mdi-key-plus mr-1"></i>Generate API Token
+                        </button>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
         </div>

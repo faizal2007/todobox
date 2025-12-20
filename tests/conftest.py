@@ -24,7 +24,7 @@ def app():
         db.create_all()
         
         # Seed status data
-        from app.models import Status
+        from app.models import Status, TermsAndDisclaimer
         if Status.query.count() == 0:
             statuses = [
                 Status(name='new'),
@@ -36,6 +36,17 @@ def app():
             for i, status in enumerate(statuses, start=5):
                 status.id = i
             db.session.add_all(statuses)
+            db.session.commit()
+        
+        # Seed terms and disclaimer
+        if TermsAndDisclaimer.query.count() == 0:
+            terms = TermsAndDisclaimer(
+                title='Terms and Conditions',
+                content='These are the terms and conditions.',
+                version=1,
+                is_active=True
+            )
+            db.session.add(terms)
             db.session.commit()
         
         yield app
