@@ -2877,3 +2877,98 @@ def admin_manage_terms():
                           title='Manage Terms and Disclaimer',
                           current_terms=current_terms,
                           all_versions=all_versions)
+
+
+@app.route('/backup', methods=['GET'])
+@login_required
+def backup_todos():
+    """Create and download a backup of all user's todos"""
+    try:
+        # Get backup format from query params (default: json)
+        backup_format = request.args.get('format', 'json').lower()
+        
+        # Get all todos for current user
+        todos = Todo.query.filter_by(user_id=current_user.id).all()
+        
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        def get_todo_status(todo_id):
+            """Get the current status of a todo"""
+            tracker = Tracker.query.filter_by(todo_id=todo_id).order_by(Tracker.timestamp.desc()).first()
+            if tracker and tracker.status_id:
+                status = Status.query.get(tracker.status_id)
+                return status.name if status else 'unknown'
+            return 'new'
+        
+        if backup_format == 'csv':
+            # CSV format backup
+            import csv
+            import io
+            
+            output = io.StringIO()
+            writer = csv.writer(output)
+            
+            # Write headers
+            writer.writerow([
+                'ID', 'Name', 'Details', 'Status', 'Created Date', 'Modified Date', 
+                'Target Date', 'Reminder Enabled', 'Reminder Time', 'In KIV'
+            ])
+            
+            # Write todos
+            for todo in todos:
+                writer.writerow([
+                    todo.id,
+                    todo.name,
+                    todo.details,
+                    get_todo_status(todo.id),
+                    todo.timestamp.strftime('%Y-%m-%d %H:%M:%S') if todo.timestamp else '',
+                    todo.modified.strftime('%Y-%m-%d %H:%M:%S') if todo.modified else '',
+                    todo.target_date.strftime('%Y-%m-%d %H:%M:%S') if todo.target_date else '',
+                    'Yes' if todo.reminder_enabled else 'No',
+                    todo.reminder_time.strftime('%Y-%m-%d %H:%M:%S') if todo.reminder_time else '',
+                    'Yes' if KIV.is_kiv(todo.id) else 'No'
+                ])
+            
+            filename = f'todobox_backup_{timestamp}.csv'
+            response = make_response(output.getvalue())
+            response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+            response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+        
+        else:
+            # JSON format backup (default)
+            backup_data = {
+                'backup_date': datetime.now().isoformat(),
+                'user_email': current_user.email,
+                'total_todos': len(todos),
+                'todos': []
+            }
+            
+            # Convert todos to JSON-serializable format
+            for todo in todos:
+                todo_dict = {
+                    'id': todo.id,
+                    'name': todo.name,
+                    'details': todo.details,
+                    'timestamp': todo.timestamp.isoformat() if todo.timestamp else None,
+                    'modified': todo.modified.isoformat() if todo.modified else None,
+                    'target_date': todo.target_date.isoformat() if todo.target_date else None,
+                    'status': get_todo_status(todo.id),
+                    'reminder_enabled': todo.reminder_enabled,
+                    'reminder_time': todo.reminder_time.isoformat() if todo.reminder_time else None,
+                    'is_kiv': KIV.is_kiv(todo.id)
+                }
+                backup_data['todos'].append(todo_dict)
+            
+            filename = f'todobox_backup_{timestamp}.json'
+            response = make_response(json.dumps(backup_data, indent=2))
+            response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+            response.headers['Content-Type'] = 'application/json; charset=utf-8'
+        
+        app.logger.info(f'Backup created for user {current_user.email}: {len(todos)} todos ({backup_format.upper()} format)')
+        
+        return response
+    
+    except Exception as e:
+        app.logger.error(f'Error creating backup for user {current_user.email}: {str(e)}', exc_info=True)
+        flash('Error creating backup. Please try again later.', 'error')
+        return redirect(url_for('dashboard'))
