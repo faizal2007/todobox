@@ -35,7 +35,7 @@ bleach==6.3.0
 
 # Markdown and Extensions
 Markdown==3.10
-pymdown-extensions==10.9
+pymdown-extensions==10.16.1
 click==8.3.1
 cachetools==6.2.2
 cachelib==0.13.0
