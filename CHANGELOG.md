@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **CRITICAL: Fixed Open Redirect Vulnerability**: Fixed open redirect vulnerability in OAuth terms acceptance flow
+  - Added URL validation before storing `next` parameter in session (line 1333-1338 in routes.py)
+  - Added URL validation before redirecting from OAuth terms acceptance (line 1009-1011 in routes.py)
+  - Prevents attackers from redirecting users to external malicious sites after OAuth login
+  - Defense-in-depth: Validation at both storage and redirect points
+  - Added comprehensive test suite in `tests/test_security_updates.py::TestOpenRedirectProtection`
+  - Validates that external URLs (e.g., `https://evil.com`) are blocked and redirected to dashboard
+  - Validates that internal relative URLs (e.g., `/account`) are still allowed
+  - Impact: Medium severity - could be used for phishing attacks
+  - Credit: GitHub Code Scanning Alert #85
+
 ### Fixed
 - **Test Suite Fixes**: Fixed test_account_page_get test that was getting 302 redirect
   - Updated test_user fixture to accept terms_accepted_version to prevent redirect to terms page
