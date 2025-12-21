@@ -221,6 +221,7 @@ class KIV(db.Model): # type: ignore[attr-defined]
     Keep In View (KIV) - separate table to manage KIV todos cleanly
     This replaces the previous status_id=9 approach
     """
+    __tablename__ = 'KIV'
     id = db.Column(db.Integer, primary_key=True) # type: ignore[attr-defined]
     todo_id = db.Column(db.Integer, db.ForeignKey('todo.id'), unique=True, nullable=False) # type: ignore[attr-defined]
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True) # type: ignore[attr-defined]
