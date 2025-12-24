@@ -1,0 +1,118 @@
+{% extends "main.html" %}
+
+{% block content %}
+<main role="main" style="min-height: 100vh; display: flex; align-items: center; padding: 20px 0;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+                <div class="card shadow-lg" style="border-radius: 8px;">
+                    <div class="card-body p-4">
+                        {% if is_verified %}
+                            <!-- Verified Email -->
+                            <div class="text-center mb-4">
+                                <i class="mdi mdi-check-circle" style="font-size: 48px; color: #28a745;"></i>
+                            </div>
+                            
+                            <h2 class="text-center mb-3 text-success">Email Verified</h2>
+                            <p class="text-center mb-4">
+                                The email <strong>{{ email }}</strong> is already registered and verified.
+                            </p>
+                            
+                            <div class="form-group mb-0">
+                                <a href="{{ url_for('login') }}" class="btn btn-primary btn-block btn-lg">
+                                    <i class="mdi mdi-login mr-1"></i>Go to Login
+                                </a>
+                            </div>
+                        {% else %}
+                            <!-- Unverified Email -->
+                            <div class="text-center mb-4">
+                                <i class="mdi mdi-alert-circle" style="font-size: 48px; color: #ff9800;"></i>
+                            </div>
+                            
+                            <h2 class="text-center mb-2">Email Already Registered</h2>
+                            <p class="text-center text-muted mb-4" style="font-size: 0.9rem;">
+                                The email <strong>{{ email }}</strong> is already associated with an account that hasn't been verified yet.
+                            </p>
+
+                            <form id="resendForm" method="post" class="d-none">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <input type="hidden" name="email" value="{{ email }}">
+                                <input type="hidden" name="action" value="resend">
+                            </form>
+
+                            <form id="deleteForm" method="post" class="d-none">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <input type="hidden" name="email" value="{{ email }}">
+                                <input type="hidden" name="action" value="delete">
+                            </form>
+
+                            <div class="form-group mb-2">
+                                <button type="button" class="btn btn-primary btn-block btn-lg" onclick="document.getElementById('resendForm').submit();">
+                                    <i class="mdi mdi-email-send mr-1"></i>Resend Verification Email
+                                </button>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <button type="button" class="btn btn-danger btn-block btn-lg" data-toggle="modal" data-target="#deleteConfirmModal">
+                                    <i class="mdi mdi-delete mr-1"></i>Delete Account
+                                </button>
+                            </div>
+
+                            <div class="text-center">
+                                <a href="{{ url_for('register') }}" class="btn btn-link">
+                                    <small>Register with a different email</small>
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Delete Confirmation Modal -->
+{% if not is_verified %}
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteConfirmLabel">
+                    <i class="mdi mdi-alert mr-2"></i>Confirm Account Deletion
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning" role="alert">
+                    <i class="mdi mdi-alert-circle mr-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone immediately.
+                </div>
+                <p class="mb-3">
+                    Are you sure you want to delete your account?
+                </p>
+                <ul class="mb-3">
+                    <li>Your account will be marked for deletion</li>
+                    <li>It will be permanently removed in <strong>1 hour</strong></li>
+                    <li>You can <strong>cancel this</strong> by verifying your email before the time expires</li>
+                </ul>
+                <p class="text-muted mb-0">
+                    <small>Once deleted, all your data will be permanently erased.</small>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="mdi mdi-close mr-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger" onclick="document.getElementById('deleteForm').submit();">
+                    <i class="mdi mdi-delete mr-1"></i>Yes, Delete Account
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+

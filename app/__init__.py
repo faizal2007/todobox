@@ -156,6 +156,38 @@ def service_worker():
 # Initialize default data when app starts (not during import)
 _initialized = False
 
+def cleanup_pending_deletions():
+    """Delete accounts marked for deletion if 1 hour has passed"""
+    try:
+        from datetime import datetime, timedelta
+        from app import models
+        
+        # Find accounts marked for deletion that are older than 1 hour
+        one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+        pending_deletions = models.User.query.filter(
+            models.User.pending_deletion == True,
+            models.User.deletion_requested_at <= one_hour_ago
+        ).all()
+        
+        for user in pending_deletions:
+            try:
+                # Delete all related todos first
+                models.Todo.query.filter_by(user_id=user.id).delete()
+                
+                # Delete the user
+                db.session.delete(user)
+                logging.info(f'Permanently deleted unverified account: {user.email}')
+            except Exception as e:
+                logging.error(f'Error deleting user {user.email}: {str(e)}')
+        
+        if pending_deletions:
+            db.session.commit()
+            logging.info(f'Cleaned up {len(pending_deletions)} pending account deletions')
+    
+    except Exception as e:
+        logging.error(f'Error in cleanup_pending_deletions: {str(e)}')
+        # Don't raise - this is a background operation
+
 def initialize_default_data():
     """Initialize default data on first request, not during import"""
     global _initialized
@@ -197,6 +229,8 @@ def initialize_default_data():
 def ensure_initialized():
     """Ensure default data is initialized on first request"""
     initialize_default_data()
+    # Run cleanup for pending deletions
+    cleanup_pending_deletions()
 
 
 @app.route('/healthz')
