@@ -489,7 +489,7 @@
 							<div class="navbar-custom topnav-navbar">
 								<div class="container-fluid">
 									<a href="{{ url_for('index') }}" class="topnav-logo  mt-md-2">
-										<img src="https://todobox.geekdo.me/logo.svg" alt="TodoBox Logo" class="logo-icon">
+										<img src="{{ url_for('static', filename='assets/images/logo.svg') }}" alt="TodoBox Logo" class="logo-icon">
 										<p class="h3 text-muted app-title">{{ config.TITLE }}</p>
 									</a>
 										<a class="navbar-toggle" href="#" role="button" data-toggle="collapse" data-target="#topnav-menu-content" aria-controls="topnav-menu-content" aria-expanded="false" aria-label="Toggle navigation">
@@ -521,7 +521,7 @@
 												<a class="nav-link dropdown-toggle nav-user arrow-none mr-0" data-toggle="dropdown" id="topbar-userdrop" href="#" role="button" aria-haspopup="true"
 													aria-expanded="false">
 													<span class="account-user-avatar">
-														<img src="https://www.gravatar.com/avatar/{{ current_user.email|lower|replace(' ', '')|md5 }}?s=32&d=identicon" alt="user-avatar" class="rounded-circle" referrerpolicy="no-referrer">
+														<img src="https://www.gravatar.com/avatar/{{ current_user.email|lower|replace(' ', '')|md5 }}?s=32&d=identicon" alt="user-avatar" class="rounded-circle" referrerpolicy="no-referrer" onerror="this.src='{{ url_for('static', filename='assets/images/logo.svg') }}'">
 													</span>
 													<span>
 														<span class="account-user-name" title="{{ current_user.email }}">{{ current_user.email }}</span>
