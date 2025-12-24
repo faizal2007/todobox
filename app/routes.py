@@ -834,8 +834,16 @@ def register():
     
     try:
         if form.validate_on_submit():
+            email = form.email.data.lower()
+            
+            # Check if email already exists
+            existing_user = User.query.filter_by(email=email).first()
+            if existing_user:
+                # Email exists, redirect to email exists page
+                return redirect(f'/email-exists?email={email}')
+            
             # Create new user
-            user = User(email=form.email.data.lower())
+            user = User(email=email)
             user.set_password(form.password.data)
             if form.fullname.data and form.fullname.data.strip():
                 user.fullname = form.fullname.data.strip()
@@ -882,7 +890,8 @@ def register():
         if 'csrf' in error_msg.lower():
             flash('Session expired. Please try again.', 'warning')
         elif 'unique constraint' in error_msg.lower() or 'duplicate' in error_msg.lower():
-            flash('Email already registered. Please use a different email or log in.', 'error')
+            email = form.email.data.lower() if form.email.data else ''
+            return redirect(f'/email-exists?email={email}')
         else:
             flash(f'Registration failed: {error_msg}', 'error')
     
@@ -919,9 +928,18 @@ def verify_email(token):
         
         # Mark email as verified
         verified_user.email_verified = True
+        
+        # Cancel pending deletion if account was marked for deletion
+        if verified_user.pending_deletion:
+            verified_user.pending_deletion = False
+            verified_user.deletion_requested_at = None
+            flash('Email verified successfully! Account deletion cancelled. You can now log in.', 'success')
+            app.logger.info(f'Account deletion cancelled during email verification for: {verified_user.email}')
+        else:
+            flash('Email verified successfully! You can now log in.', 'success')
+        
         db.session.commit()
         
-        flash('Email verified successfully! You can now log in.', 'success')
         return redirect(url_for('login'))
     
     except Exception as e:
@@ -969,6 +987,94 @@ def request_verification_email():
     
     email = request.args.get('email', '')
     return render_template('resend_verification.html', email=email)
+
+@app.route('/email-exists', methods=['GET', 'POST'])
+def email_exists():
+    """Show page when email already exists during registration"""
+    email = request.args.get('email', '') or request.form.get('email', '')
+    
+    if not email:
+        return redirect(url_for('register'))
+    
+    email = email.lower()
+    user = User.query.filter_by(email=email).first()
+    
+    if not user:
+        return redirect(url_for('register'))
+    
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+        
+        if action == 'resend':
+            # Resend verification email
+            from app.verification import VerificationToken
+            try:
+                if user.email_verified:
+                    flash('This email is already verified. Please log in.', 'info')
+                    return redirect(url_for('login'))
+                
+                # Generate new verification token
+                token, expires_at = VerificationToken.create_verification_token(user)
+                
+                # Send verification email
+                send_verification_email(user, token)
+                
+                flash('Verification email sent! Check your inbox.', 'success')
+                return redirect(url_for('verification_sent', email=user.email))
+            
+            except Exception as e:
+                app.logger.error(f'Error resending verification email: {str(e)}')
+                flash('Failed to resend verification email. Please try again.', 'error')
+        
+        elif action == 'delete':
+            # Request account deletion
+            try:
+                from datetime import datetime, timedelta
+                user.pending_deletion = True
+                user.deletion_requested_at = datetime.utcnow()
+                db.session.commit()
+                
+                flash('Your account has been marked for deletion. It will be permanently removed in 1 hour. You can cancel this by verifying your email.', 'warning')
+                app.logger.info(f'Account deletion requested for: {email}')
+                return redirect(url_for('login'))
+            
+            except Exception as e:
+                app.logger.error(f'Error requesting account deletion: {str(e)}')
+                flash('Failed to process deletion request. Please try again.', 'error')
+    
+    return render_template('email_exists.html', email=email, is_verified=user.email_verified)
+
+@app.route('/cancel-deletion/<email>', methods=['POST'])
+def cancel_deletion(email):
+    """Cancel pending account deletion by verifying email"""
+    email = email.lower()
+    user = User.query.filter_by(email=email).first()
+    
+    if not user:
+        flash('Email not found.', 'error')
+        return redirect(url_for('login'))
+    
+    if not user.pending_deletion:
+        flash('No pending deletion found.', 'info')
+        return redirect(url_for('login'))
+    
+    try:
+        # Cancel deletion if email is verified
+        if user.email_verified:
+            user.pending_deletion = False
+            user.deletion_requested_at = None
+            db.session.commit()
+            flash('Account deletion cancelled! You can now log in.', 'success')
+            app.logger.info(f'Account deletion cancelled for: {email}')
+            return redirect(url_for('login'))
+        else:
+            flash('Please verify your email first to cancel deletion.', 'warning')
+            return redirect(url_for('email_exists', email=email))
+    
+    except Exception as e:
+        app.logger.error(f'Error cancelling deletion: {str(e)}')
+        flash('Failed to cancel deletion. Please try again.', 'error')
+        return redirect(url_for('email_exists', email=email))
 
 @app.route('/accept-terms-oauth', methods=['GET', 'POST'])
 def accept_terms_oauth():
@@ -1111,11 +1217,16 @@ TodoBox Team"""
         
         # Send email with proper SMTP settings
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            # Enable security
-            server.starttls()
-            
             # Set proper timeout
             server.timeout = 10
+            
+            # Enable security only if not using localhost (e.g., MailHog for development)
+            # MailHog doesn't support STARTTLS, so skip it for local development
+            if SMTP_SERVER not in ['localhost', '127.0.0.1']:
+                try:
+                    server.starttls()
+                except smtplib.SMTPNotSupportedError:
+                    app.logger.warning(f'STARTTLS not supported by {SMTP_SERVER}, proceeding without encryption')
             
             # Login if credentials provided
             if SMTP_USERNAME and SMTP_PASSWORD:
@@ -1561,9 +1672,14 @@ TodoBox Team'''
         
         try:
             with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-                # Only use TLS and login if credentials are provided (not needed for MailHog)
+                # Enable security only if not using localhost (e.g., MailHog for development)
+                # MailHog doesn't support STARTTLS, so skip it for local development
                 if SMTP_USERNAME and SMTP_PASSWORD:
-                    server.starttls()
+                    if SMTP_SERVER not in ['localhost', '127.0.0.1']:
+                        try:
+                            server.starttls()
+                        except smtplib.SMTPNotSupportedError:
+                            app.logger.warning(f'STARTTLS not supported by {SMTP_SERVER}, proceeding without encryption')
                     server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 server.sendmail(SMTP_FROM_EMAIL, [current_user.email], msg.as_string())
             flash(f'A verification code has been sent to {current_user.email}. Check your inbox and enter it below to confirm account deletion.', 'info')
