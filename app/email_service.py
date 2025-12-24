@@ -191,18 +191,21 @@ def send_sharing_invitation(invitation, from_user):
         msg.attach(part2)
         
         # Send email via SMTP
-        with smtplib.SMTP(config['server'], config['port']) as server:
-            logger.debug(f"Connected to SMTP server {config['server']}:{config['port']}")
+        smtp_server = config['server']
+        smtp_port = config['port']
+
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            logger.debug(f"Connected to SMTP server {smtp_server}:{smtp_port}")
             
             # Only use TLS and login if credentials are provided (not needed for MailHog)
             if config['username'] and config['password']:
                 logger.debug("Using TLS and authentication")
                 # Skip STARTTLS for localhost (MailHog) as it doesn't support it
-                if config['server'] not in ['localhost', '127.0.0.1']:
+                if smtp_server not in ['localhost', '127.0.0.1']:
                     try:
                         server.starttls()
                     except smtplib.SMTPNotSupportedError:
-                        logger.warning(f'STARTTLS not supported by {config["server"]}, proceeding without encryption')
+                        logger.warning(f"STARTTLS not supported by {smtp_server}, proceeding without encryption")
                 server.login(config['username'], config['password'])
             else:
                 logger.debug("No credentials provided, sending without authentication (MailHog mode)")
