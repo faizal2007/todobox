@@ -195,7 +195,7 @@ def send_sharing_invitation(invitation, from_user):
         smtp_port = config['port']
 
         with smtplib.SMTP(smtp_server, smtp_port) as server:
-            logger.debug(f"Connected to SMTP server {smtp_server}:{smtp_port}")
+            logger.debug("Connected to SMTP server")
             
             # Only use TLS and login if credentials are provided (not needed for MailHog)
             if config['username'] and config['password']:
