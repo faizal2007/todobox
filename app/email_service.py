@@ -205,7 +205,7 @@ def send_sharing_invitation(invitation, from_user):
                     try:
                         server.starttls()
                     except smtplib.SMTPNotSupportedError:
-                        logger.warning(f"STARTTLS not supported by {smtp_server}, proceeding without encryption")
+                        logger.warning("STARTTLS not supported by SMTP server, proceeding without encryption")
                 server.login(config['username'], config['password'])
             else:
                 logger.debug("No credentials provided, sending without authentication (MailHog mode)")
