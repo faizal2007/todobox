@@ -1,4 +1,3 @@
-
 from flask import render_template, request, redirect, url_for, make_response, jsonify, abort, flash, session, g, send_from_directory
 from flask_login import current_user, login_user, login_required, logout_user
 from app import app, db, csrf
@@ -445,11 +444,20 @@ def get_todo(todo_id):
         
         if todo_date == today:
             schedule = 'today'
-        elif todo_date == today.replace(day=today.day + 1):
-            schedule = 'tomorrow'
         else:
-            schedule = 'custom_day'
-            custom_date = todo_date.isoformat()
+            try:
+                tomorrow = today.replace(day=today.day + 1)
+            except ValueError:
+                if today.month == 12:
+                    tomorrow = today.replace(year=today.year + 1, month=1, day=1)
+                else:
+                    tomorrow = today.replace(month=today.month + 1, day=1)
+
+            if todo_date == tomorrow:
+                schedule = 'tomorrow'
+            else:
+                schedule = 'custom_day'
+                custom_date = todo_date.isoformat()
     
     return jsonify({
         'success': True,
@@ -661,7 +669,7 @@ def dashboard():
             # All non-done, non-KIV todos are pending (includes re-assign which are pending reschedules)
             chart_segments['pending'] += 1
             
-            # Also track if this pending todo has re-assignment history for info purposes
+            # Also track if this pending todo has re-assignments history for info purposes
             todo_trackers = db.session.query(Status.name).join(Tracker).filter(  # type: ignore
                 Tracker.todo_id == todo.id  # type: ignore
             ).order_by(Tracker.timestamp).all()  # type: ignore
@@ -722,9 +730,9 @@ def dashboard():
     # Status 6 = 'done' (see Status.seed() in models.py)
     # Get the most recent tracker for each todo (not completed)
     recent_todos_raw = db.session.query(Todo).filter(  # type: ignore[attr-defined]
-        Todo.user_id == current_user.id  # type: ignore[attr-defined]
+        Todo.user_id == current_user.id  # type: ignore
     ).outerjoin(
-        Tracker, Todo.id == Tracker.todo_id  # type: ignore[attr-defined]
+        Tracker, Todo.id == Tracker.todo_id  # type: ignore
     ).filter(
         (Tracker.status_id != 6) | (Tracker.status_id == None)  # type: ignore[attr-defined]
     ).order_by(Todo.modified.desc()).distinct().limit(5).all()
@@ -1754,7 +1762,7 @@ def mark_done(todo_id):
         return jsonify({
             'status': 'Error',
             'message': 'Todo not found'
-        }), 404
+        }, 404)
 
 @app.route('/<path:todo_id>/kiv', methods=['POST'])
 @login_required
@@ -1780,7 +1788,7 @@ def mark_kiv(todo_id):
         return jsonify({
             'status': 'Error',
             'message': 'Todo not found'
-        }), 404
+        }, 404)
 
 @app.route('/<path:todo>/view')
 @login_required
@@ -2830,7 +2838,6 @@ def admin_bulk_delete_users():
                 
                 # Delete todos
                 Todo.query.filter_by(user_id=user.id).delete()
-            
             # Delete sharing relationships
             TodoShare.query.filter(
                 or_(TodoShare.owner_id == user.id, TodoShare.shared_with_id == user.id)
