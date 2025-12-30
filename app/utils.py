@@ -66,7 +66,15 @@ class momentjs:
             dt = self.timestamp
         
         today = datetime.now().date()
-        tomorrow = today.replace(day=today.day + 1) if today.day < 28 else today.replace(day=1, month=today.month + 1)
+        # Safely compute tomorrow's date, handling month and year rollover
+        try:
+            tomorrow = today.replace(day=today.day + 1)
+        except ValueError:
+            # If day+1 is invalid, roll over to next month or year
+            if today.month == 12:
+                tomorrow = today.replace(year=today.year + 1, month=1, day=1)
+            else:
+                tomorrow = today.replace(month=today.month + 1, day=1)
         
         if dt.date() == today:
             return f"Today at {dt.strftime('%I:%M %p')}"
