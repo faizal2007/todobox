@@ -1743,6 +1743,57 @@ def undone():
     
     return render_template('undone.html', title='Undone Tasks', todos=undone_todos, kiv_todos=kiv_todos)
 
+@app.route('/achievements')
+@login_required
+def achievements():
+    """Show all completed todos as achievements"""
+    all_todos = Todo.query.filter_by(user_id=current_user.id).order_by(Todo.modified.desc()).all()
+    
+    completed_todos = []
+    
+    for todo in all_todos:
+        # Get the latest tracker entry for this todo
+        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc(), Tracker.id.desc()).first()  # type: ignore[attr-defined]
+        
+        if latest_tracker and latest_tracker.status_id == 6:  # Status 6 = Done
+            completed_todos.append((todo, latest_tracker))
+    
+    # Sort by completion date (most recent first)
+    completed_todos.sort(key=lambda x: x[1].timestamp, reverse=True)
+    
+    # Calculate statistics
+    total_completed = len(completed_todos)
+    stats = {
+        'total_completed': total_completed,
+        'completion_rate': 0,
+        'streak': 0,
+        'average_completion_time': 0
+    }
+    
+    # Calculate completion rate
+    all_completions = []
+    for todo in all_todos:
+        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc(), Tracker.id.desc()).first()  # type: ignore[attr-defined]
+        if latest_tracker:
+            all_completions.append(latest_tracker.status_id)
+    
+    if all_completions:
+        stats['completion_rate'] = round((all_completions.count(6) / len(all_completions)) * 100, 1)
+    
+    # Calculate average time to completion
+    completion_times = []
+    for todo, completion_tracker in completed_todos:
+        # Get the creation tracker (status_id = 5 = new)
+        creation_tracker = Tracker.query.filter_by(todo_id=todo.id, status_id=5).order_by(Tracker.timestamp.asc()).first()  # type: ignore[attr-defined]
+        if creation_tracker:
+            time_diff = completion_tracker.timestamp - creation_tracker.timestamp
+            completion_times.append(time_diff.total_seconds() / 3600)  # Convert to hours
+    
+    if completion_times:
+        stats['average_completion_time'] = round(sum(completion_times) / len(completion_times), 1)
+    
+    return render_template('achievements.html', title='Achievements', achievements=completed_todos, stats=stats)
+
 @app.route('/<path:todo_id>/done', methods=['POST'])
 @login_required
 def mark_done(todo_id):

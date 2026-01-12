@@ -1,0 +1,269 @@
+{% extends "main.html" %}
+{% block extra_css %}
+<style>
+    .achievement-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-left: 5px solid #28a745;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .achievement-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(40, 167, 69, 0.2);
+    }
+    
+    .achievement-badge {
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    
+    .achievement-content {
+        flex-grow: 1;
+    }
+    
+    .achievement-title {
+        color: #2c3e50;
+        font-weight: 600;
+        margin: 0 0 5px 0;
+        font-size: 16px;
+    }
+    
+    .achievement-date {
+        color: #7f8c8d;
+        font-size: 13px;
+        margin: 0;
+    }
+    
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-number {
+        font-size: 32px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .stat-label {
+        font-size: 14px;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        color: #7f8c8d;
+    }
+    
+    .empty-state i {
+        font-size: 64px;
+        color: #bdc3c7;
+        margin-bottom: 20px;
+    }
+    
+    .achievements-list {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .achievement-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        border-left: 5px solid #28a745;
+        transition: all 0.3s ease;
+    }
+    
+    .achievement-item:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .achievement-item.strikethrough .achievement-title {
+        text-decoration: line-through;
+        color: #95a5a6;
+    }
+    
+    .achievement-details {
+        flex-grow: 1;
+    }
+    
+    .achievement-text {
+        color: #555;
+        font-size: 14px;
+        line-height: 1.5;
+        margin-top: 8px;
+        max-height: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-container {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-card {
+            padding: 15px;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+        }
+        
+        .achievement-item {
+            padding: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main role="main">
+    <!-- Start Content-->
+    <div class="container-fluid">
+        <!-- start page title -->
+        <div class="row">
+            <div class="col-12 pb-3">
+                <div class="page-title-box">
+                    <h1 class="page-title">
+                        <i class="mdi mdi-trophy-outline mr-2"></i>Achievements
+                    </h1>
+                    <p class="text-muted">Celebrate your completed todos</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        {% if stats.total_completed > 0 %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <i class="mdi mdi-check-all" style="font-size: 32px;"></i>
+                        <div class="stat-number">{{ stats.total_completed }}</div>
+                        <div class="stat-label">Completed Todos</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="mdi mdi-percent" style="font-size: 32px;"></i>
+                        <div class="stat-number">{{ stats.completion_rate }}%</div>
+                        <div class="stat-label">Completion Rate</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="mdi mdi-clock-outline" style="font-size: 32px;"></i>
+                        <div class="stat-number">{{ stats.average_completion_time }}</div>
+                        <div class="stat-label">Avg Hours to Complete</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Achievements List -->
+        <div class="row">
+            <div class="col-12">
+                {% if achievements %}
+                <div class="card">
+                    <div class="card-header bg-white border-bottom">
+                        <h4 class="card-title mb-0">
+                            <i class="mdi mdi-star-outline mr-2"></i>{{ achievements|length }} Achievement{{ 's' if achievements|length != 1 else '' }}
+                        </h4>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="achievements-list">
+                            {% for todo, tracker in achievements %}
+                            <div class="achievement-item{% if todo.name.startswith('[x]') or todo.name.startswith('- [x]') %} strikethrough{% endif %}" id="achievement-{{ todo.id }}">
+                                <div class="achievement-badge">
+                                    <i class="mdi mdi-star"></i>
+                                </div>
+                                <div class="achievement-details">
+                                    <h5 class="achievement-title">{{ todo.name|title }}</h5>
+                                    {% if todo.details %}
+                                    <div class="achievement-text">
+                                        {{ todo.details|truncate(150, true)|striptags }}
+                                    </div>
+                                    {% endif %}
+                                    <p class="achievement-date mb-0">
+                                        <i class="mdi mdi-calendar-check"></i>
+                                        Completed {{ momentjs(tracker.timestamp).fromNow() }}
+                                    </p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="mdi mdi-trophy-outline"></i>
+                    <h3>No Achievements Yet</h3>
+                    <p>Complete your first todo to earn an achievement!</p>
+                    <a href="{{ url_for('list', id='today') }}" class="btn btn-primary mt-3">
+                        <i class="mdi mdi-plus"></i> Create a Todo
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_script_footer %}
+<script>
+    // Add any custom scripts for achievements page here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add smooth scroll behavior to achievements
+        const achievementItems = document.querySelectorAll('.achievement-item');
+        achievementItems.forEach((item, index) => {
+            item.style.animation = `slideIn 0.5s ease ${index * 0.1}s forwards`;
+        });
+    });
+    
+    // Add animation keyframes
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

@@ -601,6 +601,13 @@
 													</a>
 												</li>
 											</ul>
+											<ul class="navbar-nav">
+												<li class="nav-item dropdown">
+													<a class="nav-link dropdown-toggle arrow-none" href="{{ url_for('achievements') }}" id="topnav-achievements">
+														<i class="mdi mdi-trophy-outline mr-1"></i>Achievements
+													</a>
+												</li>
+											</ul>
 											{% if current_user.is_gmail_user() %}
 											<ul class="navbar-nav">
 												<li class="nav-item dropdown">
