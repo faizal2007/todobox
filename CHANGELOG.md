@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Achievement Page**: New `/achievements` route showing all completed todos with statistics
+  - Display all completed todos with star badges and completion dates
+  - Show completion statistics: total completed, completion rate, average completion time
+  - Animate achievement cards with smooth transitions and hover effects
+  - Responsive design for mobile, tablet, and desktop views
+  - Empty state message when no achievements yet
+  - New "Achievements" navigation link in main menu
+  - Template: `app/templates/achievements.html`
+  - Route handler: `app/routes.py` - `achievements()` function
+
 ### Security
 - **CRITICAL: Fixed Open Redirect Vulnerability**: Fixed open redirect vulnerability in OAuth terms acceptance flow
   - Added URL validation before storing `next` parameter in session (line 1333-1338 in routes.py)
