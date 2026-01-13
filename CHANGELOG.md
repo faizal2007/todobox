@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Floating Progress Widget**: Improved UX for achievement page with persistent progress tracking
+  - Circular progress indicator stays visible in bottom-right corner while scrolling
+  - Shows real-time percentage of achievements loaded
+  - Updates dynamically as new batches load via infinite scroll
+  - Smooth SVG stroke animation for progress circle
+  - Hover effect with scale animation for better interactivity
+  - Click to scroll back to top for quick navigation
+  - Responsive design: adjusts size and position on mobile devices
+  - Prevents visibility loss that occurred with sticky progress bar
+  
 - **Achievement Page**: New `/achievements` route showing all completed todos with statistics
   - Display all completed todos with star badges and completion dates
   - Show completion statistics: total completed, completion rate, average completion time
