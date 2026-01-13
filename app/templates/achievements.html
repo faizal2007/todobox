@@ -91,6 +91,7 @@
     .achievements-list {
         /* Full page layout - no height restriction */
         width: 100%;
+        margin-bottom: 50px;  /* Space for floating widget */
     }
     
     .achievement-item {
@@ -102,6 +103,18 @@
         margin-bottom: 15px;
         border-left: 5px solid #28a745;
         transition: all 0.3s ease;
+        animation: slideIn 0.5s ease forwards;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
     
     .achievement-item:hover {
@@ -477,18 +490,21 @@
     const endMessageEl = document.getElementById('end-of-list-message');
     const achievementsContainer = document.querySelector('.achievements-list');
     
-    // Detect when user scrolls to bottom
+    // Detect when user scrolls to bottom - use passive event listener for better performance
     window.addEventListener('scroll', function() {
         // Calculate if we're near the bottom
         const scrollPosition = window.innerHeight + window.scrollY;
         const documentHeight = document.documentElement.scrollHeight;
         const scrollThreshold = documentHeight - 500;  // Load when 500px from bottom
         
+        // Debug: log scroll info
+        // console.log(`Scroll: ${scrollPosition}/${scrollThreshold}, Loading: ${isLoading}, HasMore: ${hasMore}`);
+        
         // Load more if: user scrolled near bottom, not already loading, and more exists
         if (scrollPosition >= scrollThreshold && !isLoading && hasMore) {
             loadMoreAchievements();
         }
-    });
+    }, { passive: true });  // Passive listener for better scroll performance
     
     function updateProgressIndicator() {
         const progressCountEl = document.getElementById('loaded-count');
@@ -533,7 +549,7 @@
             .then(data => {
                 // Create HTML for new items
                 const itemsHtml = data.items.map((item, index) => `
-                    <div class="achievement-item" style="animation: slideIn 0.5s ease ${index * 0.1}s forwards;">
+                    <div class="achievement-item">
                         <div class="achievement-badge">
                             <i class="mdi mdi-star"></i>
                         </div>
@@ -549,7 +565,9 @@
                 `).join('');
                 
                 // Append to container
-                achievementsContainer.insertAdjacentHTML('beforeend', itemsHtml);
+                if (achievementsContainer) {
+                    achievementsContainer.insertAdjacentHTML('beforeend', itemsHtml);
+                }
                 
                 // Update loaded count and progress
                 loadedCount += data.count;
@@ -584,22 +602,6 @@
         div.textContent = text;
         return div.innerHTML;
     }
-    
-    // Add slide-in animation
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-    `;
-    document.head.appendChild(style);
     
     // Floating progress widget click handler - scroll to top
     const floatingProgressWidget = document.getElementById('floating-progress');
