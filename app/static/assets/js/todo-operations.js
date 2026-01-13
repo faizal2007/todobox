@@ -239,7 +239,17 @@ var TodoOperations = (function() {
     function setupSaveHandler(simplemde, csrfToken, redirectUrl) {
         $('.create-todo').click(function() {
             let title = $('#title-input-normal').val();
-            let activities = simplemde.value();
+            let todoMode = document.getElementById('todo_mode') ? document.getElementById('todo_mode').value : 'simple';
+            let activities = '';
+            let simpleItems = '';
+            
+            // Get content based on mode
+            if (todoMode === 'simple') {
+                simpleItems = $('#simple-items').val();
+            } else {
+                activities = simplemde.value();
+            }
+            
             let todo_id = $("input[name='todo_id']").val();
             let schedule_day = $('input[name="schedule_day"]:checked').val();
             let custom_date = $('#custom_date').val();
@@ -257,11 +267,12 @@ var TodoOperations = (function() {
                 $loading.show();
                 $button.prop('disabled', true);
                 
-                $.post('/add', {
+                // Choose the right endpoint based on mode
+                let endpoint = todoMode === 'simple' && !todo_id ? '/add_simple' : '/add';
+                let postData = {
                     '_csrf_token': csrfToken,
                     'todo_id': todo_id != null && todo_id !== '' ? todo_id : '',
                     'title': title,
-                    'activities': activities,
                     'schedule_day': schedule_day,
                     'custom_date': custom_date,
                     'reminder_enabled': reminderData.enabled,
@@ -269,7 +280,16 @@ var TodoOperations = (function() {
                     'reminder_datetime': reminderData.datetime,
                     'reminder_before_minutes': reminderData.beforeMinutes,
                     'reminder_before_unit': reminderData.beforeUnit
-                },
+                };
+                
+                // Add content based on mode
+                if (todoMode === 'simple') {
+                    postData.items = simpleItems;
+                } else {
+                    postData.activities = activities;
+                }
+                
+                $.post(endpoint, postData,
                 function(data) {
                     // Determine redirect URL
                     let targetUrl;

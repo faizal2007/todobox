@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Simple Todo Feature**: New quick-creation todo type for checklists
+  - Added `todo_type` column to Todo model (default: 'advanced' for backward compatibility)
+  - New SimpleTodoForm for minimal title-only input
+  - New AdvancedTodoForm for existing rich markdown content creation
+  - `/add_simple` route for creating simple todos with markdown checklist format
+  - `/toggle_item` endpoint for checkbox toggling with auto-save functionality
+  - Simple todos store checklist items in markdown format (- [ ] / - [x])
+  - Database migration to safely add todo_type column to todo table
+  - Type distinction allows future UI/UX improvements for different todo workflows
+  - Full backward compatibility: existing todos automatically default to 'advanced' type
+
 ### Fixed
 - **Achievements Route Database Errors**: Fixed 500 Internal Server errors on production
   - Simplified complex nested database queries that were causing errors

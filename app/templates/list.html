@@ -413,8 +413,19 @@
                     var titleInput = document.getElementById('title-input-normal');
                     if (titleInput) titleInput.value = '';
                     
+                    // Reset simple mode items
+                    var simpleItems = document.getElementById('simple-items');
+                    if (simpleItems) simpleItems.value = '';
+                    
                     var todoIdInput = document.querySelector("input[name='todo_id']");
                     if (todoIdInput) todoIdInput.value = '';
+                    
+                    // Reset todo mode to simple
+                    var modeSimple = document.getElementById('mode-simple');
+                    if (modeSimple) {
+                         modeSimple.checked = true;
+                         modeSimple.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
                     
                     // Reset SimpleMDE editor if it exists
                     if (typeof simplemde !== 'undefined' && simplemde) {
@@ -430,7 +441,7 @@
           }); // Close modal event listener
      }); // Close the DOMContentLoaded event listener
 </script>
-{% endblock %} 
+{% endblock %}
 
 
 

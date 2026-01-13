@@ -34,7 +34,26 @@
 			<form class="need-validations" novalidate>
 				<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 				<input type="hidden" name="todo_id"/>
+				<input type="hidden" name="todo_mode" id="todo_mode" value="simple"/>
 				<div class="modal-body">
+					<!-- Todo Mode Selection -->
+					<div class="form-group mb-4">
+						<label style="margin-bottom: 12px; font-weight: 600;">Create:</label>
+						<div class="btn-group btn-group-toggle d-block" data-toggle="buttons" style="gap: 10px; display: flex;">
+							<label class="btn btn-outline-primary btn-sm active" for="mode-simple" style="flex: 1; text-align: center; border-radius: 6px;">
+								<input type="radio" name="todo_type" id="mode-simple" value="simple" checked autocomplete="off">
+								<i class="mdi mdi-checkbox-multiple-marked-outline mr-2"></i>Simple Todo (Checklist)
+							</label>
+							<label class="btn btn-outline-primary btn-sm" for="mode-advanced" style="flex: 1; text-align: center; border-radius: 6px;">
+								<input type="radio" name="todo_type" id="mode-advanced" value="advanced" autocomplete="off">
+								<i class="mdi mdi-pencil-multiple mr-2"></i>Advanced Todo (Rich Text)
+							</label>
+						</div>
+						<small class="form-text text-muted mt-2" id="mode-description">
+							<i class="mdi mdi-information-outline"></i> Perfect for quick checklists - easily tick items off as you complete them.
+						</small>
+					</div>
+
 					<div class="form-group position-relative mb-3">
 						<label for="title-input-normal">Thinking ....</label>
 						<input type="text" id="title-input-normal" name="title-input-normal" class="form-control form-control-sm" placeholder="Anything ??" required>
@@ -45,10 +64,58 @@
 							What do you want to do ???.
 						</div>
 					</div>
-					<div class="form-group">
+					
+					<!-- Simple Mode Content -->
+					<div id="simple-mode-content" class="form-group" style="display: block;">
+						<label for="simple-items">Items (one per line):</label>
+						<textarea class="form-control" id="simple-items" name="simple-items" rows="5" placeholder="Buy milk&#10;Buy bread&#10;Buy eggs"></textarea>
+						<small class="form-text text-muted">Enter each item on a new line. You'll be able to check them off as completed.</small>
+					</div>
+					
+					<!-- Advanced Mode Content -->
+					<div id="advanced-mode-content" class="form-group" style="display: none;">
 						<label for="details-textarea">Why ???</label>
 						<textarea class="form-control" id="details-textarea" rows="5"></textarea>
 					</div>
+					
+					<!-- Mode Toggle Script -->
+					<script>
+						document.addEventListener('DOMContentLoaded', function() {
+							const modeSimple = document.getElementById('mode-simple');
+							const modeAdvanced = document.getElementById('mode-advanced');
+							const simpleModeContent = document.getElementById('simple-mode-content');
+							const advancedModeContent = document.getElementById('advanced-mode-content');
+							const modeDescription = document.getElementById('mode-description');
+							const todoModeInput = document.getElementById('todo_mode');
+							
+							function updateModeDisplay() {
+								if (modeSimple && modeSimple.checked) {
+									// Show simple mode
+									simpleModeContent.style.display = 'block';
+									advancedModeContent.style.display = 'none';
+									modeDescription.innerHTML = '<i class="mdi mdi-information-outline"></i> Perfect for quick checklists - easily tick items off as you complete them.';
+									todoModeInput.value = 'simple';
+								} else {
+									// Show advanced mode
+									simpleModeContent.style.display = 'none';
+									advancedModeContent.style.display = 'block';
+									modeDescription.innerHTML = '<i class="mdi mdi-information-outline"></i> Create rich, formatted todos with detailed descriptions and markdown support.';
+									todoModeInput.value = 'advanced';
+									
+									// Initialize SimpleMDE if needed
+									if (typeof window.simplemde !== 'undefined' && window.simplemde) {
+										window.simplemde.codemirror.refresh();
+									}
+								}
+							}
+							
+							if (modeSimple) modeSimple.addEventListener('change', updateModeDisplay);
+							if (modeAdvanced) modeAdvanced.addEventListener('change', updateModeDisplay);
+							
+							// Set initial display
+							updateModeDisplay();
+						});
+					</script>
 					
 					<!-- Schedule/Day Selection -->
 					<div class="form-group">
