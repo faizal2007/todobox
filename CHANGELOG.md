@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Achievement Progress Percentage**: Fixed incorrect progress calculation on achievement page
+  - Progress was showing 7% initially but jumping to 100% after scrolling a little
+  - Root cause: totalAchievements was incorrectly set to initial loaded count (20) instead of total
+  - Solution: Use data-total-achievements attribute from server instead of parsing DOM text
+  - Now correctly shows accurate percentage (e.g., 20/250 = 8%) throughout infinite scroll
+
 ### Added
 - **Floating Progress Widget**: Improved UX for achievement page with persistent progress tracking
   - Circular progress indicator stays visible in bottom-right corner while scrolling
