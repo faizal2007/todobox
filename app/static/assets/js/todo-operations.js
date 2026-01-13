@@ -760,6 +760,7 @@ var TodoOperations = (function() {
         const container = document.getElementById('items-container');
         const addBtn = document.getElementById('add-item-btn');
         const input = document.getElementById('new-item-input');
+        const modal = document.getElementById('info-header-modal');
         
         if (!container || !addBtn || !input) return;
         
@@ -770,22 +771,39 @@ var TodoOperations = (function() {
             renderChecklist(items);
         }
         
-        // Add item on button click
-        addBtn.addEventListener('click', () => {
-            const text = input.value.trim();
-            if (!text) return;
+        // Use event delegation on modal to prevent duplicate listeners
+        // Attach listeners to the modal element which is never recreated
+        modal.addEventListener('click', function(e) {
+            // Handle add button clicks
+            if (e.target.closest('#add-item-btn')) {
+                const text = input.value.trim();
+                if (!text) return;
+                
+                const markdown = document.getElementById('simple-items').value;
+                const items = parseMarkdownItems(markdown);
+                items.push({ text, completed: false });
+                
+                updateMarkdownStorage(items);
+                renderChecklist(items);
+                input.value = '';
+                input.focus();
+                return;
+            }
             
-            const markdown = document.getElementById('simple-items').value;
-            const items = parseMarkdownItems(markdown);
-            items.push({ text, completed: false });
-            
-            updateMarkdownStorage(items);
-            renderChecklist(items);
-            input.value = '';
-            input.focus();
+            // Handle item deletion
+            const deleteBtn = e.target.closest('.delete-item-btn');
+            if (deleteBtn) {
+                const index = parseInt(deleteBtn.dataset.index);
+                const markdown = document.getElementById('simple-items').value;
+                const items = parseMarkdownItems(markdown);
+                
+                items.splice(index, 1);
+                updateMarkdownStorage(items);
+                renderChecklist(items);
+            }
         });
         
-        // Add item on Enter key
+        // Handle Enter key on input field
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -793,8 +811,8 @@ var TodoOperations = (function() {
             }
         });
         
-        // Handle checkbox changes and item deletion via event delegation
-        container.addEventListener('change', (e) => {
+        // Handle checkbox changes via event delegation on modal
+        modal.addEventListener('change', (e) => {
             if (e.target.classList.contains('item-checkbox')) {
                 const index = parseInt(e.target.dataset.index);
                 const markdown = document.getElementById('simple-items').value;
@@ -805,19 +823,6 @@ var TodoOperations = (function() {
                     updateMarkdownStorage(items);
                     renderChecklist(items);
                 }
-            }
-        });
-        
-        container.addEventListener('click', (e) => {
-            const deleteBtn = e.target.closest('.delete-item-btn');
-            if (deleteBtn) {
-                const index = parseInt(deleteBtn.dataset.index);
-                const markdown = document.getElementById('simple-items').value;
-                const items = parseMarkdownItems(markdown);
-                
-                items.splice(index, 1);
-                updateMarkdownStorage(items);
-                renderChecklist(items);
             }
         });
     }
