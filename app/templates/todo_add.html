@@ -205,13 +205,10 @@
 						// Handle confirmation of mode switch
 						$('#confirm-mode-switch').click(function() {
 							// User confirmed switching to simple mode
-							// Clear advanced content and switch to simple
+							// Only clear the advanced editor, but keep the simple mode data intact
 							if (typeof window.simplemde !== 'undefined' && window.simplemde) {
 								window.simplemde.value('');
 							}
-							// Clear the items container
-							$('#items-container').html('');
-							$('#simple-items').val('');
 							
 							// Now actually switch the mode
 							modeSimple.checked = true;
