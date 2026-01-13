@@ -89,8 +89,8 @@
     }
     
     .achievements-list {
-        max-height: 600px;
-        overflow-y: auto;
+        /* Full page layout - no height restriction */
+        width: 100%;
     }
     
     .achievement-item {
@@ -180,6 +180,141 @@
         cursor: not-allowed;
         border-color: #eee;
     }
+    
+    .progress-indicator {
+        position: sticky;
+        top: 0;
+        background: white;
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+        z-index: 100;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .progress-bar-container {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .progress-stats {
+        font-size: 14px;
+        color: #666;
+        font-weight: 500;
+    }
+    
+    .progress-count {
+        color: #667eea;
+        font-weight: bold;
+    }
+    
+    .progress-bar-wrapper {
+        flex: 1;
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+        box-shadow: 0 0 10px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Floating Progress Widget */
+    .floating-progress {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: white;
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        z-index: 1000;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 3px solid transparent;
+    }
+    
+    .floating-progress:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 30px rgba(102, 126, 234, 0.4);
+    }
+    
+    .floating-progress-circle {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .floating-progress-circle svg {
+        transform: rotate(-90deg);
+    }
+    
+    .progress-circle-bg {
+        fill: none;
+        stroke: #e9ecef;
+        stroke-width: 3;
+    }
+    
+    .progress-circle-fill {
+        fill: none;
+        stroke: url(#progressGradient);
+        stroke-width: 3;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.3s ease;
+    }
+    
+    .floating-progress-text {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        text-align: center;
+    }
+    
+    .floating-progress-percent {
+        font-size: 24px;
+        color: #667eea;
+    }
+    
+    .floating-progress-label {
+        font-size: 11px;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    @media (max-width: 768px) {
+        .floating-progress {
+            bottom: 20px;
+            right: 20px;
+            width: 100px;
+            height: 100px;
+        }
+        
+        .floating-progress-percent {
+            font-size: 20px;
+        }
+        
+        .floating-progress-label {
+            font-size: 10px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -198,6 +333,26 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Progress Indicator -->
+        {% if stats.total_completed > 0 %}
+        <div class="progress-indicator" data-total-achievements="{{ stats.total_completed }}">
+            <div class="progress-bar-container">
+                <div class="progress-stats">
+                    <span class="progress-count" id="loaded-count">{{ achievements|length }}</span>
+                    <span>of</span>
+                    <span class="progress-count" id="total-count">{{ stats.total_completed }}</span>
+                    <span>loaded</span>
+                </div>
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar-fill" id="progress-bar" style="width: {% if stats.total_completed > 0 %}{{ (achievements|length / stats.total_completed * 100)|int }}{% else %}0{% endif %}%"></div>
+                </div>
+                <div class="progress-stats">
+                    <span id="progress-percent">{% if stats.total_completed > 0 %}{{ (achievements|length / stats.total_completed * 100)|int }}{% else %}0{% endif %}%</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Statistics Section -->
         {% if stats.total_completed > 0 %}
@@ -228,26 +383,19 @@
         <div class="row">
             <div class="col-12">
                 {% if achievements %}
-                <div class="card">
-                    <div class="card-header bg-white border-bottom">
-                        <h4 class="card-title mb-0">
-                            <i class="mdi mdi-star-outline mr-2"></i>{{ achievements|length }} Achievement{{ 's' if achievements|length != 1 else '' }}
-                        </h4>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="achievements-list">
-                            {% for todo, tracker in achievements %}
-                            <div class="achievement-item{% if todo.name.startswith('[x]') or todo.name.startswith('- [x]') %} strikethrough{% endif %}" id="achievement-{{ todo.id }}">
-                                <div class="achievement-badge">
-                                    <i class="mdi mdi-star"></i>
-                                </div>
-                                <div class="achievement-details">
-                                    <h5 class="achievement-title">{{ todo.name|title }}</h5>
-                                    {% if todo.details %}
-                                    <div class="achievement-text">
-                                        {{ todo.details|truncate(150, true)|striptags }}
-                                    </div>
-                                    {% endif %}
+                <div class="achievements-list">
+                    {% for todo, tracker in achievements %}
+                    <div class="achievement-item{% if todo.name.startswith('[x]') or todo.name.startswith('- [x]') %} strikethrough{% endif %}" id="achievement-{{ todo.id }}">
+                        <div class="achievement-badge">
+                            <i class="mdi mdi-star"></i>
+                        </div>
+                        <div class="achievement-details">
+                            <h5 class="achievement-title">{{ todo.name|title }}</h5>
+                            {% if todo.details %}
+                            <div class="achievement-text">
+                                {{ todo.details|truncate(150, true)|striptags }}
+                            </div>
+                            {% endif %}
                                     <p class="achievement-date mb-0">
                                         <i class="mdi mdi-calendar-check"></i>
                                         Completed {{ momentjs(tracker.timestamp).fromNow() }}
@@ -271,7 +419,6 @@
                         <i class="mdi mdi-check-circle-outline" style="font-size: 32px; margin-bottom: 10px;"></i>
                         <p>No more achievements to load</p>
                     </div>
-                </div>
                 {% else %}
                 <div class="empty-state">
                     <i class="mdi mdi-trophy-outline"></i>
@@ -285,6 +432,31 @@
             </div>
         </div>
     </div>
+    
+    <!-- Floating Progress Widget -->
+    {% if stats.total_completed > 0 %}
+    <div class="floating-progress" id="floating-progress">
+        <div class="floating-progress-circle">
+            <svg width="110" height="110" viewBox="0 0 110 110">
+                <defs>
+                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <circle class="progress-circle-bg" cx="55" cy="55" r="50"></circle>
+                <circle class="progress-circle-fill" id="progress-circle-fill" cx="55" cy="55" r="50" 
+                    style="stroke-dasharray: 314; stroke-dashoffset: 314;"></circle>
+            </svg>
+            <div class="floating-progress-text">
+                <div class="floating-progress-percent" id="floating-percent">
+                    {% if stats.total_completed > 0 %}{{ (achievements|length / stats.total_completed * 100)|int }}{% else %}0{% endif %}%
+                </div>
+                <div class="floating-progress-label">Loaded</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </main>
 {% endblock %}
 
@@ -295,6 +467,10 @@
     let isLoading = false;
     let hasMore = true;
     const batchSize = 20;
+    // Get total from data attribute instead of text content
+    const progressIndicator = document.querySelector('.progress-indicator');
+    let totalAchievements = parseInt(progressIndicator?.getAttribute('data-total-achievements') || '0');
+    let loadedCount = parseInt(document.getElementById('loaded-count')?.textContent || '0');  // Initial loaded count from server
     
     // Get loader elements
     const loaderEl = document.getElementById('infinite-scroll-loader');
@@ -313,6 +489,34 @@
             loadMoreAchievements();
         }
     });
+    
+    function updateProgressIndicator() {
+        const progressCountEl = document.getElementById('loaded-count');
+        const progressBarEl = document.getElementById('progress-bar');
+        const progressPercentEl = document.getElementById('progress-percent');
+        const floatingPercent = document.getElementById('floating-percent');
+        const progressCircleFill = document.getElementById('progress-circle-fill');
+        
+        if (progressCountEl && progressBarEl && progressPercentEl && totalAchievements > 0) {
+            const percentage = Math.min((loadedCount / totalAchievements) * 100, 100);
+            progressCountEl.textContent = loadedCount;
+            progressBarEl.style.width = percentage + '%';
+            progressPercentEl.textContent = Math.round(percentage) + '%';
+            
+            // Update floating progress widget
+            if (floatingPercent) {
+                floatingPercent.textContent = Math.round(percentage) + '%';
+            }
+            
+            // Update circular progress
+            if (progressCircleFill) {
+                // SVG circle circumference = 2 * π * r = 2 * π * 50 ≈ 314
+                const circumference = 314;
+                const offset = circumference - (percentage / 100) * circumference;
+                progressCircleFill.style.strokeDashoffset = offset;
+            }
+        }
+    }
     
     function loadMoreAchievements() {
         if (isLoading || !hasMore) return;
@@ -347,6 +551,10 @@
                 // Append to container
                 achievementsContainer.insertAdjacentHTML('beforeend', itemsHtml);
                 
+                // Update loaded count and progress
+                loadedCount += data.count;
+                updateProgressIndicator();
+                
                 // Update offset for next batch
                 currentOffset = data.offset;
                 hasMore = data.has_more;
@@ -355,6 +563,9 @@
                 if (!hasMore) {
                     loaderEl.style.display = 'none';
                     endMessageEl.style.display = 'block';
+                    // Update progress to 100%
+                    loadedCount = totalAchievements;
+                    updateProgressIndicator();
                 }
                 
                 isLoading = false;
@@ -389,5 +600,19 @@
         }
     `;
     document.head.appendChild(style);
+    
+    // Floating progress widget click handler - scroll to top
+    const floatingProgressWidget = document.getElementById('floating-progress');
+    if (floatingProgressWidget) {
+        floatingProgressWidget.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Add tooltip on hover
+        floatingProgressWidget.setAttribute('title', 'Click to scroll to top');
+    }
 </script>
 {% endblock %}

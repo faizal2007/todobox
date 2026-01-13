@@ -7,7 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Achievement Progress Percentage**: Fixed incorrect progress calculation on achievement page
+  - Progress was showing 7% initially but jumping to 100% after scrolling a little
+  - Root cause: totalAchievements was incorrectly set to initial loaded count (20) instead of total
+  - Solution: Use data-total-achievements attribute from server instead of parsing DOM text
+  - Now correctly shows accurate percentage (e.g., 20/250 = 8%) throughout infinite scroll
+
 ### Added
+- **Floating Progress Widget**: Improved UX for achievement page with persistent progress tracking
+  - Circular progress indicator stays visible in bottom-right corner while scrolling
+  - Shows real-time percentage of achievements loaded
+  - Updates dynamically as new batches load via infinite scroll
+  - Smooth SVG stroke animation for progress circle
+  - Hover effect with scale animation for better interactivity
+  - Click to scroll back to top for quick navigation
+  - Responsive design: adjusts size and position on mobile devices
+  - Prevents visibility loss that occurred with sticky progress bar
+  
 - **Achievement Page**: New `/achievements` route showing all completed todos with statistics
   - Display all completed todos with star badges and completion dates
   - Show completion statistics: total completed, completion rate, average completion time
