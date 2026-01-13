@@ -180,6 +180,50 @@
         cursor: not-allowed;
         border-color: #eee;
     }
+    
+    .progress-indicator {
+        position: sticky;
+        top: 0;
+        background: white;
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+        z-index: 100;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .progress-bar-container {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .progress-stats {
+        font-size: 14px;
+        color: #666;
+        font-weight: 500;
+    }
+    
+    .progress-count {
+        color: #667eea;
+        font-weight: bold;
+    }
+    
+    .progress-bar-wrapper {
+        flex: 1;
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+        box-shadow: 0 0 10px rgba(102, 126, 234, 0.4);
+    }
 </style>
 {% endblock %}
 
@@ -198,6 +242,26 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Progress Indicator -->
+        {% if stats.total_completed > 0 %}
+        <div class="progress-indicator">
+            <div class="progress-bar-container">
+                <div class="progress-stats">
+                    <span class="progress-count" id="loaded-count">{{ achievements|length }}</span>
+                    <span>of</span>
+                    <span class="progress-count">{{ stats.total_completed }}</span>
+                    <span>loaded</span>
+                </div>
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar-fill" id="progress-bar" style="width: {% if stats.total_completed > 0 %}{{ (achievements|length / stats.total_completed * 100)|int }}{% else %}0{% endif %}%"></div>
+                </div>
+                <div class="progress-stats">
+                    <span id="progress-percent">{% if stats.total_completed > 0 %}{{ (achievements|length / stats.total_completed * 100)|int }}{% else %}0{% endif %}%</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Statistics Section -->
         {% if stats.total_completed > 0 %}
@@ -287,6 +351,8 @@
     let isLoading = false;
     let hasMore = true;
     const batchSize = 20;
+    let totalAchievements = parseInt(document.querySelector('.progress-count')?.textContent || '0');  // Get total from progress indicator
+    let loadedCount = totalAchievements;  // Initial loaded count
     
     // Get loader elements
     const loaderEl = document.getElementById('infinite-scroll-loader');
@@ -305,6 +371,19 @@
             loadMoreAchievements();
         }
     });
+    
+    function updateProgressIndicator() {
+        const progressCountEl = document.getElementById('loaded-count');
+        const progressBarEl = document.getElementById('progress-bar');
+        const progressPercentEl = document.getElementById('progress-percent');
+        
+        if (progressCountEl && progressBarEl && progressPercentEl && totalAchievements > 0) {
+            const percentage = Math.min((loadedCount / totalAchievements) * 100, 100);
+            progressCountEl.textContent = loadedCount;
+            progressBarEl.style.width = percentage + '%';
+            progressPercentEl.textContent = Math.round(percentage) + '%';
+        }
+    }
     
     function loadMoreAchievements() {
         if (isLoading || !hasMore) return;
@@ -339,6 +418,10 @@
                 // Append to container
                 achievementsContainer.insertAdjacentHTML('beforeend', itemsHtml);
                 
+                // Update loaded count and progress
+                loadedCount += data.count;
+                updateProgressIndicator();
+                
                 // Update offset for next batch
                 currentOffset = data.offset;
                 hasMore = data.has_more;
@@ -347,6 +430,9 @@
                 if (!hasMore) {
                     loaderEl.style.display = 'none';
                     endMessageEl.style.display = 'block';
+                    // Update progress to 100%
+                    loadedCount = totalAchievements;
+                    updateProgressIndicator();
                 }
                 
                 isLoading = false;
