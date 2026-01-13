@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Achievements Route Database Errors**: Fixed 500 Internal Server errors on production
+  - Simplified complex nested database queries that were causing errors
+  - Root cause: SQLAlchemy subquery correlation and DISTINCT clause compatibility issues
+  - Solution: Separate queries for total_todos and total_completed with clearer logic
+  - Removed problematic DISTINCT(Todo.id) clause incompatible with some database backends
+  - Added error handling and logging for better debugging
+  - All queries now use consistent db.session.query() pattern
+  - Fixed offset/limit logic in batch API to properly detect more available items
+  - Impact: /achievements and /api/achievements/batch routes now work reliably on all databases
+
 - **Achievement Progress Percentage**: Fixed incorrect progress calculation on achievement page
   - Progress was showing 7% initially but jumping to 100% after scrolling a little
   - Root cause: totalAchievements was incorrectly set to initial loaded count (20) instead of total
