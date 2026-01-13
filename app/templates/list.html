@@ -1,6 +1,36 @@
 {% extends "main.html" %}
 {% block extra_css %}
 	<link href='{{ url_for('static', filename='assets/css/vendor/simplemde.min.css') }}' rel="stylesheet" type="text/css" />
+	<style>
+		.simple-todo-items {
+			padding: 10px 0;
+		}
+		
+		.simple-todo-item {
+			padding: 5px 0;
+		}
+		
+		.simple-item-checkbox {
+			cursor: pointer;
+			margin-right: 5px;
+		}
+		
+		.simple-item-checkbox:checked ~ label {
+			text-decoration: line-through;
+			color: #999;
+		}
+		
+		.simple-todo-item label {
+			margin-bottom: 0;
+			user-select: none;
+			cursor: pointer;
+			word-break: break-word;
+		}
+		
+		.simple-todo-item label.text-muted {
+			color: #999 !important;
+		}
+	</style>
 {% endblock %}
 {% block content %}
 <main role="main">
@@ -70,9 +100,39 @@
                                                        </div>
                                                        <h3 class="card-title mb-0">{{ list.Todo.name|title }}</h3>
                                                        <div class="divider"><hr></div>
-                                                       <p class="card-text">
-                                                            {{ list.Todo.details_html|safe }}
-                                                       </p>
+                                                       
+                                                       {% if list.Todo.todo_type == 'simple' %}
+                                                            <!-- Simple Todo: Render as interactive checkboxes -->
+                                                            <div class="simple-todo-items">
+                                                                 {% set items = list.Todo.details.split('\n') %}
+                                                                 {% for item in items %}
+                                                                      {% if item.strip().startswith('- [') %}
+                                                                           {% set is_checked = item.strip().startswith('- [x]') %}
+                                                                           {% set item_text = item.strip()[6:] if item.strip().startswith('- [x]') else item.strip()[6:] %}
+                                                                           <div class="simple-todo-item mb-2">
+                                                                                <div class="custom-control custom-checkbox">
+                                                                                     <input type="checkbox" class="custom-control-input simple-item-checkbox" id="item-{{ list.Todo.id }}-{{ loop.index0 }}" data-todo-id="{{ list.Todo.id }}" data-item-index="{{ loop.index0 }}" {% if is_checked %}checked{% endif %}>
+                                                                                     <label class="custom-control-label {% if is_checked %}text-muted{% endif %}" for="item-{{ list.Todo.id }}-{{ loop.index0 }}" style="{% if is_checked %}text-decoration: line-through;{% endif %}">
+                                                                          {{ item_text }}
+                                                                     </label>
+                                                                </div>
+                                                           </div>
+                                                      {% endif %}
+                                                 {% endfor %}
+                                            </div>
+                                       {% else %}
+                                            <!-- Advanced Todo: Render as HTML, with fallback to plain text -->
+                                            {% if list.Todo.details_html and list.Todo.details_html.strip() %}
+                                                <p class="card-text">
+                                                     {{ list.Todo.details_html|safe }}
+                                                </p>
+                                            {% elif list.Todo.details and list.Todo.details.strip() %}
+                                                <!-- Fallback: Show plain text if HTML not available -->
+                                                <div class="card-text" style="white-space: pre-wrap; word-break: break-word;">{{ list.Todo.details|e }}</div>
+                                            {% else %}
+                                                <p class="card-text text-muted"><em>No content</em></p>
+                                            {% endif %}
+                                       {% endif %}
                                                        <footer class="blockquote-footer"> 
                                                             <i class="uil uil-schedule font-16 mr-1"></i>
                                                             {{ momentjs(list.Tracker.timestamp).calendar() }}
@@ -356,6 +416,51 @@
                showLoadingState: true
           });
           
+          // Handle simple todo item checkboxes
+          document.querySelectorAll('.simple-item-checkbox').forEach(function(checkbox) {
+               checkbox.addEventListener('change', function() {
+                    const todoId = this.dataset.todoId;
+                    const itemIndex = parseInt(this.dataset.itemIndex);
+                    const isChecked = this.checked;
+                    const label = this.parentElement.parentElement.querySelector('label');
+                    
+                    // Update UI immediately
+                    if (isChecked) {
+                         label.style.textDecoration = 'line-through';
+                         label.classList.add('text-muted');
+                    } else {
+                         label.style.textDecoration = 'none';
+                         label.classList.remove('text-muted');
+                    }
+                    
+                    // Send auto-save request to server
+                    fetch('/' + todoId + '/toggle_item', {
+                         method: 'POST',
+                         headers: {
+                              'Content-Type': 'application/json',
+                              'X-CSRFToken': '{{ csrf_token() }}'
+                         },
+                         body: JSON.stringify({
+                              item_index: itemIndex,
+                              checked: isChecked
+                         })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                         if (data.status !== 'success') {
+                              console.error('Failed to toggle item:', data);
+                              // Optionally revert the checkbox
+                              // this.checked = !isChecked;
+                         }
+                    })
+                    .catch(error => {
+                         console.error('Error toggling item:', error);
+                         // Optionally revert the checkbox
+                         // this.checked = !isChecked;
+                    });
+               });
+          });
+          
           // Reset form when modal is closed - use vanilla JS event delegation since jQuery may not be loaded yet
           // This will be enhanced by jQuery modal handlers in main.html after vendor scripts load
           document.addEventListener('hidden.bs.modal', function(event) {
@@ -413,8 +518,19 @@
                     var titleInput = document.getElementById('title-input-normal');
                     if (titleInput) titleInput.value = '';
                     
+                    // Reset simple mode items
+                    var simpleItems = document.getElementById('simple-items');
+                    if (simpleItems) simpleItems.value = '';
+                    
                     var todoIdInput = document.querySelector("input[name='todo_id']");
                     if (todoIdInput) todoIdInput.value = '';
+                    
+                    // Reset todo mode to simple
+                    var modeSimple = document.getElementById('mode-simple');
+                    if (modeSimple) {
+                         modeSimple.checked = true;
+                         modeSimple.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
                     
                     // Reset SimpleMDE editor if it exists
                     if (typeof simplemde !== 'undefined' && simplemde) {
@@ -430,7 +546,7 @@
           }); // Close modal event listener
      }); // Close the DOMContentLoaded event listener
 </script>
-{% endblock %} 
+{% endblock %}
 
 
 

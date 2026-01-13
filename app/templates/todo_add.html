@@ -34,7 +34,26 @@
 			<form class="need-validations" novalidate>
 				<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 				<input type="hidden" name="todo_id"/>
+				<input type="hidden" name="todo_mode" id="todo_mode" value="simple"/>
 				<div class="modal-body">
+					<!-- Todo Mode Selection -->
+					<div class="form-group mb-4">
+						<label style="margin-bottom: 12px; font-weight: 600;">Create:</label>
+						<div class="btn-group btn-group-toggle d-block" data-toggle="buttons" style="gap: 10px; display: flex;">
+							<label class="btn btn-outline-primary btn-sm active" for="mode-simple" style="flex: 1; text-align: center; border-radius: 6px;">
+								<input type="radio" name="todo_type" id="mode-simple" value="simple" checked autocomplete="off">
+								<i class="mdi mdi-checkbox-multiple-marked-outline mr-2"></i>Simple Todo (Checklist)
+							</label>
+							<label class="btn btn-outline-primary btn-sm" for="mode-advanced" style="flex: 1; text-align: center; border-radius: 6px;">
+								<input type="radio" name="todo_type" id="mode-advanced" value="advanced" autocomplete="off">
+								<i class="mdi mdi-pencil-multiple mr-2"></i>Advanced Todo (Rich Text)
+							</label>
+						</div>
+						<small class="form-text text-muted mt-2" id="mode-description">
+							<i class="mdi mdi-information-outline"></i> Perfect for quick checklists - easily tick items off as you complete them.
+						</small>
+					</div>
+
 					<div class="form-group position-relative mb-3">
 						<label for="title-input-normal">Thinking ....</label>
 						<input type="text" id="title-input-normal" name="title-input-normal" class="form-control form-control-sm" placeholder="Anything ??" required>
@@ -45,19 +64,181 @@
 							What do you want to do ???.
 						</div>
 					</div>
-					<div class="form-group">
+					
+					<!-- Simple Mode Content -->
+					<div id="simple-mode-content" class="form-group" style="display: block;">
+						<label for="simple-items-list">Items:</label>
+						
+						<!-- Checklist Items Container -->
+						<div id="simple-items-list" class="border rounded p-3 mb-3" style="background-color: #f8f9fa; min-height: 120px;">
+							<div id="items-container"></div>
+						</div>
+						
+						<!-- Add New Item Input -->
+						<div class="input-group input-group-sm mb-2">
+							<input type="text" class="form-control" id="new-item-input" placeholder="Add a new item..." autocomplete="off">
+							<div class="input-group-append">
+								<button class="btn btn-outline-primary" type="button" id="add-item-btn">
+									<i class="mdi mdi-plus"></i> Add
+								</button>
+							</div>
+						</div>
+						
+						<!-- Hidden textarea to store markdown data -->
+						<textarea class="form-control" id="simple-items" name="simple-items" rows="0" style="display: none;"></textarea>
+						<small class="form-text text-muted">Add items to your checklist. You can check them off as you complete them.</small>
+					</div>
+					
+					<!-- Advanced Mode Content -->
+					<div id="advanced-mode-content" class="form-group" style="display: none;">
 						<label for="details-textarea">Why ???</label>
 						<textarea class="form-control" id="details-textarea" rows="5"></textarea>
 					</div>
 					
-					<!-- Schedule/Day Selection -->
-					<div class="form-group">
-						<label>Schedule for:</label>
-						<div class="btn-group btn-group-toggle d-block" data-toggle="buttons">
-							<label class="btn btn-outline-primary btn-sm active" for="today" id="today-button">
-								<input type="radio" name="schedule_day" id="today" value="today" checked autocomplete="off"> Today
-							</label>
-							<label class="btn btn-outline-primary btn-sm" for="tomorrow" id="tomorrow-button">
+					<!-- Mode Toggle Script -->
+					<script>
+					// Make updateModeDisplay globally accessible so it can be called from todo-operations.js
+					window.updateModeDisplay = function() {
+						const modeSimple = document.getElementById('mode-simple');
+						const simpleModeContent = document.getElementById('simple-mode-content');
+						const advancedModeContent = document.getElementById('advanced-mode-content');
+						const modeDescription = document.getElementById('mode-description');
+						const todoModeInput = document.getElementById('todo_mode');
+						
+						if (modeSimple && modeSimple.checked) {
+							// Show simple mode
+							simpleModeContent.style.display = 'block';
+							advancedModeContent.style.display = 'none';
+							modeDescription.innerHTML = '<i class="mdi mdi-information-outline"></i> Perfect for quick checklists - easily tick items off as you complete them.';
+							todoModeInput.value = 'simple';
+						} else {
+							// Show advanced mode
+							simpleModeContent.style.display = 'none';
+							advancedModeContent.style.display = 'block';
+							modeDescription.innerHTML = '<i class="mdi mdi-information-outline"></i> Create rich, formatted todos with detailed descriptions and markdown support.';
+							todoModeInput.value = 'advanced';
+							
+							// Initialize SimpleMDE if needed
+							if (typeof window.simplemde !== 'undefined' && window.simplemde) {
+								window.simplemde.codemirror.refresh();
+							}
+						}
+					};
+					
+					// Make previousMode global so it can be updated from todo-operations.js
+					window.previousMode = 'simple';
+					
+					document.addEventListener('DOMContentLoaded', function() {
+						const modeSimple = document.getElementById('mode-simple');
+						const modeAdvanced = document.getElementById('mode-advanced');
+						const modeSimpleLabel = document.querySelector('label[for="mode-simple"]');
+						const modeAdvancedLabel = document.querySelector('label[for="mode-advanced"]');
+						
+						// Check if advanced mode content is compatible with simple mode (checklist format)
+						function isAdvancedContentCompatibleWithSimple() {
+							if (typeof window.simplemde !== 'undefined' && window.simplemde) {
+								const content = window.simplemde.value();
+								console.log('[MODE DEBUG] Checking advanced content compatibility:', content.substring(0, 100));
+								// Check if content is in checklist format (contains "- [" pattern)
+								const hasChecklist = /^-\s*\[[^\]]\]/m.test(content);
+								console.log('[MODE DEBUG] Has checklist format:', hasChecklist);
+								return hasChecklist;
+							}
+							return false;
+						}
+						
+						// Handle clicks on mode labels (Bootstrap button group)
+						if (modeSimpleLabel) {
+							modeSimpleLabel.addEventListener('click', function(e) {
+								console.log('[MODE DEBUG] Simple mode label clicked, previousMode:', window.previousMode);
+								if (window.previousMode === 'advanced') {
+									// Switching from advanced to simple
+									if (!isAdvancedContentCompatibleWithSimple()) {
+										// Content not compatible, prevent the switch and show warning
+										e.preventDefault();
+										e.stopPropagation();
+										console.log('[MODE DEBUG] Content not compatible, showing modal');
+										$('#mode-switch-confirm-modal').modal('show');
+										return false;
+									}
+								}
+								window.previousMode = 'simple';
+								window.updateModeDisplay();
+							});
+						}
+						
+						if (modeAdvancedLabel) {
+							modeAdvancedLabel.addEventListener('click', function() {
+								console.log('[MODE DEBUG] Advanced mode label clicked');
+								window.previousMode = 'advanced';
+								window.updateModeDisplay();
+							});
+						}
+						
+						// Also listen to radio button changes as backup
+						if (modeSimple) {
+							modeSimple.addEventListener('change', function() {
+								console.log('[MODE DEBUG] mode-simple radio change event');
+								if (!this.checked) return;
+								if (window.previousMode === 'advanced') {
+									if (!isAdvancedContentCompatibleWithSimple()) {
+										modeAdvanced.checked = true;
+										$('#mode-switch-confirm-modal').modal('show');
+										return;
+									}
+								}
+								window.previousMode = 'simple';
+								window.updateModeDisplay();
+							});
+						}
+						
+						if (modeAdvanced) {
+							modeAdvanced.addEventListener('change', function() {
+								console.log('[MODE DEBUG] mode-advanced radio change event');
+								if (this.checked) {
+									window.previousMode = 'advanced';
+									window.updateModeDisplay();
+								}
+							});
+						}
+						
+						// Handle confirmation of mode switch
+						$('#confirm-mode-switch').click(function() {
+							// User confirmed switching to simple mode
+							// Clear advanced content and switch to simple
+							if (typeof window.simplemde !== 'undefined' && window.simplemde) {
+								window.simplemde.value('');
+							}
+							// Clear the items container
+							$('#items-container').html('');
+							$('#simple-items').val('');
+							
+							// Now actually switch the mode
+							modeSimple.checked = true;
+							modeAdvanced.checked = false;
+							window.previousMode = 'simple';
+							
+							// Update visual state
+							$('label[for="mode-simple"], label[for="mode-advanced"]').removeClass('active');
+							$('label[for="mode-simple"]').addClass('active');
+							
+							window.updateModeDisplay();
+							$('#mode-switch-confirm-modal').modal('hide');
+						});
+						
+						// Set initial display
+						window.updateModeDisplay();
+					});
+				</script>
+					
+				<!-- Schedule/Day Selection -->
+				<div class="form-group">
+					<label>Schedule for:</label>
+					<div class="btn-group btn-group-toggle d-block" data-toggle="buttons">
+						<label class="btn btn-outline-primary btn-sm active" for="today" id="today-button">
+							<input type="radio" name="schedule_day" id="today" value="today" checked autocomplete="off"> Today
+						</label>
+						<label class="btn btn-outline-primary btn-sm" for="tomorrow" id="tomorrow-button">
 								<input type="radio" name="schedule_day" id="tomorrow" value="tomorrow" autocomplete="off"> Tomorrow
 							</label>
 							<label class="btn btn-outline-primary btn-sm" for="custom_day">
@@ -271,3 +452,26 @@
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
+
+<!-- Mode Switch Confirmation Modal -->
+<div id="mode-switch-confirm-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modeSwitchLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header modal-colored-header bg-warning">
+                <h5 class="modal-title" id="modeSwitchLabel">
+                    <i class="mdi mdi-alert-circle mr-2"></i>Switch to Simple Mode?
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body">
+                <p>Your current content is not compatible with Simple Mode (checklist format).</p>
+                <p>If you switch to Simple Mode, your current content will be <strong>discarded</strong> and replaced with an empty checklist.</p>
+                <p>Are you sure you want to continue?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" id="confirm-mode-switch">Yes, Switch to Simple Mode</button>
+            </div>
+        </div>
+    </div>
+</div>

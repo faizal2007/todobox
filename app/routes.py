@@ -465,6 +465,7 @@ def get_todo(todo_id):
         'title': todo.name,
         'description': todo.details,
         'description_html': todo.details_html,
+        'todo_type': todo.todo_type if hasattr(todo, 'todo_type') else 'advanced',
         'status': status,
         'created_at': todo.timestamp.isoformat(),
         'modified_at': todo.modified.isoformat(),
@@ -1943,15 +1944,39 @@ def add():
         # Input validation and sanitization
         from html import escape
         getTitle = escape((request.form.get("title") or "").strip())
-        getActivities = escape((request.form.get("activities") or "").strip())
+        
+        # Handle both 'activities' (advanced todos) and 'items' (simple todos)
+        # If 'items' is provided (simple todo), use it; otherwise use 'activities' (advanced todo)
+        # Check if explicit todo_type is provided from frontend
+        explicit_todo_type = request.form.get("todo_type", "").strip()
+        
+        if 'items' in request.form:
+            # Simple todo - items are already in markdown format (- [ ] or - [x])
+            getActivities = escape((request.form.get("items") or "").strip())
+            is_simple_mode = True
+            logging.debug(f"[SAVE DEBUG] Simple mode detected, items: {getActivities[:100]}")
+        else:
+            # Advanced todo - get raw content without escaping first
+            # Let markdown and clean() handle HTML encoding together
+            getActivities = (request.form.get("activities") or "").strip()
+            is_simple_mode = False
+            logging.debug(f"[SAVE DEBUG] Advanced mode detected, activities: {getActivities[:100]}")
+        
+        # Override mode detection if explicit todo_type is provided
+        if explicit_todo_type:
+            is_simple_mode = explicit_todo_type == 'simple'
+            logging.debug(f"[SAVE DEBUG] Explicit todo_type provided: {explicit_todo_type}, is_simple_mode: {is_simple_mode}")
         
         # Additional validation - limit input length for security
         if len(getTitle) > 255:
             getTitle = getTitle[:255]
         if len(getActivities) > 10000:
             getActivities = getActivities[:10000]
+        # For HTML generation, markdown will handle the content properly
+        # clean() will sanitize the resulting HTML
         getActivities_html = clean(markdown.markdown(getActivities, extensions=['fenced_code', 'pymdownx.tilde']), 
                                    tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+        logging.debug(f"[SAVE DEBUG] Generated HTML: {getActivities_html[:100] if getActivities_html else 'EMPTY'}")
         
         # Handle new schedule_day parameter
         schedule_day = request.form.get("schedule_day", "today")
@@ -2005,6 +2030,9 @@ def add():
         if not todo_id_param:  # Handles: None, '', empty string
             # Creating new todo
             t = Todo(name=getTitle, details=getActivities, user_id=current_user.id, details_html=getActivities_html)
+            
+            # Set todo_type based on mode
+            t.todo_type = 'simple' if is_simple_mode else 'advanced'
             
             # Override default timestamps if custom schedule is selected
             if schedule_day != "today" or getTomorrow != 0:
@@ -2219,6 +2247,16 @@ def add():
                 t.name = getTitle
                 t.details = getActivities
                 t.details_html = getActivities_html
+                logging.debug(f"[SAVE DEBUG] Updating todo {todo_id} - details: {getActivities[:100]}, details_html: {getActivities_html[:100] if getActivities_html else 'EMPTY'}")
+                
+                # Preserve or set todo_type based on current mode
+                # If this is a simple mode update, ensure todo_type is set to 'simple'
+                if is_simple_mode and (not hasattr(t, 'todo_type') or t.todo_type != 'simple'):
+                    t.todo_type = 'simple'
+                # If this is advanced mode, ensure todo_type is set to 'advanced'
+                elif not is_simple_mode and (not hasattr(t, 'todo_type') or t.todo_type != 'advanced'):
+                    t.todo_type = 'advanced'
+                
                 if schedule_day != "today" or getTomorrow == '1':
                     # For tomorrow or custom date, use target_date
                     t.modified = target_date
@@ -2252,6 +2290,205 @@ def add():
 
 
     return redirect(url_for('list', id='today'))
+
+@app.route('/add_simple', methods=['POST'])
+@login_required
+def add_simple():
+    """Create a new simple todo (checklist format)"""
+    if request.method == "POST":
+        from html import escape
+        
+        # Get title and initial items
+        getTitle = escape((request.form.get("title") or "").strip())
+        initial_items = (request.form.get("items") or "").strip()
+        
+        # Validate title
+        if len(getTitle) > 255:
+            getTitle = getTitle[:255]
+        
+        if not getTitle:
+            return jsonify({
+                'status': 'failed',
+                'msg': 'Title is required.'
+            }), 400
+        
+        # Convert initial items to markdown checklist format
+        # Initial items should be one per line, and we create unchecked checkboxes
+        details = ''
+        if initial_items:
+            items = [item.strip() for item in initial_items.split('\n') if item.strip()]
+            details = '\n'.join([f'- [ ] {escape(item)}' for item in items])
+        
+        # Handle schedule_day parameter
+        schedule_day = request.form.get("schedule_day", "today")
+        custom_date = request.form.get("custom_date", "")
+        
+        # Calculate target date based on schedule selection
+        if schedule_day == "tomorrow":
+            target_date = datetime.now() + timedelta(days=1)
+        elif schedule_day == "custom" and custom_date:
+            try:
+                parsed_date = datetime.strptime(custom_date, "%Y-%m-%d").date()
+                current_time = datetime.now().time()
+                target_date = datetime.combine(parsed_date, current_time)
+            except ValueError:
+                target_date = datetime.now()
+        else:
+            target_date = datetime.now()
+        
+        # Create the todo as simple type
+        t = Todo(
+            name=getTitle,
+            details=details,
+            details_html=clean(markdown.markdown(details), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES),
+            user_id=current_user.id,
+            todo_type='simple'  # Mark as simple type
+        )
+        
+        # Handle reminder setup
+        reminder_enabled = request.form.get("reminder_enabled") == "true"
+        reminder_type = request.form.get("reminder_type")
+        reminder_datetime = request.form.get("reminder_datetime")
+        reminder_before_minutes = request.form.get("reminder_before_minutes")
+        reminder_before_unit = request.form.get("reminder_before_unit")
+        
+        db.session.add(t)  # type: ignore[attr-defined]
+        db.session.flush()  # type: ignore[attr-defined]
+        
+        # Set timestamps based on schedule
+        if schedule_day != "today":
+            t.timestamp = target_date
+            t.modified = target_date
+        
+        # Handle reminder setup
+        if reminder_enabled and reminder_type:
+            if reminder_type == "custom" and reminder_datetime:
+                try:
+                    from app.timezone_utils import convert_from_user_timezone
+                    reminder_dt = datetime.fromisoformat(reminder_datetime)
+                    reminder_dt_utc = convert_from_user_timezone(reminder_dt, current_user.timezone)
+                    t.reminder_time = reminder_dt_utc
+                    t.reminder_enabled = True
+                    t.reminder_sent = False
+                    t.reminder_notification_count = 0
+                    t.reminder_first_notification_time = None
+                except ValueError:
+                    pass
+            elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
+                try:
+                    minutes = int(reminder_before_minutes)
+                    if reminder_before_unit == "minutes":
+                        reminder_dt = target_date - timedelta(minutes=minutes)
+                    elif reminder_before_unit == "hours":
+                        reminder_dt = target_date - timedelta(hours=minutes)
+                    elif reminder_before_unit == "days":
+                        reminder_dt = target_date - timedelta(days=minutes)
+                    else:
+                        reminder_dt = target_date - timedelta(minutes=minutes)
+                    
+                    t.reminder_time = reminder_dt
+                    t.reminder_enabled = True
+                    t.reminder_sent = False
+                    t.reminder_notification_count = 0
+                    t.reminder_first_notification_time = None
+                except (ValueError, TypeError):
+                    pass
+        
+        db.session.commit()  # type: ignore[attr-defined]
+        
+        # Add tracker entry with NEW status
+        Tracker.add(t.id, 5, target_date)  # Status 5 = new
+        
+        return jsonify({
+            'status': 'success',
+            'id': t.id,
+            'message': 'Simple todo created successfully.',
+            'exitedKIV': False
+        }), 201
+    
+    return redirect(url_for('list', id='today'))
+
+@app.route('/<path:todo_id>/toggle_item', methods=['POST'])
+@login_required
+def toggle_item(todo_id):
+    """Toggle a checklist item in a simple todo"""
+    from html import escape
+    
+    # Get the todo - verify it belongs to current user
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return jsonify({
+            'status': 'error',
+            'message': 'Todo not found'
+        }), 404
+    
+    # Only allow toggling on simple todos
+    if todo.todo_type != 'simple':
+        return jsonify({
+            'status': 'error',
+            'message': 'Item toggle only available for simple todos'
+        }), 400
+    
+    # Get the item index from the request
+    try:
+        data = request.get_json()
+        item_index = int(data.get('item_index', -1))
+        checked = data.get('checked', False)
+        
+        if item_index < 0:
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid item index'
+            }), 400
+    except (ValueError, TypeError):
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid request data'
+        }), 400
+    
+    # Parse the current checklist items
+    lines = (todo.details or '').split('\n')
+    
+    if item_index >= len(lines):
+        return jsonify({
+            'status': 'error',
+            'message': 'Item index out of range'
+        }), 400
+    
+    # Update the specific item
+    line = lines[item_index]
+    
+    # Parse the line to extract checkbox and text
+    if line.strip().startswith('- [ ]'):
+        # Uncheck → Check
+        if checked:
+            lines[item_index] = line.replace('- [ ]', '- [x]', 1)
+    elif line.strip().startswith('- [x]'):
+        # Check → Uncheck
+        if not checked:
+            lines[item_index] = line.replace('- [x]', '- [ ]', 1)
+    else:
+        # Invalid format
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid checklist format'
+        }), 400
+    
+    # Update the todo
+    todo.details = '\n'.join(lines)
+    todo.details_html = clean(markdown.markdown(todo.details), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+    todo.modified = datetime.now()
+    
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    # Add tracker entry for the modification
+    Tracker.add(todo.id, 5, datetime.now())  # Status 5 = new (activity)
+    
+    return jsonify({
+        'status': 'success',
+        'message': 'Item toggled successfully.',
+        'checked': checked
+    }), 200
 
 @app.route('/<path:id>/todo', methods=['POST'])
 @login_required
@@ -2309,6 +2546,7 @@ def getTodo(id):
             'id': t.id,
             'title': t.name,
             'activities': t.details,
+            'todo_type': t.todo_type if hasattr(t, 'todo_type') else 'advanced',
             'modified': t.modified,
             'button': button,
             'reminder_enabled': t.reminder_enabled or False,

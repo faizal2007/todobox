@@ -279,6 +279,7 @@ class Todo(db.Model): # type: ignore[attr-defined]
     reminder_sent = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Whether reminder has been sent
     reminder_notification_count = db.Column(db.Integer, default=0) # type: ignore[attr-defined]  # Count of notifications sent
     reminder_first_notification_time = db.Column(db.DateTime, nullable=True) # type: ignore[attr-defined]  # Time of first notification
+    todo_type = db.Column(db.String(20), default='advanced') # type: ignore[attr-defined]  # 'simple' or 'advanced' - default is advanced for backward compatibility
     user_id = db.Column(db.Integer, db.ForeignKey('user.id')) # type: ignore[attr-defined]
     tracker_entries = db.relationship('Tracker', backref='todo', lazy='dynamic') # type: ignore[attr-defined]
 
