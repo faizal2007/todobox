@@ -13,7 +13,7 @@ from app.email_service import (
 )
 from urllib.parse import urlparse as url_parse
 from datetime import datetime, date, timedelta
-from sqlalchemy import asc, desc, or_
+from sqlalchemy import asc, desc, or_, func
 from functools import wraps
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
