@@ -247,7 +247,12 @@ var TodoOperations = (function() {
             if (todoMode === 'simple') {
                 simpleItems = $('#simple-items').val();
             } else {
-                activities = simplemde.value();
+                // Only access simplemde in advanced mode
+                if (typeof window.simplemde !== 'undefined' && window.simplemde) {
+                    activities = window.simplemde.value();
+                } else {
+                    activities = $('#details-textarea').val();
+                }
             }
             
             let todo_id = $("input[name='todo_id']").val();
@@ -289,8 +294,11 @@ var TodoOperations = (function() {
                     postData.activities = activities;
                 }
                 
+                console.log('Submitting to endpoint:', endpoint, 'with mode:', todoMode, 'data:', postData);
+                
                 $.post(endpoint, postData,
                 function(data) {
+                    console.log('Success response:', data);
                     // Determine redirect URL
                     let targetUrl;
                     
@@ -330,12 +338,27 @@ var TodoOperations = (function() {
                             targetUrl = redirectUrl;
                         }
                     }
+                    console.log('Redirecting to:', targetUrl);
                     window.location.href = targetUrl;
-                }).fail(function() {
+                }).fail(function(xhr, status, error) {
+                    console.error('Error submitting form:', status, error, xhr);
+                    console.error('Response:', xhr.responseText);
                     // Hide loading state on error
                     $icon.show();
                     $loading.hide();
                     $button.prop('disabled', false);
+                    
+                    // Show error message if available
+                    try {
+                        let response = JSON.parse(xhr.responseText);
+                        if (response.msg) {
+                            alert('Error: ' + response.msg);
+                        } else {
+                            alert('Error creating todo. Please try again.');
+                        }
+                    } catch (e) {
+                        alert('Error creating todo. Please try again.');
+                    }
                 });
             } else {
                 $('#title-input-normal').last().addClass('is-invalid');

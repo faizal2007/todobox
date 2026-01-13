@@ -2281,6 +2281,23 @@ def add_simple():
             items = [item.strip() for item in initial_items.split('\n') if item.strip()]
             details = '\n'.join([f'- [ ] {escape(item)}' for item in items])
         
+        # Handle schedule_day parameter
+        schedule_day = request.form.get("schedule_day", "today")
+        custom_date = request.form.get("custom_date", "")
+        
+        # Calculate target date based on schedule selection
+        if schedule_day == "tomorrow":
+            target_date = datetime.now() + timedelta(days=1)
+        elif schedule_day == "custom" and custom_date:
+            try:
+                parsed_date = datetime.strptime(custom_date, "%Y-%m-%d").date()
+                current_time = datetime.now().time()
+                target_date = datetime.combine(parsed_date, current_time)
+            except ValueError:
+                target_date = datetime.now()
+        else:
+            target_date = datetime.now()
+        
         # Create the todo as simple type
         t = Todo(
             name=getTitle,
@@ -2290,16 +2307,65 @@ def add_simple():
             todo_type='simple'  # Mark as simple type
         )
         
+        # Handle reminder setup
+        reminder_enabled = request.form.get("reminder_enabled") == "true"
+        reminder_type = request.form.get("reminder_type")
+        reminder_datetime = request.form.get("reminder_datetime")
+        reminder_before_minutes = request.form.get("reminder_before_minutes")
+        reminder_before_unit = request.form.get("reminder_before_unit")
+        
         db.session.add(t)  # type: ignore[attr-defined]
+        db.session.flush()  # type: ignore[attr-defined]
+        
+        # Set timestamps based on schedule
+        if schedule_day != "today":
+            t.timestamp = target_date
+            t.modified = target_date
+        
+        # Handle reminder setup
+        if reminder_enabled and reminder_type:
+            if reminder_type == "custom" and reminder_datetime:
+                try:
+                    from app.timezone_utils import convert_from_user_timezone
+                    reminder_dt = datetime.fromisoformat(reminder_datetime)
+                    reminder_dt_utc = convert_from_user_timezone(reminder_dt, current_user.timezone)
+                    t.reminder_time = reminder_dt_utc
+                    t.reminder_enabled = True
+                    t.reminder_sent = False
+                    t.reminder_notification_count = 0
+                    t.reminder_first_notification_time = None
+                except ValueError:
+                    pass
+            elif reminder_type == "before" and reminder_before_minutes and reminder_before_unit:
+                try:
+                    minutes = int(reminder_before_minutes)
+                    if reminder_before_unit == "minutes":
+                        reminder_dt = target_date - timedelta(minutes=minutes)
+                    elif reminder_before_unit == "hours":
+                        reminder_dt = target_date - timedelta(hours=minutes)
+                    elif reminder_before_unit == "days":
+                        reminder_dt = target_date - timedelta(days=minutes)
+                    else:
+                        reminder_dt = target_date - timedelta(minutes=minutes)
+                    
+                    t.reminder_time = reminder_dt
+                    t.reminder_enabled = True
+                    t.reminder_sent = False
+                    t.reminder_notification_count = 0
+                    t.reminder_first_notification_time = None
+                except (ValueError, TypeError):
+                    pass
+        
         db.session.commit()  # type: ignore[attr-defined]
         
         # Add tracker entry with NEW status
-        Tracker.add(t.id, 5, t.timestamp)  # Status 5 = new
+        Tracker.add(t.id, 5, target_date)  # Status 5 = new
         
         return jsonify({
             'status': 'success',
             'id': t.id,
-            'message': 'Simple todo created successfully.'
+            'message': 'Simple todo created successfully.',
+            'exitedKIV': False
         }), 201
     
     return redirect(url_for('list', id='today'))

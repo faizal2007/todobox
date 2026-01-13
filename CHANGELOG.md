@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Database migration to safely add todo_type column to todo table
   - Type distinction allows future UI/UX improvements for different todo workflows
   - Full backward compatibility: existing todos automatically default to 'advanced' type
+  - **UI for Simple Todo Mode**:
+    - Added Simple vs Advanced mode toggle buttons in create todo modal
+    - Simple mode (default) shows text input for checklist items
+    - Advanced mode shows SimpleMDE editor with rich formatting
+    - Dynamic form switching based on selected mode
+    - Form automatically resets to simple mode when modal closes
+    - Proper routing: submits to `/add_simple` for simple todos, `/add` for advanced
+    - Descriptive text updates based on selected mode to guide user choice
 
 ### Fixed
 - **Achievements Route Database Errors**: Fixed 500 Internal Server errors on production
