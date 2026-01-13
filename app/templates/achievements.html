@@ -145,6 +145,41 @@
             padding: 15px;
         }
     }
+    
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 30px;
+        padding: 20px 0;
+    }
+    
+    .pagination-container a, .pagination-container span {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #667eea;
+        transition: all 0.3s ease;
+    }
+    
+    .pagination-container a:hover {
+        background: #667eea;
+        color: white;
+    }
+    
+    .pagination-container .current {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    
+    .pagination-container .disabled {
+        color: #bbb;
+        cursor: not-allowed;
+        border-color: #eee;
+    }
 </style>
 {% endblock %}
 
@@ -222,6 +257,20 @@
                             {% endfor %}
                         </div>
                     </div>
+                    
+                    <!-- Infinite Scroll Loader -->
+                    <div id="infinite-scroll-loader" style="display: none; text-align: center; padding: 30px;">
+                        <div style="display: inline-block;">
+                            <i class="mdi mdi-loading mdi-spin" style="font-size: 32px; color: #667eea;"></i>
+                            <p style="color: #667eea; margin-top: 10px;">Loading more achievements...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- End of list message -->
+                    <div id="end-of-list-message" style="display: none; text-align: center; padding: 30px; color: #7f8c8d;">
+                        <i class="mdi mdi-check-circle-outline" style="font-size: 32px; margin-bottom: 10px;"></i>
+                        <p>No more achievements to load</p>
+                    </div>
                 </div>
                 {% else %}
                 <div class="empty-state">
@@ -241,16 +290,91 @@
 
 {% block extra_script_footer %}
 <script>
-    // Add any custom scripts for achievements page here
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add smooth scroll behavior to achievements
-        const achievementItems = document.querySelectorAll('.achievement-item');
-        achievementItems.forEach((item, index) => {
-            item.style.animation = `slideIn 0.5s ease ${index * 0.1}s forwards`;
-        });
+    // Infinite scroll configuration
+    let currentOffset = 20;  // First page loads 20, so start next batch at offset 20
+    let isLoading = false;
+    let hasMore = true;
+    const batchSize = 20;
+    
+    // Get loader elements
+    const loaderEl = document.getElementById('infinite-scroll-loader');
+    const endMessageEl = document.getElementById('end-of-list-message');
+    const achievementsContainer = document.querySelector('.achievements-list');
+    
+    // Detect when user scrolls to bottom
+    window.addEventListener('scroll', function() {
+        // Calculate if we're near the bottom
+        const scrollPosition = window.innerHeight + window.scrollY;
+        const documentHeight = document.documentElement.scrollHeight;
+        const scrollThreshold = documentHeight - 500;  // Load when 500px from bottom
+        
+        // Load more if: user scrolled near bottom, not already loading, and more exists
+        if (scrollPosition >= scrollThreshold && !isLoading && hasMore) {
+            loadMoreAchievements();
+        }
     });
     
-    // Add animation keyframes
+    function loadMoreAchievements() {
+        if (isLoading || !hasMore) return;
+        
+        isLoading = true;
+        loaderEl.style.display = 'block';
+        
+        // Fetch next batch
+        fetch(`/api/achievements/batch?offset=${currentOffset}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                // Create HTML for new items
+                const itemsHtml = data.items.map((item, index) => `
+                    <div class="achievement-item" style="animation: slideIn 0.5s ease ${index * 0.1}s forwards;">
+                        <div class="achievement-badge">
+                            <i class="mdi mdi-star"></i>
+                        </div>
+                        <div class="achievement-details">
+                            <h5 class="achievement-title">${escapeHtml(item.name)}</h5>
+                            ${item.details ? `<div class="achievement-text">${escapeHtml(item.details)}</div>` : ''}
+                            <p class="achievement-date mb-0">
+                                <i class="mdi mdi-calendar-check"></i>
+                                Completed ${item.completed_from_now}
+                            </p>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Append to container
+                achievementsContainer.insertAdjacentHTML('beforeend', itemsHtml);
+                
+                // Update offset for next batch
+                currentOffset = data.offset;
+                hasMore = data.has_more;
+                
+                // Show end message if no more items
+                if (!hasMore) {
+                    loaderEl.style.display = 'none';
+                    endMessageEl.style.display = 'block';
+                }
+                
+                isLoading = false;
+                loaderEl.style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Error loading achievements:', error);
+                loaderEl.style.display = 'none';
+                isLoading = false;
+            });
+    }
+    
+    // Utility function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Add slide-in animation
     const style = document.createElement('style');
     style.textContent = `
         @keyframes slideIn {
