@@ -121,10 +121,17 @@
                                                  {% endfor %}
                                             </div>
                                        {% else %}
-                                            <!-- Advanced Todo: Render as HTML -->
-                                            <p class="card-text">
-                                                 {{ list.Todo.details_html|safe }}
-                                            </p>
+                                            <!-- Advanced Todo: Render as HTML, with fallback to plain text -->
+                                            {% if list.Todo.details_html and list.Todo.details_html.strip() %}
+                                                <p class="card-text">
+                                                     {{ list.Todo.details_html|safe }}
+                                                </p>
+                                            {% elif list.Todo.details and list.Todo.details.strip() %}
+                                                <!-- Fallback: Show plain text if HTML not available -->
+                                                <div class="card-text" style="white-space: pre-wrap; word-break: break-word;">{{ list.Todo.details|e }}</div>
+                                            {% else %}
+                                                <p class="card-text text-muted"><em>No content</em></p>
+                                            {% endif %}
                                        {% endif %}
                                                        <footer class="blockquote-footer"> 
                                                             <i class="uil uil-schedule font-16 mr-1"></i>

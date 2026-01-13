@@ -465,6 +465,7 @@ def get_todo(todo_id):
         'title': todo.name,
         'description': todo.details,
         'description_html': todo.details_html,
+        'todo_type': todo.todo_type if hasattr(todo, 'todo_type') else 'advanced',
         'status': status,
         'created_at': todo.timestamp.isoformat(),
         'modified_at': todo.modified.isoformat(),
@@ -1943,15 +1944,39 @@ def add():
         # Input validation and sanitization
         from html import escape
         getTitle = escape((request.form.get("title") or "").strip())
-        getActivities = escape((request.form.get("activities") or "").strip())
+        
+        # Handle both 'activities' (advanced todos) and 'items' (simple todos)
+        # If 'items' is provided (simple todo), use it; otherwise use 'activities' (advanced todo)
+        # Check if explicit todo_type is provided from frontend
+        explicit_todo_type = request.form.get("todo_type", "").strip()
+        
+        if 'items' in request.form:
+            # Simple todo - items are already in markdown format (- [ ] or - [x])
+            getActivities = escape((request.form.get("items") or "").strip())
+            is_simple_mode = True
+            logging.debug(f"[SAVE DEBUG] Simple mode detected, items: {getActivities[:100]}")
+        else:
+            # Advanced todo - get raw content without escaping first
+            # Let markdown and clean() handle HTML encoding together
+            getActivities = (request.form.get("activities") or "").strip()
+            is_simple_mode = False
+            logging.debug(f"[SAVE DEBUG] Advanced mode detected, activities: {getActivities[:100]}")
+        
+        # Override mode detection if explicit todo_type is provided
+        if explicit_todo_type:
+            is_simple_mode = explicit_todo_type == 'simple'
+            logging.debug(f"[SAVE DEBUG] Explicit todo_type provided: {explicit_todo_type}, is_simple_mode: {is_simple_mode}")
         
         # Additional validation - limit input length for security
         if len(getTitle) > 255:
             getTitle = getTitle[:255]
         if len(getActivities) > 10000:
             getActivities = getActivities[:10000]
+        # For HTML generation, markdown will handle the content properly
+        # clean() will sanitize the resulting HTML
         getActivities_html = clean(markdown.markdown(getActivities, extensions=['fenced_code', 'pymdownx.tilde']), 
                                    tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+        logging.debug(f"[SAVE DEBUG] Generated HTML: {getActivities_html[:100] if getActivities_html else 'EMPTY'}")
         
         # Handle new schedule_day parameter
         schedule_day = request.form.get("schedule_day", "today")
@@ -2005,6 +2030,9 @@ def add():
         if not todo_id_param:  # Handles: None, '', empty string
             # Creating new todo
             t = Todo(name=getTitle, details=getActivities, user_id=current_user.id, details_html=getActivities_html)
+            
+            # Set todo_type based on mode
+            t.todo_type = 'simple' if is_simple_mode else 'advanced'
             
             # Override default timestamps if custom schedule is selected
             if schedule_day != "today" or getTomorrow != 0:
@@ -2219,6 +2247,16 @@ def add():
                 t.name = getTitle
                 t.details = getActivities
                 t.details_html = getActivities_html
+                logging.debug(f"[SAVE DEBUG] Updating todo {todo_id} - details: {getActivities[:100]}, details_html: {getActivities_html[:100] if getActivities_html else 'EMPTY'}")
+                
+                # Preserve or set todo_type based on current mode
+                # If this is a simple mode update, ensure todo_type is set to 'simple'
+                if is_simple_mode and (not hasattr(t, 'todo_type') or t.todo_type != 'simple'):
+                    t.todo_type = 'simple'
+                # If this is advanced mode, ensure todo_type is set to 'advanced'
+                elif not is_simple_mode and (not hasattr(t, 'todo_type') or t.todo_type != 'advanced'):
+                    t.todo_type = 'advanced'
+                
                 if schedule_day != "today" or getTomorrow == '1':
                     # For tomorrow or custom date, use target_date
                     t.modified = target_date
@@ -2508,6 +2546,7 @@ def getTodo(id):
             'id': t.id,
             'title': t.name,
             'activities': t.details,
+            'todo_type': t.todo_type if hasattr(t, 'todo_type') else 'advanced',
             'modified': t.modified,
             'button': button,
             'reminder_enabled': t.reminder_enabled or False,

@@ -26,6 +26,104 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Form automatically resets to simple mode when modal closes
     - Proper routing: submits to `/add_simple` for simple todos, `/add` for advanced
     - Descriptive text updates based on selected mode to guide user choice
+  - **Interactive Checklist Display**:
+    - Renders markdown checklist items as interactive checkboxes
+    - Strikethrough styling for completed items
+    - Auto-save on checkbox toggle via `/toggle_item` endpoint
+  - **Edit Simple Todo Workflow**:
+    - `getTodo` endpoint now returns `todo_type` field to identify todo type
+    - Form automatically switches to correct mode (simple/advanced) when editing
+    - Simple todos populate checklist items in textarea instead of editor
+    - Markdown format properly parsed to extract item text for editing
+    - Full edit→save cycle works for both simple and advanced todos
+
+### Fixed
+- **Edit Form Loading for Simple Todos**: Fixed issue where simple todo items weren't displaying when editing
+  - Both GET API (`/api/todo/<id>`) and POST API (`/<id>/todo`) endpoints now return `todo_type` field
+  - Frontend detects todo type from response and switches form mode automatically
+  - SimpleMDE editor is always populated with markdown content (allows mode switching without data loss)
+  - Simple mode: Items parsed from markdown and populated in textarea for easy editing
+  - Advanced mode: Full markdown content available in SimpleMDE editor
+  - Seamless mode switching: User can switch between simple/advanced without losing content
+  - Form restores correct mode based on todo type, maintaining consistency
+  - Both simple and advanced todos can now be edited seamlessly with full feature support:
+    - Checkboxes support auto-save on toggle (no page refresh needed)
+- **Improved Simple Todo Edit UI**: Changed simple todo editing from markdown text to visual checklist interface
+  - Replaced textarea with interactive checklist display showing actual checkboxes
+  - Users can check/uncheck items directly in the edit form with visual feedback
+  - Added "Add" button to easily add new items during editing
+  - Items show with strikethrough styling when marked as completed
+  - Delete button on each item for easy removal
+  - Enter key support: press Enter in input field to add new item
+  - Cleaner UI without exposed markdown syntax (markdown stored internally in hidden field)
+    - Completed items show strikethrough text styling
+    - Reminders and scheduling work with simple todos
+    - Applied across all todo list pages (today, tomorrow, undone, KIV)
+    - Immediate UI feedback with background auto-save
+- **Simple Todo Save Issue**: Fixed bug where simple todos become empty after editing and saving
+  - Root cause: `/add` route was expecting `activities` field for advanced todos but receiving `items` field for simple todos
+## [Unreleased]
+
+### Added
+- **Mode Switch Confirmation for Advanced to Simple Conversion**: New safety feature that prevents accidental data loss
+  - When user tries to switch from Advanced mode to Simple mode with incompatible content
+  - Modal dialog displays warning: "Your current content is not compatible with Simple Mode"
+  - Explains that content will be discarded and replaced with empty checklist
+  - User must explicitly confirm to proceed with the switch
+  - Switching from Simple to Advanced mode is always allowed (no confirmation needed)
+  - Protects user from accidentally losing formatted content or plain text when switching to checklist-only mode
+  - After confirmation, advances content is cleared and simple mode is activated
+
+## Recent Fixes
+
+- **Simple Todo Save Data Loss**: Fixed bug where saving simple todos resulted in empty todos
+  - Solution: Updated `/add` route to detect and handle both `items` (simple todos) and `activities` (advanced todos)
+  - Form now correctly preserves todo_type when updating simple todos
+  - All changes (title, items, schedule, reminders) now properly saved for simple todos
+- **Create Todo Form Shows Previous Data**: Fixed bug where creating a new todo after saving showed previous todo's data
+  - Root cause: Modal form was not being reset when closed after saving
+  - Solution: Added hidden.bs.modal event handler to reset all form fields when modal closes
+  - Now properly clears: title, items, schedule, reminders, checklist display, SimpleMDE editor
+  - Form resets to default state (Simple mode, Today schedule, no reminders) for fresh todo creation
+- **Edit Mode Not Auto-Detecting**: Fixed bug where clicking edit didn't automatically switch to correct todo mode
+  - Root cause: Mode toggle change event not firing reliably when both radio buttons updated simultaneously
+  - Solution: Explicitly set both radio button states before triggering change on the correct one
+  - Now properly detects and switches to Simple or Advanced mode based on todo_type from server
+  - Works consistently for both GET API and POST fallback endpoints
+- **Mode Switching Affected All Todos**: Fixed bug where switching mode for one todo's editing affected the mode display for all todos
+  - Root cause 1: Mode toggle button visual state (.active class) not being updated when switching between different todos
+  - Root cause 2: updateModeDisplay function not being called to refresh the form display after mode change
+  - Solution: Made updateModeDisplay function globally accessible (window.updateModeDisplay) and explicitly call it after setting radio button states
+  - Now ensures both button visual state AND form content area visibility update immediately when editing each todo
+  - Works correctly when manually switching modes and then editing a different todo with a different type
+- **Advanced Mode Button Active But Data Not Loading**: Fixed bug where advanced mode button showed as active but editor was empty
+  - Root cause 1: Missing closing </script> tag in todo_add.html causing JavaScript execution to break
+  - Root cause 2: SimpleMDE content not being set or refreshed when switching to advanced mode
+  - Solution: Fixed HTML syntax error, ensured SimpleMDE value is set, and added CodeMirror refresh with small delay
+  - Now properly displays loaded content in the advanced mode rich text editor when editing advanced todos
+- **Plain Text Content Not Showing in Advanced Mode**: Fixed bug where advanced mode todos with non-markdown plain text content were not displaying
+  - Root cause: Advanced mode content was being escaped before markdown conversion, preventing proper HTML generation for plain text
+  - Solution: Removed escaping for advanced mode content, allowing markdown processor to handle plain text correctly and generate proper HTML
+  - Restriction to escape content only applies to simple mode (checklist format), not advanced mode
+  - Advanced mode now properly displays any content type: plain text, markdown, formatted text, lists, etc.
+- **Advanced Mode Content Not Displaying After Save**: Fixed bug where editing and saving advanced mode todos resulted in content not showing in the list view
+  - Root causes: Multiple issues combined to prevent display: empty todo_type field, missing HTML generation, and no fallback display
+  - Solution 1: Ensure todo_type is always set to 'advanced' when creating or updating advanced todos, and 'simple' for simple todos
+  - Solution 2: Added fallback display logic in list.html that shows plain text content when details_html is empty
+  - Solution 3: Added comprehensive debug logging to track content flow from frontend submission through backend storage
+  - Now displays content reliably: uses generated HTML if available, falls back to plain text if HTML not available, and always shows something
+- **Advanced Mode Content Lost When Switching Modes**: Fixed bug where editing a simple todo and switching to advanced mode resulted in content not being saved with correct type
+  - Root cause: Frontend mode detection based on form fields, but switching modes manually didn't explicitly send todo_type to backend
+  - Solution: Explicitly include `todo_type` in form submission so backend knows exact mode, overriding field-based detection
+  - Frontend now always sends: todo_type='simple' or todo_type='advanced' based on current mode selection
+  - Backend uses explicit todo_type if provided, ensuring correct mode is set regardless of field contents
+  - Resolves issue where manually switching modes before saving would lose the mode information
+- **Doubled Checkboxes in Advanced Mode**: Fixed bug where switching to advanced mode showed doubled checkbox prefixes
+  - Root cause: Item text could contain checkbox format from malformed markdown, causing "- [ ] - [ ] item" format
+  - Solution: Improved parseMarkdownItems to handle multiple checkbox patterns (e.g., "- [ ] - [ ] item" → "item")
+  - Added text cleaning in updateMarkdownStorage to remove any existing checkbox patterns before reconstruction
+  - Ensures clean checklist items whether created fresh or loaded from database
+  - Both simple and advanced modes now display correctly without malformed markdown
 
 ### Fixed
 - **Achievements Route Database Errors**: Fixed 500 Internal Server errors on production

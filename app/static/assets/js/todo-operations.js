@@ -83,7 +83,83 @@ var TodoOperations = (function() {
                     $('#info-header-modal').modal('show');
                     $('#title-input-normal').val(data['title'] || '');
                     $("input[name='todo_id']").val(data['id']);
+                    
+                    // Always populate SimpleMDE with the full description (markdown content)
+                    // This ensures both simple and advanced content are available if user switches modes
                     simplemde.value(data['description'] || '');
+                    
+                    // Check if this is a simple or advanced todo
+                    var todoType = data['todo_type'] || 'advanced';
+                    console.log('Loading todo with type (GET API):', todoType);
+                    
+                    // Set the correct mode and populate content based on type
+                    if (todoType === 'simple') {
+                        // Switch to simple mode
+                        var modeSimpleRadio = $('#mode-simple');
+                        var modeAdvancedRadio = $('#mode-advanced');
+                        
+                        // Set checked state
+                        modeSimpleRadio.prop('checked', true);
+                        modeAdvancedRadio.prop('checked', false);
+                        
+                        // Update visual button state for Bootstrap button group
+                        $('label[for="mode-simple"], label[for="mode-advanced"]').removeClass('active');
+                        $('label[for="mode-simple"]').addClass('active');
+                        
+                        // Update previousMode tracking
+                        window.previousMode = 'simple';
+                        console.log('[EDIT DEBUG] Set previousMode to simple');
+                        
+                        // Explicitly call updateModeDisplay to ensure the display updates immediately
+                        if (typeof window.updateModeDisplay === 'function') {
+                            window.updateModeDisplay();
+                        }
+                        modeSimpleRadio.trigger('change');
+                        
+                        // Parse and render checklist items with visual checkboxes
+                        var items = data['description'] || '';
+                        var parsedItems = parseMarkdownItems(items);
+                        renderChecklist(parsedItems);
+                        
+                        // Store markdown in hidden textarea for form submission
+                        $('#simple-items').val(items);
+                        console.log('Loaded simple todo items (GET API):', parsedItems);
+                    } else {
+                        // Switch to advanced mode
+                        var modeSimpleRadio = $('#mode-simple');
+                        var modeAdvancedRadio = $('#mode-advanced');
+                        
+                        // Set checked state
+                        modeAdvancedRadio.prop('checked', true);
+                        modeSimpleRadio.prop('checked', false);
+                        
+                        // Update visual button state for Bootstrap button group
+                        $('label[for="mode-simple"], label[for="mode-advanced"]').removeClass('active');
+                        $('label[for="mode-advanced"]').addClass('active');
+                        
+                        // Update previousMode tracking
+                        window.previousMode = 'advanced';
+                        console.log('[EDIT DEBUG] Set previousMode to advanced');
+                        
+                        // Explicitly call updateModeDisplay to ensure the display updates immediately
+                        if (typeof window.updateModeDisplay === 'function') {
+                            window.updateModeDisplay();
+                        }
+                        
+                        // Ensure SimpleMDE has the correct value and is refreshed
+                        var content = data['description'] || '';
+                        simplemde.value(content);
+                        
+                        // Refresh CodeMirror to ensure it displays correctly
+                        setTimeout(function() {
+                            if (simplemde && simplemde.codemirror) {
+                                simplemde.codemirror.refresh();
+                            }
+                        }, 100);
+                        
+                        modeAdvancedRadio.trigger('change');
+                        console.log('Loaded advanced todo (GET API)');
+                    }
                     
                     // Set schedule and ensure proper active state
                     var schedule = data['schedule'] || 'today';
@@ -185,7 +261,83 @@ var TodoOperations = (function() {
                         $('#info-header-modal').modal('show');
                         $('#title-input-normal').val(data['title'] || '');
                         $("input[name='todo_id']").val(data['id']);
+                        
+                        // Always populate SimpleMDE with the full content (markdown)
+                        // This ensures both simple and advanced content are available if user switches modes
                         simplemde.value(data['activities'] || '');
+                        
+                        // Check if this is a simple or advanced todo
+                        var todoType = data['todo_type'] || 'advanced';
+                        console.log('Loading todo with type (POST fallback):', todoType);
+                        
+                        // Set the correct mode
+                        if (todoType === 'simple') {
+                            // Switch to simple mode
+                            var modeSimpleRadio = $('#mode-simple');
+                            var modeAdvancedRadio = $('#mode-advanced');
+                            
+                            // Set checked state
+                            modeSimpleRadio.prop('checked', true);
+                            modeAdvancedRadio.prop('checked', false);
+                            
+                            // Update visual button state for Bootstrap button group
+                            $('label[for="mode-simple"], label[for="mode-advanced"]').removeClass('active');
+                            $('label[for="mode-simple"]').addClass('active');
+                            
+                            // Update previousMode tracking
+                            window.previousMode = 'simple';
+                            console.log('[EDIT DEBUG] Set previousMode to simple (POST fallback)');
+                            
+                            // Explicitly call updateModeDisplay to ensure the display updates immediately
+                            if (typeof window.updateModeDisplay === 'function') {
+                                window.updateModeDisplay();
+                            }
+                            modeSimpleRadio.trigger('change');
+                            
+                            // Parse and render checklist items with visual checkboxes
+                            var items = data['activities'] || '';
+                            var parsedItems = parseMarkdownItems(items);
+                            renderChecklist(parsedItems);
+                            
+                            // Store markdown in hidden textarea for form submission
+                            $('#simple-items').val(items);
+                            console.log('Loaded simple todo items (POST fallback):', parsedItems);
+                        } else {
+                            // Switch to advanced mode
+                            var modeSimpleRadio = $('#mode-simple');
+                            var modeAdvancedRadio = $('#mode-advanced');
+                            
+                            // Set checked state
+                            modeAdvancedRadio.prop('checked', true);
+                            modeSimpleRadio.prop('checked', false);
+                            
+                            // Update visual button state for Bootstrap button group
+                            $('label[for="mode-simple"], label[for="mode-advanced"]').removeClass('active');
+                            $('label[for="mode-advanced"]').addClass('active');
+                            
+                            // Update previousMode tracking
+                            window.previousMode = 'advanced';
+                            console.log('[EDIT DEBUG] Set previousMode to advanced (POST fallback)');
+                            
+                            // Explicitly call updateModeDisplay to ensure the display updates immediately
+                            if (typeof window.updateModeDisplay === 'function') {
+                                window.updateModeDisplay();
+                            }
+                            
+                            // Ensure SimpleMDE has the correct value and is refreshed
+                            var content = data['activities'] || '';
+                            simplemde.value(content);
+                            
+                            // Refresh CodeMirror to ensure it displays correctly
+                            setTimeout(function() {
+                                if (simplemde && simplemde.codemirror) {
+                                    simplemde.codemirror.refresh();
+                                }
+                            }, 100);
+                            
+                            modeAdvancedRadio.trigger('change');
+                            console.log('Loaded advanced todo (POST fallback)');
+                        }
                         
                         // Load reminder data using the old function
                         loadReminderData(data);
@@ -246,12 +398,15 @@ var TodoOperations = (function() {
             // Get content based on mode
             if (todoMode === 'simple') {
                 simpleItems = $('#simple-items').val();
+                console.log('Simple mode - items to save:', simpleItems);
             } else {
                 // Only access simplemde in advanced mode
                 if (typeof window.simplemde !== 'undefined' && window.simplemde) {
                     activities = window.simplemde.value();
+                    console.log('Advanced mode - SimpleMDE content to save:', activities);
                 } else {
                     activities = $('#details-textarea').val();
+                    console.log('Advanced mode - Fallback textarea content to save:', activities);
                 }
             }
             
@@ -278,6 +433,7 @@ var TodoOperations = (function() {
                     '_csrf_token': csrfToken,
                     'todo_id': todo_id != null && todo_id !== '' ? todo_id : '',
                     'title': title,
+                    'todo_type': todoMode,  // Explicitly send the todo_type to ensure it's set correctly
                     'schedule_day': schedule_day,
                     'custom_date': custom_date,
                     'reminder_enabled': reminderData.enabled,
@@ -446,6 +602,43 @@ var TodoOperations = (function() {
             $(this).find('[autofocus]').focus();
             simplemde.codemirror.refresh();
         });
+        
+        // Reset form when modal is hidden
+        $('#info-header-modal').on('hidden.bs.modal', function() {
+            // Reset all form fields
+            $('input[name="title-input-normal"]').val('');
+            $('input[name="todo_id"]').val('');
+            $('input[name="custom_date"]').val('');
+            
+            // Reset mode to simple
+            $('#mode-simple').prop('checked', true).trigger('change');
+            $('#todo_mode').val('simple');
+            
+            // Reset schedule to today
+            $('#today').prop('checked', true).trigger('change');
+            $('#custom-date-picker').hide();
+            
+            // Reset reminder
+            $('#reminder-enabled').prop('checked', false);
+            $('#reminder-options').hide();
+            $('#reminder-custom').prop('checked', true);
+            $('#reminder-datetime').val('');
+            $('#reminder-before-minutes').val('30');
+            $('#reminder-before-unit').val('minutes');
+            
+            // Clear SimpleMDE editor
+            if (typeof simplemde !== 'undefined' && simplemde) {
+                simplemde.value('');
+            }
+            
+            // Clear checklist items
+            $('#simple-items').val('');
+            const container = document.getElementById('items-container');
+            if (container) {
+                container.innerHTML = '<p class="text-muted mb-0"><em>No items yet. Add one below.</em></p>';
+            }
+            document.getElementById('new-item-input').value = '';
+        });
     }
 
     /**
@@ -466,6 +659,165 @@ var TodoOperations = (function() {
                     event.preventDefault();
                     $('.create-todo').click();
                 }
+            }
+        });
+    }
+
+    /**
+     * Escape HTML special characters
+     * @param {String} text - Text to escape
+     * @returns {String} Escaped text
+     */
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    /**
+     * Parse markdown to extract checklist items
+     * @param {String} markdown - Markdown content
+     * @returns {Array} Array of item objects with text and completed properties
+     */
+    function parseMarkdownItems(markdown) {
+        if (!markdown) return [];
+        
+        return markdown.split('\n')
+            .filter(line => line.trim().startsWith('- ['))
+            .map(line => {
+                const trimmed = line.trim();
+                const completed = trimmed.includes('[x]');
+                // Remove checkbox format, handling both single and multiple occurrences
+                let text = trimmed.replace(/^- \[[^\]]\]\s*/, '');
+                
+                // In case of doubled checkboxes (malformed), remove any additional checkbox patterns
+                text = text.replace(/^- \[[^\]]\]\s*/, '');
+                
+                return { text, completed };
+            });
+    }
+
+    /**
+     * Render checklist items in the simple mode UI
+     * @param {Array} items - Array of item objects with text and completed properties
+     */
+    function renderChecklist(items) {
+        const container = document.getElementById('items-container');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        if (items.length === 0) {
+            container.innerHTML = '<p class="text-muted mb-0"><em>No items yet. Add one below.</em></p>';
+            return;
+        }
+        
+        items.forEach((item, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'form-check mb-2';
+            itemDiv.style.display = 'flex';
+            itemDiv.style.alignItems = 'center';
+            itemDiv.innerHTML = `
+                <input class="form-check-input item-checkbox" type="checkbox" id="item-${index}" data-index="${index}" 
+                       ${item.completed ? 'checked' : ''} style="cursor: pointer;">
+                <label class="form-check-label flex-grow-1 mb-0 ${item.completed ? 'text-muted' : ''}" 
+                       for="item-${index}" style="cursor: pointer; ${item.completed ? 'text-decoration: line-through;' : ''}">
+                    ${escapeHtml(item.text)}
+                </label>
+                <button type="button" class="btn btn-sm btn-outline-danger delete-item-btn" data-index="${index}" 
+                        title="Delete item" style="padding: 0.25rem 0.5rem;">
+                    <i class="mdi mdi-delete"></i>
+                </button>
+            `;
+            container.appendChild(itemDiv);
+        });
+    }
+
+    /**
+     * Update the hidden markdown textarea with current checklist data
+     * @param {Array} items - Array of item objects
+     */
+    function updateMarkdownStorage(items) {
+        const markdown = items.map(item => {
+            const checkbox = item.completed ? '[x]' : '[ ]';
+            // Clean item text in case it has checkbox patterns from malformed data
+            let cleanText = item.text.replace(/^-\s*\[\s*[x ]\s*\]\s*/gi, '').trim();
+            return `- ${checkbox} ${cleanText}`;
+        }).join('\n');
+        
+        document.getElementById('simple-items').value = markdown;
+    }
+
+    /**
+     * Setup simple checklist item handlers
+     */
+    function setupChecklistHandlers() {
+        const container = document.getElementById('items-container');
+        const addBtn = document.getElementById('add-item-btn');
+        const input = document.getElementById('new-item-input');
+        
+        if (!container || !addBtn || !input) return;
+        
+        // Load existing items from markdown storage on page load
+        const markdown = document.getElementById('simple-items').value;
+        if (markdown) {
+            const items = parseMarkdownItems(markdown);
+            renderChecklist(items);
+        }
+        
+        // Add item on button click
+        addBtn.addEventListener('click', () => {
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const markdown = document.getElementById('simple-items').value;
+            const items = parseMarkdownItems(markdown);
+            items.push({ text, completed: false });
+            
+            updateMarkdownStorage(items);
+            renderChecklist(items);
+            input.value = '';
+            input.focus();
+        });
+        
+        // Add item on Enter key
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addBtn.click();
+            }
+        });
+        
+        // Handle checkbox changes and item deletion via event delegation
+        container.addEventListener('change', (e) => {
+            if (e.target.classList.contains('item-checkbox')) {
+                const index = parseInt(e.target.dataset.index);
+                const markdown = document.getElementById('simple-items').value;
+                const items = parseMarkdownItems(markdown);
+                
+                if (items[index]) {
+                    items[index].completed = e.target.checked;
+                    updateMarkdownStorage(items);
+                    renderChecklist(items);
+                }
+            }
+        });
+        
+        container.addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-item-btn');
+            if (deleteBtn) {
+                const index = parseInt(deleteBtn.dataset.index);
+                const markdown = document.getElementById('simple-items').value;
+                const items = parseMarkdownItems(markdown);
+                
+                items.splice(index, 1);
+                updateMarkdownStorage(items);
+                renderChecklist(items);
             }
         });
     }
@@ -494,6 +846,7 @@ var TodoOperations = (function() {
         setupScheduleHandlers();
         setupModalHandlers(options.simplemde);
         setupKeyboardShortcuts();
+        setupChecklistHandlers();
     }
 
     // Public API
