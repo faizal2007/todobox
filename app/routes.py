@@ -1746,53 +1746,102 @@ def undone():
 @app.route('/achievements')
 @login_required
 def achievements():
-    """Show all completed todos as achievements"""
-    all_todos = Todo.query.filter_by(user_id=current_user.id).order_by(Todo.modified.desc()).all()
+    """Show completed todos as achievements with infinite scroll support"""
+    # Get all completed todos (statistics only on initial load)
+    all_todo_stats = db.session.query(func.count(Todo.id), func.sum(
+        db.case([(Tracker.status_id == 6, 1)], else_=0)
+    )).outerjoin(Tracker, Todo.id == Tracker.todo_id).filter(
+        Todo.user_id == current_user.id
+    ).first()
     
-    completed_todos = []
+    total_todos = all_todo_stats[0] if all_todo_stats[0] else 0
+    total_done = all_todo_stats[1] if all_todo_stats[1] else 0
     
-    for todo in all_todos:
-        # Get the latest tracker entry for this todo
-        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc(), Tracker.id.desc()).first()  # type: ignore[attr-defined]
-        
-        if latest_tracker and latest_tracker.status_id == 6:  # Status 6 = Done
-            completed_todos.append((todo, latest_tracker))
-    
-    # Sort by completion date (most recent first)
-    completed_todos.sort(key=lambda x: x[1].timestamp, reverse=True)
-    
-    # Calculate statistics
-    total_completed = len(completed_todos)
     stats = {
-        'total_completed': total_completed,
-        'completion_rate': 0,
-        'streak': 0,
+        'total_completed': total_done,
+        'completion_rate': round((total_done / total_todos * 100), 1) if total_todos > 0 else 0,
         'average_completion_time': 0
     }
     
-    # Calculate completion rate
-    all_completions = []
-    for todo in all_todos:
-        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc(), Tracker.id.desc()).first()  # type: ignore[attr-defined]
-        if latest_tracker:
-            all_completions.append(latest_tracker.status_id)
+    # Calculate average completion time for statistics
+    avg_time_query = db.session.query(func.avg(
+        (Tracker.timestamp - func.coalesce(
+            db.session.query(Tracker.timestamp).filter(
+                Tracker.todo_id == Todo.id,
+                Tracker.status_id == 5
+            ).order_by(Tracker.timestamp.asc()).limit(1).correlate(Todo),
+            Tracker.timestamp
+        ))
+    )).filter(
+        Todo.user_id == current_user.id,
+        Tracker.status_id == 6
+    )
     
-    if all_completions:
-        stats['completion_rate'] = round((all_completions.count(6) / len(all_completions)) * 100, 1)
+    # Simple calculation: get average from first batch of completed todos
+    first_batch = db.session.query(Todo, Tracker).join(
+        Tracker, Todo.id == Tracker.todo_id
+    ).filter(
+        Todo.user_id == current_user.id,
+        Tracker.status_id == 6
+    ).order_by(Tracker.timestamp.desc()).limit(100).all()
     
-    # Calculate average time to completion
     completion_times = []
-    for todo, completion_tracker in completed_todos:
-        # Get the creation tracker (status_id = 5 = new)
-        creation_tracker = Tracker.query.filter_by(todo_id=todo.id, status_id=5).order_by(Tracker.timestamp.asc()).first()  # type: ignore[attr-defined]
+    for todo, completion_tracker in first_batch:
+        creation_tracker = Tracker.query.filter_by(todo_id=todo.id, status_id=5).order_by(Tracker.timestamp.asc()).first()
         if creation_tracker:
             time_diff = completion_tracker.timestamp - creation_tracker.timestamp
-            completion_times.append(time_diff.total_seconds() / 3600)  # Convert to hours
+            completion_times.append(time_diff.total_seconds() / 3600)
     
     if completion_times:
         stats['average_completion_time'] = round(sum(completion_times) / len(completion_times), 1)
     
+    # Load only first batch (20 items) on initial page load
+    completed_todos = first_batch[:20]
+    
     return render_template('achievements.html', title='Achievements', achievements=completed_todos, stats=stats)
+
+@app.route('/api/achievements/batch')
+@login_required
+def achievements_batch():
+    """API endpoint for loading achievements in batches (infinite scroll)"""
+    batch_size = 20
+    offset = request.args.get('offset', 0, type=int)
+    
+    # Get batch of completed todos
+    completed_query = db.session.query(Todo, Tracker).join(
+        Tracker, Todo.id == Tracker.todo_id
+    ).filter(
+        Todo.user_id == current_user.id,
+        Tracker.status_id == 6
+    ).distinct(Todo.id).order_by(Tracker.timestamp.desc()).offset(offset).limit(batch_size)
+    
+    completed_todos = completed_query.all()
+    
+    # Format as JSON for client-side rendering
+    items = []
+    for todo, tracker in completed_todos:
+        # Calculate time to completion
+        creation_tracker = Tracker.query.filter_by(todo_id=todo.id, status_id=5).order_by(Tracker.timestamp.asc()).first()
+        time_to_complete = None
+        if creation_tracker:
+            time_diff = tracker.timestamp - creation_tracker.timestamp
+            time_to_complete = round(time_diff.total_seconds() / 3600, 1)
+        
+        items.append({
+            'id': todo.id,
+            'name': todo.name,
+            'details': todo.details[:150] if todo.details else '',  # Truncate for display
+            'completed_at': tracker.timestamp.isoformat(),
+            'completed_from_now': f"{(datetime.utcnow() - tracker.timestamp).days} days ago" if (datetime.utcnow() - tracker.timestamp).days > 0 else "Today",
+            'time_to_complete': time_to_complete
+        })
+    
+    return jsonify({
+        'items': items,
+        'count': len(items),
+        'has_more': len(items) == batch_size,  # If we got full batch, there might be more
+        'offset': offset + batch_size
+    }), 200
 
 @app.route('/<path:todo_id>/done', methods=['POST'])
 @login_required
