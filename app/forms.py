@@ -109,3 +109,16 @@ class DeleteAccountForm(FlaskForm):
     """Form for account deletion with code verification"""
     delete_code = StringField('Verification Code', validators=[DataRequired()])
     submit = SubmitField('Delete Account')
+
+
+class SimpleTodoForm(FlaskForm):
+    """Form for creating/editing a simple todo (checklist)"""
+    title = StringField('Title', validators=[DataRequired(message='Title is required')])
+    submit = SubmitField('Create Simple Todo')
+
+
+class AdvancedTodoForm(FlaskForm):
+    """Form for creating/editing an advanced todo (with markdown editor)"""
+    title = StringField('Title', validators=[DataRequired(message='Title is required')])
+    details = StringField('Details', validators=[Optional()])
+    submit = SubmitField('Create Advanced Todo')

@@ -2253,6 +2253,139 @@ def add():
 
     return redirect(url_for('list', id='today'))
 
+@app.route('/add_simple', methods=['POST'])
+@login_required
+def add_simple():
+    """Create a new simple todo (checklist format)"""
+    if request.method == "POST":
+        from html import escape
+        
+        # Get title and initial items
+        getTitle = escape((request.form.get("title") or "").strip())
+        initial_items = (request.form.get("items") or "").strip()
+        
+        # Validate title
+        if len(getTitle) > 255:
+            getTitle = getTitle[:255]
+        
+        if not getTitle:
+            return jsonify({
+                'status': 'failed',
+                'msg': 'Title is required.'
+            }), 400
+        
+        # Convert initial items to markdown checklist format
+        # Initial items should be one per line, and we create unchecked checkboxes
+        details = ''
+        if initial_items:
+            items = [item.strip() for item in initial_items.split('\n') if item.strip()]
+            details = '\n'.join([f'- [ ] {escape(item)}' for item in items])
+        
+        # Create the todo as simple type
+        t = Todo(
+            name=getTitle,
+            details=details,
+            details_html=clean(markdown.markdown(details), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES),
+            user_id=current_user.id,
+            todo_type='simple'  # Mark as simple type
+        )
+        
+        db.session.add(t)  # type: ignore[attr-defined]
+        db.session.commit()  # type: ignore[attr-defined]
+        
+        # Add tracker entry with NEW status
+        Tracker.add(t.id, 5, t.timestamp)  # Status 5 = new
+        
+        return jsonify({
+            'status': 'success',
+            'id': t.id,
+            'message': 'Simple todo created successfully.'
+        }), 201
+    
+    return redirect(url_for('list', id='today'))
+
+@app.route('/<path:todo_id>/toggle_item', methods=['POST'])
+@login_required
+def toggle_item(todo_id):
+    """Toggle a checklist item in a simple todo"""
+    from html import escape
+    
+    # Get the todo - verify it belongs to current user
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return jsonify({
+            'status': 'error',
+            'message': 'Todo not found'
+        }), 404
+    
+    # Only allow toggling on simple todos
+    if todo.todo_type != 'simple':
+        return jsonify({
+            'status': 'error',
+            'message': 'Item toggle only available for simple todos'
+        }), 400
+    
+    # Get the item index from the request
+    try:
+        data = request.get_json()
+        item_index = int(data.get('item_index', -1))
+        checked = data.get('checked', False)
+        
+        if item_index < 0:
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid item index'
+            }), 400
+    except (ValueError, TypeError):
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid request data'
+        }), 400
+    
+    # Parse the current checklist items
+    lines = (todo.details or '').split('\n')
+    
+    if item_index >= len(lines):
+        return jsonify({
+            'status': 'error',
+            'message': 'Item index out of range'
+        }), 400
+    
+    # Update the specific item
+    line = lines[item_index]
+    
+    # Parse the line to extract checkbox and text
+    if line.strip().startswith('- [ ]'):
+        # Uncheck → Check
+        if checked:
+            lines[item_index] = line.replace('- [ ]', '- [x]', 1)
+    elif line.strip().startswith('- [x]'):
+        # Check → Uncheck
+        if not checked:
+            lines[item_index] = line.replace('- [x]', '- [ ]', 1)
+    else:
+        # Invalid format
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid checklist format'
+        }), 400
+    
+    # Update the todo
+    todo.details = '\n'.join(lines)
+    todo.details_html = clean(markdown.markdown(todo.details), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+    todo.modified = datetime.now()
+    
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    # Add tracker entry for the modification
+    Tracker.add(todo.id, 5, datetime.now())  # Status 5 = new (activity)
+    
+    return jsonify({
+        'status': 'success',
+        'message': 'Item toggled successfully.',
+        'checked': checked
+    }), 200
+
 @app.route('/<path:id>/todo', methods=['POST'])
 @login_required
 def getTodo(id):
