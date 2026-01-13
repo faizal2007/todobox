@@ -89,8 +89,8 @@
     }
     
     .achievements-list {
-        max-height: 600px;
-        overflow-y: auto;
+        /* Full page layout - no height restriction */
+        width: 100%;
     }
     
     .achievement-item {
@@ -228,26 +228,19 @@
         <div class="row">
             <div class="col-12">
                 {% if achievements %}
-                <div class="card">
-                    <div class="card-header bg-white border-bottom">
-                        <h4 class="card-title mb-0">
-                            <i class="mdi mdi-star-outline mr-2"></i>{{ achievements|length }} Achievement{{ 's' if achievements|length != 1 else '' }}
-                        </h4>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="achievements-list">
-                            {% for todo, tracker in achievements %}
-                            <div class="achievement-item{% if todo.name.startswith('[x]') or todo.name.startswith('- [x]') %} strikethrough{% endif %}" id="achievement-{{ todo.id }}">
-                                <div class="achievement-badge">
-                                    <i class="mdi mdi-star"></i>
-                                </div>
-                                <div class="achievement-details">
-                                    <h5 class="achievement-title">{{ todo.name|title }}</h5>
-                                    {% if todo.details %}
-                                    <div class="achievement-text">
-                                        {{ todo.details|truncate(150, true)|striptags }}
-                                    </div>
-                                    {% endif %}
+                <div class="achievements-list">
+                    {% for todo, tracker in achievements %}
+                    <div class="achievement-item{% if todo.name.startswith('[x]') or todo.name.startswith('- [x]') %} strikethrough{% endif %}" id="achievement-{{ todo.id }}">
+                        <div class="achievement-badge">
+                            <i class="mdi mdi-star"></i>
+                        </div>
+                        <div class="achievement-details">
+                            <h5 class="achievement-title">{{ todo.name|title }}</h5>
+                            {% if todo.details %}
+                            <div class="achievement-text">
+                                {{ todo.details|truncate(150, true)|striptags }}
+                            </div>
+                            {% endif %}
                                     <p class="achievement-date mb-0">
                                         <i class="mdi mdi-calendar-check"></i>
                                         Completed {{ momentjs(tracker.timestamp).fromNow() }}
@@ -271,7 +264,6 @@
                         <i class="mdi mdi-check-circle-outline" style="font-size: 32px; margin-bottom: 10px;"></i>
                         <p>No more achievements to load</p>
                     </div>
-                </div>
                 {% else %}
                 <div class="empty-state">
                     <i class="mdi mdi-trophy-outline"></i>
