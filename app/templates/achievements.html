@@ -336,12 +336,12 @@
         
         <!-- Progress Indicator -->
         {% if stats.total_completed > 0 %}
-        <div class="progress-indicator">
+        <div class="progress-indicator" data-total-achievements="{{ stats.total_completed }}">
             <div class="progress-bar-container">
                 <div class="progress-stats">
                     <span class="progress-count" id="loaded-count">{{ achievements|length }}</span>
                     <span>of</span>
-                    <span class="progress-count">{{ stats.total_completed }}</span>
+                    <span class="progress-count" id="total-count">{{ stats.total_completed }}</span>
                     <span>loaded</span>
                 </div>
                 <div class="progress-bar-wrapper">
@@ -467,8 +467,10 @@
     let isLoading = false;
     let hasMore = true;
     const batchSize = 20;
-    let totalAchievements = parseInt(document.querySelector('.progress-count')?.textContent || '0');  // Get total from progress indicator
-    let loadedCount = totalAchievements;  // Initial loaded count
+    // Get total from data attribute instead of text content
+    const progressIndicator = document.querySelector('.progress-indicator');
+    let totalAchievements = parseInt(progressIndicator?.getAttribute('data-total-achievements') || '0');
+    let loadedCount = parseInt(document.getElementById('loaded-count')?.textContent || '0');  // Initial loaded count from server
     
     // Get loader elements
     const loaderEl = document.getElementById('infinite-scroll-loader');
