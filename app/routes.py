@@ -499,8 +499,9 @@ def update_todo(todo_id):
     if 'details' in data:
         details = data['details'].strip()
         todo.details = details
-        # Preprocess: Remove checkbox brackets for clean display
-        details_display = details.replace('- [ ] ', '- ').replace('- [x] ', '- ').replace('- [ ]', '-').replace('- [x]', '-')
+        # Preprocess: Remove checkbox brackets for clean display using regex
+        import re as regex_module
+        details_display = regex_module.sub(r'^-\s*\[[^\]]*\]\s*', '- ', details, flags=regex_module.MULTILINE)
         todo.details_html = clean(markdown.markdown(details_display, extensions=['fenced_code', 'pymdownx.tilde']), 
                                  tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
     
@@ -1983,8 +1984,10 @@ def add():
         
         # Preprocess: Remove checkbox brackets for clean display
         # Convert "- [ ] text" to "- text" and "- [x] text" to "- text"
+        # Handle various formats: "- []", "- [ ]", "- [x]", etc.
         # This ensures the HTML output shows clean bullet points without brackets
-        getActivities_display = getActivities.replace('- [ ] ', '- ').replace('- [x] ', '- ').replace('- [ ]', '-').replace('- [x]', '-')
+        import re as regex_module
+        getActivities_display = regex_module.sub(r'^-\s*\[[^\]]*\]\s*', '- ', getActivities, flags=regex_module.MULTILINE)
         
         # For HTML generation, markdown will handle the content properly
         # clean() will sanitize the resulting HTML
@@ -2345,9 +2348,10 @@ def add_simple():
         
         # Preprocess: Remove checkbox brackets for clean display
         # Convert "- [ ] text" to "- text" and "- [x] text" to "- text"
+        # Handle various formats: "- []", "- [ ]", "- [x]", etc.
         # This ensures the HTML output shows clean bullet points without brackets
-        details_for_display = details
-        details_for_display = details_for_display.replace('- [ ] ', '- ').replace('- [x] ', '- ').replace('- [ ]', '-').replace('- [x]', '-')
+        import re as regex_module
+        details_for_display = regex_module.sub(r'^-\s*\[[^\]]*\]\s*', '- ', details, flags=regex_module.MULTILINE)
         
         # Handle schedule_day parameter
         schedule_day = request.form.get("schedule_day", "today")
@@ -2506,8 +2510,9 @@ def toggle_item(todo_id):
     
     # Update the todo
     todo.details = '\n'.join(lines)
-    # Preprocess: Remove checkbox brackets for clean display
-    details_display = todo.details.replace('- [ ] ', '- ').replace('- [x] ', '- ').replace('- [ ]', '-').replace('- [x]', '-')
+    # Preprocess: Remove checkbox brackets for clean display using regex
+    import re as regex_module
+    details_display = regex_module.sub(r'^-\s*\[[^\]]*\]\s*', '- ', todo.details, flags=regex_module.MULTILINE)
     todo.details_html = clean(markdown.markdown(details_display, extensions=['fenced_code']), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
     todo.modified = datetime.now()
     
