@@ -567,13 +567,22 @@ def get_todo(todo_id):
                 schedule = 'custom_day'
                 custom_date = todo_date.isoformat()
     
+    # Auto-detect todo type based on content format
+    # If content contains checkbox patterns, treat as simple mode regardless of stored todo_type
+    import re
+    detected_type = todo.todo_type if hasattr(todo, 'todo_type') else 'advanced'
+    if todo.details:
+        has_checkboxes = bool(re.search(r'^[-*+]\s*\[[^\]]*\]', todo.details, flags=re.MULTILINE))
+        if has_checkboxes:
+            detected_type = 'simple'
+    
     return jsonify({
         'success': True,
         'id': todo.id,
         'title': todo.name,
         'description': todo.details,
         'description_html': todo.details_html,
-        'todo_type': todo.todo_type if hasattr(todo, 'todo_type') else 'advanced',
+        'todo_type': detected_type,
         'status': status,
         'created_at': todo.timestamp.isoformat(),
         'modified_at': todo.modified.isoformat(),
@@ -2145,8 +2154,21 @@ def add():
             # Creating new todo
             t = Todo(name=getTitle, details=getActivities, user_id=current_user.id, details_html=getActivities_html)
             
-            # Set todo_type based on mode
-            t.todo_type = 'simple' if is_simple_mode else 'advanced'
+            # Auto-detect todo_type based on content format
+            # If content contains checkbox patterns, treat as simple mode regardless of explicit mode selection
+            import re as regex_module
+            detected_has_checkboxes = bool(regex_module.search(r'^[-*+]\s*\[[^\]]*\]', getActivities, flags=regex_module.MULTILINE))
+            
+            if detected_has_checkboxes:
+                # Content has checkboxes - automatically set to simple mode
+                t.todo_type = 'simple'
+                logging.debug(f"[SAVE DEBUG] Auto-detected simple mode based on checkbox content for new todo")
+            elif is_simple_mode:
+                # User explicitly selected simple mode
+                t.todo_type = 'simple'
+            else:
+                # User selected advanced mode and no checkboxes - keep as advanced
+                t.todo_type = 'advanced'
             
             # Override default timestamps if custom schedule is selected
             if schedule_day != "today" or getTomorrow != 0:
@@ -2363,12 +2385,20 @@ def add():
                 t.details_html = getActivities_html
                 logging.debug(f"[SAVE DEBUG] Updating todo {todo_id} - details: {getActivities[:100]}, details_html: {getActivities_html[:100] if getActivities_html else 'EMPTY'}")
                 
-                # Preserve or set todo_type based on current mode
-                # If this is a simple mode update, ensure todo_type is set to 'simple'
-                if is_simple_mode and (not hasattr(t, 'todo_type') or t.todo_type != 'simple'):
+                # Auto-detect todo_type based on content format
+                # If content contains checkbox patterns, treat as simple mode regardless of explicit mode selection
+                import re as regex_module
+                detected_has_checkboxes = bool(regex_module.search(r'^[-*+]\s*\[[^\]]*\]', getActivities, flags=regex_module.MULTILINE))
+                
+                if detected_has_checkboxes:
+                    # Content has checkboxes - automatically set to simple mode
                     t.todo_type = 'simple'
-                # If this is advanced mode, ensure todo_type is set to 'advanced'
-                elif not is_simple_mode and (not hasattr(t, 'todo_type') or t.todo_type != 'advanced'):
+                    logging.debug(f"[SAVE DEBUG] Auto-detected simple mode based on checkbox content for todo {todo_id}")
+                elif is_simple_mode:
+                    # User explicitly selected simple mode
+                    t.todo_type = 'simple'
+                else:
+                    # User selected advanced mode and no checkboxes - keep as advanced
                     t.todo_type = 'advanced'
                 
                 if schedule_day != "today" or getTomorrow == '1':
@@ -2678,13 +2708,21 @@ def getTodo(id):
             reminder_dt_user = convert_to_user_timezone(t.reminder_time, current_user.timezone)
             # Format as YYYY-MM-DDTHH:MM for Flatpickr compatibility
             reminder_time_display = reminder_dt_user.strftime('%Y-%m-%dT%H:%M') if reminder_dt_user else None
+        # Auto-detect todo type based on content format
+        # If content contains checkbox patterns, treat as simple mode regardless of stored todo_type
+        import re
+        detected_type = t.todo_type if hasattr(t, 'todo_type') else 'advanced'
+        if t.details:
+            has_checkboxes = bool(re.search(r'^[-*+]\s*\[[^\]]*\]', t.details, flags=re.MULTILINE))
+            if has_checkboxes:
+                detected_type = 'simple'
         
         return jsonify({
             'status': 'Success',
             'id': t.id,
             'title': t.name,
             'activities': t.details,
-            'todo_type': t.todo_type if hasattr(t, 'todo_type') else 'advanced',
+            'todo_type': detected_type,
             'modified': t.modified,
             'button': button,
             'reminder_enabled': t.reminder_enabled or False,
