@@ -1979,9 +1979,20 @@ def add():
         import re
         getActivities = re.sub(r'^-\s*\[\s*([x ]?)\s*\]', r'- [\1]', getActivities, flags=re.MULTILINE)
         
+        # Auto-detect: If content contains checkbox patterns, treat as simple mode content
+        # and strip brackets for clean display
+        has_checkboxes = bool(re.search(r'^-\s*\[[^\]]*\]', getActivities, flags=re.MULTILINE))
+        
+        if has_checkboxes:
+            # Content has checkboxes - strip them for clean display (like simple mode)
+            getActivities_display = re.sub(r'^-\s*\[[^\]]*\]\s*', '- ', getActivities, flags=re.MULTILINE)
+        else:
+            # No checkboxes - use content as-is
+            getActivities_display = getActivities
+        
         # For HTML generation, markdown will handle the content properly
         # clean() will sanitize the resulting HTML
-        getActivities_html = clean(markdown.markdown(getActivities, extensions=['fenced_code', 'pymdownx.tilde']), 
+        getActivities_html = clean(markdown.markdown(getActivities_display, extensions=['fenced_code', 'pymdownx.tilde']), 
                                    tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
         logging.debug(f"[SAVE DEBUG] Generated HTML: {getActivities_html[:100] if getActivities_html else 'EMPTY'}")
         
