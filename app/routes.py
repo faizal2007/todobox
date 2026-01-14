@@ -49,8 +49,8 @@ def require_api_token(f):
     return decorated_function
 
 # Allowed HTML tags for sanitized Markdown output
-ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a', 'del', 's']
-ALLOWED_ATTRIBUTES = {'a': ['href', 'title']}
+ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a', 'del', 's', 'input']
+ALLOWED_ATTRIBUTES = {'a': ['href', 'title'], 'input': ['type', 'disabled', 'checked']}
 
 # CSRF Error Handler - only for web routes
 @app.errorhandler(400)
@@ -1980,20 +1980,41 @@ def add():
         getActivities = re.sub(r'^-\s*\[\s*([x ]?)\s*\]', r'- [\1]', getActivities, flags=re.MULTILINE)
         
         # Auto-detect: If content contains checkbox patterns, treat as simple mode content
-        # and strip brackets for clean display
+        # and convert to HTML with actual visual checkboxes
         has_checkboxes = bool(re.search(r'^-\s*\[[^\]]*\]', getActivities, flags=re.MULTILINE))
         
         if has_checkboxes:
-            # Content has checkboxes - strip them for clean display (like simple mode)
-            getActivities_display = re.sub(r'^-\s*\[[^\]]*\]\s*', '- ', getActivities, flags=re.MULTILINE)
+            # Content has checkboxes - convert to HTML with visual checkbox elements
+            def convert_checkboxes_to_html(text):
+                """Convert markdown checkbox syntax to HTML checkbox elements"""
+                lines = text.split('\n')
+                html_lines = []
+                for line in lines:
+                    # Match checkbox pattern: - [ ] or - [x] with optional leading whitespace
+                    match = re.match(r'^(\s*)-\s*\[([x ])\]\s*(.*)', line, re.IGNORECASE)
+                    if match:
+                        indent = match.group(1)
+                        checked = 'checked' if match.group(2).lower() == 'x' else ''
+                        text_content = match.group(3)
+                        # Create HTML with visual checkbox
+                        html_lines.append(f'{indent}<li><input type="checkbox" disabled {checked}> {text_content}</li>')
+                    else:
+                        html_lines.append(line)
+                
+                # Wrap in <ul> tags if we have list items
+                has_items = any('<li>' in line for line in html_lines)
+                if has_items:
+                    return '<ul>\n' + '\n'.join(html_lines) + '\n</ul>'
+                else:
+                    return markdown.markdown(text, extensions=['fenced_code', 'pymdownx.tilde'])
+            
+            # Convert checkboxes and sanitize HTML
+            checkbox_html = convert_checkboxes_to_html(getActivities)
+            getActivities_html = clean(checkbox_html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
         else:
-            # No checkboxes - use content as-is
-            getActivities_display = getActivities
-        
-        # For HTML generation, markdown will handle the content properly
-        # clean() will sanitize the resulting HTML
-        getActivities_html = clean(markdown.markdown(getActivities_display, extensions=['fenced_code', 'pymdownx.tilde']), 
-                                   tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+            # No checkboxes - use standard markdown rendering
+            getActivities_html = clean(markdown.markdown(getActivities, extensions=['fenced_code', 'pymdownx.tilde']), 
+                                       tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
         logging.debug(f"[SAVE DEBUG] Generated HTML: {getActivities_html[:100] if getActivities_html else 'EMPTY'}")
         
         # Handle new schedule_day parameter
