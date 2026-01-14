@@ -705,9 +705,12 @@ var TodoOperations = (function() {
     /**
      * Render checklist items in the simple mode UI
      * @param {Array} items - Array of item objects with text and completed properties
+     * @param {HTMLElement} container - Container element to render into (optional, defaults to items-container)
      */
-    function renderChecklist(items) {
-        const container = document.getElementById('items-container');
+    function renderChecklist(items, container) {
+        if (!container) {
+            container = document.getElementById('items-container');
+        }
         if (!container) return;
         
         container.innerHTML = '';
@@ -757,34 +760,27 @@ var TodoOperations = (function() {
      * Setup simple checklist item handlers
      */
     function setupChecklistHandlers() {
-        const container = document.getElementById('items-container');
-        const addBtn = document.getElementById('add-item-btn');
-        const input = document.getElementById('new-item-input');
-        const modal = document.getElementById('info-header-modal');
-        
-        if (!container || !addBtn || !input) return;
-        
-        // Load existing items from markdown storage on page load
-        const markdown = document.getElementById('simple-items').value;
-        if (markdown) {
-            const items = parseMarkdownItems(markdown);
-            renderChecklist(items);
-        }
-        
-        // Use event delegation on modal to prevent duplicate listeners
-        // Attach listeners to the modal element which is never recreated
-        modal.addEventListener('click', function(e) {
+        // Use event delegation on document to handle ALL modals
+        // This works even if multiple modal instances exist in the DOM
+        document.addEventListener('click', function(e) {
+            // Only handle clicks within a visible modal
+            const modal = e.target.closest('#info-header-modal');
+            if (!modal || !modal.classList.contains('show')) return;
+            
             // Handle add button clicks
             if (e.target.closest('#add-item-btn')) {
+                const input = modal.querySelector('#new-item-input');
                 const text = input.value.trim();
                 if (!text) return;
                 
-                const markdown = document.getElementById('simple-items').value;
+                const simpleItems = modal.querySelector('#simple-items');
+                const markdown = simpleItems.value;
                 const items = parseMarkdownItems(markdown);
                 items.push({ text, completed: false });
                 
                 updateMarkdownStorage(items);
-                renderChecklist(items);
+                const container = modal.querySelector('#items-container');
+                renderChecklist(items, container);
                 input.value = '';
                 input.focus();
                 return;
@@ -793,36 +789,53 @@ var TodoOperations = (function() {
             // Handle item deletion
             const deleteBtn = e.target.closest('.delete-item-btn');
             if (deleteBtn) {
+                const modal = deleteBtn.closest('#info-header-modal');
+                if (!modal) return;
+                
                 const index = parseInt(deleteBtn.dataset.index);
-                const markdown = document.getElementById('simple-items').value;
+                const simpleItems = modal.querySelector('#simple-items');
+                const markdown = simpleItems.value;
                 const items = parseMarkdownItems(markdown);
                 
                 items.splice(index, 1);
                 updateMarkdownStorage(items);
-                renderChecklist(items);
+                const container = modal.querySelector('#items-container');
+                renderChecklist(items, container);
             }
-        });
+        }, { capture: true });
         
         // Handle Enter key on input field
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addBtn.click();
-            }
+        document.addEventListener('keypress', function(e) {
+            if (e.key !== 'Enter') return;
+            
+            const input = e.target;
+            if (!input.id === 'new-item-input') return;
+            
+            const modal = input.closest('#info-header-modal');
+            if (!modal || !modal.classList.contains('show')) return;
+            
+            e.preventDefault();
+            const addBtn = modal.querySelector('#add-item-btn');
+            if (addBtn) addBtn.click();
         });
         
-        // Handle checkbox changes via event delegation on modal
-        modal.addEventListener('change', (e) => {
-            if (e.target.classList.contains('item-checkbox')) {
-                const index = parseInt(e.target.dataset.index);
-                const markdown = document.getElementById('simple-items').value;
-                const items = parseMarkdownItems(markdown);
-                
-                if (items[index]) {
-                    items[index].completed = e.target.checked;
-                    updateMarkdownStorage(items);
-                    renderChecklist(items);
-                }
+        // Handle checkbox changes via event delegation on document
+        document.addEventListener('change', function(e) {
+            if (!e.target.classList.contains('item-checkbox')) return;
+            
+            const modal = e.target.closest('#info-header-modal');
+            if (!modal || !modal.classList.contains('show')) return;
+            
+            const index = parseInt(e.target.dataset.index);
+            const simpleItems = modal.querySelector('#simple-items');
+            const markdown = simpleItems.value;
+            const items = parseMarkdownItems(markdown);
+            
+            if (items[index]) {
+                items[index].completed = e.target.checked;
+                updateMarkdownStorage(items);
+                const container = modal.querySelector('#items-container');
+                renderChecklist(items, container);
             }
         });
     }
