@@ -2039,15 +2039,44 @@ def add():
         if len(getActivities) > 10000:
             getActivities = getActivities[:10000]
         
-        # Fix malformed checkbox syntax: convert "- []" or "- [x]" with no space to proper format
-        # Regex explanation: match "- [" followed by any non-bracket chars, then "]"
-        # This handles: "- [] text" → "- [ ] text" and "- [x] text" → "- [x] text"
+        # Normalize checkbox syntax to standard format for all markdown bullet types (-, *, +)
+        # This ensures consistency before detection: converts any bracket pattern to normalized form
+        # Examples: "- []" → "- [ ]", "* [x]" → "* [x]", "- [  ]" → "- [ ]"
         import re
-        getActivities = re.sub(r'^-\s*\[\s*([x ]?)\s*\]', r'- [\1]', getActivities, flags=re.MULTILINE)
+        
+        # Normalize all checkbox patterns: match any bullet (-, *, +) with brackets and any content inside
+        # Then standardize to either "[ ]" (unchecked) or "[x]" (checked)
+        def normalize_checkboxes(text):
+            """Normalize checkbox syntax to standard format"""
+            lines = text.split('\n')
+            normalized = []
+            for line in lines:
+                # Match: indent + bullet + optional space + [ + anything + ]
+                # Group 1: indent, Group 2: bullet, Group 3: bracket content
+                match = re.match(r'^(\s*)([-*+])\s*\[([^\]]*)\](.*)', line)
+                if match:
+                    indent = match.group(1)
+                    bullet = match.group(2)
+                    bracket_content = match.group(3).strip()
+                    rest = match.group(4)
+                    
+                    # Determine if checked: if 'x' or 'X' is present, it's checked
+                    is_checked = 'x' in bracket_content.lower()
+                    normalized_bracket = '[x]' if is_checked else '[ ]'
+                    
+                    # Reconstruct with normalized format
+                    normalized.append(f'{indent}{bullet} {normalized_bracket}{rest}')
+                else:
+                    # Not a checkbox line, keep as is
+                    normalized.append(line)
+            
+            return '\n'.join(normalized)
+        
+        # Normalize all checkboxes first
+        getActivities = normalize_checkboxes(getActivities)
         
         # Convert details to HTML with checkbox support
         getActivities_html = convert_details_to_html(getActivities)
-        logging.debug(f"[SAVE DEBUG] Generated HTML: {getActivities_html[:100] if getActivities_html else 'EMPTY'}")
         
         # Handle new schedule_day parameter
         schedule_day = request.form.get("schedule_day", "today")
