@@ -60,8 +60,9 @@ def convert_details_to_html(text):
     """
     import re
     
-    # Auto-detect: If content contains checkbox patterns
-    has_checkboxes = bool(re.search(r'^[-*+]\s*\[[^\]]*\]', text, flags=re.MULTILINE))
+    # Auto-detect: If content contains checkbox patterns (very permissive to catch all variations)
+    # Matches: [space][dash/asterisk/plus][optional space][bracket][anything][bracket]
+    has_checkboxes = bool(re.search(r'^[-*+]\s*\[\s*[x\s]*\s*\]', text, flags=re.MULTILINE))
     
     if has_checkboxes:
         # Convert checkboxes to HTML with visual checkbox elements
@@ -70,9 +71,9 @@ def convert_details_to_html(text):
             lines = text.split('\n')
             html_lines = []
             for line in lines:
-                # Match checkbox pattern: - [ ] or * [ ] or + [ ] (with or without 'x')
-                # Supports both dash and asterisk list formats: - [ ] or * [ ] or * [x]
-                match = re.match(r'^(\s*)[-*+]\s*\[([x\s]*)\]\s*(.*)', line, re.IGNORECASE)
+                # Match checkbox pattern - very permissive to handle all variations
+                # Handles: - [ ], - [], * [ ], *[], * [x], *[x], etc.
+                match = re.match(r'^(\s*)[-*+]\s*\[\s*([x\s]*)\s*\]\s*(.*)', line, re.IGNORECASE)
                 if match:
                     indent = match.group(1)
                     # Check if 'x' is present anywhere in the brackets (checked=true)
@@ -88,6 +89,8 @@ def convert_details_to_html(text):
             if has_items:
                 return '<ul>\n' + '\n'.join(html_lines) + '\n</ul>'
             else:
+                # Fallback to markdown if no checkboxes were converted
+                # This shouldn't happen if has_checkboxes detection worked
                 return markdown.markdown(text, extensions=['fenced_code', 'pymdownx.tilde'])
         
         # Convert checkboxes and sanitize HTML
@@ -2525,20 +2528,27 @@ def toggle_item(todo_id):
     line = lines[item_index]
     
     # Parse the line to extract checkbox and text
-    if line.strip().startswith('- [ ]'):
-        # Uncheck → Check
-        if checked:
-            lines[item_index] = line.replace('- [ ]', '- [x]', 1)
-    elif line.strip().startswith('- [x]'):
-        # Check → Uncheck
-        if not checked:
-            lines[item_index] = line.replace('- [x]', '- [ ]', 1)
-    else:
+    # Support all markdown list formats: -, *, +
+    import re
+    
+    # Check if line contains checkbox pattern
+    checkbox_match = re.match(r'^(\s*)([-*+])\s*\[\s*([x\s]*)\s*\](.*)', line, re.IGNORECASE)
+    
+    if not checkbox_match:
         # Invalid format
         return jsonify({
             'status': 'error',
             'message': 'Invalid checklist format'
         }), 400
+    
+    indent = checkbox_match.group(1)
+    bullet = checkbox_match.group(2)
+    current_checked = 'x' in checkbox_match.group(3).lower()
+    text_content = checkbox_match.group(4)
+    
+    # Toggle the checkbox state
+    new_checkbox_state = 'x' if checked else ' '
+    lines[item_index] = f'{indent}{bullet} [{new_checkbox_state}]{text_content}'
     
     # Update the todo
     todo.details = '\n'.join(lines)
