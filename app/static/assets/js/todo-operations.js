@@ -713,6 +713,8 @@ var TodoOperations = (function() {
         }
         if (!container) return;
         
+        console.log('[renderChecklist] Called with', items.length, 'items. Stack:', new Error().stack.split('\n').slice(1, 4).join('\n'));
+        
         container.innerHTML = '';
         
         if (items.length === 0) {
@@ -782,16 +784,22 @@ var TodoOperations = (function() {
             
             // Handle add button clicks
             if (e.target.closest('#add-item-btn')) {
+                console.log('[setupChecklistHandlers] Add button clicked, processingEvent=', processingEvent);
+                if (processingEvent) return;
+                
                 processingEvent = true;
                 try {
                     const input = modal.querySelector('#new-item-input');
                     const text = input.value.trim();
+                    console.log('[setupChecklistHandlers] Adding item text:', text);
                     if (!text) return;
                     
                     const simpleItems = modal.querySelector('#simple-items');
                     const markdown = simpleItems.value;
                     const items = parseMarkdownItems(markdown);
+                    console.log('[setupChecklistHandlers] Current items before push:', items);
                     items.push({ text, completed: false });
+                    console.log('[setupChecklistHandlers] Items after push:', items);
                     
                     updateMarkdownStorage(items, simpleItems);
                     const container = modal.querySelector('#items-container');
