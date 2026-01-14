@@ -768,91 +768,91 @@ var TodoOperations = (function() {
      * Setup simple checklist item handlers
      */
     function setupChecklistHandlers() {
-        // Use event delegation on document to handle ALL modals
-        // This works even if multiple modal instances exist in the DOM
-        
-        // Track if we're currently processing an event to avoid duplicates
-        let processingEvent = false;
-        
+        // Set up a single click handler for the entire modal
+        // Attach it once to the document and it handles all modal instances
         document.addEventListener('click', function(e) {
-            // Prevent duplicate processing of the same event
-            if (processingEvent) return;
-            
             // Only handle clicks within a visible modal
             const modal = e.target.closest('#info-header-modal');
             if (!modal || !modal.classList.contains('show')) return;
             
             // Handle add button clicks
-            if (e.target.closest('#add-item-btn')) {
-                console.log('[setupChecklistHandlers] Add button clicked, processingEvent=', processingEvent);
-                if (processingEvent) return;
+            const addBtn = e.target.closest('#add-item-btn');
+            if (addBtn) {
+                e.preventDefault();
+                e.stopPropagation();
                 
-                processingEvent = true;
-                try {
-                    const input = modal.querySelector('#new-item-input');
-                    const text = input.value.trim();
-                    console.log('[setupChecklistHandlers] Adding item text:', text);
-                    if (!text) return;
-                    
+                const input = modal.querySelector('#new-item-input');
+                const text = input.value.trim();
+                
+                if (text) {
+                    console.log('[CHECKLIST] Adding item:', text);
                     const simpleItems = modal.querySelector('#simple-items');
-                    const markdown = simpleItems.value;
+                    const markdown = simpleItems.value || '';
                     const items = parseMarkdownItems(markdown);
-                    console.log('[setupChecklistHandlers] Current items before push:', items);
+                    console.log('[CHECKLIST] Items before push:', items);
+                    
                     items.push({ text, completed: false });
-                    console.log('[setupChecklistHandlers] Items after push:', items);
+                    console.log('[CHECKLIST] Items after push:', items);
                     
                     updateMarkdownStorage(items, simpleItems);
                     const container = modal.querySelector('#items-container');
                     renderChecklist(items, container);
+                    
                     input.value = '';
                     input.focus();
-                } finally {
-                    processingEvent = false;
                 }
-                e.preventDefault();
                 return;
             }
             
             // Handle item deletion
             const deleteBtn = e.target.closest('.delete-item-btn');
             if (deleteBtn) {
-                processingEvent = true;
-                try {
-                    const modal = deleteBtn.closest('#info-header-modal');
-                    if (!modal) return;
-                    
-                    const index = parseInt(deleteBtn.dataset.index);
-                    const simpleItems = modal.querySelector('#simple-items');
-                    const markdown = simpleItems.value;
-                    const items = parseMarkdownItems(markdown);
-                    
-                    items.splice(index, 1);
-                    updateMarkdownStorage(items, simpleItems);
-                    const container = modal.querySelector('#items-container');
-                    renderChecklist(items, container);
-                } finally {
-                    processingEvent = false;
-                }
                 e.preventDefault();
+                e.stopPropagation();
+                
+                const index = parseInt(deleteBtn.dataset.index);
+                const simpleItems = modal.querySelector('#simple-items');
+                const markdown = simpleItems.value || '';
+                const items = parseMarkdownItems(markdown);
+                
+                items.splice(index, 1);
+                updateMarkdownStorage(items, simpleItems);
+                const container = modal.querySelector('#items-container');
+                renderChecklist(items, container);
                 return;
             }
         });
         
         // Handle Enter key on input field
-        document.addEventListener('keypress', function(e) {
+        document.addEventListener('keydown', function(e) {
             if (e.key !== 'Enter') return;
             
             const input = e.target;
-            if (input.id !== 'new-item-input') return;
+            if (!input || input.id !== 'new-item-input') return;
             
             const modal = input.closest('#info-header-modal');
             if (!modal || !modal.classList.contains('show')) return;
             
             e.preventDefault();
-            const addBtn = modal.querySelector('#add-item-btn');
-            if (addBtn) {
-                // Simulate click without actually calling click() to avoid double processing
-                addBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            e.stopPropagation();
+            
+            const text = input.value.trim();
+            if (text) {
+                console.log('[CHECKLIST] Enter key - Adding item:', text);
+                const simpleItems = modal.querySelector('#simple-items');
+                const markdown = simpleItems.value || '';
+                const items = parseMarkdownItems(markdown);
+                console.log('[CHECKLIST] Items before push (Enter):', items);
+                
+                items.push({ text, completed: false });
+                console.log('[CHECKLIST] Items after push (Enter):', items);
+                
+                updateMarkdownStorage(items, simpleItems);
+                const container = modal.querySelector('#items-container');
+                renderChecklist(items, container);
+                
+                input.value = '';
+                input.focus();
             }
         });
         
@@ -865,7 +865,7 @@ var TodoOperations = (function() {
             
             const index = parseInt(e.target.dataset.index);
             const simpleItems = modal.querySelector('#simple-items');
-            const markdown = simpleItems.value;
+            const markdown = simpleItems.value || '';
             const items = parseMarkdownItems(markdown);
             
             if (items[index]) {
