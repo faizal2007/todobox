@@ -499,10 +499,7 @@ def update_todo(todo_id):
     if 'details' in data:
         details = data['details'].strip()
         todo.details = details
-        # Preprocess: Remove checkbox brackets for clean display using regex
-        import re as regex_module
-        details_display = regex_module.sub(r'^-\s*\[[^\]]*\]\s*', '- ', details, flags=regex_module.MULTILINE)
-        todo.details_html = clean(markdown.markdown(details_display, extensions=['fenced_code', 'pymdownx.tilde']), 
+        todo.details_html = clean(markdown.markdown(details, extensions=['fenced_code', 'pymdownx.tilde']), 
                                  tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
     
     if 'status' in data:
@@ -1982,16 +1979,9 @@ def add():
         import re
         getActivities = re.sub(r'^-\s*\[\s*([x ]?)\s*\]', r'- [\1]', getActivities, flags=re.MULTILINE)
         
-        # Preprocess: Remove checkbox brackets for clean display
-        # Convert "- [ ] text" to "- text" and "- [x] text" to "- text"
-        # Handle various formats: "- []", "- [ ]", "- [x]", etc.
-        # This ensures the HTML output shows clean bullet points without brackets
-        import re as regex_module
-        getActivities_display = regex_module.sub(r'^-\s*\[[^\]]*\]\s*', '- ', getActivities, flags=regex_module.MULTILINE)
-        
         # For HTML generation, markdown will handle the content properly
         # clean() will sanitize the resulting HTML
-        getActivities_html = clean(markdown.markdown(getActivities_display, extensions=['fenced_code', 'pymdownx.tilde']), 
+        getActivities_html = clean(markdown.markdown(getActivities, extensions=['fenced_code', 'pymdownx.tilde']), 
                                    tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
         logging.debug(f"[SAVE DEBUG] Generated HTML: {getActivities_html[:100] if getActivities_html else 'EMPTY'}")
         
@@ -2510,10 +2500,7 @@ def toggle_item(todo_id):
     
     # Update the todo
     todo.details = '\n'.join(lines)
-    # Preprocess: Remove checkbox brackets for clean display using regex
-    import re as regex_module
-    details_display = regex_module.sub(r'^-\s*\[[^\]]*\]\s*', '- ', todo.details, flags=regex_module.MULTILINE)
-    todo.details_html = clean(markdown.markdown(details_display, extensions=['fenced_code']), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+    todo.details_html = clean(markdown.markdown(todo.details, extensions=['fenced_code']), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
     todo.modified = datetime.now()
     
     db.session.commit()  # type: ignore[attr-defined]
