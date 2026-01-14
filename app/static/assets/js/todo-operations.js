@@ -768,47 +768,67 @@ var TodoOperations = (function() {
     function setupChecklistHandlers() {
         // Use event delegation on document to handle ALL modals
         // This works even if multiple modal instances exist in the DOM
+        
+        // Track if we're currently processing an event to avoid duplicates
+        let processingEvent = false;
+        
         document.addEventListener('click', function(e) {
+            // Prevent duplicate processing of the same event
+            if (processingEvent) return;
+            
             // Only handle clicks within a visible modal
             const modal = e.target.closest('#info-header-modal');
             if (!modal || !modal.classList.contains('show')) return;
             
             // Handle add button clicks
             if (e.target.closest('#add-item-btn')) {
-                const input = modal.querySelector('#new-item-input');
-                const text = input.value.trim();
-                if (!text) return;
-                
-                const simpleItems = modal.querySelector('#simple-items');
-                const markdown = simpleItems.value;
-                const items = parseMarkdownItems(markdown);
-                items.push({ text, completed: false });
-                
-                updateMarkdownStorage(items, simpleItems);
-                const container = modal.querySelector('#items-container');
-                renderChecklist(items, container);
-                input.value = '';
-                input.focus();
+                processingEvent = true;
+                try {
+                    const input = modal.querySelector('#new-item-input');
+                    const text = input.value.trim();
+                    if (!text) return;
+                    
+                    const simpleItems = modal.querySelector('#simple-items');
+                    const markdown = simpleItems.value;
+                    const items = parseMarkdownItems(markdown);
+                    items.push({ text, completed: false });
+                    
+                    updateMarkdownStorage(items, simpleItems);
+                    const container = modal.querySelector('#items-container');
+                    renderChecklist(items, container);
+                    input.value = '';
+                    input.focus();
+                } finally {
+                    processingEvent = false;
+                }
+                e.preventDefault();
                 return;
             }
             
             // Handle item deletion
             const deleteBtn = e.target.closest('.delete-item-btn');
             if (deleteBtn) {
-                const modal = deleteBtn.closest('#info-header-modal');
-                if (!modal) return;
-                
-                const index = parseInt(deleteBtn.dataset.index);
-                const simpleItems = modal.querySelector('#simple-items');
-                const markdown = simpleItems.value;
-                const items = parseMarkdownItems(markdown);
-                
-                items.splice(index, 1);
-                updateMarkdownStorage(items, simpleItems);
-                const container = modal.querySelector('#items-container');
-                renderChecklist(items, container);
+                processingEvent = true;
+                try {
+                    const modal = deleteBtn.closest('#info-header-modal');
+                    if (!modal) return;
+                    
+                    const index = parseInt(deleteBtn.dataset.index);
+                    const simpleItems = modal.querySelector('#simple-items');
+                    const markdown = simpleItems.value;
+                    const items = parseMarkdownItems(markdown);
+                    
+                    items.splice(index, 1);
+                    updateMarkdownStorage(items, simpleItems);
+                    const container = modal.querySelector('#items-container');
+                    renderChecklist(items, container);
+                } finally {
+                    processingEvent = false;
+                }
+                e.preventDefault();
+                return;
             }
-        }, { capture: true });
+        });
         
         // Handle Enter key on input field
         document.addEventListener('keypress', function(e) {
@@ -822,7 +842,10 @@ var TodoOperations = (function() {
             
             e.preventDefault();
             const addBtn = modal.querySelector('#add-item-btn');
-            if (addBtn) addBtn.click();
+            if (addBtn) {
+                // Simulate click without actually calling click() to avoid double processing
+                addBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            }
         });
         
         // Handle checkbox changes via event delegation on document
