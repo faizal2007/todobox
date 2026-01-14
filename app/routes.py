@@ -2312,12 +2312,22 @@ def add_simple():
                 'msg': 'Title is required.'
             }), 400
         
-        # Convert initial items to markdown checklist format
-        # Initial items should be one per line, and we create unchecked checkboxes
+        # The initial_items come from the frontend already in markdown format
+        # (e.g., "- [ ] item1\n- [x] item2")
+        # So we should use them directly instead of reformatting
         details = ''
         if initial_items:
-            items = [item.strip() for item in initial_items.split('\n') if item.strip()]
-            details = '\n'.join([f'- [ ] {escape(item)}' for item in items])
+            # Clean up any empty lines and ensure proper markdown format
+            lines = [line.strip() for line in initial_items.split('\n') if line.strip()]
+            # Only reformat if they're not already in markdown format
+            formatted_lines = []
+            for line in lines:
+                # If line already starts with "- [", keep it as is; otherwise, add the checkbox
+                if line.startswith('- ['):
+                    formatted_lines.append(line)
+                else:
+                    formatted_lines.append(f'- [ ] {escape(line)}')
+            details = '\n'.join(formatted_lines)
         
         # Handle schedule_day parameter
         schedule_day = request.form.get("schedule_day", "today")

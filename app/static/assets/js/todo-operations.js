@@ -691,12 +691,12 @@ var TodoOperations = (function() {
             .filter(line => line.trim().startsWith('- ['))
             .map(line => {
                 const trimmed = line.trim();
-                const completed = trimmed.includes('[x]');
-                // Remove checkbox format, handling both single and multiple occurrences
-                let text = trimmed.replace(/^- \[[^\]]\]\s*/, '');
+                // Check if checkbox is checked: [x] (case-insensitive) or [ ] (unchecked)
+                const completed = /\[x\]/i.test(trimmed);
                 
-                // In case of doubled checkboxes (malformed), remove any additional checkbox patterns
-                text = text.replace(/^- \[[^\]]\]\s*/, '');
+                // Extract text by removing the entire "- [ ] " or "- [x] " prefix
+                // Match: dash + space + bracket + any char + bracket + optional spaces
+                let text = trimmed.replace(/^-\s*\[[^\]]*\]\s*/g, '').trim();
                 
                 return { text, completed };
             });
