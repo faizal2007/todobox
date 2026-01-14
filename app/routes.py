@@ -52,6 +52,43 @@ def require_api_token(f):
 ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a', 'del', 's', 'input']
 ALLOWED_ATTRIBUTES = {'a': ['href', 'title'], 'input': ['type', 'disabled', 'checked']}
 
+def normalize_checkboxes(text):
+    """
+    Normalize checkbox syntax to standard format.
+    Converts all checkbox patterns to either '[ ]' (unchecked) or '[x]' (checked).
+    Works with all markdown list formats (-, *, +) and various bracket variations.
+    
+    Examples:
+    - "- []" → "- [ ]"
+    - "* [x]" → "* [x]"
+    - "- [  ]" → "- [ ]"
+    - "+ [X]" → "+ [x]"
+    """
+    import re
+    lines = text.split('\n')
+    normalized = []
+    for line in lines:
+        # Match: indent + bullet + optional space + [ + anything + ]
+        # Group 1: indent, Group 2: bullet, Group 3: bracket content, Group 4: rest
+        match = re.match(r'^(\s*)([-*+])\s*\[([^\]]*)\](.*)', line)
+        if match:
+            indent = match.group(1)
+            bullet = match.group(2)
+            bracket_content = match.group(3).strip()
+            rest = match.group(4)
+            
+            # Determine if checked: if 'x' or 'X' is present, it's checked
+            is_checked = 'x' in bracket_content.lower()
+            normalized_bracket = '[x]' if is_checked else '[ ]'
+            
+            # Reconstruct with normalized format
+            normalized.append(f'{indent}{bullet} {normalized_bracket}{rest}')
+        else:
+            # Not a checkbox line, keep as is
+            normalized.append(line)
+    
+    return '\n'.join(normalized)
+
 def convert_details_to_html(text):
     """
     Convert todo details to HTML, with smart detection of checkbox syntax.
@@ -441,6 +478,10 @@ def create_todo():
     if not title:
         return jsonify({'error': 'Title cannot be empty'}), 400
     
+    # Normalize checkbox syntax before converting to HTML
+    if details:
+        details = normalize_checkboxes(details)
+    
     # Create todo
     details_html = convert_details_to_html(details)
     
@@ -565,6 +606,9 @@ def update_todo(todo_id):
     
     if 'details' in data:
         details = data['details'].strip()
+        # Normalize checkbox syntax before converting to HTML
+        if details:
+            details = normalize_checkboxes(details)
         todo.details = details
         todo.details_html = convert_details_to_html(details)
     
@@ -2042,36 +2086,6 @@ def add():
         # Normalize checkbox syntax to standard format for all markdown bullet types (-, *, +)
         # This ensures consistency before detection: converts any bracket pattern to normalized form
         # Examples: "- []" → "- [ ]", "* [x]" → "* [x]", "- [  ]" → "- [ ]"
-        import re
-        
-        # Normalize all checkbox patterns: match any bullet (-, *, +) with brackets and any content inside
-        # Then standardize to either "[ ]" (unchecked) or "[x]" (checked)
-        def normalize_checkboxes(text):
-            """Normalize checkbox syntax to standard format"""
-            lines = text.split('\n')
-            normalized = []
-            for line in lines:
-                # Match: indent + bullet + optional space + [ + anything + ]
-                # Group 1: indent, Group 2: bullet, Group 3: bracket content
-                match = re.match(r'^(\s*)([-*+])\s*\[([^\]]*)\](.*)', line)
-                if match:
-                    indent = match.group(1)
-                    bullet = match.group(2)
-                    bracket_content = match.group(3).strip()
-                    rest = match.group(4)
-                    
-                    # Determine if checked: if 'x' or 'X' is present, it's checked
-                    is_checked = 'x' in bracket_content.lower()
-                    normalized_bracket = '[x]' if is_checked else '[ ]'
-                    
-                    # Reconstruct with normalized format
-                    normalized.append(f'{indent}{bullet} {normalized_bracket}{rest}')
-                else:
-                    # Not a checkbox line, keep as is
-                    normalized.append(line)
-            
-            return '\n'.join(normalized)
-        
         # Normalize all checkboxes first
         getActivities = normalize_checkboxes(getActivities)
         
