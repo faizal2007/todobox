@@ -744,8 +744,9 @@ var TodoOperations = (function() {
     /**
      * Update the hidden markdown textarea with current checklist data
      * @param {Array} items - Array of item objects
+     * @param {HTMLElement} simpleItemsElement - The simple-items textarea element (optional, will find first one if not provided)
      */
-    function updateMarkdownStorage(items) {
+    function updateMarkdownStorage(items, simpleItemsElement) {
         const markdown = items.map(item => {
             const checkbox = item.completed ? '[x]' : '[ ]';
             // Clean item text in case it has checkbox patterns from malformed data
@@ -753,7 +754,12 @@ var TodoOperations = (function() {
             return `- ${checkbox} ${cleanText}`;
         }).join('\n');
         
-        document.getElementById('simple-items').value = markdown;
+        if (!simpleItemsElement) {
+            simpleItemsElement = document.getElementById('simple-items');
+        }
+        if (simpleItemsElement) {
+            simpleItemsElement.value = markdown;
+        }
     }
 
     /**
@@ -778,7 +784,7 @@ var TodoOperations = (function() {
                 const items = parseMarkdownItems(markdown);
                 items.push({ text, completed: false });
                 
-                updateMarkdownStorage(items);
+                updateMarkdownStorage(items, simpleItems);
                 const container = modal.querySelector('#items-container');
                 renderChecklist(items, container);
                 input.value = '';
@@ -798,7 +804,7 @@ var TodoOperations = (function() {
                 const items = parseMarkdownItems(markdown);
                 
                 items.splice(index, 1);
-                updateMarkdownStorage(items);
+                updateMarkdownStorage(items, simpleItems);
                 const container = modal.querySelector('#items-container');
                 renderChecklist(items, container);
             }
@@ -809,7 +815,7 @@ var TodoOperations = (function() {
             if (e.key !== 'Enter') return;
             
             const input = e.target;
-            if (!input.id === 'new-item-input') return;
+            if (input.id !== 'new-item-input') return;
             
             const modal = input.closest('#info-header-modal');
             if (!modal || !modal.classList.contains('show')) return;
@@ -833,7 +839,7 @@ var TodoOperations = (function() {
             
             if (items[index]) {
                 items[index].completed = e.target.checked;
-                updateMarkdownStorage(items);
+                updateMarkdownStorage(items, simpleItems);
                 const container = modal.querySelector('#items-container');
                 renderChecklist(items, container);
             }
