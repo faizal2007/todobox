@@ -54,50 +54,69 @@ ALLOWED_ATTRIBUTES = {'a': ['href', 'title'], 'input': ['type', 'disabled', 'che
 
 def convert_details_to_html(text):
     """
-    Convert todo details to HTML, with special handling for checkbox syntax.
-    If content contains checkbox patterns (- [ ], * [ ], + [ ]), convert to visual checkboxes.
-    Otherwise, use standard markdown rendering.
+    Convert todo details to HTML, with smart detection of checkbox syntax.
+    
+    Rules:
+    1. If content contains checkbox patterns (- [], * [], + []), treat as simple mode
+       → Convert to visual checkboxes with NO bullets
+    2. If content has NO checkbox patterns, treat as advance mode
+       → Use standard markdown rendering (normal bullet lists)
     """
     import re
     
-    # Auto-detect: If content contains checkbox patterns (very permissive to catch all variations)
-    # Matches: [space][dash/asterisk/plus][optional space][bracket][anything][bracket]
-    has_checkboxes = bool(re.search(r'^[-*+]\s*\[\s*[x\s]*\s*\]', text, flags=re.MULTILINE))
+    if not text or not text.strip():
+        return ''
+    
+    # Auto-detect: If content contains ANY checkbox patterns
+    # Very permissive: matches -, *, or + followed by brackets with optional content
+    # Examples: - [ ], - [], * [x], *[], + [ ], etc.
+    has_checkboxes = bool(re.search(r'^[-*+]\s*\[[^\]]*\]', text, flags=re.MULTILINE))
     
     if has_checkboxes:
-        # Convert checkboxes to HTML with visual checkbox elements
+        # Content has checkboxes - convert to visual checkbox list (simple mode behavior)
         def convert_checkboxes_to_html(text):
             """Convert markdown checkbox syntax to HTML checkbox elements"""
             lines = text.split('\n')
             html_lines = []
+            
             for line in lines:
-                # Match checkbox pattern - very permissive to handle all variations
-                # Handles: - [ ], - [], * [ ], *[], * [x], *[x], etc.
-                match = re.match(r'^(\s*)[-*+]\s*\[\s*([x\s]*)\s*\]\s*(.*)', line, re.IGNORECASE)
+                # Match checkbox pattern: any dash/asterisk/plus followed by brackets
+                # Captures: (indent)(bullet)(checkbox_content)(remaining_text)
+                match = re.match(r'^(\s*)([-*+])\s*\[([^\]]*)\]\s*(.*)', line)
+                
                 if match:
                     indent = match.group(1)
-                    # Check if 'x' is present anywhere in the brackets (checked=true)
-                    checked = 'checked' if 'x' in match.group(2).lower() else ''
-                    text_content = match.group(3)
-                    # Create HTML with visual checkbox
-                    html_lines.append(f'{indent}<li><input type="checkbox" disabled {checked}> {text_content}</li>')
+                    # Group 3 contains anything inside brackets: space, x, spaces, etc.
+                    bracket_content = match.group(3)
+                    # Check if 'x' is present (case insensitive) - if so, checkbox is checked
+                    checked = 'checked' if 'x' in bracket_content.lower() else ''
+                    text_content = match.group(4).strip()
+                    
+                    # Create HTML with visual checkbox element
+                    if text_content:  # Only create list item if there's text content
+                        html_lines.append(f'{indent}<li><input type="checkbox" disabled {checked}> {text_content}</li>')
+                    else:
+                        # Empty checkbox item - preserve it
+                        html_lines.append(f'{indent}<li><input type="checkbox" disabled {checked}></li>')
                 else:
+                    # Non-checkbox line - preserve as is
                     html_lines.append(line)
             
-            # Wrap in <ul> tags if we have list items
+            # Wrap in <ul> tags if we have any list items
             has_items = any('<li>' in line for line in html_lines)
             if has_items:
                 return '<ul>\n' + '\n'.join(html_lines) + '\n</ul>'
             else:
-                # Fallback to markdown if no checkboxes were converted
-                # This shouldn't happen if has_checkboxes detection worked
+                # Shouldn't reach here if has_checkboxes detection worked correctly
+                # But fallback to markdown just in case
                 return markdown.markdown(text, extensions=['fenced_code', 'pymdownx.tilde'])
         
         # Convert checkboxes and sanitize HTML
         checkbox_html = convert_checkboxes_to_html(text)
         return clean(checkbox_html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
     else:
-        # No checkboxes - use standard markdown rendering
+        # No checkboxes detected - treat as advance mode
+        # Use standard markdown rendering (will create normal bullet lists for * or - items)
         return clean(markdown.markdown(text, extensions=['fenced_code', 'pymdownx.tilde']), 
                      tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
 
