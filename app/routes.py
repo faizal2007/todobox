@@ -1972,6 +1972,13 @@ def add():
             getTitle = getTitle[:255]
         if len(getActivities) > 10000:
             getActivities = getActivities[:10000]
+        
+        # Fix malformed checkbox syntax: convert "- []" or "- [x]" with no space to proper format
+        # Regex explanation: match "- [" followed by any non-bracket chars, then "]"
+        # This handles: "- [] text" → "- [ ] text" and "- [x] text" → "- [x] text"
+        import re
+        getActivities = re.sub(r'^-\s*\[\s*([x ]?)\s*\]', r'- [\1]', getActivities, flags=re.MULTILINE)
+        
         # For HTML generation, markdown will handle the content properly
         # clean() will sanitize the resulting HTML
         getActivities_html = clean(markdown.markdown(getActivities, extensions=['fenced_code', 'pymdownx.tilde']), 
@@ -2350,7 +2357,7 @@ def add_simple():
         t = Todo(
             name=getTitle,
             details=details,
-            details_html=clean(markdown.markdown(details), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES),
+            details_html=clean(markdown.markdown(details, extensions=['pymdownx.superfences', 'pymdownx.tasklists']), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES),
             user_id=current_user.id,
             todo_type='simple'  # Mark as simple type
         )
@@ -2486,7 +2493,7 @@ def toggle_item(todo_id):
     
     # Update the todo
     todo.details = '\n'.join(lines)
-    todo.details_html = clean(markdown.markdown(todo.details), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+    todo.details_html = clean(markdown.markdown(todo.details, extensions=['pymdownx.superfences', 'pymdownx.tasklists']), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
     todo.modified = datetime.now()
     
     db.session.commit()  # type: ignore[attr-defined]
