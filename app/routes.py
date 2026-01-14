@@ -52,6 +52,52 @@ def require_api_token(f):
 ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a', 'del', 's', 'input']
 ALLOWED_ATTRIBUTES = {'a': ['href', 'title'], 'input': ['type', 'disabled', 'checked']}
 
+def convert_details_to_html(text):
+    """
+    Convert todo details to HTML, with special handling for checkbox syntax.
+    If content contains checkbox patterns (- [ ], * [ ], + [ ]), convert to visual checkboxes.
+    Otherwise, use standard markdown rendering.
+    """
+    import re
+    
+    # Auto-detect: If content contains checkbox patterns
+    has_checkboxes = bool(re.search(r'^[-*+]\s*\[[^\]]*\]', text, flags=re.MULTILINE))
+    
+    if has_checkboxes:
+        # Convert checkboxes to HTML with visual checkbox elements
+        def convert_checkboxes_to_html(text):
+            """Convert markdown checkbox syntax to HTML checkbox elements"""
+            lines = text.split('\n')
+            html_lines = []
+            for line in lines:
+                # Match checkbox pattern: - [ ] or * [ ] or + [ ] (with or without 'x')
+                # Supports both dash and asterisk list formats: - [ ] or * [ ] or * [x]
+                match = re.match(r'^(\s*)[-*+]\s*\[([x\s]*)\]\s*(.*)', line, re.IGNORECASE)
+                if match:
+                    indent = match.group(1)
+                    # Check if 'x' is present anywhere in the brackets (checked=true)
+                    checked = 'checked' if 'x' in match.group(2).lower() else ''
+                    text_content = match.group(3)
+                    # Create HTML with visual checkbox
+                    html_lines.append(f'{indent}<li><input type="checkbox" disabled {checked}> {text_content}</li>')
+                else:
+                    html_lines.append(line)
+            
+            # Wrap in <ul> tags if we have list items
+            has_items = any('<li>' in line for line in html_lines)
+            if has_items:
+                return '<ul>\n' + '\n'.join(html_lines) + '\n</ul>'
+            else:
+                return markdown.markdown(text, extensions=['fenced_code', 'pymdownx.tilde'])
+        
+        # Convert checkboxes and sanitize HTML
+        checkbox_html = convert_checkboxes_to_html(text)
+        return clean(checkbox_html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+    else:
+        # No checkboxes - use standard markdown rendering
+        return clean(markdown.markdown(text, extensions=['fenced_code', 'pymdownx.tilde']), 
+                     tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+
 # CSRF Error Handler - only for web routes
 @app.errorhandler(400)
 def handle_csrf_error(e):
@@ -374,8 +420,7 @@ def create_todo():
         return jsonify({'error': 'Title cannot be empty'}), 400
     
     # Create todo
-    details_html = clean(markdown.markdown(details, extensions=['fenced_code', 'pymdownx.tilde']), 
-                        tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+    details_html = convert_details_to_html(details)
     
     todo = Todo(name=title, details=details, details_html=details_html, user_id=user.id)
     db.session.add(todo)  # type: ignore[attr-defined]
@@ -499,8 +544,7 @@ def update_todo(todo_id):
     if 'details' in data:
         details = data['details'].strip()
         todo.details = details
-        todo.details_html = clean(markdown.markdown(details, extensions=['fenced_code', 'pymdownx.tilde']), 
-                                 tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+        todo.details_html = convert_details_to_html(details)
     
     if 'status' in data:
         status_name = data['status']
@@ -1979,44 +2023,8 @@ def add():
         import re
         getActivities = re.sub(r'^-\s*\[\s*([x ]?)\s*\]', r'- [\1]', getActivities, flags=re.MULTILINE)
         
-        # Auto-detect: If content contains checkbox patterns (dash or asterisk), treat as simple mode content
-        # and convert to HTML with actual visual checkboxes
-        has_checkboxes = bool(re.search(r'^[-*+]\s*\[[^\]]*\]', getActivities, flags=re.MULTILINE))
-        
-        if has_checkboxes:
-            # Content has checkboxes - convert to HTML with visual checkbox elements
-            def convert_checkboxes_to_html(text):
-                """Convert markdown checkbox syntax to HTML checkbox elements"""
-                lines = text.split('\n')
-                html_lines = []
-                for line in lines:
-                    # Match checkbox pattern: - [ ] or * [ ] or + [ ] (with or without 'x')
-                    # Supports both dash and asterisk list formats: - [ ] or * [ ] or * [x]
-                    match = re.match(r'^(\s*)[-*+]\s*\[([x\s]*)\]\s*(.*)', line, re.IGNORECASE)
-                    if match:
-                        indent = match.group(1)
-                        # Check if 'x' is present anywhere in the brackets (checked=true)
-                        checked = 'checked' if 'x' in match.group(2).lower() else ''
-                        text_content = match.group(3)
-                        # Create HTML with visual checkbox
-                        html_lines.append(f'{indent}<li><input type="checkbox" disabled {checked}> {text_content}</li>')
-                    else:
-                        html_lines.append(line)
-                
-                # Wrap in <ul> tags if we have list items
-                has_items = any('<li>' in line for line in html_lines)
-                if has_items:
-                    return '<ul>\n' + '\n'.join(html_lines) + '\n</ul>'
-                else:
-                    return markdown.markdown(text, extensions=['fenced_code', 'pymdownx.tilde'])
-            
-            # Convert checkboxes and sanitize HTML
-            checkbox_html = convert_checkboxes_to_html(getActivities)
-            getActivities_html = clean(checkbox_html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
-        else:
-            # No checkboxes - use standard markdown rendering
-            getActivities_html = clean(markdown.markdown(getActivities, extensions=['fenced_code', 'pymdownx.tilde']), 
-                                       tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+        # Convert details to HTML with checkbox support
+        getActivities_html = convert_details_to_html(getActivities)
         logging.debug(f"[SAVE DEBUG] Generated HTML: {getActivities_html[:100] if getActivities_html else 'EMPTY'}")
         
         # Handle new schedule_day parameter
@@ -2398,7 +2406,7 @@ def add_simple():
         t = Todo(
             name=getTitle,
             details=details,
-            details_html=clean(markdown.markdown(details_for_display, extensions=['fenced_code']), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES),
+            details_html=convert_details_to_html(details),
             user_id=current_user.id,
             todo_type='simple'  # Mark as simple type
         )
@@ -2534,7 +2542,7 @@ def toggle_item(todo_id):
     
     # Update the todo
     todo.details = '\n'.join(lines)
-    todo.details_html = clean(markdown.markdown(todo.details, extensions=['fenced_code']), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+    todo.details_html = convert_details_to_html(todo.details)
     todo.modified = datetime.now()
     
     db.session.commit()  # type: ignore[attr-defined]
