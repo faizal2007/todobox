@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **On-the-Fly Content Conversion Between Simple and Advanced Modes**:
+  - Implemented dynamic content conversion when switching between simple and advanced modes without requiring save
+  - Simple → Advanced: Markdown checklist format automatically converted to advanced editor content
+  - Advanced → Simple: Content converted only if it contains checklist format (- [ ] pattern), otherwise shows confirmation dialog
+  - Content conversion happens immediately on mode switch (on-the-fly experience)
+  - Added conversion functions: `convertSimpleToAdvanced()` and `convertAdvancedToSimple()`
+  - Added compatibility check: `isAdvancedContentCompatibleWithSimple()` to validate advanced content for simple mode
+  - Store original content (`originalSimpleContent`, `originalAdvancedContent`) when loading todos for editing
+  - Unsaved changes are temporary and local to the modal - don't affect database until save is clicked
+  - Auto-revert capability: Modal close without saving restores database content
+  - Enhanced mode switching with event listeners on radio buttons and bootstrap button group labels
+  - Improved UX: User can preview content in different modes before committing to save
+
 - **Simple Todo Feature**: New quick-creation todo type for checklists
   - Added `todo_type` column to Todo model (default: 'advanced' for backward compatibility)
   - New SimpleTodoForm for minimal title-only input
