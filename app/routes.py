@@ -2336,6 +2336,12 @@ def add_simple():
                     formatted_lines.append(f'- [ ] {escape(line)}')
             details = '\n'.join(formatted_lines)
         
+        # Preprocess: Remove checkbox brackets for clean display
+        # Convert "- [ ] text" to "- text" and "- [x] text" to "- text"
+        # This ensures the HTML output shows clean bullet points without brackets
+        details_for_display = details
+        details_for_display = details_for_display.replace('- [ ] ', '- ').replace('- [x] ', '- ').replace('- [ ]', '-').replace('- [x]', '-')
+        
         # Handle schedule_day parameter
         schedule_day = request.form.get("schedule_day", "today")
         custom_date = request.form.get("custom_date", "")
@@ -2357,7 +2363,7 @@ def add_simple():
         t = Todo(
             name=getTitle,
             details=details,
-            details_html=clean(markdown.markdown(details, extensions=['fenced_code']), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES),
+            details_html=clean(markdown.markdown(details_for_display, extensions=['fenced_code']), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES),
             user_id=current_user.id,
             todo_type='simple'  # Mark as simple type
         )
