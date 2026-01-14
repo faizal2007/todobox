@@ -123,6 +123,11 @@ var TodoOperations = (function() {
                         
                         // Store markdown in hidden textarea for form submission
                         $('#simple-items').val(items);
+                        
+                        // Store original content for reverting if user doesn't save
+                        window.originalSimpleContent = items;
+                        window.originalAdvancedContent = items;
+                        
                         console.log('Loaded simple todo items (GET API):', parsedItems);
                     } else {
                         // Switch to advanced mode
@@ -149,6 +154,10 @@ var TodoOperations = (function() {
                         // Ensure SimpleMDE has the correct value and is refreshed
                         var content = data['description'] || '';
                         simplemde.value(content);
+                        
+                        // Store original content for reverting if user doesn't save
+                        window.originalSimpleContent = content;
+                        window.originalAdvancedContent = content;
                         
                         // Refresh CodeMirror to ensure it displays correctly
                         setTimeout(function() {

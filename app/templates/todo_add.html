@@ -97,132 +97,218 @@
 					
 					<!-- Mode Toggle Script -->
 					<script>
-					// Make updateModeDisplay globally accessible so it can be called from todo-operations.js
-					window.updateModeDisplay = function() {
-						const modeSimple = document.getElementById('mode-simple');
-						const simpleModeContent = document.getElementById('simple-mode-content');
-						const advancedModeContent = document.getElementById('advanced-mode-content');
-						const modeDescription = document.getElementById('mode-description');
-						const todoModeInput = document.getElementById('todo_mode');
+				// Store original content to restore if user doesn't save
+				window.originalSimpleContent = '';
+				window.originalAdvancedContent = '';
+				
+				// Make updateModeDisplay globally accessible so it can be called from todo-operations.js
+				window.updateModeDisplay = function() {
+					const modeSimple = document.getElementById('mode-simple');
+					const simpleModeContent = document.getElementById('simple-mode-content');
+					const advancedModeContent = document.getElementById('advanced-mode-content');
+					const modeDescription = document.getElementById('mode-description');
+					const todoModeInput = document.getElementById('todo_mode');
+					
+					if (modeSimple && modeSimple.checked) {
+						// Show simple mode
+						simpleModeContent.style.display = 'block';
+						advancedModeContent.style.display = 'none';
+						modeDescription.innerHTML = '<i class="mdi mdi-information-outline"></i> Perfect for quick checklists - easily tick items off as you complete them.';
+						todoModeInput.value = 'simple';
+					} else {
+						// Show advanced mode
+						simpleModeContent.style.display = 'none';
+						advancedModeContent.style.display = 'block';
+						modeDescription.innerHTML = '<i class="mdi mdi-information-outline"></i> Create rich, formatted todos with detailed descriptions and markdown support.';
+						todoModeInput.value = 'advanced';
 						
-						if (modeSimple && modeSimple.checked) {
-							// Show simple mode
-							simpleModeContent.style.display = 'block';
-							advancedModeContent.style.display = 'none';
-							modeDescription.innerHTML = '<i class="mdi mdi-information-outline"></i> Perfect for quick checklists - easily tick items off as you complete them.';
-							todoModeInput.value = 'simple';
-						} else {
-							// Show advanced mode
-							simpleModeContent.style.display = 'none';
-							advancedModeContent.style.display = 'block';
-							modeDescription.innerHTML = '<i class="mdi mdi-information-outline"></i> Create rich, formatted todos with detailed descriptions and markdown support.';
-							todoModeInput.value = 'advanced';
+						// Initialize SimpleMDE if needed
+						if (typeof window.simplemde !== 'undefined' && window.simplemde) {
+							window.simplemde.codemirror.refresh();
+						}
+					}
+				};
+				
+				// Convert simple mode checklist to advanced mode markdown
+				function convertSimpleToAdvanced() {
+					const simpleItems = document.getElementById('simple-items').value;
+					if (!simpleItems.trim()) return '';
+					// Simple content is already in markdown format, just return it
+					return simpleItems;
+				}
+				
+				// Convert advanced mode markdown to simple mode checklist
+				function convertAdvancedToSimple() {
+					if (typeof window.simplemde === 'undefined' || !window.simplemde) return '';
+					const advancedContent = window.simplemde.value();
+					if (!advancedContent.trim()) return '';
+					
+					// Extract only checklist items from advanced content
+					const lines = advancedContent.split('\n');
+					const checklistItems = lines.filter(line => /^[-*+]\s*\[/.test(line.trim()));
+					
+					return checklistItems.join('\n');
+				}
+				
+				// Check if advanced content is compatible with simple mode
+				function isAdvancedContentCompatibleWithSimple() {
+					if (typeof window.simplemde === 'undefined' || !window.simplemde) return false;
+					const content = window.simplemde.value();
+					// Check if content contains checklist patterns
+					const hasChecklist = /^[-*+]\s*\[[^\]]*\]/m.test(content);
+					return hasChecklist;
+				}
+				
+				// Parse simple items from markdown and render checkboxes
+				function renderSimpleItems() {
+					const simpleItems = document.getElementById('simple-items').value;
+					const container = document.getElementById('items-container');
+					container.innerHTML = '';
+					
+					if (!simpleItems.trim()) return;
+					
+					const items = simpleItems.split('\n').filter(line => line.trim());
+					items.forEach((item, index) => {
+						const match = item.match(/^[-*+]\s*\[([x\s])\]\s*(.*)/i);
+						if (match) {
+							const isChecked = match[1].toLowerCase() === 'x';
+							const text = match[2];
 							
-							// Initialize SimpleMDE if needed
-							if (typeof window.simplemde !== 'undefined' && window.simplemde) {
-								window.simplemde.codemirror.refresh();
-							}
+							const itemDiv = document.createElement('div');
+							itemDiv.className = 'simple-todo-item mb-2';
+							itemDiv.innerHTML = `
+								<div class="custom-control custom-checkbox">
+									<input type="checkbox" class="custom-control-input simple-item-checkbox" id="item-${index}" ${isChecked ? 'checked' : ''} data-index="${index}">
+									<label class="custom-control-label ${isChecked ? 'text-muted' : ''}" for="item-${index}" style="${isChecked ? 'text-decoration: line-through;' : ''}">
+										${text}
+									</label>
+								</div>
+							`;
+							container.appendChild(itemDiv);
 						}
-					};
+					});
+				}
+				
+				// Make previousMode global so it can be updated from todo-operations.js
+				window.previousMode = 'simple';
+				
+				document.addEventListener('DOMContentLoaded', function() {
+					const modeSimple = document.getElementById('mode-simple');
+					const modeAdvanced = document.getElementById('mode-advanced');
+					const modeSimpleLabel = document.querySelector('label[for="mode-simple"]');
+					const modeAdvancedLabel = document.querySelector('label[for="mode-advanced"]');
 					
-					// Make previousMode global so it can be updated from todo-operations.js
-					window.previousMode = 'simple';
-					
-					document.addEventListener('DOMContentLoaded', function() {
-						const modeSimple = document.getElementById('mode-simple');
-						const modeAdvanced = document.getElementById('mode-advanced');
-						const modeSimpleLabel = document.querySelector('label[for="mode-simple"]');
-						const modeAdvancedLabel = document.querySelector('label[for="mode-advanced"]');
-						
-						// Check if advanced mode content is compatible with simple mode (checklist format)
-						function isAdvancedContentCompatibleWithSimple() {
-							if (typeof window.simplemde !== 'undefined' && window.simplemde) {
-								const content = window.simplemde.value();
-								console.log('[MODE DEBUG] Checking advanced content compatibility:', content.substring(0, 100));
-								// Check if content is in checklist format (contains "- [" pattern)
-								const hasChecklist = /^-\s*\[[^\]]\]/m.test(content);
-								console.log('[MODE DEBUG] Has checklist format:', hasChecklist);
-								return hasChecklist;
-							}
-							return false;
-						}
-						
-						// Handle clicks on mode labels (Bootstrap button group)
-						if (modeSimpleLabel) {
-							modeSimpleLabel.addEventListener('click', function(e) {
-								console.log('[MODE DEBUG] Simple mode label clicked, previousMode:', window.previousMode);
-								if (window.previousMode === 'advanced') {
-									// Switching from advanced to simple
-									if (!isAdvancedContentCompatibleWithSimple()) {
-										// Content not compatible, prevent the switch and show warning
-										e.preventDefault();
-										e.stopPropagation();
-										console.log('[MODE DEBUG] Content not compatible, showing modal');
-										$('#mode-switch-confirm-modal').modal('show');
-										return false;
-									}
+					// Handle clicks on mode labels (Bootstrap button group)
+					if (modeSimpleLabel) {
+						modeSimpleLabel.addEventListener('click', function(e) {
+							console.log('[MODE DEBUG] Simple mode label clicked, previousMode:', window.previousMode);
+							if (window.previousMode === 'advanced') {
+								// Switching from advanced to simple - convert content on the fly
+								const advancedContent = window.simplemde.value();
+								const isCompatible = isAdvancedContentCompatibleWithSimple();
+								
+								if (isCompatible) {
+									// Content has checklists - convert it
+									const converted = convertAdvancedToSimple();
+									document.getElementById('simple-items').value = converted;
+									renderSimpleItems();
+									window.originalSimpleContent = converted;
+									console.log('[MODE DEBUG] Converted advanced to simple:', converted.substring(0, 50));
+								} else {
+									// Content not compatible - show confirmation
+									e.preventDefault();
+									e.stopPropagation();
+									console.log('[MODE DEBUG] Content not compatible, showing modal');
+									$('#mode-switch-confirm-modal').modal('show');
+									return false;
 								}
-								window.previousMode = 'simple';
-								window.updateModeDisplay();
-							});
-						}
-						
-						if (modeAdvancedLabel) {
-							modeAdvancedLabel.addEventListener('click', function() {
-								console.log('[MODE DEBUG] Advanced mode label clicked');
+							}
+							window.previousMode = 'simple';
+							window.updateModeDisplay();
+						});
+					}
+					
+					if (modeAdvancedLabel) {
+						modeAdvancedLabel.addEventListener('click', function() {
+							console.log('[MODE DEBUG] Advanced mode label clicked');
+							if (window.previousMode === 'simple') {
+								// Switching from simple to advanced - convert content on the fly
+								const converted = convertSimpleToAdvanced();
+								window.simplemde.value(converted);
+								window.originalAdvancedContent = converted;
+								console.log('[MODE DEBUG] Converted simple to advanced:', converted.substring(0, 50));
+							}
+							window.previousMode = 'advanced';
+							window.updateModeDisplay();
+						});
+					}
+					
+					// Also listen to radio button changes as backup
+					if (modeSimple) {
+						modeSimple.addEventListener('change', function() {
+							console.log('[MODE DEBUG] mode-simple radio change event');
+							if (!this.checked) return;
+							if (window.previousMode === 'advanced') {
+								const isCompatible = isAdvancedContentCompatibleWithSimple();
+								if (!isCompatible) {
+									modeAdvanced.checked = true;
+									$('#mode-switch-confirm-modal').modal('show');
+									return;
+								}
+								// Convert content
+								const converted = convertAdvancedToSimple();
+								document.getElementById('simple-items').value = converted;
+								renderSimpleItems();
+								window.originalSimpleContent = converted;
+							}
+							window.previousMode = 'simple';
+							window.updateModeDisplay();
+						});
+					}
+					
+					if (modeAdvanced) {
+						modeAdvanced.addEventListener('change', function() {
+							console.log('[MODE DEBUG] mode-advanced radio change event');
+							if (this.checked) {
+								if (window.previousMode === 'simple') {
+									// Convert content
+									const converted = convertSimpleToAdvanced();
+									window.simplemde.value(converted);
+									window.originalAdvancedContent = converted;
+								}
 								window.previousMode = 'advanced';
 								window.updateModeDisplay();
-							});
-						}
-						
-						// Also listen to radio button changes as backup
-						if (modeSimple) {
-							modeSimple.addEventListener('change', function() {
-								console.log('[MODE DEBUG] mode-simple radio change event');
-								if (!this.checked) return;
-								if (window.previousMode === 'advanced') {
-									if (!isAdvancedContentCompatibleWithSimple()) {
-										modeAdvanced.checked = true;
-										$('#mode-switch-confirm-modal').modal('show');
-										return;
-									}
-								}
-								window.previousMode = 'simple';
-								window.updateModeDisplay();
-							});
-						}
-						
-						if (modeAdvanced) {
-							modeAdvanced.addEventListener('change', function() {
-								console.log('[MODE DEBUG] mode-advanced radio change event');
-								if (this.checked) {
-									window.previousMode = 'advanced';
-									window.updateModeDisplay();
-								}
-							});
-						}
-						
-						// Handle confirmation of mode switch
-						$('#confirm-mode-switch').click(function() {
-							// User confirmed switching to simple mode
-							// Only clear the advanced editor, but keep the simple mode data intact
-							if (typeof window.simplemde !== 'undefined' && window.simplemde) {
-								window.simplemde.value('');
 							}
-							
-							// Now actually switch the mode
-							modeSimple.checked = true;
-							modeAdvanced.checked = false;
-							window.previousMode = 'simple';
-							
-							// Update visual state
-							$('label[for="mode-simple"], label[for="mode-advanced"]').removeClass('active');
-							$('label[for="mode-simple"]').addClass('active');
-							
-							window.updateModeDisplay();
-							$('#mode-switch-confirm-modal').modal('hide');
 						});
+					}
+					
+					// Handle confirmation of mode switch
+					$('#confirm-mode-switch').click(function() {
+						// User confirmed switching to simple mode
+						// Only clear the advanced editor, but keep the simple mode data intact
+						if (typeof window.simplemde !== 'undefined' && window.simplemde) {
+							window.simplemde.value('');
+						}
 						
+						// Now actually switch the mode
+						modeSimple.checked = true;
+						modeAdvanced.checked = false;
+						window.previousMode = 'simple';
+						
+						// Update visual state
+						$('label[for="mode-simple"], label[for="mode-advanced"]').removeClass('active');
+						$('label[for="mode-simple"]').addClass('active');
+						
+						window.updateModeDisplay();
+						$('#mode-switch-confirm-modal').modal('hide');
+					});
+					
+					// Handle modal close - restore original content if not saved
+					$('#info-header-modal').on('hidden.bs.modal', function() {
+						// Reset to original content
+						window.originalSimpleContent = '';
+						window.originalAdvancedContent = '';
+						window.previousMode = 'simple';
 						// Set initial display
 						window.updateModeDisplay();
 					});
