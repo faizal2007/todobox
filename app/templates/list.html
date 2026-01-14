@@ -101,7 +101,8 @@
                                                        <h3 class="card-title mb-0">{{ list.Todo.name|title }}</h3>
                                                        <div class="divider"><hr></div>
                                                        
-                                                       {% if list.Todo.todo_type == 'simple' %}
+                                                       {% set detected_type = 'simple' if list.Todo.details and ('- [' in list.Todo.details or '* [' in list.Todo.details or '+ [' in list.Todo.details) else 'advanced' %}
+                                                       {% if detected_type == 'simple' %}
                                                             <!-- Simple Todo: Render as interactive checkboxes -->
                                                             <div class="simple-todo-items">
                                                                  {% set items = list.Todo.details.split('\n') %}
