@@ -1979,9 +1979,9 @@ def add():
         import re
         getActivities = re.sub(r'^-\s*\[\s*([x ]?)\s*\]', r'- [\1]', getActivities, flags=re.MULTILINE)
         
-        # Auto-detect: If content contains checkbox patterns, treat as simple mode content
+        # Auto-detect: If content contains checkbox patterns (dash or asterisk), treat as simple mode content
         # and convert to HTML with actual visual checkboxes
-        has_checkboxes = bool(re.search(r'^-\s*\[[^\]]*\]', getActivities, flags=re.MULTILINE))
+        has_checkboxes = bool(re.search(r'^[-*+]\s*\[[^\]]*\]', getActivities, flags=re.MULTILINE))
         
         if has_checkboxes:
             # Content has checkboxes - convert to HTML with visual checkbox elements
@@ -1990,9 +1990,9 @@ def add():
                 lines = text.split('\n')
                 html_lines = []
                 for line in lines:
-                    # Match checkbox pattern: - [ ] or - [x] with optional leading whitespace
-                    # Matches: - [ ] or - [x] or - [  ] (flexible spacing inside brackets)
-                    match = re.match(r'^(\s*)-\s*\[([x\s]*)\]\s*(.*)', line, re.IGNORECASE)
+                    # Match checkbox pattern: - [ ] or * [ ] or + [ ] (with or without 'x')
+                    # Supports both dash and asterisk list formats: - [ ] or * [ ] or * [x]
+                    match = re.match(r'^(\s*)[-*+]\s*\[([x\s]*)\]\s*(.*)', line, re.IGNORECASE)
                     if match:
                         indent = match.group(1)
                         # Check if 'x' is present anywhere in the brackets (checked=true)
