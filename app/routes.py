@@ -1991,10 +1991,12 @@ def add():
                 html_lines = []
                 for line in lines:
                     # Match checkbox pattern: - [ ] or - [x] with optional leading whitespace
-                    match = re.match(r'^(\s*)-\s*\[([x ])\]\s*(.*)', line, re.IGNORECASE)
+                    # Matches: - [ ] or - [x] or - [  ] (flexible spacing inside brackets)
+                    match = re.match(r'^(\s*)-\s*\[([x\s]*)\]\s*(.*)', line, re.IGNORECASE)
                     if match:
                         indent = match.group(1)
-                        checked = 'checked' if match.group(2).lower() == 'x' else ''
+                        # Check if 'x' is present anywhere in the brackets (checked=true)
+                        checked = 'checked' if 'x' in match.group(2).lower() else ''
                         text_content = match.group(3)
                         # Create HTML with visual checkbox
                         html_lines.append(f'{indent}<li><input type="checkbox" disabled {checked}> {text_content}</li>')
