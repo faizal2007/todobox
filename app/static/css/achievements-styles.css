@@ -333,20 +333,12 @@
         color: #2c3e50;
         font-size: 15px;
         line-height: 1.6;
-        padding: 16px;
-        border-left: 4px solid #4d7fe8;
-        background: #f8f9fa;
-        border-radius: 4px;
     }
     
     .achievement-modal-info-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 16px;
-        padding: 16px;
-        border-left: 4px solid #4d7fe8;
-        background: #f8f9fa;
-        border-radius: 4px;
     }
     
     .achievement-modal-info-item {
