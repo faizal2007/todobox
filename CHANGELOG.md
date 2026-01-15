@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Advanced Mode Content Transfer Issue**: Fixed JavaScript syntax error preventing Advanced Mode from working properly
+  - Removed recursive function definition that was causing "missing } after function body" syntax error
+  - Improved `convertSimpleToAdvanced()` to properly extract items from both hidden textarea and displayed UI elements
+  - Fixed SimpleMDE initialization timing: Now initializes BEFORE attempting to set content value
+  - Added proper content extraction from the items container using querySelectorAll for checkboxes
+  - Ensures simple checklist items (with checked state) are properly converted to markdown format when switching to advanced mode
+  - Added fallback initialization if SimpleMDE is not immediately available
+
 ### Added
 - **On-the-Fly Content Conversion Between Simple and Advanced Modes**:
   - Implemented dynamic content conversion when switching between simple and advanced modes without requiring save
