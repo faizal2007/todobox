@@ -119,6 +119,7 @@
     
     .achievement-item:hover {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
     }
     
     .achievement-item.strikethrough .achievement-title {
@@ -328,6 +329,188 @@
             font-size: 10px;
         }
     }
+
+    /* Modal Styles */
+    .achievement-modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .achievement-modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .achievement-modal-content {
+        background-color: #fefefe;
+        padding: 0;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .achievement-modal-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: none;
+    }
+
+    .achievement-modal-header-title {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex: 1;
+    }
+
+    .achievement-modal-header-icon {
+        font-size: 32px;
+        opacity: 0.9;
+    }
+
+    .achievement-modal-header-text h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+    }
+
+    .achievement-modal-header-text p {
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+        font-size: 14px;
+    }
+
+    .achievement-modal-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 0;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .achievement-modal-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+
+    .achievement-modal-body {
+        padding: 25px;
+    }
+
+    .achievement-modal-section {
+        margin-bottom: 25px;
+    }
+
+    .achievement-modal-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .achievement-modal-section-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #667eea;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+    }
+
+    .achievement-modal-section-content {
+        font-size: 16px;
+        color: #333;
+        line-height: 1.6;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+
+    .achievement-modal-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+
+    .achievement-modal-info-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .achievement-modal-info-label {
+        font-size: 12px;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+
+    .achievement-modal-info-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: #667eea;
+    }
+
+    @media (max-width: 768px) {
+        .achievement-modal-content {
+            width: 95%;
+            max-height: 90vh;
+        }
+
+        .achievement-modal-header {
+            padding: 20px;
+        }
+
+        .achievement-modal-header-text h2 {
+            font-size: 20px;
+        }
+
+        .achievement-modal-body {
+            padding: 20px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -471,6 +654,52 @@
     </div>
     {% endif %}
 </main>
+
+<!-- Achievement Detail Modal -->
+<div class="achievement-modal" id="achievementModal">
+    <div class="achievement-modal-content">
+        <div class="achievement-modal-header">
+            <div class="achievement-modal-header-title">
+                <div class="achievement-modal-header-icon">
+                    <i class="mdi mdi-star"></i>
+                </div>
+                <div class="achievement-modal-header-text">
+                    <h2 id="modalTitle">Todo Detail</h2>
+                    <p id="modalSubtitle">Completed Achievement</p>
+                </div>
+            </div>
+            <button class="achievement-modal-close" id="modalClose">&times;</button>
+        </div>
+        <div class="achievement-modal-body">
+            <!-- Title -->
+            <div class="achievement-modal-section">
+                <div class="achievement-modal-section-title">Title</div>
+                <div class="achievement-modal-section-content" id="modalTodoName">-</div>
+            </div>
+
+            <!-- Details -->
+            <div class="achievement-modal-section" id="detailsSection" style="display: none;">
+                <div class="achievement-modal-section-title">Description</div>
+                <div class="achievement-modal-section-content" id="modalTodoDetails">-</div>
+            </div>
+
+            <!-- Completion Info -->
+            <div class="achievement-modal-section">
+                <div class="achievement-modal-section-title">Completion Info</div>
+                <div class="achievement-modal-info-grid">
+                    <div class="achievement-modal-info-item">
+                        <div class="achievement-modal-info-label">Completed On</div>
+                        <div class="achievement-modal-info-value" id="modalCompletedDate">-</div>
+                    </div>
+                    <div class="achievement-modal-info-item">
+                        <div class="achievement-modal-info-label">Time Taken</div>
+                        <div class="achievement-modal-info-value" id="modalTimeToComplete">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_script_footer %}
@@ -616,5 +845,137 @@
         // Add tooltip on hover
         floatingProgressWidget.setAttribute('title', 'Click to scroll to top');
     }
+
+    // Achievement Modal Functionality
+    const achievementModal = document.getElementById('achievementModal');
+    const modalClose = document.getElementById('modalClose');
+    const achievementsList = document.querySelector('.achievements-list');
+
+    // Close modal when X is clicked
+    if (modalClose) {
+        modalClose.addEventListener('click', function() {
+            achievementModal.classList.remove('show');
+        });
+    }
+
+    // Close modal when clicking outside the modal content
+    achievementModal.addEventListener('click', function(event) {
+        if (event.target === achievementModal) {
+            achievementModal.classList.remove('show');
+        }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            achievementModal.classList.remove('show');
+        }
+    });
+
+    // Function to show modal with todo details
+    function showAchievementModal(todoData) {
+        document.getElementById('modalTitle').textContent = todoData.name || 'Todo Detail';
+        document.getElementById('modalSubtitle').textContent = 'Completed Achievement';
+        document.getElementById('modalTodoName').textContent = todoData.name || '-';
+        
+        // Show/hide details section
+        const detailsSection = document.getElementById('detailsSection');
+        if (todoData.details && todoData.details.trim()) {
+            document.getElementById('modalTodoDetails').textContent = todoData.details;
+            detailsSection.style.display = 'block';
+        } else {
+            detailsSection.style.display = 'none';
+        }
+        
+        // Format completion date
+        const completedDate = new Date(todoData.completed_at);
+        document.getElementById('modalCompletedDate').textContent = completedDate.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        // Show time to complete if available
+        if (todoData.time_to_complete !== null && todoData.time_to_complete !== undefined) {
+            const hours = Math.floor(todoData.time_to_complete);
+            const minutes = Math.round((todoData.time_to_complete - hours) * 60);
+            let timeStr = '';
+            if (hours > 0) {
+                timeStr = `${hours}h`;
+                if (minutes > 0) {
+                    timeStr += ` ${minutes}m`;
+                }
+            } else {
+                timeStr = `${minutes}m`;
+            }
+            document.getElementById('modalTimeToComplete').textContent = timeStr;
+        } else {
+            document.getElementById('modalTimeToComplete').textContent = '-';
+        }
+        
+        // Show modal
+        achievementModal.classList.add('show');
+    }
+
+    // Add click handlers to achievement items
+    function attachAchievementClickHandlers() {
+        const achievementItems = document.querySelectorAll('.achievement-item');
+        achievementItems.forEach(item => {
+            // Remove any existing listeners by cloning
+            const newItem = item.cloneNode(true);
+            item.parentNode.replaceChild(newItem, item);
+            
+            // Add click listener to the cloned item
+            newItem.addEventListener('click', async function() {
+                const todoId = this.id.replace('achievement-', '');
+                
+                // Try to get data from the item's children
+                const titleEl = this.querySelector('.achievement-title');
+                const detailsEl = this.querySelector('.achievement-text');
+                const dateEl = this.querySelector('.achievement-date');
+                
+                if (titleEl && dateEl) {
+                    // Extract data from HTML
+                    const todoData = {
+                        id: todoId,
+                        name: titleEl.textContent.trim(),
+                        details: detailsEl ? detailsEl.textContent.trim() : '',
+                        completed_at: new Date().toISOString(),  // Placeholder - we'll get real date from API
+                        time_to_complete: null
+                    };
+                    
+                    // Try to fetch full details from API
+                    try {
+                        const response = await fetch(`/api/todo/${todoId}/details`);
+                        if (response.ok) {
+                            const fullData = await response.json();
+                            todoData.details = fullData.details || todoData.details;
+                            todoData.completed_at = fullData.completed_at || todoData.completed_at;
+                            todoData.time_to_complete = fullData.time_to_complete;
+                        }
+                    } catch (error) {
+                        console.log('Could not fetch full details, using available data');
+                    }
+                    
+                    showAchievementModal(todoData);
+                }
+            });
+        });
+    }
+
+    // Attach handlers to initially loaded items
+    attachAchievementClickHandlers();
+
+    // Update handler when new items are loaded via infinite scroll
+    const originalLoadMore = window.loadMoreAchievements;
+    window.loadMoreAchievements = function() {
+        if (originalLoadMore) {
+            originalLoadMore.call(this);
+        }
+        // Attach handlers to newly loaded items after a short delay
+        setTimeout(attachAchievementClickHandlers, 100);
+    };
 </script>
 {% endblock %}

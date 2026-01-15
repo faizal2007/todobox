@@ -1976,6 +1976,45 @@ def achievements_batch():
         app.logger.error(f"Error loading achievements batch: {str(e)}")
         return jsonify({'error': 'Error loading achievements'}), 500
 
+@app.route('/api/todo/<int:todo_id>/details')
+@login_required
+def get_todo_details(todo_id):
+    """Get full details of a todo for modal view"""
+    try:
+        todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+        
+        if not todo:
+            return jsonify({'error': 'Todo not found'}), 404
+        
+        # Get the completion tracker
+        completion_tracker = Tracker.query.filter_by(
+            todo_id=todo_id, 
+            status_id=6  # Done status
+        ).order_by(Tracker.timestamp.desc()).first()
+        
+        # Get the creation tracker to calculate time to complete
+        creation_tracker = Tracker.query.filter_by(
+            todo_id=todo_id,
+            status_id=5  # New status
+        ).order_by(Tracker.timestamp.asc()).first()
+        
+        time_to_complete = None
+        if creation_tracker and completion_tracker:
+            time_diff = completion_tracker.timestamp - creation_tracker.timestamp
+            time_to_complete = round(time_diff.total_seconds() / 3600, 1)
+        
+        return jsonify({
+            'id': todo.id,
+            'name': todo.name,
+            'details': todo.details or '',
+            'completed_at': completion_tracker.timestamp.isoformat() if completion_tracker else '',
+            'time_to_complete': time_to_complete
+        }), 200
+    
+    except Exception as e:
+        app.logger.error(f"Error getting todo details: {str(e)}")
+        return jsonify({'error': 'Error getting todo details'}), 500
+
 @app.route('/<path:todo_id>/done', methods=['POST'])
 @login_required
 def mark_done(todo_id):
