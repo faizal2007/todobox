@@ -247,15 +247,31 @@
                     let isCheckboxChecked = itemText.match(/^\[[xX]\]\s*/);
                     
                     if (isCheckboxUnchecked) {
-                         // Remove the [] from the text and add checkbox
+                         // For task lists, use div instead of li to avoid bullets
+                         // First, flush any regular list items
+                         if (listItems.length > 0) {
+                              result.push('<' + currentListType + '>' + listItems.join('') + '</' + currentListType + '>');
+                              listItems = [];
+                              inList = false;
+                         }
+                         // Remove the [] from the text and add checkbox as a div
                          itemText = itemText.replace(/^\[\s*\]\s*/, '');
-                         listItems.push('<li><input type="checkbox" disabled> ' + formatInlineMarkdown(itemText) + '</li>');
+                         result.push('<div class="task-list-item"><input type="checkbox" disabled> ' + formatInlineMarkdown(itemText) + '</div>');
                     } else if (isCheckboxChecked) {
-                         // Remove the [x] from the text and add checked checkbox
+                         // For task lists, use div instead of li to avoid bullets
+                         // First, flush any regular list items
+                         if (listItems.length > 0) {
+                              result.push('<' + currentListType + '>' + listItems.join('') + '</' + currentListType + '>');
+                              listItems = [];
+                              inList = false;
+                         }
+                         // Remove the [x] from the text and add checked checkbox as a div
                          itemText = itemText.replace(/^\[[xX]\]\s*/, '');
-                         listItems.push('<li><input type="checkbox" checked disabled> ' + formatInlineMarkdown(itemText) + '</li>');
+                         result.push('<div class="task-list-item"><input type="checkbox" checked disabled> ' + formatInlineMarkdown(itemText) + '</div>');
                     } else {
                          // Regular list item
+                         inList = true;
+                         currentListType = 'ul';
                          listItems.push('<li>' + formatInlineMarkdown(itemText) + '</li>');
                     }
                } else if (isOrderedListItem) {

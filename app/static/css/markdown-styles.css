@@ -191,6 +191,25 @@
 }
 
 /* Task list checkbox styles */
+.task-list-item {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    padding: 4px 0;
+}
+
+.task-list-item input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+    vertical-align: middle;
+    accent-color: #007bff;
+    flex-shrink: 0;
+}
+
+.task-list-item input[type="checkbox"]:disabled {
+    cursor: default;
+}
+
 .todo-details-advanced input[type="checkbox"],
 .editor-preview input[type="checkbox"],
 .editor-preview-side input[type="checkbox"] {
