@@ -7,7 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Pre-commit Hook for Quality Assurance**: Installed Git pre-commit hook to catch errors before commits
+  - Checks Python syntax before allowing commits
+  - Verifies all imports can be resolved
+  - Runs quick unit tests on critical modules
+  - Logs all checks to help developers understand what's being validated
+  - Prevents committing broken code to the repository
+
+- **Comprehensive Regression Test Suite**: New test_regressions.py documenting all fixed bugs
+  - Tracks both fixed bugs with detailed descriptions of root causes
+  - Tests that ensure bugs don't return in future updates
+  - Prevents regressions through continuous integration
+  - Bug 1: KIV visibility bug (mark as KIV disappears then doesn't show in KIV tab)
+  - Bug 2: KIV deletion foreign key constraint error
+  - All regression tests passing ✅
+
+- **Comprehensive KIV Visibility Test Suite**: New test_kiv_visibility_fix.py with coverage for KIV todo visibility bug
+  - Unit test: Verifies KIV todos appear even when marked today (date filtering edge case)
+  - Integration test: Tests actual /undone route behavior with KIV tabs
+  - Documents the test coverage gap that allowed the bug to slip through
+  - Provides reusable pattern for testing route-level filtering logic
+
+- **Testing Strategy Documentation**: Created TESTING_STRATEGY_AND_CI_CD.md with comprehensive testing plan
+  - 5-layer testing strategy to prevent future regressions
+  - Pre-commit hooks to catch issues locally
+  - Route-level integration tests to catch filtering bugs
+  - GitHub Actions CI/CD pipeline for automated testing
+  - Regression test suite to track all fixed bugs
+  - Phase-based implementation plan for rolling out changes
+
 ### Fixed
+- **KIV Todos Not Showing in KIV Tab After Marking**: Fixed bug where KIV todos marked today wouldn't appear in the KIV tab
+  - Root cause: `/undone` route was skipping todos from today/tomorrow before checking if they were KIV
+  - When marking a todo as KIV, `todo.modified` is updated to current time, causing it to have today's date
+  - Solution: Reordered logic to check for KIV status BEFORE filtering by date
+  - KIV todos now always appear in the KIV tab regardless of when they were marked as KIV
+  - KIV tab now properly shows immediately after marking a todo as KIV
+
+- **KIV Deletion Foreign Key Constraint Error**: Fixed 1451 error when deleting KIV todos
+  - Root cause: Deleting a todo that's marked as KIV violated foreign key constraint from KIV table to todo table
+  - Solution: Updated `Tracker.delete()` method to remove KIV entries before deleting Tracker and Todo
+  - Deletion order: KIV table → Tracker table → Todo table (respects foreign key constraints)
+  - Now users can successfully delete KIV todos without errors
+
 - **Advanced Mode Content Transfer Issue**: Fixed JavaScript syntax error preventing Advanced Mode from working properly
   - Removed recursive function definition that was causing "missing } after function body" syntax error
   - Improved `convertSimpleToAdvanced()` to properly extract items from both hidden textarea and displayed UI elements

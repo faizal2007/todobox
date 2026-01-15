@@ -1842,6 +1842,11 @@ def undone():
         latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc(), Tracker.id.desc()).first()  # type: ignore[attr-defined]
         
         if latest_tracker:
+            # Check if it's a KIV task FIRST (KIV todos should always show in KIV tab, regardless of date)
+            if KIV.is_kiv(todo.id):
+                kiv_todos.append((todo, latest_tracker))
+                continue
+            
             # Get todo's date
             todo_date = todo.modified.date() if todo.modified else today
             
@@ -1849,11 +1854,8 @@ def undone():
             if todo_date == today or todo_date == tomorrow:
                 continue
             
-            # Check if it's a KIV task
-            if KIV.is_kiv(todo.id):
-                kiv_todos.append((todo, latest_tracker))
             # Check if it's NOT done (status_id != 6)
-            elif latest_tracker.status_id != 6:
+            if latest_tracker.status_id != 6:
                 # Include uncompleted tasks from past and future dates (excluding today/tomorrow)
                 undone_todos.append((todo, latest_tracker))
     
