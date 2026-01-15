@@ -226,7 +226,7 @@
     
     .achievement-modal-header {
         padding: 24px 24px 16px 24px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
         color: white;
         border-radius: 12px 12px 0 0;
         display: flex;
@@ -275,16 +275,24 @@
     }
     
     .achievement-modal-body h3 {
-        color: #667eea;
+        color: #4d7fe8;
         font-size: 12px;
         font-weight: 700;
         letter-spacing: 1px;
         text-transform: uppercase;
-        margin: 24px 0 12px 0;
+        margin: 0 0 12px 0;
+        padding-left: 12px;
+        border-left: 4px solid #4d7fe8;
     }
     
     .achievement-modal-body h3:first-child {
         margin-top: 0;
+    }
+    
+    .achievement-modal-body > div {
+        padding-left: 12px;
+        border-left: 4px solid #4d7fe8;
+        margin-bottom: 20px;
     }
     
     .achievement-modal-body p {
