@@ -488,8 +488,26 @@
                         inList = true;
                         listItems = [];
                     }
-                    const item = line.replace(/^[-*+]\s/, '').trim();
-                    listItems.push(item);
+                    let item = line.replace(/^[-*+]\s/, '').trim();
+                    
+                    // Check if this is a task list item (starts with [ ] or [x])
+                    let isCheckboxUnchecked = item.match(/^\[\s*\]\s*/);
+                    let isCheckboxChecked = item.match(/^\[[xX]\]\s*/);
+                    
+                    if (isCheckboxUnchecked || isCheckboxChecked) {
+                        // Task list item - store as special format
+                        listItems.push({
+                            isTask: true,
+                            checked: !!isCheckboxChecked,
+                            text: item.replace(/^\[\s*\]|\[\s*[xX]\]\s*/, '').trim()
+                        });
+                    } else {
+                        // Regular list item
+                        listItems.push({
+                            isTask: false,
+                            text: item
+                        });
+                    }
                 } else if (line.trim().match(/^\d+\.\s/)) {
                     // Ordered list
                     if (!inList) {
@@ -497,15 +515,39 @@
                         listItems = [];
                     }
                     const item = line.replace(/^\d+\.\s/, '').trim();
-                    listItems.push(item);
+                    listItems.push({
+                        isTask: false,
+                        text: item
+                    });
                 } else {
                     if (inList) {
                         const isOrdered = lines[i-1] && lines[i-1].trim().match(/^\d+\.\s/);
-                        if (isOrdered) {
-                            result.push(`<ol>${listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('')}</ol>`);
+                        let html = '';
+                        
+                        // Check if any items are task lists
+                        const hasTaskLists = listItems.some(item => item.isTask);
+                        
+                        if (hasTaskLists) {
+                            // Mix of task lists and regular items
+                            html = listItems.map(item => {
+                                if (item.isTask) {
+                                    const checkbox = item.checked ? 
+                                        '<input type="checkbox" checked disabled>' : 
+                                        '<input type="checkbox" disabled>';
+                                    return `<div class="task-list-item">${checkbox} ${formatInlineMarkdown(item.text)}</div>`;
+                                } else {
+                                    return `<li>${formatInlineMarkdown(item.text)}</li>`;
+                                }
+                            }).join('');
                         } else {
-                            result.push(`<ul>${listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('')}</ul>`);
+                            // All regular items
+                            if (isOrdered) {
+                                html = `<ol>${listItems.map(item => `<li>${formatInlineMarkdown(item.text || item)}</li>`).join('')}</ol>`;
+                            } else {
+                                html = `<ul>${listItems.map(item => `<li>${formatInlineMarkdown(item.text || item)}</li>`).join('')}</ul>`;
+                            }
                         }
+                        result.push(html);
                         inList = false;
                         listItems = [];
                     }
@@ -530,7 +572,21 @@
         
         // Flush remaining lists/blockquotes
         if (inList) {
-            result.push(`<ul>${listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('')}</ul>`);
+            const hasTaskLists = listItems.some(item => item.isTask);
+            if (hasTaskLists) {
+                result.push(listItems.map(item => {
+                    if (item.isTask) {
+                        const checkbox = item.checked ? 
+                            '<input type="checkbox" checked disabled>' : 
+                            '<input type="checkbox" disabled>';
+                        return `<div class="task-list-item">${checkbox} ${formatInlineMarkdown(item.text)}</div>`;
+                    } else {
+                        return `<li>${formatInlineMarkdown(item.text || item)}</li>`;
+                    }
+                }).join(''));
+            } else {
+                result.push(`<ul>${listItems.map(item => `<li>${formatInlineMarkdown(item.text || item)}</li>`).join('')}</ul>`);
+            }
         }
         if (inBlockquote) {
             result.push(`<blockquote>${blockquoteLines.map(l => formatInlineMarkdown(l)).join('<br>')}</blockquote>`);
