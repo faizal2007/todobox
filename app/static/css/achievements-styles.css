@@ -312,11 +312,7 @@
     
     /* Modal Section Styles */
     .achievement-modal-section {
-        padding: 16px 16px 16px 16px;
-        border-left: 4px solid #4d7fe8;
-        margin-bottom: 20px;
-        background: #f8f9fa;
-        border-radius: 4px;
+        margin-bottom: 24px;
     }
     
     .achievement-modal-section:last-child {
@@ -329,7 +325,7 @@
         font-weight: 700;
         letter-spacing: 1px;
         text-transform: uppercase;
-        margin: 0 0 12px 0;
+        margin: 0 0 8px 0;
         display: block;
     }
     
@@ -337,13 +333,20 @@
         color: #2c3e50;
         font-size: 15px;
         line-height: 1.6;
+        padding: 16px;
+        border-left: 4px solid #4d7fe8;
+        background: #f8f9fa;
+        border-radius: 4px;
     }
     
     .achievement-modal-info-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 16px;
-        margin-top: 12px;
+        padding: 16px;
+        border-left: 4px solid #4d7fe8;
+        background: #f8f9fa;
+        border-radius: 4px;
     }
     
     .achievement-modal-info-item {
