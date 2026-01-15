@@ -194,13 +194,16 @@
 
 {% block extra_script_footer %}
 <script>
-    // Convert GFM task list markdown to HTML checkboxes
+    // Convert GFM task list HTML to checkbox inputs
     function convertTaskListsToHTML(html) {
         if (!html) return html;
-        // Replace - [] with unchecked checkbox input
-        html = html.replace(/^- \[\s*\]\s+/gm, '<input type="checkbox" disabled> ');
-        // Replace - [x] or - [X] with checked checkbox input
-        html = html.replace(/^- \[[xX]\]\s+/gm, '<input type="checkbox" checked disabled> ');
+        // Replace <li>[] with <li><input type="checkbox" disabled>
+        html = html.replace(/<li>\[\s*\]/g, '<li><input type="checkbox" disabled>');
+        // Replace <li>[x] or <li>[X] with <li><input type="checkbox" checked disabled>
+        html = html.replace(/<li>\[[xX]\]/g, '<li><input type="checkbox" checked disabled>');
+        // Also handle cases with content after the brackets
+        html = html.replace(/<li>\[\s*\]\s+/g, '<li><input type="checkbox" disabled> ');
+        html = html.replace(/<li>\[[xX]\]\s+/g, '<li><input type="checkbox" checked disabled> ');
         return html;
     }
 
