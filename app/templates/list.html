@@ -425,40 +425,6 @@
           // Make simplemde globally available
           window.simplemde = simplemde;
           
-          // Watch for preview content changes and convert task lists
-          function watchPreviewForTaskLists() {
-               console.log('Starting preview watcher...');
-               
-               // Find the CodeMirror preview element
-               const previewContainer = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
-               
-               if (previewContainer) {
-                    console.log('Found preview container:', previewContainer);
-                    
-                    // Create observer to watch for content changes
-                    const observer = new MutationObserver(function(mutations) {
-                         console.log('Preview content changed, converting task lists...');
-                         convertPreviewTaskLists();
-                    });
-                    
-                    // Watch for any changes to the preview
-                    observer.observe(previewContainer, {
-                         childList: true,
-                         subtree: true,
-                         characterData: true
-                    });
-               }
-               
-               // Also check periodically for preview visibility changes
-               const checkPreview = setInterval(function() {
-                    const preview = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
-                    if (preview && preview.style.display !== 'none') {
-                         console.log('Preview is visible, converting task lists');
-                         convertPreviewTaskLists();
-                    }
-               }, 500);
-          }
-          
           function convertPreviewTaskLists() {
                const preview = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
                if (!preview) {
@@ -494,8 +460,38 @@
                console.log('Converted ' + converted + ' task list items');
           }
           
-          // Start watching preview after a short delay
-          setTimeout(watchPreviewForTaskLists, 1000);
+          // Hook into SimpleMDE's preview button
+          setTimeout(function() {
+               const previewButton = document.querySelector('[title="Toggle Preview"]') || 
+                                      document.querySelector('.fa-eye').parentElement;
+               
+               if (previewButton) {
+                    console.log('Found preview button, adding click listener');
+                    previewButton.addEventListener('click', function() {
+                         console.log('Preview button clicked');
+                         // Small delay to let SimpleMDE update the DOM
+                         setTimeout(convertPreviewTaskLists, 100);
+                         // Also try again after a bit more
+                         setTimeout(convertPreviewTaskLists, 500);
+                    });
+               }
+               
+               // Also watch the CodeMirror element for changes
+               const editorContainer = document.querySelector('.CodeMirror');
+               if (editorContainer) {
+                    const observer = new MutationObserver(function(mutations) {
+                         const preview = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
+                         if (preview && preview.style.display !== 'none') {
+                              convertPreviewTaskLists();
+                         }
+                    });
+                    
+                    observer.observe(editorContainer, {
+                         childList: true,
+                         subtree: true
+                    });
+               }
+          }, 500);
           
           const wisdoms = [
                'Stay focused',
