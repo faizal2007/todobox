@@ -411,34 +411,76 @@
           // Make simplemde globally available
           window.simplemde = simplemde;
           
-          // Handle preview button clicks to convert task lists
-          setTimeout(function() {
-               const previewButton = document.querySelector('.fa-eye');
-               if (previewButton) {
-                    const parent = previewButton.closest('[role="button"]') || previewButton.closest('.mde-btn');
-                    if (parent) {
-                         parent.addEventListener('click', function() {
-                              setTimeout(function() {
-                                   // When preview is shown, update the preview content
-                                   const preview = document.querySelector('.editor-preview, .editor-preview-side');
-                                   if (preview) {
-                                        let html = preview.innerHTML;
-                                        console.log('Preview content before:', html.substring(0, 100));
-                                        
-                                        // Convert task list syntax
-                                        html = html.replace(/^- \[\s*\]\s*/gm, '<input type="checkbox" disabled> ');
-                                        html = html.replace(/^- \[[xX]\]\s*/gm, '<input type="checkbox" checked disabled> ');
-                                        html = html.replace(/<li>\[\s*\]/g, '<li><input type="checkbox" disabled>');
-                                        html = html.replace(/<li>\[[xX]\]/g, '<li><input type="checkbox" checked disabled>');
-                                        
-                                        console.log('Preview content after:', html.substring(0, 100));
-                                        preview.innerHTML = html;
-                                   }
-                              }, 100);
-                         });
-                    }
+          // Watch for preview content changes and convert task lists
+          function watchPreviewForTaskLists() {
+               console.log('Starting preview watcher...');
+               
+               // Find the CodeMirror preview element
+               const previewContainer = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
+               
+               if (previewContainer) {
+                    console.log('Found preview container:', previewContainer);
+                    
+                    // Create observer to watch for content changes
+                    const observer = new MutationObserver(function(mutations) {
+                         console.log('Preview content changed, converting task lists...');
+                         convertPreviewTaskLists();
+                    });
+                    
+                    // Watch for any changes to the preview
+                    observer.observe(previewContainer, {
+                         childList: true,
+                         subtree: true,
+                         characterData: true
+                    });
                }
-          }, 500);
+               
+               // Also check periodically for preview visibility changes
+               const checkPreview = setInterval(function() {
+                    const preview = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
+                    if (preview && preview.style.display !== 'none') {
+                         console.log('Preview is visible, converting task lists');
+                         convertPreviewTaskLists();
+                    }
+               }, 500);
+          }
+          
+          function convertPreviewTaskLists() {
+               const preview = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
+               if (!preview) {
+                    console.log('No preview element found');
+                    return;
+               }
+               
+               console.log('Converting task lists in preview...');
+               let html = preview.innerHTML;
+               console.log('Before:', html.substring(0, 150));
+               
+               // Convert markdown task list syntax
+               // Replace - [ ] and - [x] patterns
+               html = html.replace(/^- \[\s*\]\s*/gm, '<input type="checkbox" disabled> ');
+               html = html.replace(/^- \[[xX]\]\s*/gm, '<input type="checkbox" checked disabled> ');
+               
+               // Also try to replace within list items
+               html = html.replace(/<li>\[\s*\]/g, '<li><input type="checkbox" disabled> ');
+               html = html.replace(/<li>\[[xX]\]/g, '<li><input type="checkbox" checked disabled> ');
+               
+               // Replace text nodes with brackets inside list items
+               const li_elements = preview.querySelectorAll('li');
+               li_elements.forEach(function(li) {
+                    if (li.textContent.match(/^\[\s*\]/)) {
+                         li.innerHTML = '<input type="checkbox" disabled> ' + li.textContent.substring(2);
+                    } else if (li.textContent.match(/^\[[xX]\]/)) {
+                         li.innerHTML = '<input type="checkbox" checked disabled> ' + li.textContent.substring(3);
+                    }
+               });
+               
+               console.log('After:', html.substring(0, 150));
+               preview.innerHTML = html;
+          }
+          
+          // Start watching preview after a short delay
+          setTimeout(watchPreviewForTaskLists, 1000);
           
           const wisdoms = [
                'Stay focused',
