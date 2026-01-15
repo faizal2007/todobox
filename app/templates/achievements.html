@@ -465,6 +465,109 @@
         border-left: 4px solid #667eea;
     }
 
+    /* Markdown rendering styles for advanced mode */
+    .achievement-modal-section-content h1,
+    .achievement-modal-section-content h2,
+    .achievement-modal-section-content h3,
+    .achievement-modal-section-content h4,
+    .achievement-modal-section-content h5,
+    .achievement-modal-section-content h6 {
+        margin-top: 15px;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .achievement-modal-section-content h1 { font-size: 24px; }
+    .achievement-modal-section-content h2 { font-size: 20px; }
+    .achievement-modal-section-content h3 { font-size: 18px; }
+    .achievement-modal-section-content h4 { font-size: 16px; }
+    .achievement-modal-section-content h5 { font-size: 15px; }
+    .achievement-modal-section-content h6 { font-size: 14px; }
+
+    .achievement-modal-section-content p {
+        margin-bottom: 10px;
+    }
+
+    .achievement-modal-section-content strong,
+    .achievement-modal-section-content b {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .achievement-modal-section-content em,
+    .achievement-modal-section-content i {
+        font-style: italic;
+        color: #555;
+    }
+
+    .achievement-modal-section-content code {
+        background: #e8eaf6;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+        color: #d32f2f;
+        font-size: 14px;
+    }
+
+    .achievement-modal-section-content pre {
+        background: #2c3e50;
+        color: #ecf0f1;
+        padding: 12px;
+        border-radius: 6px;
+        overflow-x: auto;
+        margin: 10px 0;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+    }
+
+    .achievement-modal-section-content pre code {
+        background: transparent;
+        padding: 0;
+        color: #ecf0f1;
+    }
+
+    .achievement-modal-section-content ul,
+    .achievement-modal-section-content ol {
+        margin: 10px 0 10px 20px;
+    }
+
+    .achievement-modal-section-content li {
+        margin-bottom: 5px;
+    }
+
+    .achievement-modal-section-content blockquote {
+        border-left: 4px solid #667eea;
+        padding-left: 12px;
+        margin: 10px 0;
+        color: #666;
+        font-style: italic;
+    }
+
+    .achievement-modal-section-content a {
+        color: #667eea;
+        text-decoration: none;
+        border-bottom: 1px solid #667eea;
+    }
+
+    .achievement-modal-section-content a:hover {
+        color: #5568d3;
+        border-bottom-color: #5568d3;
+    }
+
+    .achievement-modal-section-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 6px;
+        margin: 10px 0;
+    }
+
+    .achievement-modal-section-content hr {
+        border: none;
+        border-top: 1px solid #ddd;
+        margin: 15px 0;
+    }
+
     .achievement-modal-info-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -939,8 +1042,18 @@
                 // Simple mode: render as interactive checkbox list
                 detailsContent.innerHTML = convertCheckboxesToHTML(todoData.details);
             } else {
-                // Advanced mode: render as plain text / markdown
-                detailsContent.textContent = todoData.details;
+                // Advanced mode: render as markdown HTML
+                try {
+                    if (typeof marked !== 'undefined') {
+                        detailsContent.innerHTML = marked.parse(todoData.details);
+                    } else {
+                        // Fallback if marked library not available
+                        detailsContent.textContent = todoData.details;
+                    }
+                } catch (e) {
+                    // If markdown parsing fails, show as plain text
+                    detailsContent.textContent = todoData.details;
+                }
             }
             detailsSection.style.display = 'block';
         } else {
