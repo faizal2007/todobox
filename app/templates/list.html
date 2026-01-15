@@ -298,6 +298,26 @@
           return result.join('');
      }
 
+     // Convert markdown task lists to HTML checkboxes BEFORE marked parses them
+     function preprocessTaskLists(markdown) {
+          if (!markdown) return markdown;
+          console.log('Preprocessing markdown:', markdown.substring(0, 200));
+          
+          // Replace task list syntax with HTML inline
+          // - [] item -> <input type="checkbox" disabled> item
+          markdown = markdown.replace(/^- \[\s*\]\s+(.+?)$/gm, function(match, content) {
+               return '<input type="checkbox" disabled> ' + content;
+          });
+          
+          // - [x] item -> <input type="checkbox" checked disabled> item
+          markdown = markdown.replace(/^- \[[xX]\]\s+(.+?)$/gm, function(match, content) {
+               return '<input type="checkbox" checked disabled> ' + content;
+          });
+          
+          console.log('After preprocessing:', markdown.substring(0, 200));
+          return markdown;
+     }
+
      // Convert GFM task list HTML to checkbox inputs
      function convertTaskListsToHTML(html) {
           if (!html) return html;
@@ -330,14 +350,17 @@
                     try {
                          // Try to use marked.js if available
                          if (typeof marked !== 'undefined') {
+                              // Preprocess task lists BEFORE marked parses
+                              let processed = preprocessTaskLists(details);
+                              
                               // Configure marked for GFM task lists
                               marked.setOptions({
                                    gfm: true,
                                    breaks: true,
                                    pedantic: false
                               });
-                              htmlContent = marked.parse(details);
-                              // Convert task list syntax to HTML checkboxes
+                              htmlContent = marked.parse(processed);
+                              // Also convert any HTML task list syntax
                               htmlContent = convertTaskListsToHTML(htmlContent);
                          } else {
                               htmlContent = simpleMarkdownToHtml(details);
@@ -373,15 +396,20 @@
                     // Use marked.js if available, otherwise use our custom converter
                     try {
                          if (typeof marked !== 'undefined') {
+                              // Preprocess task lists BEFORE marked parses
+                              let processed = preprocessTaskLists(plainText);
+                              
                               // Configure marked to use GitHub Flavored Markdown with task lists
                               marked.setOptions({
                                    gfm: true,
                                    breaks: true,
                                    pedantic: false
                               });
-                              let html = marked.parse(plainText);
-                              // Convert task list syntax to HTML checkboxes
+                              let html = marked.parse(processed);
+                              console.log('Marked output:', html.substring(0, 300));
+                              // Also convert any HTML task list syntax
                               html = convertTaskListsToHTML(html);
+                              console.log('After conversion:', html.substring(0, 300));
                               return html;
                          } else {
                               return simpleMarkdownToHtml(plainText);
