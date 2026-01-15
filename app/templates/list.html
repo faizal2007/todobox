@@ -404,18 +404,11 @@
                             "preview"
                         ],
                previewRender: function(plainText) {
-                    console.log('=== PREVIEW RENDER CALLED ===');
-                    console.log('Input markdown:', plainText.substring(0, 100));
-                    console.log('marked available?', typeof marked !== 'undefined');
-                    
                     try {
                          // Check if marked is available
                          if (typeof marked === 'undefined') {
-                              console.error('marked.js not loaded! Will use fallback.');
                               return simpleMarkdownToHtml(plainText);
                          }
-                         
-                         console.log('marked is available, proceeding...');
                          
                          // Configure marked.js with explicit settings
                          marked.setOptions({ 
@@ -428,30 +421,17 @@
                          
                          // Parse markdown to HTML
                          let html = marked.parse(plainText);
-                         console.log('Marked.js output (first 200 chars):', html.substring(0, 200));
-                         console.log('Marked.js output (full length):', html.length);
                          
                          // Post-process the HTML string directly to convert task lists
-                         // The markdown task list syntax creates <li>[] item text</li>
-                         // We need to replace that with <li><input type="checkbox"> item text</li>
-                         
                          // Replace unchecked: <li>[] ... with checkbox
-                         let originalHtml = html;
                          html = html.replace(/<li>\[\s*\]\s*([^<]*)<\/li>/g, '<li><input type="checkbox" disabled> $1</li>');
                          
                          // Replace checked: <li>[x] or <li>[X] with checked checkbox
                          html = html.replace(/<li>\[[xX]\]\s*([^<]*)<\/li>/g, '<li><input type="checkbox" checked disabled> $1</li>');
                          
-                         if (html !== originalHtml) {
-                              console.log('Replacements made! After:', html.substring(0, 200));
-                         } else {
-                              console.log('No replacements made. HTML might not match pattern.');
-                         }
-                         
                          return html;
                     } catch (error) {
                          console.error('Error in previewRender:', error);
-                         console.error('Error stack:', error.stack);
                          return plainText;
                     }
                },
@@ -467,39 +447,23 @@
           
           function convertPreviewTaskLists() {
                const preview = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
-               if (!preview) {
-                    console.log('No preview element found');
-                    return;
-               }
+               if (!preview) return;
                
                // Get all list items in the preview
                const li_elements = preview.querySelectorAll('li');
-               console.log('Found ' + li_elements.length + ' list items in preview');
                
-               if (li_elements.length === 0) {
-                    console.log('Preview HTML:', preview.innerHTML.substring(0, 300));
-               }
-               
-               li_elements.forEach(function(li, index) {
-                    // Log the first few list items to see structure
-                    if (index < 3) {
-                         console.log('List item ' + index + ' innerHTML:', li.innerHTML);
-                         console.log('List item ' + index + ' textContent:', li.textContent);
-                    }
-                    
+               li_elements.forEach(function(li) {
                     // Get current HTML
                     let html = li.innerHTML;
                     
                     // Match: [] at the start
                     if (/^\[\s*\]/.test(html)) {
-                         console.log('Matched unchecked pattern in item ' + index);
                          // Replace the bracket pattern with a checkbox input
                          html = html.replace(/^\[\s*\]\s*/, '<input type="checkbox" disabled> ');
                          li.innerHTML = html;
                     }
                     // Match: [x] or [X] at the start  
                     else if (/^\[[xX]\]/.test(html)) {
-                         console.log('Matched checked pattern in item ' + index);
                          // Replace the bracket pattern with a checked checkbox input
                          html = html.replace(/^\[[xX]\]\s*/, '<input type="checkbox" checked disabled> ');
                          li.innerHTML = html;
@@ -509,15 +473,11 @@
           
           // Wait for SimpleMDE to initialize, then set up watching
           setTimeout(function() {
-               console.log('Setting up preview task list watcher');
-               
                // Try to find the preview element
                const findAndWatchPreview = function() {
                     const preview = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
                     
                     if (preview) {
-                         console.log('Found preview element, setting up ResizeObserver');
-                         
                          // Use ResizeObserver to detect when preview becomes visible
                          const resizeObserver = new ResizeObserver(function() {
                               convertPreviewTaskLists();

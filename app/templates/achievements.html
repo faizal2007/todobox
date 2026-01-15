@@ -488,26 +488,8 @@
                         inList = true;
                         listItems = [];
                     }
-                    let item = line.replace(/^[-*+]\s/, '').trim();
-                    
-                    // Check if this is a task list item (starts with [ ] or [x])
-                    let isCheckboxUnchecked = item.match(/^\[\s*\]\s*/);
-                    let isCheckboxChecked = item.match(/^\[[xX]\]\s*/);
-                    
-                    if (isCheckboxUnchecked || isCheckboxChecked) {
-                        // Task list item - store as special format
-                        listItems.push({
-                            isTask: true,
-                            checked: !!isCheckboxChecked,
-                            text: item.replace(/^\[\s*\]|\[\s*[xX]\]\s*/, '').trim()
-                        });
-                    } else {
-                        // Regular list item
-                        listItems.push({
-                            isTask: false,
-                            text: item
-                        });
-                    }
+                    const item = line.replace(/^[-*+]\s/, '').trim();
+                    listItems.push(item);
                 } else if (line.trim().match(/^\d+\.\s/)) {
                     // Ordered list
                     if (!inList) {
@@ -515,39 +497,15 @@
                         listItems = [];
                     }
                     const item = line.replace(/^\d+\.\s/, '').trim();
-                    listItems.push({
-                        isTask: false,
-                        text: item
-                    });
+                    listItems.push(item);
                 } else {
                     if (inList) {
                         const isOrdered = lines[i-1] && lines[i-1].trim().match(/^\d+\.\s/);
-                        let html = '';
-                        
-                        // Check if any items are task lists
-                        const hasTaskLists = listItems.some(item => item.isTask);
-                        
-                        if (hasTaskLists) {
-                            // Mix of task lists and regular items
-                            html = listItems.map(item => {
-                                if (item.isTask) {
-                                    const checkbox = item.checked ? 
-                                        '<input type="checkbox" checked disabled>' : 
-                                        '<input type="checkbox" disabled>';
-                                    return `<div class="task-list-item">${checkbox} ${formatInlineMarkdown(item.text)}</div>`;
-                                } else {
-                                    return `<li>${formatInlineMarkdown(item.text)}</li>`;
-                                }
-                            }).join('');
+                        if (isOrdered) {
+                            result.push(`<ol>${listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('')}</ol>`);
                         } else {
-                            // All regular items
-                            if (isOrdered) {
-                                html = `<ol>${listItems.map(item => `<li>${formatInlineMarkdown(item.text || item)}</li>`).join('')}</ol>`;
-                            } else {
-                                html = `<ul>${listItems.map(item => `<li>${formatInlineMarkdown(item.text || item)}</li>`).join('')}</ul>`;
-                            }
+                            result.push(`<ul>${listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('')}</ul>`);
                         }
-                        result.push(html);
                         inList = false;
                         listItems = [];
                     }
@@ -572,21 +530,7 @@
         
         // Flush remaining lists/blockquotes
         if (inList) {
-            const hasTaskLists = listItems.some(item => item.isTask);
-            if (hasTaskLists) {
-                result.push(listItems.map(item => {
-                    if (item.isTask) {
-                        const checkbox = item.checked ? 
-                            '<input type="checkbox" checked disabled>' : 
-                            '<input type="checkbox" disabled>';
-                        return `<div class="task-list-item">${checkbox} ${formatInlineMarkdown(item.text)}</div>`;
-                    } else {
-                        return `<li>${formatInlineMarkdown(item.text || item)}</li>`;
-                    }
-                }).join(''));
-            } else {
-                result.push(`<ul>${listItems.map(item => `<li>${formatInlineMarkdown(item.text || item)}</li>`).join('')}</ul>`);
-            }
+            result.push(`<ul>${listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('')}</ul>`);
         }
         if (inBlockquote) {
             result.push(`<blockquote>${blockquoteLines.map(l => formatInlineMarkdown(l)).join('<br>')}</blockquote>`);
@@ -619,6 +563,19 @@
         text = text.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
         
         return text;
+    }
+
+    // Convert task list checkboxes in HTML
+    function convertTaskListsInHtml(html) {
+        if (!html) return html;
+        
+        // Replace <li>[] ... with checkbox div
+        html = html.replace(/<li>\[\s*\]\s*([^<]*)<\/li>/g, '<div class="task-list-item"><input type="checkbox" disabled> $1</div>');
+        
+        // Replace <li>[x] or <li>[X] with checked checkbox div
+        html = html.replace(/<li>\[[xX]\]\s*([^<]*)<\/li>/g, '<div class="task-list-item"><input type="checkbox" checked disabled> $1</div>');
+        
+        return html;
     }
 
     function showAchievementModal(todoData) {
@@ -663,6 +620,10 @@
                     // If markdown parsing fails, use fallback converter
                     htmlContent = simpleMarkdownToHtml(todoData.details);
                 }
+                
+                // Post-process HTML to convert task list checkboxes
+                htmlContent = convertTaskListsInHtml(htmlContent);
+                
                 detailsContent.innerHTML = htmlContent;
             }
             detailsSection.style.display = 'block';
