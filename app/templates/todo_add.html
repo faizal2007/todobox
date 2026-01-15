@@ -238,23 +238,47 @@
 						if (this.checked) {
 							console.log('[MODE] Switched to simple mode');
 							
-							// Check if there's advanced content (markdown) that will be lost
-							let hasAdvancedContent = false;
+							// Check if there's content that's NOT compatible with simple mode
+							let hasIncompatibleContent = false;
 							if (window.simplemde) {
 								const advancedValue = window.simplemde.value();
-								// Check if content has markdown syntax (more than just empty or basic text)
-								hasAdvancedContent = advancedValue && advancedValue.trim().length > 0 && 
-									/[*_~`>#\[\]()|-]/.test(advancedValue);
+								
+								if (advancedValue && advancedValue.trim().length > 0) {
+									// Simple mode only supports checkbox lists like:
+									// - [ ] item
+									// - [x] item
+									// * [ ] item
+									// + [ ] item
+									
+									// Split into lines and check each line
+									const lines = advancedValue.split('\n');
+									for (let line of lines) {
+										line = line.trim();
+										
+										// Skip empty lines
+										if (!line) continue;
+										
+										// Check if line is a valid checkbox format
+										const isCheckbox = /^[-*+]\s*\[[ x]\]/.test(line);
+										
+										// If line exists and is NOT a checkbox, it's incompatible
+										if (!isCheckbox) {
+											hasIncompatibleContent = true;
+											console.log('[MODE] Found incompatible content:', line);
+											break;
+										}
+									}
+								}
 							}
 							
-							// If there's advanced content, show warning
-							if (hasAdvancedContent) {
+							// If there's incompatible content, show warning
+							if (hasIncompatibleContent) {
 								// Prevent the automatic mode switch
 								e.preventDefault();
 								
 								showConfirmModal(
 									'Switch to Simple Mode?',
-									'You are about to switch to Simple Mode. This will replace your current markdown content with simple checklist format. The advanced markdown content will be lost. Do you want to continue?',
+									'You are about to switch to Simple Mode. Simple Mode only supports checkbox lists. Your current content contains formatting that will be lost (bold, italics, code, links, etc.). Do you want to continue?',
 									function() {
 										// User confirmed, proceed with mode switch
 										console.log('[MODE] User confirmed switching to simple mode');
@@ -277,7 +301,7 @@
 								$('label[for="mode-advanced"]').addClass('active');
 								$('label[for="mode-simple"]').removeClass('active');
 							} else {
-								// No advanced content, safe to switch
+								// No incompatible content, safe to switch
 								window.previousMode = 'simple';
 								window.updateModeDisplay();
 							}
