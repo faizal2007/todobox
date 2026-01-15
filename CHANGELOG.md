@@ -18,6 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Infinite scroll integration: dynamically loaded items are immediately clickable
   - Comprehensive test suite with 2 passing tests
 
+- **Smart Description Rendering in Modal**: Intelligent detection and rendering of todo descriptions
+  - **Simple Mode (Checkbox Format)**: Detects markdown-style checkboxes (`- [ ]`, `* [ ]`, `+ [ ]`) and renders as interactive HTML checkbox list
+    - Displays actual disabled checkboxes with proper visual styling
+    - Shows checked/unchecked state based on content
+    - Supports indented checkboxes for nested lists
+    - Proper spacing and alignment
+  - **Advanced Mode (Plain Text)**: Plain text rendering for non-checkbox content
+  - HTML escaping for security
+  - Seamless toggle based on content detection
+
 ### Fixed
 - **Recent Todos Linking to Wrong Page**: Fixed Recent Todos showing tasks scheduled for today/tomorrow as "Undone Tasks"
   - **Issue**: Recent Todos linked to /undone page for tasks scheduled for today, but /undone endpoint didn't show them
