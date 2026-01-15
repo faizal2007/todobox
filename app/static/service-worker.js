@@ -1,6 +1,6 @@
 // Service worker with proper cache strategy for authentication and dynamic content
-const CACHE_NAME = 'todobox-v2';
-const STATIC_CACHE_NAME = 'todobox-static-v2';
+const CACHE_NAME = 'todobox-v3';
+const STATIC_CACHE_NAME = 'todobox-static-v3';
 
 // Only cache static assets (CSS, JS, images, fonts, icons)
 const STATIC_ASSETS = [
