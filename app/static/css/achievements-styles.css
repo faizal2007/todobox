@@ -302,8 +302,6 @@
         letter-spacing: 1px;
         text-transform: uppercase;
         margin: 0 0 12px 0;
-        padding-left: 12px;
-        border-left: 4px solid #4d7fe8;
     }
     
     .achievement-modal-body h3:first-child {
@@ -369,8 +367,6 @@
     }
     
     .achievement-modal-body > div {
-        padding-left: 12px;
-        border-left: 4px solid #4d7fe8;
         margin-bottom: 20px;
     }
     
