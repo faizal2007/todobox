@@ -577,12 +577,15 @@ def get_todo(todo_id):
         if has_checkboxes:
             detected_type = 'simple'
     
+    # Regenerate description_html using current logic to ensure no bullets
+    description_html = convert_details_to_html(todo.details) if todo.details else ''
+    
     return jsonify({
         'success': True,
         'id': todo.id,
         'title': todo.name,
         'description': todo.details,
-        'description_html': todo.details_html,
+        'description_html': description_html,
         'todo_type': detected_type,
         'status': status,
         'created_at': todo.timestamp.isoformat(),
