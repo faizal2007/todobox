@@ -400,6 +400,18 @@
         line-height: 1.8;
     }
     
+    #modalTodoDetails ul {
+        list-style: none;
+        padding-left: 0;
+        margin: 0;
+    }
+    
+    #modalTodoDetails li {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    
     @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
