@@ -30,11 +30,22 @@ function shouldCache(url) {
   if (NO_CACHE_ROUTES.some(route => url.includes(route))) {
     return false;
   }
-  // Only cache static assets
+  // Only cache static assets on our own domain
   if (url.includes('/static/')) {
     return true;
   }
   return false;
+}
+
+// Check if URL is external (third-party domain)
+function isExternalResource(url) {
+  try {
+    const urlObj = new URL(url);
+    const currentOrigin = new URL(self.location).origin;
+    return urlObj.origin !== currentOrigin;
+  } catch (e) {
+    return false;
+  }
 }
 
 self.addEventListener('install', (event) => {
@@ -62,6 +73,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // For external resources (gravatar, CDNs, etc), use network-first without caching
+  if (isExternalResource(url)) {
+    event.respondWith(
+      fetch(request).catch(() => {
+        // For external resources, just let the browser handle the error
+        // Don't return anything - this lets the browser's default behavior take over
+        return new Response('', { status: 503, statusText: 'Service Unavailable' });
+      })
+    );
+    return;
+  }
+
   // Network-first for auth and dynamic content, cache-first for static assets
   if (shouldCache(url)) {
     // Cache-first strategy for static assets
@@ -84,7 +107,17 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           // Return cached version only if network fails
-          return caches.match(request).then(cached => cached);
+          return caches.match(request).then(cached => {
+            // Return cached response, or a proper error response if no cache
+            if (cached) {
+              return cached;
+            }
+            // Return a 503 Service Unavailable response instead of undefined
+            return new Response(
+              JSON.stringify({ error: 'Service unavailable' }),
+              { status: 503, statusText: 'Service Unavailable', headers: { 'Content-Type': 'application/json' } }
+            );
+          });
         })
     );
   }

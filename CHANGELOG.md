@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Service Worker External Resource Handling**: Fixed ServiceWorker returning undefined for failed external resource requests
+  - Added `isExternalResource()` function to detect third-party domain requests (gravatar, CDNs)
+  - Skip caching for external resources to prevent service worker fetch errors
+  - Always return proper Response objects instead of undefined in catch handlers
+  - Return 503 Service Unavailable for failed requests with no cache fallback
+  - Resolves production error: "A ServiceWorker passed a promise to FetchEvent.respondWith() that resolved with non-Response value 'undefined'"
+  - Prevents blocking of donut chart display on dashboard when gravatar loads fail
+
 ### Added
 - **Pre-commit Hook for Quality Assurance**: Installed Git pre-commit hook to catch errors before commits
   - Checks Python syntax before allowing commits
