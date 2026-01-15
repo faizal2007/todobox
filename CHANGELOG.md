@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Todo Cleanup Utility (todomanage.py)**: New option to cleanup/delete todos by duration or all at once
+  - Option 10 in todomanage menu provides flexible cleanup options
+  - Method 1: Delete ALL todos for a selected user
+  - Method 2: Delete todos older than X days
+  - Method 3: Delete todos from the last X days
+  - Shows todo counts before deletion and requires confirmation (with special keywords)
+  - Properly deletes associated Tracker records to maintain database integrity
+  - Supports all user selection and safety confirmations
+
 ### Fixed
 - **Service Worker External Resource Handling (CRITICAL)**: Fixed ServiceWorker blocking all external resource loads
   - Skip external resource requests completely instead of intercepting them
@@ -16,8 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixes "Uncaught ReferenceError: flatpickr is not defined" error
   - Updated cache versions (v2→v3) to force browser reload of new service worker logic
   - Allows browser to handle external requests natively without service worker interference
-
-### Added
 - **Comprehensive Multi-Layer Testing Strategy** (CRITICAL IMPROVEMENT): Implemented three-layer testing to catch production issues
   - **Layer 1 - Backend Tests** (9 tests): Database logic, models, routes, ORM operations
   - **Layer 2 - Frontend Asset Tests** (20+ tests): Service worker validation, HTML templates, CSS/JS files, manifest, icons
