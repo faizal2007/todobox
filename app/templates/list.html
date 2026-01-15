@@ -301,13 +301,22 @@
      // Convert GFM task list HTML to checkbox inputs
      function convertTaskListsToHTML(html) {
           if (!html) return html;
+          console.log('Before conversion:', html.substring(0, 200));
+          
+          // Handle both regular brackets and HTML-encoded brackets
           // Replace <li>[] with <li><input type="checkbox" disabled>
-          html = html.replace(/<li>\[\s*\]/g, '<li><input type="checkbox" disabled>');
+          html = html.replace(/<li>\s*\[\s*\]/g, '<li><input type="checkbox" disabled> ');
+          html = html.replace(/<li>\s*&lsqb;\s*&rsqb;/g, '<li><input type="checkbox" disabled> ');
+          
           // Replace <li>[x] or <li>[X] with <li><input type="checkbox" checked disabled>
-          html = html.replace(/<li>\[[xX]\]/g, '<li><input type="checkbox" checked disabled>');
-          // Also handle cases with content after the brackets
-          html = html.replace(/<li>\[\s*\]\s+/g, '<li><input type="checkbox" disabled> ');
-          html = html.replace(/<li>\[[xX]\]\s+/g, '<li><input type="checkbox" checked disabled> ');
+          html = html.replace(/<li>\s*\[[xX]\]/g, '<li><input type="checkbox" checked disabled> ');
+          html = html.replace(/<li>\s*&lsqb;[xX]&rsqb;/g, '<li><input type="checkbox" checked disabled> ');
+          
+          // Also handle with content immediately after
+          html = html.replace(/<li>\s*\[\s*\]\s+([^<])/g, '<li><input type="checkbox" disabled> $1');
+          html = html.replace(/<li>\s*\[[xX]\]\s+([^<])/g, '<li><input type="checkbox" checked disabled> $1');
+          
+          console.log('After conversion:', html.substring(0, 200));
           return html;
      }
      
