@@ -24,19 +24,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Shows checked/unchecked state based on content
     - Supports indented checkboxes for nested lists
     - Proper spacing and alignment
-  - **Advanced Mode (Markdown Rendering)**: Full markdown support with HTML rendering using marked.js library
-    - Bold, italics, code, inline code styling
-    - Headings (h1-h6) with proper hierarchy
-    - Ordered and unordered lists with proper indentation
-    - Code blocks with syntax highlighting background
-    - Blockquotes with visual styling
-    - Links with hover effects
-    - Images with responsive sizing
-    - Horizontal rules
-  - Comprehensive CSS styling for all markdown elements
-  - Fallback to plain text if rendering fails
-  - HTML escaping for security
-  - Fallback detection: Frontend detects checkboxes via regex if API flag not provided
+  - **Advanced Mode (Markdown Rendering)**: Full markdown support with dual rendering engine
+    - Primary: marked.js library for comprehensive markdown support
+    - Fallback: simpleMarkdownToHtml() converter with common markdown patterns
+    - Supported patterns:
+      * Bold (**text**) and italics (*text* or _text_)
+      * Inline code (`text`) and code blocks (triple backticks)
+      * Headings (# ## ### etc)
+      * Links ([text](url)) and images
+      * Line breaks and horizontal rules
+    - Custom CSS styling for all markdown elements
+    - Graceful fallback handling if primary renderer unavailable
 
 ### Fixed
 - **Recent Todos Linking to Wrong Page**: Fixed Recent Todos showing tasks scheduled for today/tomorrow as "Undone Tasks"
