@@ -1,6 +1,6 @@
 // Service worker with proper cache strategy for authentication and dynamic content
-const CACHE_NAME = 'todobox-v2';
-const STATIC_CACHE_NAME = 'todobox-static-v2';
+const CACHE_NAME = 'todobox-v3';
+const STATIC_CACHE_NAME = 'todobox-static-v3';
 
 // Only cache static assets (CSS, JS, images, fonts, icons)
 const STATIC_ASSETS = [
@@ -73,15 +73,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For external resources (gravatar, CDNs, etc), use network-first without caching
+  // Skip external resources completely - let browser handle them
+  // This prevents service worker from interfering with CDN resources, gravatar, etc.
   if (isExternalResource(url)) {
-    event.respondWith(
-      fetch(request).catch(() => {
-        // For external resources, just let the browser handle the error
-        // Don't return anything - this lets the browser's default behavior take over
-        return new Response('', { status: 503, statusText: 'Service Unavailable' });
-      })
-    );
+    // Don't intercept - let browser fetch normally
     return;
   }
 
