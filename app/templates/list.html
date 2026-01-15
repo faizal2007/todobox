@@ -414,27 +414,22 @@
                     return;
                }
                
-               console.log('Converting task lists in preview...');
+               console.log('Converting task lists in preview DOM...');
                
                // Get all list items and convert task list syntax to checkboxes
                const li_elements = preview.querySelectorAll('li');
                let converted = 0;
                
                li_elements.forEach(function(li) {
-                    // Get the text content and check if it starts with brackets
-                    const text = li.textContent.trim();
-                    const checkbox_unchecked = /^\[\s*\]/;
-                    const checkbox_checked = /^\[[xX]\]/;
+                    const originalHTML = li.innerHTML;
                     
-                    if (checkbox_unchecked.test(text)) {
-                         // Extract the label text (everything after the brackets)
-                         const label = text.substring(2).trim();
-                         li.innerHTML = '<input type="checkbox" disabled> ' + label;
-                         converted++;
-                    } else if (checkbox_checked.test(text)) {
-                         // Extract the label text (everything after the brackets)
-                         const label = text.substring(3).trim();
-                         li.innerHTML = '<input type="checkbox" checked disabled> ' + label;
+                    // Replace unchecked task list pattern: [] ...
+                    li.innerHTML = li.innerHTML.replace(/^\[\s*\]\s*/, '<input type="checkbox" disabled> ');
+                    
+                    // Replace checked task list pattern: [x] or [X] ...
+                    li.innerHTML = li.innerHTML.replace(/^\[[xX]\]\s*/, '<input type="checkbox" checked disabled> ');
+                    
+                    if (li.innerHTML !== originalHTML) {
                          converted++;
                     }
                });
@@ -444,35 +439,38 @@
           
           // Hook into SimpleMDE's preview button
           setTimeout(function() {
-               const previewButton = document.querySelector('[title="Toggle Preview"]') || 
-                                      document.querySelector('.fa-eye').parentElement;
+               // Find the preview button - try multiple selectors
+               let previewButton = null;
+               const buttons = document.querySelectorAll('.editor-toolbar button');
+               for (let btn of buttons) {
+                    if (btn.title && btn.title.includes('Preview')) {
+                         previewButton = btn;
+                         break;
+                    }
+               }
                
                if (previewButton) {
                     console.log('Found preview button, adding click listener');
                     previewButton.addEventListener('click', function() {
                          console.log('Preview button clicked');
-                         // Small delay to let SimpleMDE update the DOM
-                         setTimeout(convertPreviewTaskLists, 100);
-                         // Also try again after a bit more
-                         setTimeout(convertPreviewTaskLists, 500);
+                         // Wait for SimpleMDE to update the DOM, then convert
+                         setTimeout(function() {
+                              convertPreviewTaskLists();
+                              // Try again after more time
+                              setTimeout(convertPreviewTaskLists, 200);
+                         }, 50);
                     });
+               } else {
+                    console.log('Could not find preview button');
                }
                
-               // Also watch the CodeMirror element for changes
-               const editorContainer = document.querySelector('.CodeMirror');
-               if (editorContainer) {
-                    const observer = new MutationObserver(function(mutations) {
-                         const preview = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
-                         if (preview && preview.style.display !== 'none') {
-                              convertPreviewTaskLists();
-                         }
-                    });
-                    
-                    observer.observe(editorContainer, {
-                         childList: true,
-                         subtree: true
-                    });
-               }
+               // Also periodically check if preview is visible and convert
+               setInterval(function() {
+                    const preview = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
+                    if (preview && preview.style.display !== 'none' && preview.offsetHeight > 0) {
+                         convertPreviewTaskLists();
+                    }
+               }, 1000);
           }, 500);
           
           const wisdoms = [
