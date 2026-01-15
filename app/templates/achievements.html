@@ -1132,8 +1132,8 @@
     function formatInlineMarkdown(text) {
         // Format inline markdown elements: bold, italic, strikethrough, code, links
         
-        // Inline code (`text`)
-        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+        // Escape HTML first to prevent XSS
+        text = escapeHtml(text);
         
         // Strikethrough (~~text~~)
         text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
@@ -1145,6 +1145,9 @@
         // Italics (*text* or _text_) - do this after bold to avoid conflicts
         text = text.replace(/(?<!\*)\*([^\*]+)\*(?!\*)/g, '<em>$1</em>');
         text = text.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
+        
+        // Inline code (`text`)
+        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
         
         // Links [text](url)
         text = text.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank">$1</a>');

@@ -268,6 +268,9 @@
      
      // Format inline markdown elements (bold, italics, strikethrough, code, links)
      function formatInlineMarkdown(text) {
+          // Escape HTML first to prevent XSS
+          text = escapeHtml(text);
+          
           // Strikethrough: ~~text~~
           text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
           
@@ -292,8 +295,8 @@
      function simpleMarkdownToHtml(text) {
           if (!text) return '';
           
-          let html = escapeHtml(text);
-          let lines = html.split('\n');
+          // Don't escape the whole text upfront - we need to parse markdown syntax first
+          let lines = text.split('\n');
           let result = [];
           let inCodeBlock = false;
           let inBlockquote = false;
@@ -310,7 +313,7 @@
                if (line.match(/^```/)) {
                     if (inCodeBlock) {
                          inCodeBlock = false;
-                         result.push('<pre><code>' + codeBlockLines.join('\n') + '</code></pre>');
+                         result.push('<pre><code>' + escapeHtml(codeBlockLines.join('\n')) + '</code></pre>');
                          codeBlockLines = [];
                     } else {
                          inCodeBlock = true;
@@ -412,7 +415,7 @@
                result.push('<' + currentListType + '>' + listItems.join('') + '</' + currentListType + '>');
           }
           if (inCodeBlock && codeBlockLines.length > 0) {
-               result.push('<pre><code>' + codeBlockLines.join('\n') + '</code></pre>');
+               result.push('<pre><code>' + escapeHtml(codeBlockLines.join('\n')) + '</code></pre>');
           }
           
           return result.join('');
