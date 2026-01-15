@@ -237,8 +237,74 @@
 					modeSimple.addEventListener('change', function(e) {
 						if (this.checked) {
 							console.log('[MODE] Switched to simple mode');
-							window.previousMode = 'simple';
-							window.updateModeDisplay();
+							
+							// Check if there's content that's NOT compatible with simple mode
+							let hasIncompatibleContent = false;
+							if (window.simplemde) {
+								const advancedValue = window.simplemde.value();
+								
+								if (advancedValue && advancedValue.trim().length > 0) {
+									// Simple mode only supports checkbox lists like:
+									// - [ ] item
+									// - [x] item
+									// * [ ] item
+									// + [ ] item
+									
+									// Split into lines and check each line
+									const lines = advancedValue.split('\n');
+									for (let line of lines) {
+										line = line.trim();
+										
+										// Skip empty lines
+										if (!line) continue;
+										
+										// Check if line is a valid checkbox format
+										const isCheckbox = /^[-*+]\s*\[[ x]\]/.test(line);
+										
+										// If line exists and is NOT a checkbox, it's incompatible
+										if (!isCheckbox) {
+											hasIncompatibleContent = true;
+											console.log('[MODE] Found incompatible content:', line);
+											break;
+										}
+									}
+								}
+							}
+							
+							// If there's incompatible content, show warning
+							if (hasIncompatibleContent) {
+								// Prevent the automatic mode switch
+								e.preventDefault();
+								
+								showConfirmModal(
+									'Switch to Simple Mode?',
+									'You are about to switch to Simple Mode. Simple Mode only supports checkbox lists. Your current content contains formatting that will be lost (bold, italics, code, links, etc.). Do you want to continue?',
+									function() {
+										// User confirmed, proceed with mode switch
+										console.log('[MODE] User confirmed switching to simple mode');
+										// Actually switch to simple mode
+										modeSimple.checked = true;
+										modeAdvanced.checked = false;
+										$('label[for="mode-simple"]').addClass('active');
+										$('label[for="mode-advanced"]').removeClass('active');
+										window.previousMode = 'simple';
+										window.updateModeDisplay();
+										console.log('[MODE] Mode switched to simple');
+									},
+									'Switch to Simple',
+									'btn-warning',
+									'bg-warning text-dark'
+								);
+								// Revert the radio button since we prevented default
+								modeAdvanced.checked = true;
+								modeSimple.checked = false;
+								$('label[for="mode-advanced"]').addClass('active');
+								$('label[for="mode-simple"]').removeClass('active');
+							} else {
+								// No incompatible content, safe to switch
+								window.previousMode = 'simple';
+								window.updateModeDisplay();
+							}
 						}
 					});
 				}

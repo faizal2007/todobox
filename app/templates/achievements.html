@@ -119,6 +119,7 @@
     
     .achievement-item:hover {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
     }
     
     .achievement-item.strikethrough .achievement-title {
@@ -328,6 +329,291 @@
             font-size: 10px;
         }
     }
+
+    /* Modal Styles */
+    .achievement-modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .achievement-modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .achievement-modal-content {
+        background-color: #fefefe;
+        padding: 0;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .achievement-modal-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: none;
+    }
+
+    .achievement-modal-header-title {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex: 1;
+    }
+
+    .achievement-modal-header-icon {
+        font-size: 32px;
+        opacity: 0.9;
+    }
+
+    .achievement-modal-header-text h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+    }
+
+    .achievement-modal-header-text p {
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+        font-size: 14px;
+    }
+
+    .achievement-modal-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 0;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .achievement-modal-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+
+    .achievement-modal-body {
+        padding: 25px;
+    }
+
+    .achievement-modal-section {
+        margin-bottom: 25px;
+    }
+
+    .achievement-modal-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .achievement-modal-section-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #667eea;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+    }
+
+    .achievement-modal-section-content {
+        font-size: 16px;
+        color: #333;
+        line-height: 1.6;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+
+    /* Markdown rendering styles for advanced mode */
+    .achievement-modal-section-content h1,
+    .achievement-modal-section-content h2,
+    .achievement-modal-section-content h3,
+    .achievement-modal-section-content h4,
+    .achievement-modal-section-content h5,
+    .achievement-modal-section-content h6 {
+        margin-top: 15px;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .achievement-modal-section-content h1 { font-size: 24px; }
+    .achievement-modal-section-content h2 { font-size: 20px; }
+    .achievement-modal-section-content h3 { font-size: 18px; }
+    .achievement-modal-section-content h4 { font-size: 16px; }
+    .achievement-modal-section-content h5 { font-size: 15px; }
+    .achievement-modal-section-content h6 { font-size: 14px; }
+
+    .achievement-modal-section-content p {
+        margin-bottom: 10px;
+    }
+
+    .achievement-modal-section-content strong,
+    .achievement-modal-section-content b {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .achievement-modal-section-content em,
+    .achievement-modal-section-content i {
+        font-style: italic;
+        color: #555;
+    }
+
+    .achievement-modal-section-content code {
+        background: #e8eaf6;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+        color: #d32f2f;
+        font-size: 14px;
+    }
+
+    .achievement-modal-section-content pre {
+        background: #2c3e50;
+        color: #ecf0f1;
+        padding: 12px;
+        border-radius: 6px;
+        overflow-x: auto;
+        margin: 10px 0;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+    }
+
+    .achievement-modal-section-content pre code {
+        background: transparent;
+        padding: 0;
+        color: #ecf0f1;
+    }
+
+    .achievement-modal-section-content ul,
+    .achievement-modal-section-content ol {
+        margin: 10px 0 10px 20px;
+    }
+
+    .achievement-modal-section-content li {
+        margin-bottom: 5px;
+    }
+
+    .achievement-modal-section-content blockquote {
+        border-left: 4px solid #667eea;
+        padding-left: 12px;
+        margin: 10px 0;
+        color: #666;
+        font-style: italic;
+    }
+
+    .achievement-modal-section-content a {
+        color: #667eea;
+        text-decoration: none;
+        border-bottom: 1px solid #667eea;
+    }
+
+    .achievement-modal-section-content a:hover {
+        color: #5568d3;
+        border-bottom-color: #5568d3;
+    }
+
+    .achievement-modal-section-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 6px;
+        margin: 10px 0;
+    }
+
+    .achievement-modal-section-content hr {
+        border: none;
+        border-top: 1px solid #ddd;
+        margin: 15px 0;
+    }
+
+    .achievement-modal-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+
+    .achievement-modal-info-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .achievement-modal-info-label {
+        font-size: 12px;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+
+    .achievement-modal-info-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: #667eea;
+    }
+
+    @media (max-width: 768px) {
+        .achievement-modal-content {
+            width: 95%;
+            max-height: 90vh;
+        }
+
+        .achievement-modal-header {
+            padding: 20px;
+        }
+
+        .achievement-modal-header-text h2 {
+            font-size: 20px;
+        }
+
+        .achievement-modal-body {
+            padding: 20px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -471,6 +757,52 @@
     </div>
     {% endif %}
 </main>
+
+<!-- Achievement Detail Modal -->
+<div class="achievement-modal" id="achievementModal">
+    <div class="achievement-modal-content">
+        <div class="achievement-modal-header">
+            <div class="achievement-modal-header-title">
+                <div class="achievement-modal-header-icon">
+                    <i class="mdi mdi-star"></i>
+                </div>
+                <div class="achievement-modal-header-text">
+                    <h2 id="modalTitle">Todo Detail</h2>
+                    <p id="modalSubtitle">Completed Achievement</p>
+                </div>
+            </div>
+            <button class="achievement-modal-close" id="modalClose">&times;</button>
+        </div>
+        <div class="achievement-modal-body">
+            <!-- Title -->
+            <div class="achievement-modal-section">
+                <div class="achievement-modal-section-title">Title</div>
+                <div class="achievement-modal-section-content" id="modalTodoName">-</div>
+            </div>
+
+            <!-- Details -->
+            <div class="achievement-modal-section" id="detailsSection" style="display: none;">
+                <div class="achievement-modal-section-title">Description</div>
+                <div class="achievement-modal-section-content" id="modalTodoDetails">-</div>
+            </div>
+
+            <!-- Completion Info -->
+            <div class="achievement-modal-section">
+                <div class="achievement-modal-section-title">Completion Info</div>
+                <div class="achievement-modal-info-grid">
+                    <div class="achievement-modal-info-item">
+                        <div class="achievement-modal-info-label">Completed On</div>
+                        <div class="achievement-modal-info-value" id="modalCompletedDate">-</div>
+                    </div>
+                    <div class="achievement-modal-info-item">
+                        <div class="achievement-modal-info-label">Time Taken</div>
+                        <div class="achievement-modal-info-value" id="modalTimeToComplete">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_script_footer %}
@@ -616,5 +948,346 @@
         // Add tooltip on hover
         floatingProgressWidget.setAttribute('title', 'Click to scroll to top');
     }
+
+    // Achievement Modal Functionality
+    const achievementModal = document.getElementById('achievementModal');
+    const modalClose = document.getElementById('modalClose');
+    const achievementsList = document.querySelector('.achievements-list');
+
+    // Close modal when X is clicked
+    if (modalClose) {
+        modalClose.addEventListener('click', function() {
+            achievementModal.classList.remove('show');
+        });
+    }
+
+    // Close modal when clicking outside the modal content
+    achievementModal.addEventListener('click', function(event) {
+        if (event.target === achievementModal) {
+            achievementModal.classList.remove('show');
+        }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            achievementModal.classList.remove('show');
+        }
+    });
+
+    // Function to show modal with todo details
+    function convertCheckboxesToHTML(text) {
+        // Convert markdown checkbox syntax to HTML list
+        if (!text || !text.trim()) return '';
+        
+        const lines = text.split('\n');
+        let html = '<ul style="list-style: none; padding-left: 0;">';
+        
+        lines.forEach(line => {
+            // Match checkbox pattern: dash/asterisk/plus + [content] + text
+            const match = line.match(/^(\s*)([-*+])\s*\[([^\]]*)\]\s*(.*)/);
+            
+            if (match) {
+                const indent = match[1];
+                const bracketContent = match[3];
+                const isChecked = /x/i.test(bracketContent);
+                const textContent = match[4].trim();
+                
+                const indentLevel = indent.length / 2;
+                const style = `margin-left: ${indentLevel * 20}px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;`;
+                
+                html += `<li style="${style}">
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="cursor: default; margin: 0;">
+                    <span>${escapeHtml(textContent)}</span>
+                </li>`;
+            } else if (line.trim()) {
+                // Non-checkbox lines
+                const indent = line.match(/^(\s*)/)[1];
+                const indentLevel = indent.length / 2;
+                const style = `margin-left: ${indentLevel * 20}px; margin-bottom: 8px;`;
+                
+                html += `<li style="${style}">${escapeHtml(line.trim())}</li>`;
+            }
+        });
+        
+        html += '</ul>';
+        return html;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function simpleMarkdownToHtml(text) {
+        // Comprehensive fallback markdown converter
+        if (!text || !text.trim()) return '';
+        
+        let html = text;
+        
+        // Split into lines for processing
+        let lines = html.split('\n');
+        let result = [];
+        let inCodeBlock = false;
+        let codeBlockContent = '';
+        let inBlockquote = false;
+        let blockquoteLines = [];
+        let inList = false;
+        let listItems = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i];
+            
+            // Code blocks (triple backticks)
+            if (line.trim().startsWith('```')) {
+                if (inCodeBlock) {
+                    result.push(`<pre><code>${escapeHtml(codeBlockContent.trim())}</code></pre>`);
+                    codeBlockContent = '';
+                    inCodeBlock = false;
+                } else {
+                    inCodeBlock = true;
+                    codeBlockContent = '';
+                }
+                continue;
+            }
+            
+            if (inCodeBlock) {
+                codeBlockContent += line + '\n';
+                continue;
+            }
+            
+            // Blockquotes (lines starting with >)
+            if (line.trim().startsWith('>')) {
+                if (!inBlockquote) {
+                    inBlockquote = true;
+                    blockquoteLines = [];
+                }
+                blockquoteLines.push(line.replace(/^>\s?/, ''));
+            } else {
+                if (inBlockquote) {
+                    result.push(`<blockquote>${blockquoteLines.map(l => formatInlineMarkdown(l)).join('<br>')}</blockquote>`);
+                    inBlockquote = false;
+                    blockquoteLines = [];
+                }
+                
+                // Lists
+                if (line.trim().match(/^[-*+]\s/)) {
+                    // Unordered list
+                    if (!inList) {
+                        inList = true;
+                        listItems = [];
+                    }
+                    const item = line.replace(/^[-*+]\s/, '').trim();
+                    listItems.push(item);
+                } else if (line.trim().match(/^\d+\.\s/)) {
+                    // Ordered list
+                    if (!inList) {
+                        inList = true;
+                        listItems = [];
+                    }
+                    const item = line.replace(/^\d+\.\s/, '').trim();
+                    listItems.push(item);
+                } else {
+                    if (inList) {
+                        const isOrdered = lines[i-1] && lines[i-1].trim().match(/^\d+\.\s/);
+                        if (isOrdered) {
+                            result.push(`<ol>${listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('')}</ol>`);
+                        } else {
+                            result.push(`<ul>${listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('')}</ul>`);
+                        }
+                        inList = false;
+                        listItems = [];
+                    }
+                    
+                    // Headings
+                    if (line.trim().match(/^#+\s/)) {
+                        const level = line.match(/^#+/)[0].length;
+                        const heading = line.replace(/^#+\s/, '').trim();
+                        result.push(`<h${level}>${formatInlineMarkdown(heading)}</h${level}>`);
+                    } 
+                    // Horizontal rule
+                    else if (line.trim().match(/^(-{3,}|_{3,}|\*{3,})$/)) {
+                        result.push('<hr>');
+                    }
+                    // Paragraphs
+                    else if (line.trim()) {
+                        result.push(`<p>${formatInlineMarkdown(line.trim())}</p>`);
+                    }
+                }
+            }
+        }
+        
+        // Flush remaining lists/blockquotes
+        if (inList) {
+            result.push(`<ul>${listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('')}</ul>`);
+        }
+        if (inBlockquote) {
+            result.push(`<blockquote>${blockquoteLines.map(l => formatInlineMarkdown(l)).join('<br>')}</blockquote>`);
+        }
+        
+        return result.join('');
+    }
+
+    function formatInlineMarkdown(text) {
+        // Format inline markdown elements: bold, italic, strikethrough, code, links
+        
+        // Escape HTML first to prevent XSS
+        text = escapeHtml(text);
+        
+        // Strikethrough (~~text~~)
+        text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+        
+        // Bold (**text** or __text__)
+        text = text.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+        
+        // Italics (*text* or _text_) - do this after bold to avoid conflicts
+        text = text.replace(/(?<!\*)\*([^\*]+)\*(?!\*)/g, '<em>$1</em>');
+        text = text.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
+        
+        // Inline code (`text`)
+        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+        
+        // Links [text](url)
+        text = text.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+        
+        return text;
+    }
+
+    function showAchievementModal(todoData) {
+        document.getElementById('modalTitle').textContent = todoData.name || 'Todo Detail';
+        document.getElementById('modalSubtitle').textContent = 'Completed Achievement';
+        document.getElementById('modalTodoName').textContent = todoData.name || '-';
+        
+        // Show/hide details section
+        const detailsSection = document.getElementById('detailsSection');
+        const detailsContent = document.getElementById('modalTodoDetails');
+        
+        if (todoData.details && todoData.details.trim()) {
+            // Detect simple mode: check if has checkboxes (either from API flag or by pattern detection)
+            let isSimpleMode = todoData.is_simple_mode;
+            
+            // Fallback: detect checkboxes in frontend if flag not provided
+            if (isSimpleMode === undefined) {
+                isSimpleMode = /^[-*+]\s*\[/.test(todoData.details);
+            }
+            
+            if (isSimpleMode) {
+                // Simple mode: render as interactive checkbox list
+                detailsContent.innerHTML = convertCheckboxesToHTML(todoData.details);
+            } else {
+                // Advanced mode: render as markdown HTML
+                let htmlContent = '';
+                try {
+                    // Try to use marked library if available
+                    if (typeof marked !== 'undefined' && marked.parse) {
+                        htmlContent = marked.parse(todoData.details);
+                    } else {
+                        // Fallback to simple converter
+                        htmlContent = simpleMarkdownToHtml(todoData.details);
+                    }
+                } catch (e) {
+                    console.error('Markdown parsing error:', e);
+                    // If markdown parsing fails, use fallback converter
+                    htmlContent = simpleMarkdownToHtml(todoData.details);
+                }
+                detailsContent.innerHTML = htmlContent;
+            }
+            detailsSection.style.display = 'block';
+        } else {
+            detailsSection.style.display = 'none';
+        }
+        
+        // Format completion date
+        const completedDate = new Date(todoData.completed_at);
+        document.getElementById('modalCompletedDate').textContent = completedDate.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        // Show time to complete if available
+        if (todoData.time_to_complete !== null && todoData.time_to_complete !== undefined) {
+            const hours = Math.floor(todoData.time_to_complete);
+            const minutes = Math.round((todoData.time_to_complete - hours) * 60);
+            let timeStr = '';
+            if (hours > 0) {
+                timeStr = `${hours}h`;
+                if (minutes > 0) {
+                    timeStr += ` ${minutes}m`;
+                }
+            } else {
+                timeStr = `${minutes}m`;
+            }
+            document.getElementById('modalTimeToComplete').textContent = timeStr;
+        } else {
+            document.getElementById('modalTimeToComplete').textContent = '-';
+        }
+        
+        // Show modal
+        achievementModal.classList.add('show');
+    }
+
+    // Add click handlers to achievement items
+    function attachAchievementClickHandlers() {
+        const achievementItems = document.querySelectorAll('.achievement-item');
+        achievementItems.forEach(item => {
+            // Remove any existing listeners by cloning
+            const newItem = item.cloneNode(true);
+            item.parentNode.replaceChild(newItem, item);
+            
+            // Add click listener to the cloned item
+            newItem.addEventListener('click', async function() {
+                const todoId = this.id.replace('achievement-', '');
+                
+                // Try to get data from the item's children
+                const titleEl = this.querySelector('.achievement-title');
+                const detailsEl = this.querySelector('.achievement-text');
+                const dateEl = this.querySelector('.achievement-date');
+                
+                if (titleEl && dateEl) {
+                    // Extract data from HTML
+                    const todoData = {
+                        id: todoId,
+                        name: titleEl.textContent.trim(),
+                        details: detailsEl ? detailsEl.textContent.trim() : '',
+                        completed_at: new Date().toISOString(),  // Placeholder - we'll get real date from API
+                        time_to_complete: null
+                    };
+                    
+                    // Try to fetch full details from API
+                    try {
+                        const response = await fetch(`/api/todo/${todoId}/details`);
+                        if (response.ok) {
+                            const fullData = await response.json();
+                            todoData.details = fullData.details || todoData.details;
+                            todoData.completed_at = fullData.completed_at || todoData.completed_at;
+                            todoData.time_to_complete = fullData.time_to_complete;
+                        }
+                    } catch (error) {
+                        console.log('Could not fetch full details, using available data');
+                    }
+                    
+                    showAchievementModal(todoData);
+                }
+            });
+        });
+    }
+
+    // Attach handlers to initially loaded items
+    attachAchievementClickHandlers();
+
+    // Update handler when new items are loaded via infinite scroll
+    const originalLoadMore = window.loadMoreAchievements;
+    window.loadMoreAchievements = function() {
+        if (originalLoadMore) {
+            originalLoadMore.call(this);
+        }
+        // Attach handlers to newly loaded items after a short delay
+        setTimeout(attachAchievementClickHandlers, 100);
+    };
 </script>
 {% endblock %}

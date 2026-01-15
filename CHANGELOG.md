@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Achievement Modal Detail View**: Added interactive modal dialog for viewing full todo details in achievements page
+  - New API endpoint `/api/todo/<int:todo_id>/details` for fetching complete todo information
+  - Endpoint calculates time-to-completion from creation and completion tracker timestamps
+  - Modal displays: todo title, description, completion date/time, and time taken to complete
+  - User isolation: endpoint validates user ownership to prevent unauthorized access
+  - Responsive design with fade-in overlay and slide-up animation
+  - Keyboard support: Escape key closes modal
+  - Infinite scroll integration: dynamically loaded items are immediately clickable
+  - Comprehensive test suite with 2 passing tests
+
+- **Smart Description Rendering in Modal**: Intelligent detection and rendering of todo descriptions
+  - **Simple Mode (Checkbox Format)**: Detects markdown-style checkboxes (`- [ ]`, `* [ ]`, `+ [ ]`) and renders as interactive HTML checkbox list
+    - Displays actual disabled checkboxes with proper visual styling
+    - Shows checked/unchecked state based on content
+    - Supports indented checkboxes for nested lists
+    - Proper spacing and alignment
+  - **Advanced Mode (Markdown Rendering)**: Full markdown support with dual rendering engine
+    - Primary: marked.js library for comprehensive markdown support
+    - Fallback: simpleMarkdownToHtml() converter with common markdown patterns
+    - Supported patterns:
+      * Bold (**text**) and italics (*text* or _text_)
+      * Inline code (`text`) and code blocks (triple backticks)
+      * Headings (# ## ### etc)
+      * Links ([text](url)) and images
+      * Line breaks and horizontal rules
+    - Custom CSS styling for all markdown elements
+    - Graceful fallback handling if primary renderer unavailable
+
 ### Fixed
 - **Recent Todos Linking to Wrong Page**: Fixed Recent Todos showing tasks scheduled for today/tomorrow as "Undone Tasks"
   - **Issue**: Recent Todos linked to /undone page for tasks scheduled for today, but /undone endpoint didn't show them
