@@ -5,8 +5,12 @@ import pytest
 import os
 import sys
 
+
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import login fixtures for pytest discovery
+from tests.login_fixtures import *
 
 
 @pytest.fixture(scope="function")
@@ -41,9 +45,9 @@ def app():
         # Seed terms and disclaimer
         if TermsAndDisclaimer.query.count() == 0:
             terms = TermsAndDisclaimer(
-                title='Terms and Conditions',
-                content='These are the terms and conditions.',
-                version=1,
+                terms_of_use='These are the terms of use.',
+                disclaimer='This is the disclaimer.',
+                version='1.0',
                 is_active=True
             )
             db.session.add(terms)

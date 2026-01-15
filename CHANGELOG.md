@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Advanced Mode Content Transfer Issue**: Fixed JavaScript syntax error preventing Advanced Mode from working properly
+  - Removed recursive function definition that was causing "missing } after function body" syntax error
+  - Improved `convertSimpleToAdvanced()` to properly extract items from both hidden textarea and displayed UI elements
+  - Fixed SimpleMDE initialization timing: Now initializes BEFORE attempting to set content value
+  - Added proper content extraction from the items container using querySelectorAll for checkboxes
+  - Ensures simple checklist items (with checked state) are properly converted to markdown format when switching to advanced mode
+  - Added fallback initialization if SimpleMDE is not immediately available
+
 ### Added
+- **On-the-Fly Content Conversion Between Simple and Advanced Modes**:
+  - Implemented dynamic content conversion when switching between simple and advanced modes without requiring save
+  - Simple → Advanced: Markdown checklist format automatically converted to advanced editor content
+  - Advanced → Simple: Content converted only if it contains checklist format (- [ ] pattern), otherwise shows confirmation dialog
+  - Content conversion happens immediately on mode switch (on-the-fly experience)
+  - Added conversion functions: `convertSimpleToAdvanced()` and `convertAdvancedToSimple()`
+  - Added compatibility check: `isAdvancedContentCompatibleWithSimple()` to validate advanced content for simple mode
+  - Store original content (`originalSimpleContent`, `originalAdvancedContent`) when loading todos for editing
+  - Unsaved changes are temporary and local to the modal - don't affect database until save is clicked
+  - Auto-revert capability: Modal close without saving restores database content
+  - Enhanced mode switching with event listeners on radio buttons and bootstrap button group labels
+  - Improved UX: User can preview content in different modes before committing to save
+
 - **Simple Todo Feature**: New quick-creation todo type for checklists
   - Added `todo_type` column to Todo model (default: 'advanced' for backward compatibility)
   - New SimpleTodoForm for minimal title-only input

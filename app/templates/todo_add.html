@@ -1,5 +1,7 @@
 
 <!-- Flatpickr CSS and JS for datetime picker -->
+<link href='{{ url_for('static', filename='assets/css/vendor/simplemde.min.css') }}' rel="stylesheet" type="text/css" />
+<script src='{{ url_for('static', filename='assets/js/vendor/simplemde.min.js') }}'></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
@@ -97,136 +99,154 @@
 					
 					<!-- Mode Toggle Script -->
 					<script>
-					// Make updateModeDisplay globally accessible so it can be called from todo-operations.js
-					window.updateModeDisplay = function() {
-						const modeSimple = document.getElementById('mode-simple');
-						const simpleModeContent = document.getElementById('simple-mode-content');
-						const advancedModeContent = document.getElementById('advanced-mode-content');
-						const modeDescription = document.getElementById('mode-description');
-						const todoModeInput = document.getElementById('todo_mode');
-						
-						if (modeSimple && modeSimple.checked) {
-							// Show simple mode
-							simpleModeContent.style.display = 'block';
-							advancedModeContent.style.display = 'none';
-							modeDescription.innerHTML = '<i class="mdi mdi-information-outline"></i> Perfect for quick checklists - easily tick items off as you complete them.';
-							todoModeInput.value = 'simple';
-						} else {
-							// Show advanced mode
-							simpleModeContent.style.display = 'none';
-							advancedModeContent.style.display = 'block';
-							modeDescription.innerHTML = '<i class="mdi mdi-information-outline"></i> Create rich, formatted todos with detailed descriptions and markdown support.';
-							todoModeInput.value = 'advanced';
-							
-							// Initialize SimpleMDE if needed
-							if (typeof window.simplemde !== 'undefined' && window.simplemde) {
-								window.simplemde.codemirror.refresh();
-							}
-						}
-					};
-					
-					// Make previousMode global so it can be updated from todo-operations.js
-					window.previousMode = 'simple';
-					
-					document.addEventListener('DOMContentLoaded', function() {
-						const modeSimple = document.getElementById('mode-simple');
-						const modeAdvanced = document.getElementById('mode-advanced');
-						const modeSimpleLabel = document.querySelector('label[for="mode-simple"]');
-						const modeAdvancedLabel = document.querySelector('label[for="mode-advanced"]');
-						
-						// Check if advanced mode content is compatible with simple mode (checklist format)
-						function isAdvancedContentCompatibleWithSimple() {
-							if (typeof window.simplemde !== 'undefined' && window.simplemde) {
-								const content = window.simplemde.value();
-								console.log('[MODE DEBUG] Checking advanced content compatibility:', content.substring(0, 100));
-								// Check if content is in checklist format (contains "- [" pattern)
-								const hasChecklist = /^-\s*\[[^\]]\]/m.test(content);
-								console.log('[MODE DEBUG] Has checklist format:', hasChecklist);
-								return hasChecklist;
-							}
-							return false;
-						}
-						
-						// Handle clicks on mode labels (Bootstrap button group)
-						if (modeSimpleLabel) {
-							modeSimpleLabel.addEventListener('click', function(e) {
-								console.log('[MODE DEBUG] Simple mode label clicked, previousMode:', window.previousMode);
-								if (window.previousMode === 'advanced') {
-									// Switching from advanced to simple
-									if (!isAdvancedContentCompatibleWithSimple()) {
-										// Content not compatible, prevent the switch and show warning
-										e.preventDefault();
-										e.stopPropagation();
-										console.log('[MODE DEBUG] Content not compatible, showing modal');
-										$('#mode-switch-confirm-modal').modal('show');
-										return false;
-									}
-								}
-								window.previousMode = 'simple';
-								window.updateModeDisplay();
+			// Initialize global variables
+			window.originalSimpleContent = '';
+			window.originalAdvancedContent = '';
+			window.previousMode = 'simple';
+			
+			// Mode Display Update Function
+			window.updateModeDisplay = function() {
+				const modeSimple = document.getElementById('mode-simple');
+				const simpleModeContent = document.getElementById('simple-mode-content');
+				const advancedModeContent = document.getElementById('advanced-mode-content');
+				const modeDescription = document.getElementById('mode-description');
+				const todoModeInput = document.getElementById('todo_mode');
+
+				if (modeSimple && modeSimple.checked) {
+					// Show simple mode
+					if (simpleModeContent) simpleModeContent.style.display = 'block';
+					if (advancedModeContent) advancedModeContent.style.display = 'none';
+					if (modeDescription) modeDescription.innerHTML = '<i class="mdi mdi-information-outline"></i> Perfect for quick checklists - easily tick items off as you complete them.';
+					if (todoModeInput) todoModeInput.value = 'simple';
+				} else {
+					// Show advanced mode
+					if (simpleModeContent) simpleModeContent.style.display = 'none';
+					if (advancedModeContent) advancedModeContent.style.display = 'block';
+					if (modeDescription) modeDescription.innerHTML = '<i class="mdi mdi-information-outline"></i> Create rich, formatted todos with detailed descriptions and markdown support.';
+					if (todoModeInput) todoModeInput.value = 'advanced';
+
+					// Initialize SimpleMDE if needed
+					if (typeof window.SimpleMDE !== 'undefined' && (!window.simplemde || typeof window.simplemde === 'undefined')) {
+						try {
+							window.simplemde = new window.SimpleMDE({
+								spellChecker: false,
+								toolbarTips: true,
+								toolbar: [
+									"bold",
+									"italic",
+									"strikethrough",
+									"unordered-list",
+									"ordered-list", "|",
+									"quote",
+									"link",
+									"preview"
+								],
+								element: document.getElementById("details-textarea")
 							});
+							console.log('[MODE] SimpleMDE initialized successfully');
+						} catch(err) {
+							console.error('[MODE] Error initializing SimpleMDE:', err);
 						}
-						
-						if (modeAdvancedLabel) {
-							modeAdvancedLabel.addEventListener('click', function() {
-								console.log('[MODE DEBUG] Advanced mode label clicked');
-								window.previousMode = 'advanced';
-								window.updateModeDisplay();
-							});
-						}
-						
-						// Also listen to radio button changes as backup
-						if (modeSimple) {
-							modeSimple.addEventListener('change', function() {
-								console.log('[MODE DEBUG] mode-simple radio change event');
-								if (!this.checked) return;
-								if (window.previousMode === 'advanced') {
-									if (!isAdvancedContentCompatibleWithSimple()) {
-										modeAdvanced.checked = true;
-										$('#mode-switch-confirm-modal').modal('show');
-										return;
-									}
-								}
-								window.previousMode = 'simple';
-								window.updateModeDisplay();
-							});
-						}
-						
-						if (modeAdvanced) {
-							modeAdvanced.addEventListener('change', function() {
-								console.log('[MODE DEBUG] mode-advanced radio change event');
-								if (this.checked) {
-									window.previousMode = 'advanced';
-									window.updateModeDisplay();
-								}
-							});
-						}
-						
-						// Handle confirmation of mode switch
-						$('#confirm-mode-switch').click(function() {
-							// User confirmed switching to simple mode
-							// Only clear the advanced editor, but keep the simple mode data intact
-							if (typeof window.simplemde !== 'undefined' && window.simplemde) {
-								window.simplemde.value('');
-							}
-							
-							// Now actually switch the mode
-							modeSimple.checked = true;
-							modeAdvanced.checked = false;
-							window.previousMode = 'simple';
-							
-							// Update visual state
-							$('label[for="mode-simple"], label[for="mode-advanced"]').removeClass('active');
-							$('label[for="mode-simple"]').addClass('active');
-							
+					}
+				}
+			};
+
+			// Helper function: Convert simple mode checklist to advanced mode markdown
+			function convertSimpleToAdvanced() {
+				// First check if there's content in the hidden textarea
+				const simpleItemsTextarea = document.getElementById('simple-items');
+				if (simpleItemsTextarea && simpleItemsTextarea.value.trim()) {
+					return simpleItemsTextarea.value;
+				}
+				
+				// If not, extract from the displayed items in the container
+				const itemsContainer = document.getElementById('items-container');
+				if (!itemsContainer) return '';
+				
+				const items = [];
+				const checkboxes = itemsContainer.querySelectorAll('.simple-item-checkbox');
+				
+				checkboxes.forEach((checkbox) => {
+					const label = checkbox.parentElement.querySelector('label');
+					if (label) {
+						const text = label.textContent.trim();
+						const isChecked = checkbox.checked;
+						const markdownItem = `- [${isChecked ? 'x' : ' '}] ${text}`;
+						items.push(markdownItem);
+					}
+				});
+				
+				return items.join('\n');
+			}
+			
+			// Helper function: Convert advanced mode markdown to simple mode checklist
+			function convertAdvancedToSimple() {
+				if (typeof window.simplemde === 'undefined' || !window.simplemde) return '';
+				const advancedContent = window.simplemde.value();
+				if (!advancedContent.trim()) return '';
+				
+				// Extract only checklist items
+				const lines = advancedContent.split('\n');
+				const checklistItems = lines.filter(line => /^[-*+]\s*\[/.test(line.trim()));
+				return checklistItems.join('\n');
+			}
+			
+			// Event handlers for mode radio button clicks
+			document.addEventListener('DOMContentLoaded', function() {
+				const modeSimple = document.getElementById('mode-simple');
+				const modeAdvanced = document.getElementById('mode-advanced');
+				
+				if (modeAdvanced) {
+					modeAdvanced.addEventListener('change', function(e) {
+						if (this.checked) {
+							console.log('[MODE] Switched to advanced mode');
+							// First update display to show advanced content area
 							window.updateModeDisplay();
-							$('#mode-switch-confirm-modal').modal('hide');
-						});
-						
-						// Set initial display
-						window.updateModeDisplay();
+							// Small delay to ensure SimpleMDE is initialized
+							setTimeout(function() {
+								const converted = convertSimpleToAdvanced();
+								console.log('[MODE] Converted content:', converted);
+								if (window.simplemde) {
+									window.simplemde.value(converted);
+									console.log('[MODE] Set SimpleMDE value');
+								} else {
+									console.log('[MODE] SimpleMDE not available');
+									// Try to initialize it
+									if (typeof window.SimpleMDE !== 'undefined') {
+										try {
+											window.simplemde = new window.SimpleMDE({
+												spellChecker: false,
+												toolbarTips: true,
+												toolbar: ["bold", "italic", "strikethrough", "unordered-list", "ordered-list", "|", "quote", "link", "preview"],
+												element: document.getElementById("details-textarea")
+											});
+											window.simplemde.value(converted);
+											console.log('[MODE] SimpleMDE initialized and value set');
+										} catch(err) {
+											console.error('[MODE] Error initializing SimpleMDE:', err);
+										}
+									}
+								}
+								window.previousMode = 'advanced';
+							}, 100);
+						}
 					});
-				</script>
+				}
+				
+				if (modeSimple) {
+					modeSimple.addEventListener('change', function(e) {
+						if (this.checked) {
+							console.log('[MODE] Switched to simple mode');
+							window.previousMode = 'simple';
+							window.updateModeDisplay();
+						}
+					});
+				}
+				
+				// Initialize the display
+				window.updateModeDisplay();
+			});
+			</script>
 					
 				<!-- Schedule/Day Selection -->
 				<div class="form-group">

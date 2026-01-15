@@ -378,6 +378,19 @@
                     document.querySelector("input[name='todo_id']").value = '';
                     simplemde.value('');
                     
+                    // Reset to simple mode
+                    document.getElementById('mode-simple').checked = true;
+                    document.getElementById('mode-advanced').checked = false;
+                    $('label[for="mode-simple"]').addClass('active');
+                    $('label[for="mode-advanced"]').removeClass('active');
+                    window.previousMode = 'simple';
+                    if (typeof window.updateModeDisplay === 'function') {
+                         window.updateModeDisplay();
+                    }
+                    
+                    // Reset simple items
+                    document.getElementById('simple-items').value = '';
+                    
                     // Reset schedule selection to today
                     document.querySelector('input[name="schedule_day"][value="today"]').checked = true;
                     document.querySelector('label[for="today"]').classList.add('active');
@@ -460,7 +473,7 @@
                          // this.checked = !isChecked;
                     });
                });
-          });
+           });
           
           // Reset form when modal is closed - use vanilla JS event delegation since jQuery may not be loaded yet
           // This will be enhanced by jQuery modal handlers in main.html after vendor scripts load
