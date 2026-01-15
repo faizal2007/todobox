@@ -301,42 +301,23 @@
      // Convert markdown task lists to HTML checkboxes BEFORE marked parses them
      function preprocessTaskLists(markdown) {
           if (!markdown) return markdown;
-          console.log('Preprocessing markdown:', markdown.substring(0, 200));
           
-          // Replace task list syntax with HTML inline
-          // - [] item -> <input type="checkbox" disabled> item
-          markdown = markdown.replace(/^- \[\s*\]\s+(.+?)$/gm, function(match, content) {
-               return '<input type="checkbox" disabled> ' + content;
-          });
+          // Simple approach: replace task list syntax with HTML inline
+          // Handle: - [] text and - [x] text
+          markdown = markdown.replace(/^- \[\s*\]\s*/gm, '<input type="checkbox" disabled> ');
+          markdown = markdown.replace(/^- \[[xX]\]\s*/gm, '<input type="checkbox" checked disabled> ');
           
-          // - [x] item -> <input type="checkbox" checked disabled> item
-          markdown = markdown.replace(/^- \[[xX]\]\s+(.+?)$/gm, function(match, content) {
-               return '<input type="checkbox" checked disabled> ' + content;
-          });
-          
-          console.log('After preprocessing:', markdown.substring(0, 200));
           return markdown;
      }
 
      // Convert GFM task list HTML to checkbox inputs
      function convertTaskListsToHTML(html) {
           if (!html) return html;
-          console.log('Before conversion:', html.substring(0, 200));
           
-          // Handle both regular brackets and HTML-encoded brackets
-          // Replace <li>[] with <li><input type="checkbox" disabled>
-          html = html.replace(/<li>\s*\[\s*\]/g, '<li><input type="checkbox" disabled> ');
-          html = html.replace(/<li>\s*&lsqb;\s*&rsqb;/g, '<li><input type="checkbox" disabled> ');
+          // Replace <li>[] pattern in HTML output
+          html = html.replace(/<li>\[\s*\]/g, '<li><input type="checkbox" disabled>');
+          html = html.replace(/<li>\[[xX]\]/g, '<li><input type="checkbox" checked disabled>');
           
-          // Replace <li>[x] or <li>[X] with <li><input type="checkbox" checked disabled>
-          html = html.replace(/<li>\s*\[[xX]\]/g, '<li><input type="checkbox" checked disabled> ');
-          html = html.replace(/<li>\s*&lsqb;[xX]&rsqb;/g, '<li><input type="checkbox" checked disabled> ');
-          
-          // Also handle with content immediately after
-          html = html.replace(/<li>\s*\[\s*\]\s+([^<])/g, '<li><input type="checkbox" disabled> $1');
-          html = html.replace(/<li>\s*\[[xX]\]\s+([^<])/g, '<li><input type="checkbox" checked disabled> $1');
-          
-          console.log('After conversion:', html.substring(0, 200));
           return html;
      }
      
@@ -393,30 +374,22 @@
                             "preview"
                         ],
                previewRender: function(plainText) {
-                    // Use marked.js if available, otherwise use our custom converter
                     try {
                          if (typeof marked !== 'undefined') {
                               // Preprocess task lists BEFORE marked parses
                               let processed = preprocessTaskLists(plainText);
                               
-                              // Configure marked to use GitHub Flavored Markdown with task lists
-                              marked.setOptions({
-                                   gfm: true,
-                                   breaks: true,
-                                   pedantic: false
-                              });
+                              // Configure and parse
+                              marked.setOptions({ gfm: true, breaks: true });
                               let html = marked.parse(processed);
-                              console.log('Marked output:', html.substring(0, 300));
-                              // Also convert any HTML task list syntax
-                              html = convertTaskListsToHTML(html);
-                              console.log('After conversion:', html.substring(0, 300));
+                              
                               return html;
                          } else {
                               return simpleMarkdownToHtml(plainText);
                          }
                     } catch (error) {
-                         console.error('Error rendering markdown preview:', error);
-                         return simpleMarkdownToHtml(plainText);
+                         console.error('Error rendering preview:', error);
+                         return plainText;
                     }
                },
                element: document.getElementById("details-textarea")
