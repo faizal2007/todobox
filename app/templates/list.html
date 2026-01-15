@@ -308,6 +308,14 @@
                     try {
                          // Try to use marked.js if available
                          if (typeof marked !== 'undefined') {
+                              // Configure marked for GFM task lists
+                              const renderer = new marked.Renderer();
+                              marked.setOptions({
+                                   gfm: true,
+                                   breaks: true,
+                                   pedantic: false,
+                                   renderer: renderer
+                              });
                               htmlContent = marked.parse(details);
                          } else {
                               htmlContent = simpleMarkdownToHtml(details);
@@ -343,6 +351,14 @@
                     // Use marked.js if available, otherwise use our custom converter
                     try {
                          if (typeof marked !== 'undefined') {
+                              // Configure marked to use GitHub Flavored Markdown
+                              const renderer = new marked.Renderer();
+                              marked.setOptions({
+                                   gfm: true,
+                                   breaks: true,
+                                   pedantic: false,
+                                   renderer: renderer
+                              });
                               return marked.parse(plainText);
                          } else {
                               return simpleMarkdownToHtml(plainText);
