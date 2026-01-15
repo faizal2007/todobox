@@ -231,8 +231,28 @@
         border-radius: 12px 12px 0 0;
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: center;
         flex-shrink: 0;
+    }
+    
+    .achievement-modal-header-title {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+    }
+    
+    .achievement-modal-header-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: white;
+        flex-shrink: 0;
+    }
+    
+    .achievement-modal-header-text {
+        flex: 1;
     }
     
     .achievement-modal-header h2 {
@@ -240,6 +260,7 @@
         font-size: 24px;
         font-weight: 700;
         line-height: 1.2;
+        color: white;
     }
     
     .achievement-modal-header p {
@@ -287,6 +308,61 @@
     
     .achievement-modal-body h3:first-child {
         margin-top: 0;
+    }
+    
+    /* Modal Section Styles */
+    .achievement-modal-section {
+        padding: 16px 16px 16px 16px;
+        border-left: 4px solid #4d7fe8;
+        margin-bottom: 20px;
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+    
+    .achievement-modal-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .achievement-modal-section-title {
+        color: #4d7fe8;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin: 0 0 12px 0;
+        display: block;
+    }
+    
+    .achievement-modal-section-content {
+        color: #2c3e50;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+    
+    .achievement-modal-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 12px;
+    }
+    
+    .achievement-modal-info-item {
+        text-align: center;
+    }
+    
+    .achievement-modal-info-label {
+        color: #7f8c8d;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .achievement-modal-info-value {
+        color: #4d7fe8;
+        font-size: 16px;
+        font-weight: 600;
     }
     
     .achievement-modal-body > div {
