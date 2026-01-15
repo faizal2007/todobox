@@ -849,13 +849,20 @@ def dashboard():
     # Get recent undone todos for activity feed (filtered by current user and not completed)
     # Status 6 = 'done' (see Status.seed() in models.py)
     # Get the most recent tracker for each todo (not completed)
-    recent_todos_raw = db.session.query(Todo).filter(  # type: ignore[attr-defined]
+    all_todos_for_recent = db.session.query(Todo).filter(  # type: ignore[attr-defined]
         Todo.user_id == current_user.id  # type: ignore
-    ).outerjoin(
-        Tracker, Todo.id == Tracker.todo_id  # type: ignore
-    ).filter(
-        (Tracker.status_id != 6) | (Tracker.status_id == None)  # type: ignore[attr-defined]
-    ).order_by(Todo.modified.desc()).distinct().limit(5).all()
+    ).order_by(Todo.modified.desc()).limit(50).all()
+    
+    recent_todos_raw = []
+    for todo in all_todos_for_recent:
+        # Get the latest tracker for this todo
+        latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc(), Tracker.id.desc()).first()  # type: ignore[attr-defined]
+        
+        # Include only if: no tracker exists OR latest tracker is not 'done' (status_id != 6)
+        if not latest_tracker or latest_tracker.status_id != 6:
+            recent_todos_raw.append(todo)
+            if len(recent_todos_raw) >= 5:
+                break
 
     today_date = now.date()
     tomorrow_date = today_date + timedelta(days=1)

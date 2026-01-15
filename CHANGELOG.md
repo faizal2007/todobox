@@ -7,17 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- **Todo Cleanup Utility (todomanage.py)**: New option to cleanup/delete todos by duration or all at once
-  - Option 10 in todomanage menu provides flexible cleanup options
-  - Method 1: Delete ALL todos for a selected user
-  - Method 2: Delete todos older than X days
-  - Method 3: Delete todos from the last X days
-  - Shows todo counts before deletion and requires confirmation (with special keywords)
-  - Properly deletes associated Tracker records to maintain database integrity
-  - Supports all user selection and safety confirmations
-
 ### Fixed
+- **Recent Todos Display Misleading Data**: Fixed Recent Todos widget showing completed tasks as undone
+  - **Issue**: Dashboard "Recent Todos" displayed tasks that appeared in /undone page but had no actual undone data
+  - **Root Cause**: Query using OUTERJOIN was checking ANY tracker status instead of LATEST tracker status
+  - Previous query included todos with any non-done tracker, even if the latest tracker was 'done'
+  - **Solution**: Changed to check the latest tracker for each todo, consistent with /undone route logic
+  - Now correctly filters: latest_tracker is None OR latest_tracker.status_id != 6 (done)
+  - Eliminates confusing discrepancy between dashboard display and /undone endpoint
+
 - **Service Worker External Resource Handling (CRITICAL)**: Fixed ServiceWorker blocking all external resource loads
   - Skip external resource requests completely instead of intercepting them
   - External CDNs (moment.js, flatpickr, gravatar, fonts, etc.) now bypass service worker entirely
