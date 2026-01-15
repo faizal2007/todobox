@@ -49,8 +49,8 @@ def require_api_token(f):
     return decorated_function
 
 # Allowed HTML tags for sanitized Markdown output
-ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a', 'del', 's', 'input']
-ALLOWED_ATTRIBUTES = {'a': ['href', 'title'], 'input': ['type', 'disabled', 'checked']}
+ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a', 'del', 's', 'input', 'div']
+ALLOWED_ATTRIBUTES = {'a': ['href', 'title'], 'input': ['type', 'disabled', 'checked'], 'div': ['style']}
 
 def normalize_checkboxes(text):
     """
