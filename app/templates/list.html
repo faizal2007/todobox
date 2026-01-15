@@ -300,17 +300,8 @@
 
      // Convert markdown task lists to HTML checkboxes BEFORE marked parses them
      function preprocessTaskLists(markdown) {
-          if (!markdown) return markdown;
-          
-          console.log('PREPROCESS INPUT:', markdown.substring(0, 100));
-          
-          // Replace task list syntax with HTML input elements
-          // Match: - [] (unchecked) at start of line
-          markdown = markdown.replace(/^- \[\s*\]\s*/gm, '<input type="checkbox" disabled> ');
-          // Match: - [x] or - [X] (checked) at start of line
-          markdown = markdown.replace(/^- \[[xX]\]\s*/gm, '<input type="checkbox" checked disabled> ');
-          
-          console.log('PREPROCESS OUTPUT:', markdown.substring(0, 100));
+          // Don't modify the markdown - let marked.js handle it
+          // We'll convert the checkboxes AFTER marked.js creates the HTML
           return markdown;
      }
 
@@ -384,15 +375,38 @@
                     console.log('PREVIEW CALLED WITH:', plainText.substring(0, 100));
                     try {
                          if (typeof marked !== 'undefined') {
-                              // Preprocess task lists BEFORE marked parses
-                              let processed = preprocessTaskLists(plainText);
-                              
-                              // Configure and parse
+                              // Configure marked.js
                               marked.setOptions({ gfm: true, breaks: true });
-                              let html = marked.parse(processed);
                               
-                              console.log('FINAL HTML:', html.substring(0, 200));
-                              return html;
+                              // Parse markdown to HTML
+                              let html = marked.parse(plainText);
+                              
+                              // Post-process: Convert task list syntax in list items to checkboxes
+                              // This regex finds <li> elements and converts bracket content to checkboxes
+                              const tempDiv = document.createElement('div');
+                              tempDiv.innerHTML = html;
+                              
+                              // Process all list items
+                              const li_elements = tempDiv.querySelectorAll('li');
+                              li_elements.forEach(function(li) {
+                                   // Check if the first thing in this li is a bracket pattern
+                                   const text = li.textContent.trim();
+                                   const checkbox_unchecked = /^\[\s*\]/;
+                                   const checkbox_checked = /^\[[xX]\]/;
+                                   
+                                   if (checkbox_unchecked.test(text)) {
+                                        // Extract the label text (everything after the brackets)
+                                        const label = text.substring(2).trim();
+                                        li.innerHTML = '<input type="checkbox" disabled> ' + label;
+                                   } else if (checkbox_checked.test(text)) {
+                                        // Extract the label text (everything after the brackets)
+                                        const label = text.substring(3).trim();
+                                        li.innerHTML = '<input type="checkbox" checked disabled> ' + label;
+                                   }
+                              });
+                              
+                              console.log('FINAL HTML:', tempDiv.innerHTML.substring(0, 200));
+                              return tempDiv.innerHTML;
                          } else {
                               return simpleMarkdownToHtml(plainText);
                          }
@@ -453,30 +467,31 @@
                }
                
                console.log('Converting task lists in preview...');
-               let html = preview.innerHTML;
-               console.log('Before:', html.substring(0, 150));
                
-               // Convert markdown task list syntax
-               // Replace - [ ] and - [x] patterns
-               html = html.replace(/^- \[\s*\]\s*/gm, '<input type="checkbox" disabled> ');
-               html = html.replace(/^- \[[xX]\]\s*/gm, '<input type="checkbox" checked disabled> ');
-               
-               // Also try to replace within list items
-               html = html.replace(/<li>\[\s*\]/g, '<li><input type="checkbox" disabled> ');
-               html = html.replace(/<li>\[[xX]\]/g, '<li><input type="checkbox" checked disabled> ');
-               
-               // Replace text nodes with brackets inside list items
+               // Get all list items and convert task list syntax to checkboxes
                const li_elements = preview.querySelectorAll('li');
+               let converted = 0;
+               
                li_elements.forEach(function(li) {
-                    if (li.textContent.match(/^\[\s*\]/)) {
-                         li.innerHTML = '<input type="checkbox" disabled> ' + li.textContent.substring(2);
-                    } else if (li.textContent.match(/^\[[xX]\]/)) {
-                         li.innerHTML = '<input type="checkbox" checked disabled> ' + li.textContent.substring(3);
+                    // Get the text content and check if it starts with brackets
+                    const text = li.textContent.trim();
+                    const checkbox_unchecked = /^\[\s*\]/;
+                    const checkbox_checked = /^\[[xX]\]/;
+                    
+                    if (checkbox_unchecked.test(text)) {
+                         // Extract the label text (everything after the brackets)
+                         const label = text.substring(2).trim();
+                         li.innerHTML = '<input type="checkbox" disabled> ' + label;
+                         converted++;
+                    } else if (checkbox_checked.test(text)) {
+                         // Extract the label text (everything after the brackets)
+                         const label = text.substring(3).trim();
+                         li.innerHTML = '<input type="checkbox" checked disabled> ' + label;
+                         converted++;
                     }
                });
                
-               console.log('After:', html.substring(0, 150));
-               preview.innerHTML = html;
+               console.log('Converted ' + converted + ' task list items');
           }
           
           // Start watching preview after a short delay
