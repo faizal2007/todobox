@@ -565,19 +565,6 @@
         return text;
     }
 
-    // Convert task list checkboxes in HTML
-    function convertTaskListsInHtml(html) {
-        if (!html) return html;
-        
-        // Replace <li>[] ... with checkbox div
-        html = html.replace(/<li>\[\s*\]\s*([^<]*)<\/li>/g, '<div class="task-list-item"><input type="checkbox" disabled> $1</div>');
-        
-        // Replace <li>[x] or <li>[X] with checked checkbox div
-        html = html.replace(/<li>\[[xX]\]\s*([^<]*)<\/li>/g, '<div class="task-list-item"><input type="checkbox" checked disabled> $1</div>');
-        
-        return html;
-    }
-
     function showAchievementModal(todoData) {
         document.getElementById('modalTitle').textContent = todoData.name || 'Todo Detail';
         document.getElementById('modalSubtitle').textContent = 'Completed Achievement';
@@ -620,10 +607,6 @@
                     // If markdown parsing fails, use fallback converter
                     htmlContent = simpleMarkdownToHtml(todoData.details);
                 }
-                
-                // Post-process HTML to convert task list checkboxes
-                htmlContent = convertTaskListsInHtml(htmlContent);
-                
                 detailsContent.innerHTML = htmlContent;
             }
             detailsSection.style.display = 'block';
