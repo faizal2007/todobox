@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Comprehensive KIV Visibility Test Suite**: New test_kiv_visibility_fix.py with coverage for KIV todo visibility bug
+  - Unit test: Verifies KIV todos appear even when marked today (date filtering edge case)
+  - Integration test: Tests actual /undone route behavior with KIV tabs
+  - Documents the test coverage gap that allowed the bug to slip through
+  - Provides reusable pattern for testing route-level filtering logic
+
 ### Fixed
 - **KIV Todos Not Showing in KIV Tab After Marking**: Fixed bug where KIV todos marked today wouldn't appear in the KIV tab
   - Root cause: `/undone` route was skipping todos from today/tomorrow before checking if they were KIV
