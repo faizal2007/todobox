@@ -83,9 +83,10 @@ def main():
         print("  7) Generate SECRET_KEY and SALT")
         print("  8) Uninstall and cleanup")
         print("  9) Generate fake todos (for testing)")
-        print("  10) Exit")
+        print("  10) Cleanup todos (all or by duration)")
+        print("  11) Exit")
         
-        choice = input("\nSelect option (1-10): ").strip()
+        choice = input("\nSelect option (1-11): ").strip()
         
         if choice == '1':
             create_user()
@@ -106,10 +107,12 @@ def main():
         elif choice == '9':
             generate_fake_todos()
         elif choice == '10':
+            cleanup_todos()
+        elif choice == '11':
             print("\n✅ Exiting.\n")
             sys.exit(0)
         else:
-            print("\n❌ Invalid option. Please select 1-10.")
+            print("\n❌ Invalid option. Please select 1-11.")
 
 def run_todobox():
     """Run the TodoBox Flask application"""
@@ -1419,6 +1422,196 @@ def get_valid_password():
         
         print("✓ Password is valid (strength: moderate)")
         return password
+
+def cleanup_todos():
+    """Cleanup todos - delete all or by duration"""
+    from app import app, db
+    from app.models import User, Todo, Tracker, KIV
+    from datetime import datetime, timedelta
+    
+    with app.app_context():
+        print("\n\n" + "="*60)
+        print("  Cleanup Todos".center(60))
+        print("="*60)
+        
+        # List users
+        users = User.query.all()
+        
+        if not users:
+            print("\n❌ No users found.")
+            return False
+        
+        print("\nAvailable users:")
+        for i, user in enumerate(users, 1):
+            email = user.email or '(no email)'
+            todo_count = Todo.query.filter_by(user_id=user.id).count()
+            print(f"  {i}) {email} - {todo_count} todos")
+        
+        # Select user
+        try:
+            user_choice = input(f"\nSelect user (1-{len(users)}): ").strip()
+            user_index = int(user_choice) - 1
+            
+            if user_index < 0 or user_index >= len(users):
+                print("\n❌ Invalid user selection.")
+                return False
+            
+            selected_user = users[user_index]
+        except (ValueError, IndexError):
+            print("\n❌ Invalid user selection.")
+            return False
+        
+        # Get current todo count
+        total_todos = Todo.query.filter_by(user_id=selected_user.id).count()
+        print(f"\n✓ Selected user: {selected_user.email}")
+        print(f"✓ Total todos for this user: {total_todos}")
+        
+        if total_todos == 0:
+            print("\n❌ No todos to cleanup for this user.")
+            return False
+        
+        # Choose cleanup method
+        print("\nCleanup method:")
+        print("  1) Delete ALL todos")
+        print("  2) Delete todos older than X days")
+        print("  3) Delete todos from last X days")
+        
+        cleanup_choice = input("\nSelect cleanup method (1-3): ").strip()
+        
+        if cleanup_choice == '1':
+            # Delete all todos
+            print(f"\n⚠️  You are about to delete ALL {total_todos} todos for {selected_user.email}")
+            confirm = input("Type 'DELETE ALL' to confirm: ").strip()
+            
+            if confirm != 'DELETE ALL':
+                print("\n❌ Operation cancelled.")
+                return False
+            
+            try:
+                # Get all todos first
+                todos_to_delete = Todo.query.filter_by(user_id=selected_user.id).all()
+                deleted_count = 0
+                
+                # Delete KIV, trackers and todos
+                for todo in todos_to_delete:
+                    KIV.query.filter_by(todo_id=todo.id).delete(synchronize_session=False)
+                    Tracker.query.filter_by(todo_id=todo.id).delete(synchronize_session=False)
+                    db.session.delete(todo)
+                    deleted_count += 1
+                
+                db.session.commit()
+                
+                print(f"\n✅ Successfully deleted {deleted_count} todos!")
+                return True
+                
+            except Exception as e:
+                print(f"\n❌ Error deleting todos: {e}")
+                db.session.rollback()
+                return False
+        
+        elif cleanup_choice == '2':
+            # Delete todos older than X days
+            try:
+                days_input = input("\nDelete todos older than how many days? ").strip()
+                days = int(days_input)
+                
+                if days < 1:
+                    print("\n❌ Please enter a number >= 1.")
+                    return False
+                
+                cutoff_date = datetime.now() - timedelta(days=days)
+                
+                todos_to_delete = Todo.query.filter(
+                    Todo.user_id == selected_user.id,
+                    Todo.modified < cutoff_date
+                ).all()
+                
+                delete_count = len(todos_to_delete)
+                
+                if delete_count == 0:
+                    print(f"\n❌ No todos older than {days} days found.")
+                    return False
+                
+                print(f"\n⚠️  You are about to delete {delete_count} todos older than {days} days")
+                print(f"   Cutoff date: {cutoff_date.strftime('%Y-%m-%d %H:%M:%S')}")
+                confirm = input("Type 'DELETE' to confirm: ").strip()
+                
+                if confirm != 'DELETE':
+                    print("\n❌ Operation cancelled.")
+                    return False
+                
+                try:
+                    for todo in todos_to_delete:
+                        KIV.query.filter_by(todo_id=todo.id).delete(synchronize_session=False)
+                        Tracker.query.filter_by(todo_id=todo.id).delete(synchronize_session=False)
+                        db.session.delete(todo)
+                    
+                    db.session.commit()
+                    print(f"\n✅ Successfully deleted {delete_count} todos!")
+                    return True
+                    
+                except Exception as e:
+                    print(f"\n❌ Error deleting todos: {e}")
+                    db.session.rollback()
+                    return False
+                    
+            except ValueError:
+                print("\n❌ Invalid number.")
+                return False
+        
+        elif cleanup_choice == '3':
+            # Delete todos from last X days
+            try:
+                days_input = input("\nDelete todos from the last how many days? ").strip()
+                days = int(days_input)
+                
+                if days < 1:
+                    print("\n❌ Please enter a number >= 1.")
+                    return False
+                
+                cutoff_date = datetime.now() - timedelta(days=days)
+                
+                todos_to_delete = Todo.query.filter(
+                    Todo.user_id == selected_user.id,
+                    Todo.modified >= cutoff_date
+                ).all()
+                
+                delete_count = len(todos_to_delete)
+                
+                if delete_count == 0:
+                    print(f"\n❌ No todos from the last {days} days found.")
+                    return False
+                
+                print(f"\n⚠️  You are about to delete {delete_count} todos from the last {days} days")
+                print(f"   Cutoff date: {cutoff_date.strftime('%Y-%m-%d %H:%M:%S')}")
+                confirm = input("Type 'DELETE' to confirm: ").strip()
+                
+                if confirm != 'DELETE':
+                    print("\n❌ Operation cancelled.")
+                    return False
+                
+                try:
+                    for todo in todos_to_delete:
+                        KIV.query.filter_by(todo_id=todo.id).delete(synchronize_session=False)
+                        Tracker.query.filter_by(todo_id=todo.id).delete(synchronize_session=False)
+                        db.session.delete(todo)
+                    
+                    db.session.commit()
+                    print(f"\n✅ Successfully deleted {delete_count} todos!")
+                    return True
+                    
+                except Exception as e:
+                    print(f"\n❌ Error deleting todos: {e}")
+                    db.session.rollback()
+                    return False
+                    
+            except ValueError:
+                print("\n❌ Invalid number.")
+                return False
+        
+        else:
+            print("\n❌ Invalid cleanup method.")
+            return False
 
 def generate_fake_todos():
     """Generate fake todos spanning different time periods for testing"""
