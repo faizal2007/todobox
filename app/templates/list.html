@@ -381,32 +381,14 @@
                               // Parse markdown to HTML
                               let html = marked.parse(plainText);
                               
-                              // Post-process: Convert task list syntax in list items to checkboxes
-                              // This regex finds <li> elements and converts bracket content to checkboxes
-                              const tempDiv = document.createElement('div');
-                              tempDiv.innerHTML = html;
+                              // Post-process the HTML string directly to convert task lists
+                              // Replace <li>[] ... with checkbox
+                              html = html.replace(/<li>\[\s*\]\s*([^<]*)<\/li>/g, '<li><input type="checkbox" disabled> $1</li>');
+                              // Replace <li>[x] or <li>[X] with checked checkbox
+                              html = html.replace(/<li>\[[xX]\]\s*([^<]*)<\/li>/g, '<li><input type="checkbox" checked disabled> $1</li>');
                               
-                              // Process all list items
-                              const li_elements = tempDiv.querySelectorAll('li');
-                              li_elements.forEach(function(li) {
-                                   // Check if the first thing in this li is a bracket pattern
-                                   const text = li.textContent.trim();
-                                   const checkbox_unchecked = /^\[\s*\]/;
-                                   const checkbox_checked = /^\[[xX]\]/;
-                                   
-                                   if (checkbox_unchecked.test(text)) {
-                                        // Extract the label text (everything after the brackets)
-                                        const label = text.substring(2).trim();
-                                        li.innerHTML = '<input type="checkbox" disabled> ' + label;
-                                   } else if (checkbox_checked.test(text)) {
-                                        // Extract the label text (everything after the brackets)
-                                        const label = text.substring(3).trim();
-                                        li.innerHTML = '<input type="checkbox" checked disabled> ' + label;
-                                   }
-                              });
-                              
-                              console.log('FINAL HTML:', tempDiv.innerHTML.substring(0, 200));
-                              return tempDiv.innerHTML;
+                              console.log('FINAL HTML:', html.substring(0, 200));
+                              return html;
                          } else {
                               return simpleMarkdownToHtml(plainText);
                          }
