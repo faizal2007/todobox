@@ -1,227 +1,8 @@
 {% extends "main.html" %}
 {% block extra_css %}
 	<link href='{{ url_for('static', filename='assets/css/vendor/simplemde.min.css') }}' rel="stylesheet" type="text/css" />
-	<style>
-		.simple-todo-items {
-			padding: 10px 0;
-		}
-		
-		.simple-todo-item {
-			padding: 5px 0;
-		}
-		
-		.simple-item-checkbox {
-			cursor: pointer;
-			margin-right: 5px;
-		}
-		
-		.simple-item-checkbox:checked ~ label {
-			text-decoration: line-through;
-			color: #999;
-		}
-		
-		.simple-todo-item label {
-			margin-bottom: 0;
-			user-select: none;
-			cursor: pointer;
-			word-break: break-word;
-		}
-		
-		.simple-todo-item label.text-muted {
-			color: #999 !important;
-		}
-
-		/* Markdown Rendering Styles */
-		.todo-details-advanced h1,
-		.todo-details-advanced h2,
-		.todo-details-advanced h3,
-		.todo-details-advanced h4,
-		.todo-details-advanced h5,
-		.todo-details-advanced h6 {
-			margin-top: 15px;
-			margin-bottom: 10px;
-			font-weight: 600;
-		}
-		
-		.todo-details-advanced h1 { font-size: 1.8em; }
-		.todo-details-advanced h2 { font-size: 1.6em; }
-		.todo-details-advanced h3 { font-size: 1.4em; }
-		.todo-details-advanced h4 { font-size: 1.2em; }
-		.todo-details-advanced h5 { font-size: 1.1em; }
-		.todo-details-advanced h6 { font-size: 1em; }
-		
-		.todo-details-advanced p {
-			margin-bottom: 10px;
-			line-height: 1.6;
-		}
-		
-		.todo-details-advanced strong {
-			font-weight: 600;
-		}
-		
-		.todo-details-advanced em {
-			font-style: italic;
-		}
-		
-		.todo-details-advanced del {
-			text-decoration: line-through;
-			color: #999;
-		}
-		
-		.todo-details-advanced code {
-			background-color: #f5f5f5;
-			border: 1px solid #ddd;
-			border-radius: 3px;
-			padding: 2px 6px;
-			font-family: 'Courier New', monospace;
-			font-size: 0.9em;
-		}
-		
-		.todo-details-advanced pre {
-			background-color: #f5f5f5;
-			border: 1px solid #ddd;
-			border-radius: 4px;
-			padding: 12px;
-			margin: 10px 0;
-			overflow-x: auto;
-		}
-		
-		.todo-details-advanced pre code {
-			background-color: transparent;
-			border: none;
-			padding: 0;
-		}
-		
-		.todo-details-advanced blockquote {
-			border-left: 4px solid #667eea;
-			margin: 10px 0;
-			padding-left: 15px;
-			color: #666;
-			font-style: italic;
-		}
-		
-		.todo-details-advanced ul,
-		.todo-details-advanced ol {
-			margin: 10px 0 10px 30px;
-			line-height: 1.8;
-		}
-		
-		.todo-details-advanced li {
-			margin-bottom: 5px;
-		}
-		
-		.todo-details-advanced a {
-			color: #667eea;
-			text-decoration: none;
-			cursor: pointer;
-		}
-		
-		.todo-details-advanced a:hover {
-			text-decoration: underline;
-		}
-		
-		.todo-details-advanced hr {
-			margin: 15px 0;
-			border: none;
-			border-top: 2px solid #ddd;
-		}
-
-		/* SimpleMDE Preview Styles */
-		.CodeMirror-fullscreen ~ .editor-preview-side {
-			background-color: #fff;
-			padding: 15px;
-		}
-
-		.editor-preview {
-			background-color: #fff;
-			padding: 15px;
-		}
-
-		.editor-preview blockquote,
-		.editor-preview-side blockquote {
-			border-left: 4px solid #667eea;
-			margin: 10px 0;
-			padding-left: 15px;
-			color: #666;
-			font-style: italic;
-		}
-
-		.editor-preview h1,
-		.editor-preview-side h1,
-		.editor-preview h2,
-		.editor-preview-side h2,
-		.editor-preview h3,
-		.editor-preview-side h3 {
-			margin-top: 15px;
-			margin-bottom: 10px;
-			font-weight: 600;
-		}
-
-		.editor-preview code,
-		.editor-preview-side code {
-			background-color: #f5f5f5;
-			border: 1px solid #ddd;
-			border-radius: 3px;
-			padding: 2px 6px;
-			font-family: 'Courier New', monospace;
-			font-size: 0.9em;
-		}
-
-		.editor-preview pre,
-		.editor-preview-side pre {
-			background-color: #f5f5f5;
-			border: 1px solid #ddd;
-			border-radius: 4px;
-			padding: 12px;
-			margin: 10px 0;
-			overflow-x: auto;
-		}
-
-		.editor-preview pre code,
-		.editor-preview-side pre code {
-			background-color: transparent;
-			border: none;
-			padding: 0;
-		}
-
-		.editor-preview ul,
-		.editor-preview-side ul,
-		.editor-preview ol,
-		.editor-preview-side ol {
-			margin: 10px 0 10px 30px;
-			line-height: 1.8;
-		}
-
-		.editor-preview li,
-		.editor-preview-side li {
-			margin-bottom: 5px;
-		}
-
-		.editor-preview a,
-		.editor-preview-side a {
-			color: #667eea;
-			text-decoration: none;
-			cursor: pointer;
-		}
-
-		.editor-preview a:hover,
-		.editor-preview-side a:hover {
-			text-decoration: underline;
-		}
-
-		.editor-preview del,
-		.editor-preview-side del {
-			text-decoration: line-through;
-			color: #999;
-		}
-
-		.editor-preview hr,
-		.editor-preview-side hr {
-			margin: 15px 0;
-			border: none;
-			border-top: 2px solid #ddd;
-		}
-	</style>
+	<link href='{{ url_for('static', filename='css/todo-list-styles.css') }}' rel="stylesheet" type="text/css" />
+	<link href='{{ url_for('static', filename='css/markdown-styles.css') }}' rel="stylesheet" type="text/css" />
 {% endblock %}
 {% block content %}
 <main role="main">
@@ -460,7 +241,39 @@
                          currentListType = 'ul';
                     }
                     let itemText = line.replace(/^[-*+]\s/, '');
-                    listItems.push('<li>' + formatInlineMarkdown(itemText) + '</li>');
+                    
+                    // Check if this is a task list item (starts with [ ] or [x])
+                    let isCheckboxUnchecked = itemText.match(/^\[\s*\]\s*/);
+                    let isCheckboxChecked = itemText.match(/^\[[xX]\]\s*/);
+                    
+                    if (isCheckboxUnchecked) {
+                         // For task lists, use div instead of li to avoid bullets
+                         // First, flush any regular list items
+                         if (listItems.length > 0) {
+                              result.push('<' + currentListType + '>' + listItems.join('') + '</' + currentListType + '>');
+                              listItems = [];
+                              inList = false;
+                         }
+                         // Remove the [] from the text and add checkbox as a div
+                         itemText = itemText.replace(/^\[\s*\]\s*/, '');
+                         result.push('<div class="task-list-item"><input type="checkbox" disabled> ' + formatInlineMarkdown(itemText) + '</div>');
+                    } else if (isCheckboxChecked) {
+                         // For task lists, use div instead of li to avoid bullets
+                         // First, flush any regular list items
+                         if (listItems.length > 0) {
+                              result.push('<' + currentListType + '>' + listItems.join('') + '</' + currentListType + '>');
+                              listItems = [];
+                              inList = false;
+                         }
+                         // Remove the [x] from the text and add checked checkbox as a div
+                         itemText = itemText.replace(/^\[[xX]\]\s*/, '');
+                         result.push('<div class="task-list-item"><input type="checkbox" checked disabled> ' + formatInlineMarkdown(itemText) + '</div>');
+                    } else {
+                         // Regular list item
+                         inList = true;
+                         currentListType = 'ul';
+                         listItems.push('<li>' + formatInlineMarkdown(itemText) + '</li>');
+                    }
                } else if (isOrderedListItem) {
                     if (!inList || currentListType !== 'ol') {
                          if (inList && listItems.length > 0) {
@@ -516,6 +329,27 @@
           
           return result.join('');
      }
+
+     // Convert markdown task lists to HTML checkboxes BEFORE marked parses them
+     function preprocessTaskLists(markdown) {
+          // Don't modify the markdown - let marked.js handle it
+          // We'll convert the checkboxes AFTER marked.js creates the HTML
+          return markdown;
+     }
+
+     // Convert GFM task list HTML to checkbox inputs (post-marked processing)
+     function convertTaskListsToHTML(html) {
+          if (!html) return html;
+          
+          console.log('POSTPROCESS INPUT:', html.substring(0, 100));
+          
+          // Replace <li>[] pattern in HTML output from marked.js
+          html = html.replace(/<li>\[\s*\]/g, '<li><input type="checkbox" disabled>');
+          html = html.replace(/<li>\[[xX]\]/g, '<li><input type="checkbox" checked disabled>');
+          
+          console.log('POSTPROCESS OUTPUT:', html.substring(0, 100));
+          return html;
+     }
      
      // Initialize markdown rendering for advanced todo details
      function initializeMarkdownRendering() {
@@ -527,7 +361,18 @@
                     try {
                          // Try to use marked.js if available
                          if (typeof marked !== 'undefined') {
-                              htmlContent = marked.parse(details);
+                              // Preprocess task lists BEFORE marked parses
+                              let processed = preprocessTaskLists(details);
+                              
+                              // Configure marked for GFM task lists
+                              marked.setOptions({
+                                   gfm: true,
+                                   breaks: true,
+                                   pedantic: false
+                              });
+                              htmlContent = marked.parse(processed);
+                              // Also convert any HTML task list syntax
+                              htmlContent = convertTaskListsToHTML(htmlContent);
                          } else {
                               htmlContent = simpleMarkdownToHtml(details);
                          }
@@ -559,16 +404,35 @@
                             "preview"
                         ],
                previewRender: function(plainText) {
-                    // Use marked.js if available, otherwise use our custom converter
                     try {
-                         if (typeof marked !== 'undefined') {
-                              return marked.parse(plainText);
-                         } else {
+                         // Check if marked is available
+                         if (typeof marked === 'undefined') {
                               return simpleMarkdownToHtml(plainText);
                          }
+                         
+                         // Configure marked.js with explicit settings
+                         marked.setOptions({ 
+                              gfm: true, 
+                              breaks: true,
+                              pedantic: false,
+                              smartLists: true,
+                              smartypants: false
+                         });
+                         
+                         // Parse markdown to HTML
+                         let html = marked.parse(plainText);
+                         
+                         // Post-process the HTML string directly to convert task lists
+                         // Replace unchecked: <li>[] ... with checkbox
+                         html = html.replace(/<li>\[\s*\]\s*([^<]*)<\/li>/g, '<li><input type="checkbox" disabled> $1</li>');
+                         
+                         // Replace checked: <li>[x] or <li>[X] with checked checkbox
+                         html = html.replace(/<li>\[[xX]\]\s*([^<]*)<\/li>/g, '<li><input type="checkbox" checked disabled> $1</li>');
+                         
+                         return html;
                     } catch (error) {
-                         console.error('Error rendering markdown preview:', error);
-                         return simpleMarkdownToHtml(plainText);
+                         console.error('Error in previewRender:', error);
+                         return plainText;
                     }
                },
                element: document.getElementById("details-textarea")
@@ -580,6 +444,71 @@
           
           // Make simplemde globally available
           window.simplemde = simplemde;
+          
+          function convertPreviewTaskLists() {
+               const preview = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
+               if (!preview) return;
+               
+               // Get all list items in the preview
+               const li_elements = preview.querySelectorAll('li');
+               
+               li_elements.forEach(function(li) {
+                    // Get current HTML
+                    let html = li.innerHTML;
+                    
+                    // Match: [] at the start
+                    if (/^\[\s*\]/.test(html)) {
+                         // Replace the bracket pattern with a checkbox input
+                         html = html.replace(/^\[\s*\]\s*/, '<input type="checkbox" disabled> ');
+                         li.innerHTML = html;
+                    }
+                    // Match: [x] or [X] at the start  
+                    else if (/^\[[xX]\]/.test(html)) {
+                         // Replace the bracket pattern with a checked checkbox input
+                         html = html.replace(/^\[[xX]\]\s*/, '<input type="checkbox" checked disabled> ');
+                         li.innerHTML = html;
+                    }
+               });
+          }
+          
+          // Wait for SimpleMDE to initialize, then set up watching
+          setTimeout(function() {
+               // Try to find the preview element
+               const findAndWatchPreview = function() {
+                    const preview = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
+                    
+                    if (preview) {
+                         // Use ResizeObserver to detect when preview becomes visible
+                         const resizeObserver = new ResizeObserver(function() {
+                              convertPreviewTaskLists();
+                         });
+                         
+                         resizeObserver.observe(preview);
+                         
+                         // Also watch for DOM changes in the preview
+                         const mutationObserver = new MutationObserver(function() {
+                              convertPreviewTaskLists();
+                         });
+                         
+                         mutationObserver.observe(preview, {
+                              childList: true,
+                              subtree: true,
+                              characterData: true
+                         });
+                    }
+               };
+               
+               // Try immediately
+               findAndWatchPreview();
+               
+               // Also set up a timer to convert every 250ms when preview is visible
+               setInterval(function() {
+                    const preview = document.querySelector('.editor-preview-side') || document.querySelector('.editor-preview');
+                    if (preview && preview.offsetHeight > 0) {
+                         convertPreviewTaskLists();
+                    }
+               }, 250);
+          }, 1000);
           
           const wisdoms = [
                'Stay focused',

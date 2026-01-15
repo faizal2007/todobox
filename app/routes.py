@@ -49,8 +49,8 @@ def require_api_token(f):
     return decorated_function
 
 # Allowed HTML tags for sanitized Markdown output
-ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a', 'del', 's', 'input']
-ALLOWED_ATTRIBUTES = {'a': ['href', 'title'], 'input': ['type', 'disabled', 'checked']}
+ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a', 'del', 's', 'input', 'div']
+ALLOWED_ATTRIBUTES = {'a': ['href', 'title'], 'input': ['type', 'disabled', 'checked'], 'div': ['style']}
 
 def normalize_checkboxes(text):
     """
@@ -129,20 +129,21 @@ def convert_details_to_html(text):
                     checked = 'checked' if 'x' in bracket_content.lower() else ''
                     text_content = match.group(4).strip()
                     
-                    # Create HTML with visual checkbox element
+                    # Create HTML with visual checkbox element (using div instead of li to avoid bullets)
+                    indent_style = f'margin-left: {len(indent) * 10}px;' if indent else ''
                     if text_content:  # Only create list item if there's text content
-                        html_lines.append(f'{indent}<li><input type="checkbox" disabled {checked}> {text_content}</li>')
+                        html_lines.append(f'<div style="display: flex; align-items: center; gap: 8px; {indent_style}"><input type="checkbox" disabled {checked}> {text_content}</div>')
                     else:
                         # Empty checkbox item - preserve it
-                        html_lines.append(f'{indent}<li><input type="checkbox" disabled {checked}></li>')
+                        html_lines.append(f'<div style="display: flex; align-items: center; gap: 8px; {indent_style}"><input type="checkbox" disabled {checked}></div>')
                 else:
                     # Non-checkbox line - preserve as is
                     html_lines.append(line)
             
-            # Wrap in <ul> tags if we have any list items
-            has_items = any('<li>' in line for line in html_lines)
+            # Wrap in div container (not ul, to avoid bullets)
+            has_items = any('<div' in line for line in html_lines)
             if has_items:
-                return '<ul>\n' + '\n'.join(html_lines) + '\n</ul>'
+                return '<div style="list-style: none;">\n' + '\n'.join(html_lines) + '\n</div>'
             else:
                 # Shouldn't reach here if has_checkboxes detection worked correctly
                 # But fallback to markdown just in case
@@ -576,12 +577,15 @@ def get_todo(todo_id):
         if has_checkboxes:
             detected_type = 'simple'
     
+    # Regenerate description_html using current logic to ensure no bullets
+    description_html = convert_details_to_html(todo.details) if todo.details else ''
+    
     return jsonify({
         'success': True,
         'id': todo.id,
         'title': todo.name,
         'description': todo.details,
-        'description_html': todo.details_html,
+        'description_html': description_html,
         'todo_type': detected_type,
         'status': status,
         'created_at': todo.timestamp.isoformat(),
