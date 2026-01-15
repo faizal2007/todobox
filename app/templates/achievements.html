@@ -1021,39 +1021,135 @@
     }
 
     function simpleMarkdownToHtml(text) {
-        // Simple fallback markdown converter if marked.js not available
+        // Comprehensive fallback markdown converter
         if (!text || !text.trim()) return '';
         
         let html = text;
         
-        // Code blocks (triple backticks)
-        html = html.replace(/```[\s\S]*?```/g, (match) => {
-            const code = match.replace(/```/g, '').trim();
-            return `<pre><code>${escapeHtml(code)}</code></pre>`;
-        });
+        // Split into lines for processing
+        let lines = html.split('\n');
+        let result = [];
+        let inCodeBlock = false;
+        let codeBlockContent = '';
+        let inBlockquote = false;
+        let blockquoteLines = [];
+        let inList = false;
+        let listItems = [];
         
-        // Bold (**text**)
-        html = html.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i];
+            
+            // Code blocks (triple backticks)
+            if (line.trim().startsWith('```')) {
+                if (inCodeBlock) {
+                    result.push(`<pre><code>${escapeHtml(codeBlockContent.trim())}</code></pre>`);
+                    codeBlockContent = '';
+                    inCodeBlock = false;
+                } else {
+                    inCodeBlock = true;
+                    codeBlockContent = '';
+                }
+                continue;
+            }
+            
+            if (inCodeBlock) {
+                codeBlockContent += line + '\n';
+                continue;
+            }
+            
+            // Blockquotes (lines starting with >)
+            if (line.trim().startsWith('>')) {
+                if (!inBlockquote) {
+                    inBlockquote = true;
+                    blockquoteLines = [];
+                }
+                blockquoteLines.push(line.replace(/^>\s?/, ''));
+            } else {
+                if (inBlockquote) {
+                    result.push(`<blockquote>${blockquoteLines.map(l => formatInlineMarkdown(l)).join('<br>')}</blockquote>`);
+                    inBlockquote = false;
+                    blockquoteLines = [];
+                }
+                
+                // Lists
+                if (line.trim().match(/^[-*+]\s/)) {
+                    // Unordered list
+                    if (!inList) {
+                        inList = true;
+                        listItems = [];
+                    }
+                    const item = line.replace(/^[-*+]\s/, '').trim();
+                    listItems.push(item);
+                } else if (line.trim().match(/^\d+\.\s/)) {
+                    // Ordered list
+                    if (!inList) {
+                        inList = true;
+                        listItems = [];
+                    }
+                    const item = line.replace(/^\d+\.\s/, '').trim();
+                    listItems.push(item);
+                } else {
+                    if (inList) {
+                        const isOrdered = lines[i-1] && lines[i-1].trim().match(/^\d+\.\s/);
+                        if (isOrdered) {
+                            result.push(`<ol>${listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('')}</ol>`);
+                        } else {
+                            result.push(`<ul>${listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('')}</ul>`);
+                        }
+                        inList = false;
+                        listItems = [];
+                    }
+                    
+                    // Headings
+                    if (line.trim().match(/^#+\s/)) {
+                        const level = line.match(/^#+/)[0].length;
+                        const heading = line.replace(/^#+\s/, '').trim();
+                        result.push(`<h${level}>${formatInlineMarkdown(heading)}</h${level}>`);
+                    } 
+                    // Horizontal rule
+                    else if (line.trim().match(/^(-{3,}|_{3,}|\*{3,})$/)) {
+                        result.push('<hr>');
+                    }
+                    // Paragraphs
+                    else if (line.trim()) {
+                        result.push(`<p>${formatInlineMarkdown(line.trim())}</p>`);
+                    }
+                }
+            }
+        }
         
-        // Italics (*text* or _text_)
-        html = html.replace(/\*([^\*]+)\*/g, '<em>$1</em>');
-        html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+        // Flush remaining lists/blockquotes
+        if (inList) {
+            result.push(`<ul>${listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('')}</ul>`);
+        }
+        if (inBlockquote) {
+            result.push(`<blockquote>${blockquoteLines.map(l => formatInlineMarkdown(l)).join('<br>')}</blockquote>`);
+        }
+        
+        return result.join('');
+    }
+
+    function formatInlineMarkdown(text) {
+        // Format inline markdown elements: bold, italic, strikethrough, code, links
         
         // Inline code (`text`)
-        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
         
-        // Headings (# ## ###)
-        html = html.replace(/^### ([^\n]+)$/gm, '<h3>$1</h3>');
-        html = html.replace(/^## ([^\n]+)$/gm, '<h2>$1</h2>');
-        html = html.replace(/^# ([^\n]+)$/gm, '<h1>$1</h1>');
+        // Strikethrough (~~text~~)
+        text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+        
+        // Bold (**text** or __text__)
+        text = text.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+        
+        // Italics (*text* or _text_) - do this after bold to avoid conflicts
+        text = text.replace(/(?<!\*)\*([^\*]+)\*(?!\*)/g, '<em>$1</em>');
+        text = text.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
         
         // Links [text](url)
-        html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+        text = text.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
         
-        // Line breaks
-        html = html.replace(/\n/g, '<br>');
-        
-        return html;
+        return text;
     }
 
     function showAchievementModal(todoData) {
