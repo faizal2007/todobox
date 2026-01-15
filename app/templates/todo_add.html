@@ -249,22 +249,31 @@
 							
 							// If there's advanced content, show warning
 							if (hasAdvancedContent) {
+								// Prevent the automatic mode switch
+								e.preventDefault();
+								
 								showConfirmModal(
 									'Switch to Simple Mode?',
 									'You are about to switch to Simple Mode. This will replace your current markdown content with simple checklist format. The advanced markdown content will be lost. Do you want to continue?',
 									function() {
 										// User confirmed, proceed with mode switch
 										console.log('[MODE] User confirmed switching to simple mode');
+										// Actually switch to simple mode
+										modeSimple.checked = true;
+										modeAdvanced.checked = false;
+										$('label[for="mode-simple"]').addClass('active');
+										$('label[for="mode-advanced"]').removeClass('active');
 										window.previousMode = 'simple';
 										window.updateModeDisplay();
+										console.log('[MODE] Mode switched to simple');
 									},
 									'Switch to Simple',
 									'btn-warning',
 									'bg-warning text-dark'
 								);
-								// Don't proceed with the switch yet - wait for user confirmation
-								// Revert the radio button selection
+								// Revert the radio button since we prevented default
 								modeAdvanced.checked = true;
+								modeSimple.checked = false;
 								$('label[for="mode-advanced"]').addClass('active');
 								$('label[for="mode-simple"]').removeClass('active');
 							} else {
