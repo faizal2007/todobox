@@ -411,6 +411,35 @@
           // Make simplemde globally available
           window.simplemde = simplemde;
           
+          // Handle preview button clicks to convert task lists
+          setTimeout(function() {
+               const previewButton = document.querySelector('.fa-eye');
+               if (previewButton) {
+                    const parent = previewButton.closest('[role="button"]') || previewButton.closest('.mde-btn');
+                    if (parent) {
+                         parent.addEventListener('click', function() {
+                              setTimeout(function() {
+                                   // When preview is shown, update the preview content
+                                   const preview = document.querySelector('.editor-preview, .editor-preview-side');
+                                   if (preview) {
+                                        let html = preview.innerHTML;
+                                        console.log('Preview content before:', html.substring(0, 100));
+                                        
+                                        // Convert task list syntax
+                                        html = html.replace(/^- \[\s*\]\s*/gm, '<input type="checkbox" disabled> ');
+                                        html = html.replace(/^- \[[xX]\]\s*/gm, '<input type="checkbox" checked disabled> ');
+                                        html = html.replace(/<li>\[\s*\]/g, '<li><input type="checkbox" disabled>');
+                                        html = html.replace(/<li>\[[xX]\]/g, '<li><input type="checkbox" checked disabled>');
+                                        
+                                        console.log('Preview content after:', html.substring(0, 100));
+                                        preview.innerHTML = html;
+                                   }
+                              }, 100);
+                         });
+                    }
+               }
+          }, 500);
+          
           const wisdoms = [
                'Stay focused',
                'Small steps, big gains',
