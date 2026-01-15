@@ -1020,6 +1020,42 @@
         return div.innerHTML;
     }
 
+    function simpleMarkdownToHtml(text) {
+        // Simple fallback markdown converter if marked.js not available
+        if (!text || !text.trim()) return '';
+        
+        let html = text;
+        
+        // Code blocks (triple backticks)
+        html = html.replace(/```[\s\S]*?```/g, (match) => {
+            const code = match.replace(/```/g, '').trim();
+            return `<pre><code>${escapeHtml(code)}</code></pre>`;
+        });
+        
+        // Bold (**text**)
+        html = html.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
+        
+        // Italics (*text* or _text_)
+        html = html.replace(/\*([^\*]+)\*/g, '<em>$1</em>');
+        html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+        
+        // Inline code (`text`)
+        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+        
+        // Headings (# ## ###)
+        html = html.replace(/^### ([^\n]+)$/gm, '<h3>$1</h3>');
+        html = html.replace(/^## ([^\n]+)$/gm, '<h2>$1</h2>');
+        html = html.replace(/^# ([^\n]+)$/gm, '<h1>$1</h1>');
+        
+        // Links [text](url)
+        html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+        
+        // Line breaks
+        html = html.replace(/\n/g, '<br>');
+        
+        return html;
+    }
+
     function showAchievementModal(todoData) {
         document.getElementById('modalTitle').textContent = todoData.name || 'Todo Detail';
         document.getElementById('modalSubtitle').textContent = 'Completed Achievement';
@@ -1043,17 +1079,21 @@
                 detailsContent.innerHTML = convertCheckboxesToHTML(todoData.details);
             } else {
                 // Advanced mode: render as markdown HTML
+                let htmlContent = '';
                 try {
-                    if (typeof marked !== 'undefined') {
-                        detailsContent.innerHTML = marked.parse(todoData.details);
+                    // Try to use marked library if available
+                    if (typeof marked !== 'undefined' && marked.parse) {
+                        htmlContent = marked.parse(todoData.details);
                     } else {
-                        // Fallback if marked library not available
-                        detailsContent.textContent = todoData.details;
+                        // Fallback to simple converter
+                        htmlContent = simpleMarkdownToHtml(todoData.details);
                     }
                 } catch (e) {
-                    // If markdown parsing fails, show as plain text
-                    detailsContent.textContent = todoData.details;
+                    console.error('Markdown parsing error:', e);
+                    // If markdown parsing fails, use fallback converter
+                    htmlContent = simpleMarkdownToHtml(todoData.details);
                 }
+                detailsContent.innerHTML = htmlContent;
             }
             detailsSection.style.display = 'block';
         } else {
