@@ -1,0 +1,191 @@
+/* Markdown Rendering Styles - Applied to displayed markdown content */
+
+.todo-details-advanced h1,
+.todo-details-advanced h2,
+.todo-details-advanced h3,
+.todo-details-advanced h4,
+.todo-details-advanced h5,
+.todo-details-advanced h6 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.todo-details-advanced h1 { font-size: 1.8em; }
+.todo-details-advanced h2 { font-size: 1.6em; }
+.todo-details-advanced h3 { font-size: 1.4em; }
+.todo-details-advanced h4 { font-size: 1.2em; }
+.todo-details-advanced h5 { font-size: 1.1em; }
+.todo-details-advanced h6 { font-size: 1em; }
+
+.todo-details-advanced p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.todo-details-advanced strong {
+    font-weight: 600;
+}
+
+.todo-details-advanced em {
+    font-style: italic;
+}
+
+.todo-details-advanced del {
+    text-decoration: line-through;
+    color: #999;
+}
+
+.todo-details-advanced code {
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.todo-details-advanced pre {
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 10px 0;
+    overflow-x: auto;
+}
+
+.todo-details-advanced pre code {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+}
+
+.todo-details-advanced blockquote {
+    border-left: 4px solid #667eea;
+    margin: 10px 0;
+    padding-left: 15px;
+    color: #666;
+    font-style: italic;
+}
+
+.todo-details-advanced ul,
+.todo-details-advanced ol {
+    margin: 10px 0 10px 30px;
+    line-height: 1.8;
+}
+
+.todo-details-advanced li {
+    margin-bottom: 5px;
+}
+
+.todo-details-advanced a {
+    color: #667eea;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.todo-details-advanced a:hover {
+    text-decoration: underline;
+}
+
+.todo-details-advanced hr {
+    margin: 15px 0;
+    border: none;
+    border-top: 2px solid #ddd;
+}
+
+/* SimpleMDE Preview Styles */
+.CodeMirror-fullscreen ~ .editor-preview-side {
+    background-color: #fff;
+    padding: 15px;
+}
+
+.editor-preview {
+    background-color: #fff;
+    padding: 15px;
+}
+
+.editor-preview blockquote,
+.editor-preview-side blockquote {
+    border-left: 4px solid #667eea;
+    margin: 10px 0;
+    padding-left: 15px;
+    color: #666;
+    font-style: italic;
+}
+
+.editor-preview h1,
+.editor-preview-side h1,
+.editor-preview h2,
+.editor-preview-side h2,
+.editor-preview h3,
+.editor-preview-side h3 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.editor-preview code,
+.editor-preview-side code {
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.editor-preview pre,
+.editor-preview-side pre {
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 10px 0;
+    overflow-x: auto;
+}
+
+.editor-preview pre code,
+.editor-preview-side pre code {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+}
+
+.editor-preview ul,
+.editor-preview-side ul,
+.editor-preview ol,
+.editor-preview-side ol {
+    margin: 10px 0 10px 30px;
+    line-height: 1.8;
+}
+
+.editor-preview li,
+.editor-preview-side li {
+    margin-bottom: 5px;
+}
+
+.editor-preview a,
+.editor-preview-side a {
+    color: #667eea;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.editor-preview a:hover,
+.editor-preview-side a:hover {
+    text-decoration: underline;
+}
+
+.editor-preview del,
+.editor-preview-side del {
+    text-decoration: line-through;
+    color: #999;
+}
+
+.editor-preview hr,
+.editor-preview-side hr {
+    margin: 15px 0;
+    border: none;
+    border-top: 2px solid #ddd;
+}

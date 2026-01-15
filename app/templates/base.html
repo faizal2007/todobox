@@ -37,56 +37,7 @@
     crossorigin="anonymous">
   </script>
   {% block extra_css %}
-  <style>
-    .account-user-avatar img {
-      border-radius: 50%;
-    }
-    .nav-user {
-      display: flex;
-      align-items: center;
-      padding: 0.5rem 1rem;
-    }
-    .nav-user .account-user-avatar {
-      margin-right: 0.5rem;
-    }
-    /* Force email and date to show on all screen sizes */
-    .nav-user .account-user-name {
-      display: block !important;
-      font-weight: 600;
-      margin-right: 0.5rem;
-    }
-    .nav-user .account-position {
-      display: block !important;
-      font-size: 12px;
-    }
-    .nav-user > span:last-child {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .account-position {
-      font-size: 0.75rem;
-      color: #6c757d;
-      margin-top: 0.125rem;
-    }
-    .topbar-dropdown-menu {
-      min-width: 180px;
-    }
-    .noti-title h6 {
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 0;
-    }
-    .notify-item {
-      padding: 0.5rem 1rem;
-      display: flex;
-      align-items: center;
-    }
-    .notify-item i {
-      font-size: 1rem;
-      margin-right: 0.5rem;
-    }
-  </style>
+  <link href='{{ url_for('static', filename='css/navigation-styles.css') }}' rel="stylesheet" type="text/css" />
   {% endblock %}
 </head>
 <body>

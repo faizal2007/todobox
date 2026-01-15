@@ -1,0 +1,30 @@
+/* Simple Todo Item Styles */
+
+.simple-todo-items {
+    padding: 10px 0;
+}
+
+.simple-todo-item {
+    padding: 5px 0;
+}
+
+.simple-item-checkbox {
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.simple-item-checkbox:checked ~ label {
+    text-decoration: line-through;
+    color: #999;
+}
+
+.simple-todo-item label {
+    margin-bottom: 0;
+    user-select: none;
+    cursor: pointer;
+    word-break: break-word;
+}
+
+.simple-todo-item label.text-muted {
+    color: #999 !important;
+}
