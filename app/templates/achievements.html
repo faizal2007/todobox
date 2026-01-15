@@ -873,6 +873,50 @@
     });
 
     // Function to show modal with todo details
+    function convertCheckboxesToHTML(text) {
+        """Convert markdown checkbox syntax to HTML list"""
+        if (!text || !text.trim()) return '';
+        
+        const lines = text.split('\n');
+        let html = '<ul style="list-style: none; padding-left: 0;">';
+        
+        lines.forEach(line => {
+            // Match checkbox pattern: dash/asterisk/plus + [content] + text
+            const match = line.match(/^(\s*)([-*+])\s*\[([^\]]*)\]\s*(.*)/);
+            
+            if (match) {
+                const indent = match[1];
+                const bracketContent = match[3];
+                const isChecked = /x/i.test(bracketContent);
+                const textContent = match[4].trim();
+                
+                const indentLevel = indent.length / 2;
+                const style = `margin-left: ${indentLevel * 20}px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;`;
+                
+                html += `<li style="${style}">
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="cursor: default; margin: 0;">
+                    <span>${escapeHtml(textContent)}</span>
+                </li>`;
+            } else if (line.trim()) {
+                // Non-checkbox lines
+                const indent = line.match(/^(\s*)/)[1];
+                const indentLevel = indent.length / 2;
+                const style = `margin-left: ${indentLevel * 20}px; margin-bottom: 8px;`;
+                
+                html += `<li style="${style}">${escapeHtml(line.trim())}</li>`;
+            }
+        });
+        
+        html += '</ul>';
+        return html;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     function showAchievementModal(todoData) {
         document.getElementById('modalTitle').textContent = todoData.name || 'Todo Detail';
         document.getElementById('modalSubtitle').textContent = 'Completed Achievement';
@@ -880,8 +924,17 @@
         
         // Show/hide details section
         const detailsSection = document.getElementById('detailsSection');
+        const detailsContent = document.getElementById('modalTodoDetails');
+        
         if (todoData.details && todoData.details.trim()) {
-            document.getElementById('modalTodoDetails').textContent = todoData.details;
+            // Check if simple mode (has checkboxes)
+            if (todoData.is_simple_mode) {
+                // Simple mode: render as interactive checkbox list
+                detailsContent.innerHTML = convertCheckboxesToHTML(todoData.details);
+            } else {
+                // Advanced mode: render as plain text / markdown
+                detailsContent.textContent = todoData.details;
+            }
             detailsSection.style.display = 'block';
         } else {
             detailsSection.style.display = 'none';

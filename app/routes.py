@@ -1981,6 +1981,8 @@ def achievements_batch():
 def get_todo_details(todo_id):
     """Get full details of a todo for modal view"""
     try:
+        import re
+        
         todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
         
         if not todo:
@@ -2003,12 +2005,17 @@ def get_todo_details(todo_id):
             time_diff = completion_tracker.timestamp - creation_tracker.timestamp
             time_to_complete = round(time_diff.total_seconds() / 3600, 1)
         
+        # Detect if content is in simple mode (has checkbox patterns)
+        details = todo.details or ''
+        is_simple_mode = bool(re.search(r'^[-*+]\s*\[[^\]]*\]', details, flags=re.MULTILINE))
+        
         return jsonify({
             'id': todo.id,
             'name': todo.name,
-            'details': todo.details or '',
+            'details': details,
             'completed_at': completion_tracker.timestamp.isoformat() if completion_tracker else '',
-            'time_to_complete': time_to_complete
+            'time_to_complete': time_to_complete,
+            'is_simple_mode': is_simple_mode
         }), 200
     
     except Exception as e:
