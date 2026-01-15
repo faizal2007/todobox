@@ -8,13 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- **Service Worker External Resource Handling**: Fixed ServiceWorker returning undefined for failed external resource requests
-  - Added `isExternalResource()` function to detect third-party domain requests (gravatar, CDNs)
-  - Skip caching for external resources to prevent service worker fetch errors
-  - Always return proper Response objects instead of undefined in catch handlers
-  - Return 503 Service Unavailable for failed requests with no cache fallback
-  - Resolves production error: "A ServiceWorker passed a promise to FetchEvent.respondWith() that resolved with non-Response value 'undefined'"
-  - Prevents blocking of donut chart display on dashboard when gravatar loads fail
+- **Service Worker External Resource Handling (CRITICAL)**: Fixed ServiceWorker blocking all external resource loads
+  - Skip external resource requests completely instead of intercepting them
+  - External CDNs (moment.js, flatpickr, gravatar, fonts, etc.) now bypass service worker entirely
+  - Resolves production errors: Multiple "non-Response value 'undefined'" errors when loading external resources
+  - Prevents blocking of "today" tab and dashboard when CDN resources fail to load
+  - Fixes "Uncaught ReferenceError: flatpickr is not defined" error
+  - Updated cache versions (v2→v3) to force browser reload of new service worker logic
+  - Allows browser to handle external requests natively without service worker interference
 
 ### Added
 - **Pre-commit Hook for Quality Assurance**: Installed Git pre-commit hook to catch errors before commits
