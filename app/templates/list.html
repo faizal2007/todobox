@@ -241,7 +241,23 @@
                          currentListType = 'ul';
                     }
                     let itemText = line.replace(/^[-*+]\s/, '');
-                    listItems.push('<li>' + formatInlineMarkdown(itemText) + '</li>');
+                    
+                    // Check if this is a task list item (starts with [ ] or [x])
+                    let isCheckboxUnchecked = itemText.match(/^\[\s*\]\s*/);
+                    let isCheckboxChecked = itemText.match(/^\[[xX]\]\s*/);
+                    
+                    if (isCheckboxUnchecked) {
+                         // Remove the [] from the text and add checkbox
+                         itemText = itemText.replace(/^\[\s*\]\s*/, '');
+                         listItems.push('<li><input type="checkbox" disabled> ' + formatInlineMarkdown(itemText) + '</li>');
+                    } else if (isCheckboxChecked) {
+                         // Remove the [x] from the text and add checked checkbox
+                         itemText = itemText.replace(/^\[[xX]\]\s*/, '');
+                         listItems.push('<li><input type="checkbox" checked disabled> ' + formatInlineMarkdown(itemText) + '</li>');
+                    } else {
+                         // Regular list item
+                         listItems.push('<li>' + formatInlineMarkdown(itemText) + '</li>');
+                    }
                } else if (isOrderedListItem) {
                     if (!inList || currentListType !== 'ol') {
                          if (inList && listItems.length > 0) {
@@ -374,28 +390,52 @@
                previewRender: function(plainText) {
                     console.log('=== PREVIEW RENDER CALLED ===');
                     console.log('Input markdown:', plainText.substring(0, 100));
+                    console.log('marked available?', typeof marked !== 'undefined');
+                    
                     try {
-                         if (typeof marked !== 'undefined') {
-                              // Configure marked.js
-                              marked.setOptions({ gfm: true, breaks: true });
-                              
-                              // Parse markdown to HTML
-                              let html = marked.parse(plainText);
-                              console.log('Marked.js output:', html.substring(0, 200));
-                              
-                              // Post-process the HTML string directly to convert task lists
-                              // Replace <li>[] ... with checkbox
-                              html = html.replace(/<li>\[\s*\]\s*([^<]*)<\/li>/g, '<li><input type="checkbox" disabled> $1</li>');
-                              // Replace <li>[x] or <li>[X] with checked checkbox
-                              html = html.replace(/<li>\[[xX]\]\s*([^<]*)<\/li>/g, '<li><input type="checkbox" checked disabled> $1</li>');
-                              
-                              console.log('After replacement:', html.substring(0, 200));
-                              return html;
-                         } else {
+                         // Check if marked is available
+                         if (typeof marked === 'undefined') {
+                              console.error('marked.js not loaded! Will use fallback.');
                               return simpleMarkdownToHtml(plainText);
                          }
+                         
+                         console.log('marked is available, proceeding...');
+                         
+                         // Configure marked.js with explicit settings
+                         marked.setOptions({ 
+                              gfm: true, 
+                              breaks: true,
+                              pedantic: false,
+                              smartLists: true,
+                              smartypants: false
+                         });
+                         
+                         // Parse markdown to HTML
+                         let html = marked.parse(plainText);
+                         console.log('Marked.js output (first 200 chars):', html.substring(0, 200));
+                         console.log('Marked.js output (full length):', html.length);
+                         
+                         // Post-process the HTML string directly to convert task lists
+                         // The markdown task list syntax creates <li>[] item text</li>
+                         // We need to replace that with <li><input type="checkbox"> item text</li>
+                         
+                         // Replace unchecked: <li>[] ... with checkbox
+                         let originalHtml = html;
+                         html = html.replace(/<li>\[\s*\]\s*([^<]*)<\/li>/g, '<li><input type="checkbox" disabled> $1</li>');
+                         
+                         // Replace checked: <li>[x] or <li>[X] with checked checkbox
+                         html = html.replace(/<li>\[[xX]\]\s*([^<]*)<\/li>/g, '<li><input type="checkbox" checked disabled> $1</li>');
+                         
+                         if (html !== originalHtml) {
+                              console.log('Replacements made! After:', html.substring(0, 200));
+                         } else {
+                              console.log('No replacements made. HTML might not match pattern.');
+                         }
+                         
+                         return html;
                     } catch (error) {
-                         console.error('Error rendering preview:', error);
+                         console.error('Error in previewRender:', error);
+                         console.error('Error stack:', error.stack);
                          return plainText;
                     }
                },
