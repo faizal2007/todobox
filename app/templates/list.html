@@ -302,22 +302,29 @@
      function preprocessTaskLists(markdown) {
           if (!markdown) return markdown;
           
-          // Simple approach: replace task list syntax with HTML inline
-          // Handle: - [] text and - [x] text
+          console.log('PREPROCESS INPUT:', markdown.substring(0, 100));
+          
+          // Replace task list syntax with HTML input elements
+          // Match: - [] (unchecked) at start of line
           markdown = markdown.replace(/^- \[\s*\]\s*/gm, '<input type="checkbox" disabled> ');
+          // Match: - [x] or - [X] (checked) at start of line
           markdown = markdown.replace(/^- \[[xX]\]\s*/gm, '<input type="checkbox" checked disabled> ');
           
+          console.log('PREPROCESS OUTPUT:', markdown.substring(0, 100));
           return markdown;
      }
 
-     // Convert GFM task list HTML to checkbox inputs
+     // Convert GFM task list HTML to checkbox inputs (post-marked processing)
      function convertTaskListsToHTML(html) {
           if (!html) return html;
           
-          // Replace <li>[] pattern in HTML output
+          console.log('POSTPROCESS INPUT:', html.substring(0, 100));
+          
+          // Replace <li>[] pattern in HTML output from marked.js
           html = html.replace(/<li>\[\s*\]/g, '<li><input type="checkbox" disabled>');
           html = html.replace(/<li>\[[xX]\]/g, '<li><input type="checkbox" checked disabled>');
           
+          console.log('POSTPROCESS OUTPUT:', html.substring(0, 100));
           return html;
      }
      
@@ -374,6 +381,7 @@
                             "preview"
                         ],
                previewRender: function(plainText) {
+                    console.log('PREVIEW CALLED WITH:', plainText.substring(0, 100));
                     try {
                          if (typeof marked !== 'undefined') {
                               // Preprocess task lists BEFORE marked parses
@@ -383,6 +391,7 @@
                               marked.setOptions({ gfm: true, breaks: true });
                               let html = marked.parse(processed);
                               
+                              console.log('FINAL HTML:', html.substring(0, 200));
                               return html;
                          } else {
                               return simpleMarkdownToHtml(plainText);
