@@ -194,6 +194,16 @@
 
 {% block extra_script_footer %}
 <script>
+    // Convert GFM task list markdown to HTML checkboxes
+    function convertTaskListsToHTML(html) {
+        if (!html) return html;
+        // Replace - [] with unchecked checkbox input
+        html = html.replace(/^- \[\s*\]\s+/gm, '<input type="checkbox" disabled> ');
+        // Replace - [x] or - [X] with checked checkbox input
+        html = html.replace(/^- \[[xX]\]\s+/gm, '<input type="checkbox" checked disabled> ');
+        return html;
+    }
+
     // Infinite scroll configuration
     let currentOffset = 20;  // First page loads 20, so start next batch at offset 20
     let isLoading = false;
@@ -576,6 +586,8 @@
                             pedantic: false
                         });
                         htmlContent = marked.parse(todoData.details);
+                        // Convert task list syntax to HTML checkboxes
+                        htmlContent = convertTaskListsToHTML(htmlContent);
                     } else {
                         // Fallback to simple converter
                         htmlContent = simpleMarkdownToHtml(todoData.details);

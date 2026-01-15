@@ -297,6 +297,16 @@
           
           return result.join('');
      }
+
+     // Convert GFM task list markdown to HTML checkboxes
+     function convertTaskListsToHTML(html) {
+          if (!html) return html;
+          // Replace - [] with unchecked checkbox input
+          html = html.replace(/^- \[\s*\]\s+/gm, '<input type="checkbox" disabled> ');
+          // Replace - [x] or - [X] with checked checkbox input
+          html = html.replace(/^- \[[xX]\]\s+/gm, '<input type="checkbox" checked disabled> ');
+          return html;
+     }
      
      // Initialize markdown rendering for advanced todo details
      function initializeMarkdownRendering() {
@@ -315,6 +325,8 @@
                                    pedantic: false
                               });
                               htmlContent = marked.parse(details);
+                              // Convert task list syntax to HTML checkboxes
+                              htmlContent = convertTaskListsToHTML(htmlContent);
                          } else {
                               htmlContent = simpleMarkdownToHtml(details);
                          }
@@ -355,7 +367,10 @@
                                    breaks: true,
                                    pedantic: false
                               });
-                              return marked.parse(plainText);
+                              let html = marked.parse(plainText);
+                              // Convert task list syntax to HTML checkboxes
+                              html = convertTaskListsToHTML(html);
+                              return html;
                          } else {
                               return simpleMarkdownToHtml(plainText);
                          }
