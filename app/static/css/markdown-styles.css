@@ -189,3 +189,24 @@
     border: none;
     border-top: 2px solid #ddd;
 }
+
+/* Task list checkbox styles */
+.todo-details-advanced input[type="checkbox"],
+.editor-preview input[type="checkbox"],
+.editor-preview-side input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.todo-details-advanced li input[type="checkbox"],
+.editor-preview li input[type="checkbox"],
+.editor-preview-side li input[type="checkbox"] {
+    accent-color: #007bff;
+}
+
+.todo-details-advanced input[type="checkbox"]:disabled,
+.editor-preview input[type="checkbox"]:disabled,
+.editor-preview-side input[type="checkbox"]:disabled {
+    cursor: default;
+}

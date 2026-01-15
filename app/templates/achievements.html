@@ -570,12 +570,10 @@
                     // Try to use marked library if available
                     if (typeof marked !== 'undefined' && marked.parse) {
                         // Configure marked for GFM task lists
-                        const renderer = new marked.Renderer();
                         marked.setOptions({
                             gfm: true,
                             breaks: true,
-                            pedantic: false,
-                            renderer: renderer
+                            pedantic: false
                         });
                         htmlContent = marked.parse(todoData.details);
                     } else {
