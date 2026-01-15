@@ -214,7 +214,11 @@ class Tracker(db.Model): # type: ignore[attr-defined]
 
     @classmethod
     def delete(cls, todo_id):
+        # Remove from KIV table first (foreign key constraint)
+        KIV.query.filter_by(todo_id=todo_id).delete() # type: ignore[attr-defined]
+        # Then delete Tracker entries
         db.session.query(Tracker).filter(Tracker.todo_id == todo_id).delete() # type: ignore[attr-defined]
+        # Finally delete the Todo
         db.session.query(Todo).filter(Todo.id == todo_id).delete() # type: ignore[attr-defined]
         db.session.commit() # type: ignore[attr-defined]
 

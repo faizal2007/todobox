@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **KIV Deletion Foreign Key Constraint Error**: Fixed 1451 error when deleting KIV todos
+  - Root cause: Deleting a todo that's marked as KIV violated foreign key constraint from KIV table to todo table
+  - Solution: Updated `Tracker.delete()` method to remove KIV entries before deleting Tracker and Todo
+  - Deletion order: KIV table → Tracker table → Todo table (respects foreign key constraints)
+  - Now users can successfully delete KIV todos without errors
+
 - **Advanced Mode Content Transfer Issue**: Fixed JavaScript syntax error preventing Advanced Mode from working properly
   - Removed recursive function definition that was causing "missing } after function body" syntax error
   - Improved `convertSimpleToAdvanced()` to properly extract items from both hidden textarea and displayed UI elements
