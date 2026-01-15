@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Recent Todos Linking to Wrong Page**: Fixed Recent Todos showing tasks scheduled for today/tomorrow as "Undone Tasks"
+  - **Issue**: Recent Todos linked to /undone page for tasks scheduled for today, but /undone endpoint didn't show them
+  - **Root Cause**: Inconsistent date field usage
+    - Dashboard used `target_date` (when task is scheduled) to determine view
+    - /undone used `modified.date()` (when task was last changed) to filter
+  - **Solution**: Changed /undone route to use `target_date` consistently with dashboard
+  - Now todos scheduled for today/tomorrow are correctly excluded from /undone
+  - Recent Todos links now match actual task locations
+
 - **Recent Todos Display Misleading Data**: Fixed Recent Todos widget showing completed tasks as undone
   - **Issue**: Dashboard "Recent Todos" displayed tasks that appeared in /undone page but had no actual undone data
   - **Root Cause**: Query using OUTERJOIN was checking ANY tracker status instead of LATEST tracker status

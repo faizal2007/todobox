@@ -1855,7 +1855,7 @@ def undone():
                 continue
             
             # Get todo's date
-            todo_date = todo.modified.date() if todo.modified else today
+            todo_date = todo.target_date.date() if todo.target_date else today
             
             # Skip today and tomorrow todos - they appear in the pending views
             if todo_date == today or todo_date == tomorrow:
