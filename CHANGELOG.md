@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Checkbox List Rendering Without Bullets**: Fixed bullet points appearing in checkbox lists in modal descriptions
+  - Changed checkbox HTML rendering from `<ul>/<li>` tags to `<div>` elements with flexbox styling
+  - Added 'div' and 'style' attributes to HTML sanitizer whitelist (ALLOWED_TAGS and ALLOWED_ATTRIBUTES)
+  - Modified API to regenerate description_html on the fly using new rendering logic
+  - Checkboxes now display cleanly as `☐ item` instead of `• ☐ item`
+  - Applies to both dashboard todo details modal and achievements modal descriptions
+  - Fixed in both newly created todos and cached existing todos
+
+- **Achievements Modal Styling**: Restored complete CSS for achievement modal after CSS centralization
+  - Restored complete modal styling (header, body, close button)
+  - Fixed modal header gradient background color (green: #28a745 → #20c997)
+  - Fixed modal body padding and typography
+  - Restored close button styling and hover effects
+  - Restored fadeIn and slideDown animations
+  - Added proper modal header layout with star icon and title/subtitle
+  - Modal now displays properly with all sections formatted correctly
+  - Section titles separated from content areas (titles have no box, content has gray background)
+  - Removed blue left borders from section titles, kept only on content areas
+
 ### Added
 - **Achievement Modal Detail View**: Added interactive modal dialog for viewing full todo details in achievements page
   - New API endpoint `/api/todo/<int:todo_id>/details` for fetching complete todo information
