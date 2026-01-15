@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **KIV Todos Not Showing in KIV Tab After Marking**: Fixed bug where KIV todos marked today wouldn't appear in the KIV tab
+  - Root cause: `/undone` route was skipping todos from today/tomorrow before checking if they were KIV
+  - When marking a todo as KIV, `todo.modified` is updated to current time, causing it to have today's date
+  - Solution: Reordered logic to check for KIV status BEFORE filtering by date
+  - KIV todos now always appear in the KIV tab regardless of when they were marked as KIV
+  - KIV tab now properly shows immediately after marking a todo as KIV
+
 - **KIV Deletion Foreign Key Constraint Error**: Fixed 1451 error when deleting KIV todos
   - Root cause: Deleting a todo that's marked as KIV violated foreign key constraint from KIV table to todo table
   - Solution: Updated `Tracker.delete()` method to remove KIV entries before deleting Tracker and Todo
