@@ -237,8 +237,41 @@
 					modeSimple.addEventListener('change', function(e) {
 						if (this.checked) {
 							console.log('[MODE] Switched to simple mode');
-							window.previousMode = 'simple';
-							window.updateModeDisplay();
+							
+							// Check if there's advanced content (markdown) that will be lost
+							let hasAdvancedContent = false;
+							if (window.simplemde) {
+								const advancedValue = window.simplemde.value();
+								// Check if content has markdown syntax (more than just empty or basic text)
+								hasAdvancedContent = advancedValue && advancedValue.trim().length > 0 && 
+									/[*_~`>#\[\]()|-]/.test(advancedValue);
+							}
+							
+							// If there's advanced content, show warning
+							if (hasAdvancedContent) {
+								showConfirmModal(
+									'Switch to Simple Mode?',
+									'You are about to switch to Simple Mode. This will replace your current markdown content with simple checklist format. The advanced markdown content will be lost. Do you want to continue?',
+									function() {
+										// User confirmed, proceed with mode switch
+										console.log('[MODE] User confirmed switching to simple mode');
+										window.previousMode = 'simple';
+										window.updateModeDisplay();
+									},
+									'Switch to Simple',
+									'btn-warning',
+									'bg-warning text-dark'
+								);
+								// Don't proceed with the switch yet - wait for user confirmation
+								// Revert the radio button selection
+								modeAdvanced.checked = true;
+								$('label[for="mode-advanced"]').addClass('active');
+								$('label[for="mode-simple"]').removeClass('active');
+							} else {
+								// No advanced content, safe to switch
+								window.previousMode = 'simple';
+								window.updateModeDisplay();
+							}
 						}
 					});
 				}
