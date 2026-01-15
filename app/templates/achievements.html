@@ -927,8 +927,15 @@
         const detailsContent = document.getElementById('modalTodoDetails');
         
         if (todoData.details && todoData.details.trim()) {
-            // Check if simple mode (has checkboxes)
-            if (todoData.is_simple_mode) {
+            // Detect simple mode: check if has checkboxes (either from API flag or by pattern detection)
+            let isSimpleMode = todoData.is_simple_mode;
+            
+            // Fallback: detect checkboxes in frontend if flag not provided
+            if (isSimpleMode === undefined) {
+                isSimpleMode = /^[-*+]\s*\[/.test(todoData.details);
+            }
+            
+            if (isSimpleMode) {
                 // Simple mode: render as interactive checkbox list
                 detailsContent.innerHTML = convertCheckboxesToHTML(todoData.details);
             } else {
