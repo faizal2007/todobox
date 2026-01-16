@@ -2045,7 +2045,7 @@ def mark_done(todo_id):
         return jsonify({
             'status': 'Error',
             'message': 'Todo not found'
-        }, 404)
+        }), 404
 
 @app.route('/<path:todo_id>/kiv', methods=['POST'])
 @login_required
@@ -2071,7 +2071,7 @@ def mark_kiv(todo_id):
         return jsonify({
             'status': 'Error',
             'message': 'Todo not found'
-        }, 404)
+        }), 404
 
 @app.route('/<path:todo>/view')
 @login_required

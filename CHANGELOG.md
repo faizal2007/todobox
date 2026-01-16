@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Mark as Done Button Not Working on /undone Page**: Fixed syntax error in mark_done and mark_kiv routes
+  - Fixed incorrect jsonify syntax in mark_done route (line 2045-2048): Changed `jsonify({...}, 404)` to `jsonify({...}), 404`
+  - Fixed identical syntax error in mark_kiv route (line 2072-2075)
+  - This was causing a 500 Internal Server Error when trying to mark todos as done or KIV
+  - Improved error handling in JavaScript to properly check response status and display user-friendly error messages
+  - Added response validation in fetch handlers for done, kiv, and delete actions on /undone page
+  - **Added enhanced error-path tests** (tests/test_mark_done_enhanced.py) to catch similar errors in the future
+    - Tests that explicitly trigger error handlers with non-existent todo IDs
+    - Validates error response structure
+    - Prevents regression where error handlers contain bugs missed by success-path-only tests
+
 - **Checkbox List Rendering Without Bullets**: Fixed bullet points appearing in checkbox lists in modal descriptions
   - Changed checkbox HTML rendering from `<ul>/<li>` tags to `<div>` elements with flexbox styling
   - Added 'div' and 'style' attributes to HTML sanitizer whitelist (ALLOWED_TAGS and ALLOWED_ATTRIBUTES)
