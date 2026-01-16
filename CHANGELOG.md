@@ -5,6 +5,41 @@ All notable changes to TodoBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+---
+
+## 📋 Recent Updates Summary (January 2026)
+
+### Latest Features (v2.0)
+- ✅ **User Registration**: Email verification system with 24-hour token expiration
+- ✅ **Terms Management**: Versioned terms and disclaimer with admin control
+- ✅ **Todo Sharing**: Share todos with Gmail users via email invitations
+- ✅ **Data Encryption**: Optional Fernet encryption for todo data
+- ✅ **Account Deletion**: Secure deletion with 7-day cooldown period
+- ✅ **Simple/Advanced Modes**: Quick checklists or rich markdown content
+- ✅ **PWA Support**: Progressive Web App with offline caching (Service Worker v3)
+- ✅ **Smart Reminders**: Auto-close after 3 notifications within 30 minutes
+- ✅ **Timezone Detection**: IP-based automatic timezone detection (43+ zones)
+
+### Latest Improvements
+- ✅ **JavaScript Modernization**: 50+ jQuery instances replaced with vanilla JS (~15% faster)
+- ✅ **Security Enhancements**: Open redirect fixes, command injection prevention, encryption support
+- ✅ **Achievement Page**: Completed todos with infinite scroll and statistics
+- ✅ **Dashboard Charts**: Time-grouped donut charts (today, weekly, monthly, yearly)
+- ✅ **KIV Tracking**: Separate KIV table with active/inactive status
+
+### Database Updates (v2.0)
+- **9 Models Total**: User, Todo, Status, Tracker, KIV, ShareInvitation, TodoShare, DeletedAccount, TermsAndDisclaimer
+- **30+ Migrations**: Complete migration history maintained
+
+### Testing & Quality
+- **227 Tests**: 80.6% pass rate (183 passing)
+- **Multi-Layer Testing**: Backend, frontend assets, static files
+- **Security**: XSS prevention, CSRF protection, encryption, input validation
+
+**Full changelog details below** ↓
+
+---
+
 ## [Unreleased]
 
 ### Fixed
