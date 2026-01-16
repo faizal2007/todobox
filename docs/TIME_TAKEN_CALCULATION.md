@@ -2,38 +2,39 @@
 
 ## What is "Time Taken"?
 
-The **"Time Taken"** field in the achievement modal shows **how many hours** it took from when you created the todo until you marked it as done.
+The **"Time Taken"** field in the achievement modal shows **how long you actually worked** on a todo from when you clicked "Start Work" until you marked it as done.
 
 ---
 
-## How It's Calculated
+## How It's Calculated (Updated Method)
 
 ### Status IDs (Key to Understanding)
 
 The system tracks todo status with these IDs:
-- **Status ID 5:** "New" - when todo is created
+- **Status ID 5:** "New" - when todo is created (NOT used for time calculation)
 - **Status ID 6:** "Done" - when todo is marked as complete
-- **Status ID 7:** "Failed"
-- **Status ID 8:** "Re-assign"
-- **Status ID 9:** "KIV" (Keep In View)
+- **Status ID 10:** "Started" - when user clicks "Start Work" button ← **USED FOR TIME CALCULATION**
+- **Status ID 11:** "Paused" - when work session is paused
+- **Status ID 12:** "Resumed" - when work session is resumed
 
-### The Calculation Formula
+### The Calculation Formula (Current - Accurate)
 
 ```
-Time Taken = Timestamp(Done) - Timestamp(Created)
-           = When marked done - When created
-           = Converted to hours (rounded to 1 decimal place)
+Time Taken = Timestamp(Done) - Timestamp(First Start)
+           = When marked done - When first clicked "Start Work"
+           = Reflects actual work time spent, not planning time
+           = Displayed as: seconds → minutes → hours → days → years
 ```
 
 ### Code Location
 
-**File:** [app/routes.py](app/routes.py#L2007-L2010)
+**File:** [app/routes.py](app/routes.py#L2005-L2014)
 
 ```python
-# Get the creation tracker (when todo was created)
-creation_tracker = Tracker.query.filter_by(
+# Get the first 'started' tracker (when user began working)
+started_tracker = Tracker.query.filter_by(
     todo_id=todo_id,
-    status_id=5  # "New" status - when created
+    status_id=10  # Started - actual work begins here
 ).order_by(Tracker.timestamp.asc()).first()
 
 # Get the completion tracker (when todo was marked done)
@@ -44,9 +45,9 @@ completion_tracker = Tracker.query.filter_by(
 
 # Calculate the difference in hours
 time_to_complete = None
-if creation_tracker and completion_tracker:
-    time_diff = completion_tracker.timestamp - creation_tracker.timestamp
-    # Convert seconds to hours, rounded to 1 decimal place
+if started_tracker and completion_tracker:
+    # Calculate total work time from when work started to when completed
+    time_diff = completion_tracker.timestamp - started_tracker.timestamp
     time_to_complete = round(time_diff.total_seconds() / 3600, 1)
 ```
 
@@ -56,56 +57,75 @@ if creation_tracker and completion_tracker:
 
 ### Scenario
 - **Created:** January 15, 2024 at 2:00 PM
+- **Clicked "Start Work":** January 15, 2024 at 5:00 PM (after rescheduling 3 times)
 - **Marked Done:** January 15, 2024 at 5:30 PM
 
 ### Math
 ```
-Time Difference = 5:30 PM - 2:00 PM
-                = 3 hours 30 minutes
-                = 3.5 hours
+Time Difference = 5:30 PM - 5:00 PM  (From Start, NOT from creation)
+                = 30 minutes
+                = 0.5 hours
                 
-In seconds: 3.5 * 3600 = 12,600 seconds
-Rounded to 1 decimal: 3.5 hours
+In seconds: 0.5 * 3600 = 1,800 seconds
+Rounded to 1 decimal: 0.5 hours
 ```
 
 ### Display in Modal
 ```
-Time Taken: 3h 30m
+Time Taken: 30m
 ```
+
+**Why this is better:**
+- Old method: Would show 3.5 hours (2 PM → 5:30 PM including planning time)
+- **New method: Shows 30 minutes (actual work time)**
+
 
 ---
 
 ## How It's Displayed in the Modal
 
-**File:** [app/templates/achievements.html](app/templates/achievements.html#L628-L638)
+**File:** [app/templates/achievements.html](app/templates/achievements.html#L628-L665)
 
 ```javascript
+// NEW METHOD: Shows seconds, minutes, hours, days, years progressively
 if (todoData.time_to_complete !== null && todoData.time_to_complete !== undefined) {
-    const hours = Math.floor(todoData.time_to_complete);      // Get whole hours (3)
-    const minutes = Math.round((todoData.time_to_complete - hours) * 60);  // Get minutes (30)
+    const totalSeconds = todoData.time_to_complete * 3600;  // Convert hours to seconds
+    const seconds = Math.round(totalSeconds % 60);
+    const minutes = Math.floor((totalSeconds / 60) % 60);
+    const hours = Math.floor((totalSeconds / 3600) % 24);
+    const days = Math.floor((totalSeconds / 86400) % 365);
+    const years = Math.floor(totalSeconds / (86400 * 365));
     
-    let timeStr = '';
-    if (hours > 0) {
+    // Display progressively: 45s, 5m 30s, 2h 15m, 3d 5h, 1y 2d
+    if (years > 0) {
+        timeStr = `${years}y`;
+        if (days > 0) timeStr += ` ${days}d`;
+    } else if (days > 0) {
+        timeStr = `${days}d`;
+        if (hours > 0) timeStr += ` ${hours}h`;
+    } else if (hours > 0) {
         timeStr = `${hours}h`;
-        if (minutes > 0) {
-            timeStr += ` ${minutes}m`;
-        }
-    } else {
+        if (minutes > 0) timeStr += ` ${minutes}m`;
+    } else if (minutes > 0) {
         timeStr = `${minutes}m`;
+        if (seconds > 0) timeStr += ` ${seconds}s`;
+    } else {
+        timeStr = `${seconds}s`;
     }
     document.getElementById('modalTimeToComplete').textContent = timeStr;
-} else {
-    document.getElementById('modalTimeToComplete').textContent = '-';
 }
 ```
 
-### Display Examples
-- **0.5 hours** → Display: `30m`
-- **1.0 hours** → Display: `1h`
-- **1.5 hours** → Display: `1h 30m`
-- **3.5 hours** → Display: `3h 30m`
-- **24.75 hours** → Display: `24h 45m`
-- **null** (no creation tracker) → Display: `-`
+### Display Examples (NEW WITH SECONDS)
+- **30 seconds** → Display: `30s`
+- **2 minutes 15 seconds** → Display: `2m 15s`
+- **1 hour 30 minutes** → Display: `1h 30m`
+- **3 hours 45 minutes** → Display: `3h 45m`
+- **1 day 5 hours** → Display: `1d 5h`
+- **7 days 2 hours** → Display: `7d 2h`
+- **1 year 45 days** → Display: `1y 45d`
+- **null** (no work started) → Display: `-`
+
 
 ---
 
