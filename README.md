@@ -22,33 +22,64 @@ Visit `http://localhost:5000` in your browser.
 
 ## Key Features
 
+### Core Functionality
 - 📝 **Todo Management** - Create, organize, and track tasks with responsive grid layout
-- 🕐 **KIV Status** - Keep tasks in view with dedicated KIV (Keep In View) status for tasks on hold
+- ✅ **Simple & Advanced Modes** - Quick checklists or rich markdown content with on-the-fly conversion
+- 🕐 **KIV Status** - Keep tasks in view with dedicated KIV (Keep In View) tab for tasks on hold
+- 📋 **Status Tracking** - Track todo lifecycle: new, done, failed, re-assign with complete history
+
+### User Experience
 - 💡 **Wisdom Quotes** - Daily inspiration from ZenQuotes API with local fallback
-- 👤 **User Authentication** - Email/password and Google OAuth sign-in
-- 🎨 **Modern UI** - Bootstrap 4 responsive design with multiple themes
-- 🔒 **Secure** - Password hashing, CSRF protection, XSS prevention
+- 🎨 **Modern UI** - Bootstrap 4 responsive design with grid layout and multiple themes
+- 📱 **PWA Support** - Install as a Progressive Web App on mobile and desktop devices
+- 📊 **Dashboard Analytics** - Donut charts grouped by time periods (today, weekly, monthly, yearly)
+- 🏆 **Achievements Page** - View completed todos with infinite scroll and detailed completion stats
+
+### Authentication & Security
+- 👤 **User Authentication** - Email/password registration with verification and Google OAuth sign-in
+- 🔒 **Secure** - Password hashing, CSRF protection, XSS prevention, security headers
+- 🔐 **Data Encryption** - Optional Fernet encryption for todo data (protects from DB admins)
+- 📧 **Email Verification** - Required for registration with 24-hour token expiration
+- 📜 **Terms Management** - Versioned terms and disclaimer with admin control
+
+### Collaboration Features
+- 🤝 **Todo Sharing** - Share todos with other Gmail users (email-based invitations)
+- 🔗 **Share Invitations** - Token-based approval system with 7-day expiration
+- 👥 **Shared View** - Access todos shared by others in dedicated view
+
+### Smart Features
+- ⏰ **Smart Reminders** - Set reminders with automatic timezone detection and auto-close after 3 notifications
+- 🌍 **Timezone Support** - Automatic IP-based timezone detection with 43+ timezone options
+- 🔄 **Auto-Close Reminders** - Prevent reminder fatigue with auto-close after 3 notifications in 30 minutes
+
+### API & Integration
+- 🔑 **API Access** - RESTful API with Bearer token authentication for external integrations
+- 🛠️ **API Token Management** - Generate, regenerate, and revoke API tokens via web interface
+
+### Database & Deployment
 - 💾 **Flexible Storage** - Support for SQLite, MySQL, and PostgreSQL
 - 🧂 **Salt Generator** - Secure password hashing with cryptographically strong salts
 - 🚀 **Ready to Deploy** - Production-ready with unified configuration
-- 🔑 **API Access** - RESTful API with token-based authentication for external integrations
-- ⏰ **Smart Reminders** - Set reminders with automatic timezone detection and auto-close after 3 notifications
-- 🌍 **Timezone Support** - Automatic timezone detection based on IP geolocation with 43+ timezone options
-- 📱 **PWA Support** - Install as a Progressive Web App on mobile and desktop devices
-- 📊 **Dashboard Analytics** - Track tasks with donut charts grouped by time periods (today, weekly, monthly, yearly)
+- ⚙️ **Admin Panel** - User management, terms management, blocked accounts control
+
+### Account Management
+- 🗑️ **Secure Deletion** - Email-verified account deletion with 7-day re-registration cooldown
+- 🚫 **Deletion Cooldown** - Prevents immediate re-registration (both OAuth and direct login)
 
 ## Technology Stack
 
 - **Framework:** Flask 2.3.2
-- **Database:** SQLAlchemy with SQLite/MySQL/PostgreSQL support
-- **Authentication:** Flask-Login with Google OAuth
+- **Database:** SQLAlchemy with SQLite/MySQL/PostgreSQL support (9 models)
+- **Authentication:** Flask-Login with Google OAuth 2.0 and email verification
 - **Forms:** Flask-WTF with CSRF protection
-- **Security:** Bleach for XSS prevention, Werkzeug password hashing
-- **API:** Server-side quote fetching (eliminates CORS errors)
-- **Frontend:** Bootstrap 4, Jinja2 templates
+- **Security:** Bleach for XSS prevention, Werkzeug password hashing, Fernet encryption (optional)
+- **Email:** SMTP with 14+ anti-spam headers for deliverability
+- **API:** RESTful API with Bearer token authentication
+- **Frontend:** Bootstrap 4, vanilla JavaScript (jQuery being phased out), Jinja2 templates
+- **PWA:** Service Worker v3, Web App Manifest, offline caching
 - **Python:** 3.10+
 
-**Status:** ✅ **Production Ready** (December 2025)
+**Status:** ✅ **Production Ready** (January 2026 - v2.0)
 
 ## Common Commands
 
@@ -98,6 +129,10 @@ Comprehensive documentation is available in the `docs/` directory:
 - **[docs/TIMEZONE_AUTO_DETECTION.md](docs/TIMEZONE_AUTO_DETECTION.md)** - Automatic timezone detection
 - **[docs/TIMEZONE_INTEGRATION.md](docs/TIMEZONE_INTEGRATION.md)** - Timezone integration for reminders
 
+### Sharing & Collaboration
+
+- **[docs/SHARING.md](docs/SHARING.md)** - Todo sharing feature documentation (if exists)
+
 ### Code Quality & Performance
 
 - **[docs/JAVASCRIPT_OPTIMIZATION.md](docs/JAVASCRIPT_OPTIMIZATION.md)** - JavaScript modernization (jQuery to vanilla JS)
@@ -118,30 +153,52 @@ Comprehensive documentation is available in the `docs/` directory:
 ```bash
 todobox/
 ├── app/
-│   ├── __init__.py         # Flask app factory
-│   ├── config.py           # Configuration & salt generator
-│   ├── models.py           # Database models (Todo, User)
-│   ├── routes.py           # Request handlers & API endpoints
-│   ├── forms.py            # WTForms definitions
-│   ├── utils.py            # Utility functions
-│   ├── oauth.py            # Google OAuth integration
+│   ├── __init__.py         # Flask app factory (9KB)
+│   ├── config.py           # Configuration & salt generator (3.5KB)
+│   ├── models.py           # Database models - 9 models (26KB)
+│   ├── routes.py           # Request handlers & API endpoints (155KB)
+│   ├── forms.py            # WTForms definitions (5.5KB)
+│   ├── utils.py            # Utility functions (4.9KB)
+│   ├── oauth.py            # Google OAuth integration (5.6KB)
+│   ├── email_service.py    # SMTP email delivery (10.4KB)
+│   ├── encryption.py       # Data encryption service (4.7KB)
+│   ├── verification.py     # Email verification tokens (2.2KB)
+│   ├── reminder_service.py # Reminder system (7.6KB)
+│   ├── geolocation.py      # IP-based timezone detection (4.3KB)
+│   ├── timezone_utils.py   # Timezone utilities (2KB)
+│   ├── cli.py              # Flask CLI commands (5.9KB)
+│   ├── forms/              # Additional form modules
+│   │   └── delete_account_form.py
 │   ├── templates/          # HTML templates
-│   │   ├── base.html       # Base template
-│   │   ├── main.html       # Main app template
+│   │   ├── base.html       # Base template with PWA manifest
+│   │   ├── main.html       # Dashboard with donut charts
 │   │   ├── list.html       # Todo list (responsive grid)
-│   │   ├── login.html      # Login page
+│   │   ├── undone.html     # Undone tasks + KIV tab
+│   │   ├── achievements.html # Completed todos
+│   │   ├── login.html      # Login with OAuth
+│   │   ├── register.html   # Registration with email verification
 │   │   ├── setup_wizard.html # 5-step setup guide
+│   │   ├── sharing.html    # Todo sharing management
+│   │   ├── shared_todos.html # View shared todos
+│   │   ├── admin/          # Admin templates
 │   │   └── ...
 │   └── static/             # CSS, JS, images, fonts
+│       ├── manifest.json   # PWA manifest
+│       └── service-worker.js # PWA service worker (v3)
 ├── lib/
 │   └── database.py         # Database connection utilities
-├── migrations/             # Database migration files
-├── todobox.py            # App entry point
-├── .flaskenv               # Environment variables (create from .flaskenv.example)
+├── migrations/             # 30+ database migration files
+├── tests/                  # Test suite (227 tests, 80.6% passing)
+├── docs/                   # 50+ documentation files
+├── todobox.py              # App entry point
+├── todomanage.py           # CLI management tool
+├── .flaskenv               # Environment variables (create from example)
 ├── .flaskenv.example       # Configuration template
 ├── requirements.txt        # Python dependencies
 ├── CHANGELOG.md            # Recent changes and updates
-└── docs/                   # Documentation (if available)
+├── SECURITY.md             # Security policy
+├── LICENSE                 # MIT License
+└── README.md               # This file
 ```
 
 ## API Endpoints
