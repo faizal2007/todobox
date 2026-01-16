@@ -1951,13 +1951,15 @@ def achievements_batch():
         # Format as JSON for client-side rendering
         items = []
         for todo, tracker in completed_todos[:batch_size]:
-            # Calculate time to completion
-            creation_tracker = db.session.query(Tracker).filter_by(
-                todo_id=todo.id, status_id=5
+            # Calculate time to completion based on work sessions (Status 10: Started)
+            started_tracker = db.session.query(Tracker).filter_by(
+                todo_id=todo.id, status_id=10
             ).order_by(Tracker.timestamp.asc()).first()
+            
             time_to_complete = None
-            if creation_tracker:
-                time_diff = tracker.timestamp - creation_tracker.timestamp
+            if started_tracker:
+                # Calculate total work time from all sessions
+                time_diff = tracker.timestamp - started_tracker.timestamp
                 time_to_complete = round(time_diff.total_seconds() / 3600, 1)
             
             items.append({
@@ -1998,15 +2000,17 @@ def get_todo_details(todo_id):
             status_id=6  # Done status
         ).order_by(Tracker.timestamp.desc()).first()
         
-        # Get the creation tracker to calculate time to complete
-        creation_tracker = Tracker.query.filter_by(
+        # Get the first 'started' tracker to calculate time to complete
+        # Status 10 = Started, which marks when user actually began work
+        started_tracker = Tracker.query.filter_by(
             todo_id=todo_id,
-            status_id=5  # New status
+            status_id=10  # Started status
         ).order_by(Tracker.timestamp.asc()).first()
         
         time_to_complete = None
-        if creation_tracker and completion_tracker:
-            time_diff = completion_tracker.timestamp - creation_tracker.timestamp
+        if started_tracker and completion_tracker:
+            # Calculate total work time from when work started to when completed
+            time_diff = completion_tracker.timestamp - started_tracker.timestamp
             time_to_complete = round(time_diff.total_seconds() / 3600, 1)
         
         # Detect if content is in simple mode (has checkbox patterns)
@@ -2072,6 +2076,109 @@ def mark_kiv(todo_id):
             'status': 'Error',
             'message': 'Todo not found'
         }), 404
+
+@app.route('/<path:todo_id>/start', methods=['POST'])
+@login_required
+def start_work_session(todo_id):
+    """Start a work session for a todo (Status 10: Started)"""
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return jsonify({
+            'status': 'Error',
+            'message': 'Todo not found'
+        }), 404
+    
+    date_entry = datetime.now()
+    todo.modified = date_entry
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    # Record that work session has started (Status 10)
+    Tracker.add(todo.id, 10, date_entry)
+    
+    return jsonify({
+        'status': 'Success',
+        'todo_id': todo.id,
+        'session_start_time': date_entry.isoformat()
+    }), 200
+
+@app.route('/<path:todo_id>/pause', methods=['POST'])
+@login_required
+def pause_work_session(todo_id):
+    """Pause a work session for a todo (Status 11: Paused)"""
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return jsonify({
+            'status': 'Error',
+            'message': 'Todo not found'
+        }), 404
+    
+    date_entry = datetime.now()
+    todo.modified = date_entry
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    # Record that work session has paused (Status 11)
+    Tracker.add(todo.id, 11, date_entry)
+    
+    # Calculate current session duration
+    # Find the most recent 'started' (Status 10) or 'resumed' (Status 12) before this pause
+    previous_session_start = db.session.execute(
+        """SELECT timestamp FROM tracker 
+           WHERE todo_id = :todo_id AND status_id IN (10, 12) 
+           ORDER BY timestamp DESC LIMIT 1""",
+        {'todo_id': todo.id}
+    ).first()
+    
+    session_duration = 0
+    if previous_session_start:
+        time_diff = date_entry - previous_session_start[0]
+        session_duration = round(time_diff.total_seconds() / 3600, 2)
+    
+    # Calculate total work time so far
+    started_paused_records = db.session.execute(
+        """SELECT timestamp FROM tracker 
+           WHERE todo_id = :todo_id AND status_id IN (10, 11, 12)
+           ORDER BY timestamp ASC""",
+        {'todo_id': todo.id}
+    ).fetchall()
+    
+    total_work_time = 0
+    i = 0
+    while i < len(started_paused_records) - 1:
+        if started_paused_records[i + 1]:
+            time_diff = started_paused_records[i + 1][0] - started_paused_records[i][0]
+            total_work_time += time_diff.total_seconds() / 3600
+        i += 2
+    
+    return jsonify({
+        'status': 'Success',
+        'todo_id': todo.id,
+        'session_duration_hours': session_duration,
+        'total_work_time_hours': round(total_work_time, 2)
+    }), 200
+
+@app.route('/<path:todo_id>/resume', methods=['POST'])
+@login_required
+def resume_work_session(todo_id):
+    """Resume a work session for a todo (Status 12: Resumed)"""
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return jsonify({
+            'status': 'Error',
+            'message': 'Todo not found'
+        }), 404
+    
+    date_entry = datetime.now()
+    todo.modified = date_entry
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    # Record that work session has resumed (Status 12)
+    Tracker.add(todo.id, 12, date_entry)
+    
+    return jsonify({
+        'status': 'Success',
+        'todo_id': todo.id,
+        'session_start_time': date_entry.isoformat()
+    }), 200
 
 @app.route('/<path:todo>/view')
 @login_required

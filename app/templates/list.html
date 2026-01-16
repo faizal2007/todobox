@@ -101,15 +101,19 @@
                                                 <p class="card-text text-muted"><em>No content</em></p>
                                             {% endif %}
                                        {% endif %}
-                                                       <footer class="blockquote-footer"> 
+                                                       <footer class="blockquote-footer">
+          
                                                             <i class="uil uil-schedule font-16 mr-1"></i>
                                                             {{ momentjs(list.Tracker.timestamp).calendar() }}
                                                        </footer>
-                                                       <div style="margin-top: 15px; text-align: right;">
-                                                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; display: inline-block;">
-                                                                 <i class="mdi mdi-lightbulb-on mr-1"></i><span class="card-wisdom" data-id="{{ list.Todo.id }}">...</span>
-                                                            </div>
-                                                       </div>
+                                                       <div class="d-flex align-items-start gap-1 mt-3" style="justify-content: flex-end;">
+                                                                 <button type="button" class="btn btn-sm btn-success work-start-btn mx-2" title="Start work session" aria-label="Start work session">
+                                                                      <i class="mdi mdi-play"></i>
+                                                                 </button>
+                                                                 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; display: inline-block;">
+                                                                       <i class="mdi mdi-lightbulb-on mr-1"></i><span class="card-wisdom" data-id="{{ list.Todo.id }}">...</span>
+                                                                 </div>
+                                                          </div>
                                                   </div>
                                              </div> <!-- end card-->
                                         </div>

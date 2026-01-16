@@ -1,838 +1,442 @@
-# TodoBox Complete Documentation Index
+# TodoBox Documentation Master Index
 
-**Last Updated:** December 9, 2025  
-**Version:** 1.8  
-**Status:** Consolidated and Optimized
-
----
-
-## 📚 Documentation Complete
-
-This comprehensive index provides complete navigation for all TodoBox documentation, including:
-
-- ✅ Setup and installation guides
-- ✅ API reference and endpoint documentation
-- ✅ Database schema and models
-- ✅ Architecture and design patterns
-- ✅ Code review and quality analysis
-- ✅ Deployment and maintenance procedures
-- ✅ Security patches and fixes
-- ✅ Feature documentation (KIV, Reminders, Timezone, PWA)
-- ✅ Performance optimization guides
-
-**Quick Navigation:** Start with [docs/README.md](README.md) for a simple guide, or use this index for comprehensive navigation.
+**Last Updated:** January 16, 2026  
+**Status:** Current & Active  
+**Total Documents:** 35 active + 33 archived
 
 ---
 
-## 🗂️ Documentation Organization
+## Quick Navigation
 
-### 📖 Core Documentation (Essential Reading)
-
-#### 1. **README.md** - Project Overview
-
-**For:** Understanding the project  
-**Read Time:** 10 minutes  
-**Topics:**
-
-- Project description
-- Technology stack
-- Features overview
-- Quick links
+- [📋 System Requirements & Specifications](#system-requirements--specifications)
+- [🏗️ Architecture & Design](#architecture--design)
+- [🔧 Feature Implementation](#feature-implementation)
+- [🧪 Testing & Quality](#testing--quality)
+- [🚀 Deployment & Operations](#deployment--operations)
+- [🔐 Security & Compliance](#security--compliance)
+- [⏰ Time Tracking & Achievements](#time-tracking--achievements)
+- [👤 User Management & Authentication](#user-management--authentication)
+- [📅 Setup & Getting Started](#setup--getting-started)
 
 ---
 
-#### 2. **SETUP.md** - Installation Guide ⭐
+## System Requirements & Specifications
 
-**For:** Setting up the application  
-**Read Time:** 15 minutes  
-**Topics:**
+### Primary Reference Documents
 
-- Prerequisites
-- Step-by-step installation (6 steps)
-- Database configuration (SQLite/MySQL/PostgreSQL)
-- Environment setup
-- Troubleshooting
-- Initial credentials
-- Verification steps
+1. **[SYSTEM_REQUIREMENTS_SPECIFICATION.md](SYSTEM_REQUIREMENTS_SPECIFICATION.md)** ⭐ PRIMARY
+   - Comprehensive SRS covering all functional and non-functional requirements
+   - Technology stack and API endpoints
+   - Acceptance criteria and sign-off
+   - **Status:** CURRENT & COMPLETE
+   - **When to Use:** Product planning, requirement validation, feature scope
 
-**Start here if:** You need to install the application
+2. **[REQUIREMENTS_ANALYSIS.md](REQUIREMENTS_ANALYSIS.md)**
+   - Initial requirements analysis and user stories
+   - Feature prioritization
+   - **Status:** CURRENT
+   - **When to Use:** Understanding original project goals
 
----
+### Feature Status
 
-#### 3. **QUICKSTART.md** - Quick Reference
+3. **[FEATURE_COMPLETION_REPORT.md](FEATURE_COMPLETION_REPORT.md)**
+   - Final report on all implemented features
+   - Feature checklist with status
+   - Known limitations and future enhancements
+   - **Status:** CURRENT
+   - **When to Use:** Checking what's completed
 
-**For:** Quick lookups and common tasks  
-**Read Time:** 5 minutes (per lookup)  
-**Topics:**
-
-- Common Flask commands
-- Database commands
-- Gunicorn commands
-- File locations
-- API quick reference
-- Environment variables
-- Debugging tips
-- Testing checklist
-
-**Use this when:** You need a quick command or reference
+4. **[TODO_STATUS_VERIFICATION_REPORT.md](TODO_STATUS_VERIFICATION_REPORT.md)**
+   - Verification that all todo statuses working correctly
+   - Status workflow testing
+   - **Status:** CURRENT
+   - **When to Use:** Validating status transitions
 
 ---
 
-### 🎯 Feature & API Documentation
+## Architecture & Design
 
-#### 4. **USER_CREATION.md** - User Management System ⭐
+### System Architecture
 
-**For:** Creating and managing users  
-**Read Time:** 20 minutes  
-**Topics:**
+5. **[ARCHITECTURE.md](ARCHITECTURE.md)**
+   - Overall system architecture
+   - Component interactions
+   - Data flow diagrams
+   - **Status:** CURRENT
+   - **When to Use:** Understanding system structure
 
-- Interactive Python script (`create_user.py`)
-- Flask CLI commands (`flask create-user`, etc.)
-- First-time setup workflow
-- Security best practices
-- Troubleshooting guide
-- 5 real-world scenarios
-- Command reference
+6. **[OVERVIEW.md](OVERVIEW.md)**
+   - High-level project overview
+   - Technology choices
+   - System components
+   - **Status:** CURRENT
+   - **When to Use:** Project introduction
 
-**Use this when:** Creating users or managing accounts
+### API Documentation
 
----
+7. **[API.md](API.md)**
+   - RESTful API endpoint documentation
+   - Request/response examples
+   - Error codes
+   - **Status:** CURRENT
+   - **When to Use:** API integration and endpoint reference
 
-#### 5. **API.md** - Complete API Reference
+### Data Models
 
-**For:** Endpoint documentation  
-**Read Time:** 15 minutes  
-**Topics:**
-
-- All routes and endpoints
-- Authentication routes
-- Todo management routes
-- User account routes
-- HTTP status codes
-- Data validation rules
-- Error handling
-- CSRF protection
-- Code examples
-
-**Use this when:** Integrating with the application or understanding endpoints
+8. **[MODELS.md](MODELS.md)**
+   - Database schema and relationships
+   - SQLAlchemy model definitions
+   - Field descriptions
+   - **Status:** CURRENT
+   - **When to Use:** Database design and data structure reference
 
 ---
 
-#### 6. **MODELS.md** - Database Schema
+## Feature Implementation
 
-**For:** Database structure and models  
-**Read Time:** 15 minutes  
-**Topics:**
+### Work Session & Time Tracking
 
-- Entity relationship diagram
-- User model (columns, relationships, methods)
-- Todo model (CRUD operations)
-- Status model (predefined values)
-- Tracker model (history tracking)
-- Data integrity constraints
-- Query examples
-- Usage patterns
+9. **[TIME_TAKEN_CALCULATION.md](TIME_TAKEN_CALCULATION.md)** ⭐ CRITICAL
+   - How time tracking calculation works
+   - Status 10 (Started) to Status 6 (Done) calculation
+   - Progressive time display format (seconds → minutes → hours → days → years)
+   - Code examples
+   - **Status:** CURRENT
+   - **When to Use:** Understanding time calculation, troubleshooting time display
 
-**Use this when:** Writing database queries or understanding relationships
+10. **[TIME_TRACKING_WITH_RESCHEDULING_ANALYSIS.md](TIME_TRACKING_WITH_RESCHEDULING_ANALYSIS.md)**
+    - Architectural analysis of time tracking with rescheduling
+    - Why Status 10 is needed (accurate work time)
+    - How reschedules don't affect time calculation
+    - Migration path
+    - **Status:** COMPLETE (IMPLEMENTED)
+    - **When to Use:** Understanding time calculation design decisions
 
----
+11. **[WORK_SESSION_MODAL_IMPLEMENTATION.md](WORK_SESSION_MODAL_IMPLEMENTATION.md)**
+    - Work session modal UI implementation
+    - Modal workflow (Start → Pause/End → Resume)
+    - Button state machine
+    - Auto-pause on modal close
+    - **Status:** CURRENT & IMPLEMENTED
+    - **When to Use:** Understanding work session modal functionality
 
-### 🏗️ System & Architecture Documentation
+12. **[WORK_SESSION_TRACKING_IMPLEMENTATION.md](WORK_SESSION_TRACKING_IMPLEMENTATION.md)**
+    - Server-side tracking implementation
+    - API endpoints for start/pause/resume
+    - Database status tracking
+    - **Status:** CURRENT & IMPLEMENTED
+    - **When to Use:** Backend work session logic reference
 
-#### 7. **ARCHITECTURE.md** - System Design ⭐
+### User Features
 
-**For:** Understanding how the system works  
-**Read Time:** 20 minutes  
-**Topics:**
+13. **[USER_CREATION.md](USER_CREATION.md)**
+    - User account creation workflow
+    - Registration validation
+    - **Status:** CURRENT
+    - **When to Use:** User registration implementation
 
-- High-level architecture diagram
-- Layered architecture (7 layers)
-- Database configuration (SQLite/MySQL/PostgreSQL)
-- Instance folder lifecycle
-- File structure and responsibilities
-- Data flow diagrams
-- Design patterns used
-- Request processing pipeline
-- Security architecture
-- Performance considerations
-- Scalability recommendations
+14. **[USER_REGISTRATION_GUIDE.md](USER_REGISTRATION_GUIDE.md)**
+    - User registration process guide
+    - Email verification
+    - OAuth integration
+    - **Status:** CURRENT
+    - **When to Use:** Registration feature reference
 
-**Use this when:** Understanding system design or debugging complex issues
+### Advanced Features
 
----
+15. **[TIMEZONE_AUTO_DETECTION.md](TIMEZONE_AUTO_DETECTION.md)**
+    - Automatic timezone detection from browser
+    - Geolocation implementation
+    - **Status:** CURRENT
+    - **When to Use:** Timezone feature implementation
 
-#### 8. **OVERVIEW.md** - Project Description
+16. **[TIMEZONE_INTEGRATION.md](TIMEZONE_INTEGRATION.md)**
+    - Timezone integration in application
+    - How timezones affect scheduling and reminders
+    - **Status:** CURRENT
+    - **When to Use:** Timezone handling and testing
 
-**For:** Detailed project information  
-**Read Time:** 10 minutes  
-**Topics:**
+17. **[EMAIL_DELIVERABILITY.md](EMAIL_DELIVERABILITY.md)**
+    - Email system implementation
+    - SMTP configuration
+    - Reminder email delivery
+    - **Status:** CURRENT
+    - **When to Use:** Email feature reference
 
-- What the project does
-- Key features breakdown
-- Technology stack details
-- Project structure
-- Database models overview
-- Security features
-- External dependencies
+18. **[AUTO_CLOSE_REMINDERS.md](AUTO_CLOSE_REMINDERS.md)**
+    - Automatic reminder closing when todos completed
+    - Reminder lifecycle
+    - **Status:** CURRENT
+    - **When to Use:** Reminder feature logic
 
-**Use this when:** Explaining the project to others
+19. **[KIV_STATUS.md](KIV_STATUS.md)**
+    - Keep In View (KIV) status functionality
+    - Pausing and postponing todos
+    - **Status:** CURRENT
+    - **When to Use:** KIV feature reference
 
----
+### Authentication
 
-### 🔍 Quality & Maintenance Documentation
+20. **[OAUTH_SETUP.md](OAUTH_SETUP.md)**
+    - OAuth 2.0 (Google) setup and configuration
+    - Token management
+    - **Status:** CURRENT
+    - **When to Use:** OAuth implementation and configuration
 
-#### 9. **CODE_REVIEW.md** - Code Analysis & Issues
+### Code Quality & Standards
 
-**For:** Code quality and improvement recommendations  
-**Read Time:** 15 minutes  
-**Topics:**
+21. **[AXE_LINTER_BEST_PRACTICES.md](AXE_LINTER_BEST_PRACTICES.md)**
+    - HTML/CSS accessibility linting rules
+    - WCAG 2.1 compliance
+    - Axe DevTools best practices
+    - **Status:** CURRENT
+    - **When to Use:** Accessibility validation and improvements
 
-- 15 identified code issues:
-  - 4 Critical (security, secrets, XSS, validation)
-  - 6 Major (error handling, decorators, logging)
-  - 5 Minor (style, type hints, magic numbers)
-- Detailed issue descriptions
-- Recommended fixes
-- Impact assessment
-- Testing recommendations
-
-**Use this when:** Improving code quality or understanding identified issues
-
----
-
-#### 10. **DEPLOYMENT.md** - Production Deployment Guide
-
-**For:** Deploying to production  
-**Read Time:** 20 minutes  
-**Topics:**
-
-- Pre-deployment checklist
-- 3 deployment options:
-  - Traditional server (Nginx + Gunicorn + Systemd)
-  - Docker deployment
-  - Cloud deployment (AWS, Heroku, DigitalOcean)
-- Maintenance tasks (daily/weekly/monthly/quarterly)
-- Monitoring and logging
-- Backup and recovery
-- Performance optimization
-- Scaling strategies
-- Troubleshooting
-
-**Use this when:** Deploying to production or maintaining production systems
-
----
-
-### 📊 Progress & Status Documentation
-
-#### 11. **PROGRESS_NOVEMBER_2025.md** - Session Summary
-
-**For:** Latest session progress and status  
-**Read Time:** 15 minutes  
-**Topics:**
-
-- Database configuration optimization
-- Security patches applied (4 critical)
-- Werkzeug compatibility fixes
-- Current application status
-- Verification results
-- What's pending
-- Technology stack (current)
-- Known remaining issues
-- Next session actions
-
-**Use this when:** Checking current status or understanding what's been done
+22. **[CODE_REVIEW.md](CODE_REVIEW.md)**
+    - Code review guidelines and standards
+    - Review checklist
+    - **Status:** CURRENT
+    - **When to Use:** Pull request reviews
 
 ---
 
-#### 12. **WERKZEUG_FIX.md** - Compatibility Fix Documentation
+## Testing & Quality
 
-**For:** Understanding Werkzeug 3.0.6 fixes  
-**Read Time:** 10 minutes  
-**Topics:**
+### Test Strategy
 
-- Problem description (ImportError)
-- Root cause analysis
-- Solutions applied
-- Files modified
-- Verification steps
-- Version changes
+23. **[COMPREHENSIVE_TEST_STRATEGY.md](COMPREHENSIVE_TEST_STRATEGY.md)**
+    - Complete testing strategy
+    - Test types and coverage goals
+    - Test execution plan
+    - **Status:** CURRENT
+    - **When to Use:** Test planning and execution
 
-**Use this when:** Troubleshooting Werkzeug-related issues
+24. **[TESTING_STRATEGY_AND_CI_CD.md](TESTING_STRATEGY_AND_CI_CD.md)**
+    - Testing strategy aligned with CI/CD
+    - Automated test triggers
+    - Pipeline configuration
+    - **Status:** CURRENT
+    - **When to Use:** CI/CD and automated testing reference
 
----
-
-### 💻 Code & Performance Documentation
-
-#### 13. **JAVASCRIPT_OPTIMIZATION.md** - JavaScript Modernization Details
-
-**For:** Technical developers, code reviewers  
-**Read Time:** 20 minutes  
-**Status:** Complete - December 3, 2025  
-**Topics:**
-
-- Comprehensive JavaScript optimization overview
-- jQuery removal strategy (50+ instances)
-- Performance improvements (API calls: 90% reduction)
-- File-by-file changes (9 templates modified)
-- Technical implementation patterns
-- Fetch API and Promise handling
-- Bootstrap 4 modal manipulation
-- Testing & verification results
-- Future Phase 2 recommendations
-- Git commit history
-
-**Use this when:** Understanding JavaScript modernization work or maintaining the refactored code
+25. **[TESTING_SUMMARY.md](TESTING_SUMMARY.md)**
+    - Summary of testing results
+    - Test coverage metrics
+    - Known test issues (if any)
+    - **Status:** CURRENT
+    - **When to Use:** Test result review
 
 ---
 
-#### 14. **JQUERY_MIGRATION_GUIDE.md** - Developer Reference
+## Deployment & Operations
 
-**For:** Developers maintaining the codebase  
-**Read Time:** 15 minutes  
-**Status:** Complete - December 3, 2025  
-**Topics:**
+### Deployment
 
-- jQuery to vanilla JavaScript pattern mapping
-- Common use cases with examples
-- Fetch API patterns
-- Event listener patterns
-- DOM manipulation techniques
-- Form operations
-- Promise handling patterns
-- Common issues and solutions
-- Troubleshooting guide
-- Resource links (MDN, etc.)
+26. **[DEPLOYMENT.md](DEPLOYMENT.md)**
+    - Deployment procedures
+    - Environment setup
+    - Release checklist
+    - **Status:** CURRENT
+    - **When to Use:** Production deployment
 
-**Use this when:** You need to refactor jQuery code or add new vanilla JavaScript features
+27. **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)**
+    - Pre-deployment checklist
+    - Post-deployment verification
+    - Rollback procedures
+    - **Status:** CURRENT
+    - **When to Use:** Deployment verification
 
----
+28. **[DEPLOYMENT_READINESS.md](DEPLOYMENT_READINESS.md)**
+    - Deployment readiness assessment
+    - Production environment checklist
+    - **Status:** CURRENT
+    - **When to Use:** Pre-deployment review
 
-#### 15. **JAVASCRIPT_OPTIMIZATION_EXECUTIVE_SUMMARY.md** - High-Level Overview
+### Setup & Installation
 
-**For:** Project managers, technical leads, stakeholders  
-**Read Time:** 10 minutes  
-**Status:** Complete - December 3, 2025  
-**Topics:**
+29. **[SETUP.md](SETUP.md)** ⭐ START HERE
+    - Initial project setup
+    - Dependencies installation
+    - Database configuration
+    - Running the application
+    - **Status:** CURRENT
+    - **When to Use:** Getting the app running
 
-- Executive summary of optimization work
-- Business impact and benefits
-- Performance metrics
-- Implementation timeline
-- Test results
-- Risk assessment
-- Recommendations for Phase 2
-- Production readiness status
+30. **[QUICKSTART.md](QUICKSTART.md)**
+    - Quick start guide for new developers
+    - Essential first steps
+    - Common commands
+    - **Status:** CURRENT
+    - **When to Use:** Rapid onboarding
 
-**Use this when:** Presenting project status to stakeholders or making deployment decisions
+31. **[README.md](README.md)**
+    - Project README
+    - High-level overview
+    - Key features
+    - **Status:** CURRENT
+    - **When to Use:** Project introduction
 
----
-
-#### 16. **DEVELOPMENT_SESSION_DECEMBER_2025.md** - Session Documentation
-
-**For:** Team documentation, project tracking  
-**Read Time:** 12 minutes  
-**Status:** Complete - December 3, 2025  
-**Topics:**
-
-- Development session overview
-- Detailed work completed
-- Changes by template
-- Testing results
-- Performance metrics
-- Commits and history
-- Backward compatibility notes
-- Lessons learned
-- Future recommendations
-- Approval status
-
-**Use this when:** Reviewing session work or understanding development progress
+32. **[README_MIGRATIONS.md](README_MIGRATIONS.md)**
+    - Database migrations guide
+    - Alembic usage
+    - Migration management
+    - **Status:** CURRENT
+    - **When to Use:** Database schema changes
 
 ---
 
-#### 17. **REMINDER_FEATURE_FIX.md** - Reminder Auto-Close Fix Documentation
+## Security & Compliance
 
-**For:** Developers, testing team, support staff  
-**Read Time:** 15 minutes  
-**Status:** Complete - December 3, 2025  
-**Topics:**
+### Security
 
-- Issue report (all 3 reminders sent immediately)
-- Root cause analysis
-- Problem identification (frontend checking every 10 seconds)
-- Solution implemented (30-minute spacing enforcement)
-- Timeline comparison (buggy vs fixed behavior)
-- Auto-close behavior explanation
-- Testing results (14/14 tests passing)
-- Files modified and commits
-- User impact and verification steps
+33. **[SECURITY_AUDIT.md](SECURITY_AUDIT.md)**
+    - Comprehensive security audit
+    - Vulnerability assessment
+    - Security recommendations
+    - **Status:** CURRENT
+    - **When to Use:** Security review and compliance
 
-**Use this when:** Understanding the reminder feature fix or troubleshooting reminder issues
-
----
-
-#### 18. **PWA_INSTALL_BUTTON_TROUBLESHOOTING.md** - PWA Diagnostics & Installation Guide
-
-**For:** Users, support staff, developers  
-**Read Time:** 8 minutes  
-**Status:** Complete - December 3, 2025  
-**Topics:**
-
-- Quick start: Using PWA Debug button
-- How the install process works
-- Step-by-step diagnostic process
-- Interpreting debug results
-- Browser-specific install methods (Chrome, Safari, Firefox)
-- Common issues and fixes
-- Testing PWA locally (HTTPS setup)
-- Debugging commands
-- Code changes made
-- What to do if still not working
-
-**Use this when:** Troubleshooting why install button doesn't appear or PWA install fails
+34. **[SECURITY_FIX_CREDENTIALS.md](SECURITY_FIX_CREDENTIALS.md)**
+    - Credentials security best practices
+    - Secret management
+    - Environment configuration
+    - **Status:** CURRENT
+    - **When to Use:** Credential handling reference
 
 ---
 
-#### 19. **KIV_STATUS.md** - KIV (Keep In View) Status Feature
+## Archived Documents
 
-**For:** Users, developers, project managers  
-**Read Time:** 15 minutes  
-**Status:** Complete - December 2025  
-**Topics:**
+### Legacy Documentation (33 items)
 
-- KIV status overview and purpose
-- How to mark tasks as KIV
-- Viewing and managing KIV tasks
-- Technical implementation details
-- API endpoints for KIV functionality
-- UI components and design
-- Use cases and best practices
-- Troubleshooting guide
+These documents have been archived as they represent:
+- Specific bug fixes (already implemented)
+- Old test reports (superseded by current tests)
+- Implementation details (code is source of truth)
+- Analysis documents (conclusions implemented)
+- Temporary notes (no longer needed)
 
-**Use this when:** Understanding KIV feature, implementing task workflow, or managing tasks on hold
+**Archived Documents Location:** [archive/](archive/)
 
----
+**Archived Items Include:**
+- ACHIEVEMENT_MODAL_BUG_FIX.md
+- BULLET_POINT_ISSUE_FIX.md
+- CHECKBOX_HTML_RENDERING_IMPLEMENTATION.md
+- DECISION_KEEP_AS_IS.md
+- DONUT_CHART_FIX.md
+- FEATURE_TEST_RESULTS_DECEMBER_16_2025.md
+- FULL_CYCLE_TEST_SUMMARY.txt
+- JAVASCRIPT_OPTIMIZATION.md
+- JQUERY_MIGRATION_GUIDE.md
+- LOCAL_VS_PRODUCTION_ANALYSIS.md
+- MIGRATION_FIX_GUIDE.md
+- QA_IMPROVEMENTS_SUMMARY.md
+- REASSIGN_PENDING_LOGIC_ANALYSIS.md
+- REGISTRATION_IMPLEMENTATION_SUMMARY.md
+- REGISTRATION_QUICK_REFERENCE.md
+- REORGANIZATION_NOTES.md
+- SECURITY_PATCHES.md
+- SESSION_SUMMARY.md
+- STATUS_LOGIC_USER_SUMMARY.md
+- STRIKETHROUGH_IMPLEMENTATION.md
+- TEST_COVERAGE_GAP_KIV_FIX.md
+- TEST_FAILURE_ANALYSIS.md
+- TEST_FAILURE_ROOT_CAUSE_ANALYSIS.md
+- TEST_INVENTORY.md
+- TEST_SUITE_COMPREHENSIVE.md
+- TEST_SUITE_REVISION_SUMMARY.md
+- TEST_UPDATE_SUMMARY.md
+- TESTING_COMPLETE.md
+- DOCUMENTATION_UPDATE_DECEMBER_9_2025.md
+- WHY_TESTS_DIDNT_CATCH_BUG.md
+- FLOATING_PROGRESS_WIDGET.md
+- ON_THE_FLY_MODE_SWITCHING.md
 
-#### 20. **TIMEZONE_AUTO_DETECTION.md** - Automatic Timezone Detection Feature
-
-**For:** Developers, system administrators, users  
-**Read Time:** 10 minutes  
-**Status:** Complete - December 2025  
-**Topics:**
-
-- Automatic timezone detection overview
-- How it works (registration and OAuth login)
-- Technical details (ip-api.com geolocation)
-- Fallback behavior and error handling
-- Country to timezone mapping
-- Privacy considerations
-- Testing and troubleshooting
-
-**Use this when:** Understanding timezone detection or troubleshooting timezone issues
-
----
-
-#### 21. **TIMEZONE_INTEGRATION.md** - Timezone Integration for Reminders
-
-**For:** Developers, testing team  
-**Read Time:** 12 minutes  
-**Status:** Complete - December 2025  
-**Topics:**
-
-- Complete timezone support for reminders
-- User timezone settings (43+ timezones)
-- Reminder time conversion flow
-- UTC storage and local display
-- API endpoints with timezone support
-- Testing scenarios and edge cases
-- Troubleshooting guide
-
-**Use this when:** Understanding reminder timezone logic or debugging time-related issues
+**When to Access Archive:** Only for historical reference or understanding past decisions.
 
 ---
 
-## 🎯 Quick Navigation by Purpose
+## Documentation Guidelines
 
-### I want to
+### How to Use This Index
 
-#### Get Started
+1. **New to Project?** Start with: [SETUP.md](SETUP.md) → [QUICKSTART.md](QUICKSTART.md) → [SYSTEM_REQUIREMENTS_SPECIFICATION.md](SYSTEM_REQUIREMENTS_SPECIFICATION.md)
 
-1. Read **README.md** (5 min)
-2. Follow **SETUP.md** (15 min)
-3. Use **USER_CREATION.md** (5 min)
-4. Run **`python3 create_user.py`**
-5. Start app with **`flask run`**
+2. **Implementing a Feature?** Find in [Feature Implementation](#feature-implementation) section
 
-#### Understand the System
+3. **Deploying to Production?** Follow [Deployment & Operations](#deployment--operations) section
 
-1. Read **OVERVIEW.md** (10 min)
-2. Study **ARCHITECTURE.md** (20 min)
-3. Review **MODELS.md** (15 min)
-4. Check **API.md** (15 min)
+4. **Code Review?** Check [CODE_REVIEW.md](CODE_REVIEW.md) and [AXE_LINTER_BEST_PRACTICES.md](AXE_LINTER_BEST_PRACTICES.md)
 
-#### Deploy to Production
+5. **Understanding Time Tracking?** Read [TIME_TAKEN_CALCULATION.md](TIME_TAKEN_CALCULATION.md) + [WORK_SESSION_MODAL_IMPLEMENTATION.md](WORK_SESSION_MODAL_IMPLEMENTATION.md)
 
-1. Review **DEPLOYMENT.md** (20 min)
-2. Follow pre-deployment checklist
-3. Choose deployment option
-4. Follow step-by-step guide
+### Document Status Legend
 
-#### Create/Manage Users
-
-1. Read **USER_CREATION.md** (5 min)
-2. Run **`python3 create_user.py`** (first time)
-3. Use **`flask create-user`** (add users)
-4. Use **`flask list-users`** (view users)
-
-#### Improve Code Quality
-
-1. Review **CODE_REVIEW.md** (15 min)
-2. Prioritize by severity
-3. Follow recommended fixes
-4. Reference **QUICKSTART.md** for commands
-
-#### Modernize JavaScript/Remove jQuery
-
-1. Read **JAVASCRIPT_OPTIMIZATION.md** (20 min)
-2. Review **JQUERY_MIGRATION_GUIDE.md** for patterns (15 min)
-3. Check commit history (05b9936, f19af21, 3293397, cd3401e)
-4. Use guide patterns for new code
-5. Reference **DEVELOPMENT_SESSION_DECEMBER_2025.md** for context
-
-#### Understand Code Optimization Work
-
-1. Start with **JAVASCRIPT_OPTIMIZATION_EXECUTIVE_SUMMARY.md** (10 min)
-2. Review **DEVELOPMENT_SESSION_DECEMBER_2025.md** (12 min)
-3. Deep dive into **JAVASCRIPT_OPTIMIZATION.md** (20 min)
-4. Reference patterns in **JQUERY_MIGRATION_GUIDE.md** as needed
-
-#### Find a Command or Setting
-
-1. Check **QUICKSTART.md** (2 min)
-2. Search table of contents
-3. Use Ctrl+F to find keyword
-
-#### Troubleshoot Issues
-
-1. Check **SETUP.md** troubleshooting section
-2. Check **DEPLOYMENT.md** troubleshooting section
-3. Check **USER_CREATION.md** troubleshooting section
-4. Review **ARCHITECTURE.md** for system design
-
-#### Configure Timezones and Reminders
-
-1. Read **TIMEZONE_AUTO_DETECTION.md** (10 min)
-2. Review **TIMEZONE_INTEGRATION.md** (12 min)
-3. Check **AUTO_CLOSE_REMINDERS.md** for reminder behavior (15 min)
-4. Test timezone settings in user preferences
-
-#### Check Current Status
-
-1. Check **CHANGELOG.md** for recent updates
-2. Review verification checklist
-3. See what's new and fixed
+- ⭐ **PRIMARY** - Essential reference document
+- ✅ **CURRENT** - Up-to-date and accurate
+- 📋 **IMPLEMENTED** - Feature is code-complete and tested
+- ⚠️ **PARTIAL** - Some sections may be outdated
+- 🔄 **IN PROGRESS** - Document actively being updated
 
 ---
 
-## 📋 Documentation Statistics
+## Key Implementation Highlights
 
-| Metric | Value |
-|--------|-------|
-| Total documentation files | 23 |
-| Total documentation size | ~230 KB |
-| Code examples | 135+ |
-| Technical diagrams | 10+ |
-| Developer guides | 5 |
-| Setup guides | 2 |
-| API documentation | 2 |
-| Architecture docs | 2 |
-| Feature documentation | 4 |
-| Testing documentation | 1 |
-| Tables | 35+ |
-| Issues identified | 15 |
-| Sections | 180+ |
-| Read time (full suite) | ~3.5 hours |
+### ✅ Completed Features
 
----
+1. **Work Session Modal** (v1.0)
+   - User clicks Start Work button
+   - Modal displays timer (HH:MM:SS)
+   - Start → Pause/End workflow
+   - Auto-pause on modal close
+   - State preserved for resume
+   - Reference: [WORK_SESSION_MODAL_IMPLEMENTATION.md](WORK_SESSION_MODAL_IMPLEMENTATION.md)
 
-## 🔍 Finding Information
+2. **Accurate Time Tracking** (v1.0)
+   - Time = Status 10 (Started) → Status 6 (Done)
+   - Excludes planning and reschedule time
+   - Progressive display format
+   - Reference: [TIME_TAKEN_CALCULATION.md](TIME_TAKEN_CALCULATION.md)
 
-### By Technology
+3. **User Authentication**
+   - Email/password registration and login
+   - Google OAuth 2.0 integration
+   - Session management
+   - Reference: [OAUTH_SETUP.md](OAUTH_SETUP.md), [USER_REGISTRATION_GUIDE.md](USER_REGISTRATION_GUIDE.md)
 
-- **Flask:** API.md, ARCHITECTURE.md, DEPLOYMENT.md
-- **SQLAlchemy:** MODELS.md, ARCHITECTURE.md
-- **MySQL/PostgreSQL:** SETUP.md, ARCHITECTURE.md
-- **SQLite:** SETUP.md, ARCHITECTURE.md
-- **Docker:** DEPLOYMENT.md
-- **Gunicorn:** DEPLOYMENT.md, QUICKSTART.md
-- **Nginx:** DEPLOYMENT.md
-- **Security:** CODE_REVIEW.md, SETUP.md, DEPLOYMENT.md
+4. **Todo Management**
+   - Create, edit, reschedule, complete todos
+   - Multiple status transitions
+   - Checklist items with checkboxes
+   - References: [SYSTEM_REQUIREMENTS_SPECIFICATION.md](SYSTEM_REQUIREMENTS_SPECIFICATION.md), [MODELS.md](MODELS.md)
 
-### By User Role
+5. **Email Reminders**
+   - Scheduled reminder emails
+   - Auto-close on completion
+   - Reference: [EMAIL_DELIVERABILITY.md](EMAIL_DELIVERABILITY.md), [AUTO_CLOSE_REMINDERS.md](AUTO_CLOSE_REMINDERS.md)
 
-- **Developer:** README.md → SETUP.md → ARCHITECTURE.md
-- **Administrator:** USER_CREATION.md → DEPLOYMENT.md → QUICKSTART.md
-- **DevOps Engineer:** DEPLOYMENT.md → ARCHITECTURE.md
-- **Security Officer:** CODE_REVIEW.md → DEPLOYMENT.md → SETUP.md
-- **Project Manager:** OVERVIEW.md → PROGRESS_NOVEMBER_2025.md
-
-### By Task
-
-- **Installation:** SETUP.md (15 min)
-- **User Setup:** USER_CREATION.md (5 min)
-- **API Integration:** API.md (15 min)
-- **Database Queries:** MODELS.md (15 min)
-- **System Understanding:** ARCHITECTURE.md (20 min)
-- **Code Improvement:** CODE_REVIEW.md (15 min)
-- **Production Deploy:** DEPLOYMENT.md (20 min)
-- **Quick Lookup:** QUICKSTART.md (2-5 min)
+6. **Timezone Support**
+   - Auto-detection from browser
+   - Manual timezone selection
+   - All calculations in user's timezone
+   - References: [TIMEZONE_AUTO_DETECTION.md](TIMEZONE_AUTO_DETECTION.md), [TIMEZONE_INTEGRATION.md](TIMEZONE_INTEGRATION.md)
 
 ---
 
-## ✅ Documentation Checklist
+## Contact & Support
 
-- ✅ Setup and installation (SETUP.md)
-- ✅ Quick reference (QUICKSTART.md)
-- ✅ API documentation (API.md)
-- ✅ Database schema (MODELS.md)
-- ✅ Architecture (ARCHITECTURE.md)
-- ✅ Code review (CODE_REVIEW.md)
-- ✅ Deployment (DEPLOYMENT.md)
-- ✅ User creation (USER_CREATION.md)
-- ✅ Project overview (OVERVIEW.md)
-- ✅ Security patches (SECURITY_PATCHES.md)
-- ✅ Documentation reorganization notes (REORGANIZATION_NOTES.md)
-- ✅ Master index (DOCUMENTATION_MASTER_INDEX.md)
-- ✅ Quick navigation (README.md)
+- **Project Repository:** `/storage/linux/Projects/mysandbox`
+- **Documentation Location:** `/storage/linux/Projects/mysandbox/docs`
+- **Archive Location:** `/storage/linux/Projects/mysandbox/docs/archive`
 
 ---
 
-## 🚀 Getting Started (5 Minutes)
+## Version History
 
-### Option 1: Quick Setup
-
-```bash
-# 1. Read the README
-cat docs/README.md
-
-# 2. Follow setup
-less docs/SETUP.md
-
-# 3. Create user
-python3 create_user.py
-
-# 4. Start app
-flask run
-```
-
-### Option 2: Detailed Setup
-
-```bash
-# 1. Read complete setup
-less docs/SETUP.md
-
-# 2. Read user creation guide
-less docs/USER_CREATION.md
-
-# 3. Create user (interactive)
-python3 create_user.py
-
-# 4. Start app
-flask run
-```
-
-### Option 3: Use Quick Start
-
-```bash
-# 1. Check quick start
-cat docs/QUICKSTART.md
-
-# 2. Run all in sequence
-source venv/bin/activate
-flask db upgrade
-python3 create_user.py
-flask run
-```
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | Jan 16, 2026 | Initial comprehensive index, archived 33 obsolete documents, created SRS |
 
 ---
 
-## 📚 Reading Paths by Experience Level
-
-### For Beginners
-
-1. **README.md** (5 min) - Get oriented
-2. **SETUP.md** (15 min) - Install system
-3. **QUICKSTART.md** (5 min) - Learn common tasks
-4. **OVERVIEW.md** (10 min) - Understand features
-5. **API.md** (15 min) - Learn endpoints
-
-**Total:** ~50 minutes to understand basics
-
-### For Experienced Developers
-
-1. **OVERVIEW.md** (5 min) - Quick context
-2. **ARCHITECTURE.md** (15 min) - Understand design
-3. **MODELS.md** (10 min) - Understand database
-4. **API.md** (10 min) - Understand endpoints
-5. **CODE_REVIEW.md** (10 min) - See quality issues
-
-**Total:** ~50 minutes to understand system
-
-### For System Administrators
-
-1. **SETUP.md** (15 min) - Installation
-2. **USER_CREATION.md** (10 min) - User management
-3. **DEPLOYMENT.md** (20 min) - Production setup
-4. **QUICKSTART.md** (5 min) - Common commands
-
-**Total:** ~50 minutes to deploy system
-
----
-
-## 🔐 Security Documentation
-
-**Security-focused documentation:**
-
-- CODE_REVIEW.md - Critical issues (4)
-- SETUP.md - Security best practices
-- DEPLOYMENT.md - Security hardening
-- USER_CREATION.md - Password policies
-- WERKZEUG_FIX.md - Security updates
-
-**Key Security Features:**
-
-- ✅ Hardcoded secrets replaced with environment variables
-- ✅ XSS protection (HTML sanitization)
-- ✅ SQL injection prevention (ORM + validation)
-- ✅ Password security (bcrypt hashing)
-- ✅ CSRF protection (Flask-WTF)
-- ✅ Form validation enabled
-
----
-
-## 📞 Support & Help
-
-### If you need help with
-
-| Topic | File | Section |
-|-------|------|---------|
-| Installation | SETUP.md | Troubleshooting |
-| API usage | API.md | Error handling |
-| Database | MODELS.md | Usage patterns |
-| Architecture | ARCHITECTURE.md | Design patterns |
-| Code quality | CODE_REVIEW.md | Recommendations |
-| Deployment | DEPLOYMENT.md | Troubleshooting |
-| Users | USER_CREATION.md | Troubleshooting |
-| Commands | QUICKSTART.md | Common commands |
-| KIV Status | KIV_STATUS.md | Feature guide |
-| Timezones | TIMEZONE_AUTO_DETECTION.md | Technical details |
-| Reminders | AUTO_CLOSE_REMINDERS.md | Feature documentation |
-
----
-
-## 📝 Documentation Files List
-
-```text
-docs/
-├── README.md                                    ← Quick navigation guide
-├── DOCUMENTATION_MASTER_INDEX.md                ← Complete master index (this file)
-│
-├── QUICKSTART.md                                ← Quick reference guide
-├── SETUP.md                                     ← Installation guide
-├── USER_CREATION.md                             ← User management
-│
-├── API.md                                       ← API reference
-├── MODELS.md                                    ← Database schema
-├── ARCHITECTURE.md                              ← System design
-├── OVERVIEW.md                                  ← Project overview
-│
-├── CODE_REVIEW.md                               ← Quality analysis
-├── DEPLOYMENT.md                                ← Production guide
-├── DEPLOYMENT_CHECKLIST.md                      ← Production checklist
-├── OAUTH_SETUP.md                               ← OAuth configuration
-├── SECURITY_PATCHES.md                          ← Security documentation
-├── AXE_LINTER_BEST_PRACTICES.md                 ← Accessibility guide
-│
-├── AUTO_CLOSE_REMINDERS.md                      ← Reminder feature
-├── KIV_STATUS.md                                ← KIV (Keep In View) status
-├── TIMEZONE_AUTO_DETECTION.md                   ← Timezone detection
-├── TIMEZONE_INTEGRATION.md                      ← Timezone for reminders
-│
-├── JAVASCRIPT_OPTIMIZATION.md                   ← JS optimization details
-├── JQUERY_MIGRATION_GUIDE.md                    ← jQuery to vanilla JS
-│
-├── README_MIGRATIONS.md                         ← Migration quick ref
-├── MIGRATION_FIX_GUIDE.md                       ← Migration troubleshooting
-│
-├── REORGANIZATION_NOTES.md                      ← Documentation reorganization notes
-│
-├── screenshots/                                 ← Application screenshots
-└── archive/                                     ← Archived analysis documents
-```
-
-**Total:** 23 documentation files + archive
-
----
-
-## 🎯 Documentation Quality
-
-- ✅ **Complete** - All major topics covered
-- ✅ **Accurate** - Updated November 29, 2025
-- ✅ **Organized** - Clear structure and navigation
-- ✅ **Examples** - 100+ code examples included
-- ✅ **Current** - Reflects latest application state
-- ✅ **Searchable** - Easy to find information
-- ✅ **Practical** - Real-world usage guidance
-- ✅ **Comprehensive** - Covers all aspects
-
----
-
-## 🔄 Next Steps
-
-### For New Users
-
-1. Read **README.md**
-2. Follow **SETUP.md**
-3. Create user with **USER_CREATION.md**
-4. Start application
-5. Explore features
-
-### For Existing Users
-
-1. Check **PROGRESS_NOVEMBER_2025.md** for updates
-2. Review **CODE_REVIEW.md** for improvements
-3. Plan deployment with **DEPLOYMENT.md**
-4. Use **QUICKSTART.md** for quick lookups
-
-### For Administrators
-
-1. Use **USER_CREATION.md** for user management
-2. Follow **DEPLOYMENT.md** for production setup
-3. Reference **QUICKSTART.md** for commands
-4. Monitor with **PROGRESS_NOVEMBER_2025.md**
-
----
-
-## 📖 How to Use This Index
-
-1. **Find your need** in "Quick Navigation by Purpose"
-2. **Read recommended files** in suggested order
-3. **Use file-specific sections** for detailed help
-4. **Reference QUICKSTART.md** for quick commands
-5. **Check troubleshooting** if issues occur
-
----
-
-## Version Information
-
-- **Documentation Version:** 1.8
-- **Last Updated:** December 9, 2025
-- **Application Version:** 1.7.0
-- **Status:** Consolidated & Optimized
-
----
-
-**Total Documentation:** 23 files + archive | ~230 KB | 180+ sections | 135+ examples
-
-👉 **Start with:** `docs/README.md` for quick navigation or this file for comprehensive guide
-
-Good luck with TodoBox! 🚀
+**Last Updated:** January 16, 2026  
+**Status:** ACTIVE - This is the authoritative documentation index for TodoBox project

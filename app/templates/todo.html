@@ -44,6 +44,15 @@
                                 <footer class="blockquote-footer"> {{ momentjs(todo.Tracker.timestamp).calendar() }}</footer>
                             </div>
                             <div class="p-1 mr-2 bg-white">
+                                <button type="button" class="ml-2 mb-1 start-work" aria-label="Start Work" data-id='{{ todo.id }}' title="Start work session">
+                                    <span class="material-icons">play_arrow</span>
+                                </button>
+                                <button type="button" class="ml-2 mb-1 pause-work" aria-label="Pause Work" data-id='{{ todo.id }}' title="Pause work session" style="display:none;">
+                                    <span class="material-icons">pause</span>
+                                </button>
+                                <button type="button" class="ml-2 mb-1 resume-work" aria-label="Resume Work" data-id='{{ todo.id }}' title="Resume work session" style="display:none;">
+                                    <span class="material-icons">play_arrow</span>
+                                </button>
                                 <button type="button" class="ml-2 mb-1 done" aria-label="Done" data-id='{{ todo.id }}'>
                                     <span class="material-icons">
                                         assignment_turned_in
@@ -124,6 +133,13 @@
         simplemde.render();
         
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize TodoStatusActions with CSRF token
+        TodoStatusActions.initialize('{{ csrf_token() }}', {
+            showErrors: true,
+            doneRedirectUrl: "{{ url_for('todo') }}",
+            deleteRedirectUrl: "{{ url_for('todo') }}"
+        });
+        
         // Delete todo
         document.querySelectorAll('.close').forEach(function(btn) {
             btn.addEventListener('click', function(e) {
@@ -301,6 +317,68 @@
                 }
             });
         }
+        
+        // Work Session Event Handlers
+        document.addEventListener('click', function(e) {
+            const startBtn = e.target.closest('.start-work');
+            const pauseBtn = e.target.closest('.pause-work');
+            const resumeBtn = e.target.closest('.resume-work');
+            
+            if (!startBtn && !pauseBtn && !resumeBtn) return;
+            
+            e.preventDefault();
+            
+            const btn = startBtn || pauseBtn || resumeBtn;
+            const todoId = btn.dataset.id;
+            const card = btn.closest('.card');
+            
+            if (!todoId) {
+                console.error('Work session button missing data-id attribute');
+                return;
+            }
+            
+            btn.disabled = true;
+            
+            if (startBtn) {
+                TodoStatusActions.startWorkSession(todoId, '{{ csrf_token() }}')
+                    .then(function(data) {
+                        console.log('Work session started:', data);
+                        TodoStatusActions.updateWorkSessionButtons(card, 'started');
+                        btn.disabled = false;
+                    })
+                    .catch(function(error) {
+                        console.error('Error starting work session:', error);
+                        btn.disabled = false;
+                        alert('Failed to start work session. Please try again.');
+                    });
+            } else if (pauseBtn) {
+                TodoStatusActions.pauseWorkSession(todoId, '{{ csrf_token() }}')
+                    .then(function(data) {
+                        console.log('Work session paused:', data);
+                        console.log('Session duration:', data.session_duration_hours + ' hours');
+                        console.log('Total work time:', data.total_work_time_hours + ' hours');
+                        TodoStatusActions.updateWorkSessionButtons(card, 'paused');
+                        btn.disabled = false;
+                    })
+                    .catch(function(error) {
+                        console.error('Error pausing work session:', error);
+                        btn.disabled = false;
+                        alert('Failed to pause work session. Please try again.');
+                    });
+            } else if (resumeBtn) {
+                TodoStatusActions.resumeWorkSession(todoId, '{{ csrf_token() }}')
+                    .then(function(data) {
+                        console.log('Work session resumed:', data);
+                        TodoStatusActions.updateWorkSessionButtons(card, 'started');
+                        btn.disabled = false;
+                    })
+                    .catch(function(error) {
+                        console.error('Error resuming work session:', error);
+                        btn.disabled = false;
+                        alert('Failed to resume work session. Please try again.');
+                    });
+            }
+        });
         
         // Keyboard shortcuts
         document.addEventListener('keydown', function(event) {
