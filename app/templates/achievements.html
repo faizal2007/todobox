@@ -291,7 +291,7 @@
             .then(data => {
                 // Create HTML for new items
                 const itemsHtml = data.items.map((item, index) => `
-                    <div class="achievement-item">
+                    <div class="achievement-item" id="achievement-${item.id}">
                         <div class="achievement-badge">
                             <i class="mdi mdi-star"></i>
                         </div>
