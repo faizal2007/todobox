@@ -393,11 +393,23 @@
                          },
                          body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
                     })
-                    .then(function() {
-                         window.location.href = "{{ url_for('undone') }}";
+                    .then(function(response) {
+                         if (!response.ok) {
+                              throw new Error('HTTP error, status = ' + response.status);
+                         }
+                         return response.json();
+                    })
+                    .then(function(data) {
+                         if (data.status === 'Success') {
+                              window.location.href = "{{ url_for('undone') }}";
+                         } else {
+                              console.error('Error marking todo as done:', data.message);
+                              alert('Error: ' + (data.message || 'Failed to mark todo as done'));
+                         }
                     })
                     .catch(function(error) {
                          console.error('Error marking todo as done:', error);
+                         alert('Error: Failed to mark todo as done - ' + error.message);
                     });
                } else if (btn.classList.contains('kiv')) {
                     console.log('KIV button clicked for todo:', todoId);
@@ -410,11 +422,23 @@
                          body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
                     })
                     .then(function(response) {
-                         console.log('KIV request successful, redirecting to:', "{{ url_for('undone') }}?tab=kiv");
-                         window.location.href = "{{ url_for('undone') }}?tab=kiv";
+                         if (!response.ok) {
+                              throw new Error('HTTP error, status = ' + response.status);
+                         }
+                         return response.json();
+                    })
+                    .then(function(data) {
+                         if (data.status === 'Success') {
+                              console.log('KIV request successful, redirecting to:', "{{ url_for('undone') }}?tab=kiv");
+                              window.location.href = "{{ url_for('undone') }}?tab=kiv";
+                         } else {
+                              console.error('Error marking todo as kiv:', data.message);
+                              alert('Error: ' + (data.message || 'Failed to mark todo as KIV'));
+                         }
                     })
                     .catch(function(error) {
                          console.error('Error marking todo as kiv:', error);
+                         alert('Error: Failed to mark todo as KIV - ' + error.message);
                     });
                } else if (btn.classList.contains('close-todo')) {
                     var todoTitle = btn.closest('.card-body').querySelector('.card-title').textContent.trim();
@@ -431,11 +455,23 @@
                                    },
                                    body: '_csrf_token=' + encodeURIComponent('{{ csrf_token() }}')
                               })
-                              .then(function() {
-                                   window.location.href = "{{ url_for('undone') }}";
+                              .then(function(response) {
+                                   if (!response.ok) {
+                                        throw new Error('HTTP error, status = ' + response.status);
+                                   }
+                                   return response.json();
+                              })
+                              .then(function(data) {
+                                   if (data.status === 'Success' || data.success === true) {
+                                        window.location.href = "{{ url_for('undone') }}";
+                                   } else {
+                                        console.error('Error deleting todo:', data.message);
+                                        alert('Error: ' + (data.message || 'Failed to delete todo'));
+                                   }
                               })
                               .catch(function(error) {
                                    console.error('Error deleting todo:', error);
+                                   alert('Error: Failed to delete todo - ' + error.message);
                               });
                          },
                          'Delete',
