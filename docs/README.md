@@ -62,6 +62,13 @@ New to TodoBox? Start here:
 - **[AXE_LINTER_BEST_PRACTICES.md](AXE_LINTER_BEST_PRACTICES.md)** - Accessibility
 - **[REASSIGN_PENDING_LOGIC_ANALYSIS.md](REASSIGN_PENDING_LOGIC_ANALYSIS.md)** - Status workflow analysis
 
+### Bug Fixes & Analysis (Latest)
+
+- **[ACHIEVEMENT_MODAL_BUG_FIX.md](ACHIEVEMENT_MODAL_BUG_FIX.md)** - Achievement modal infinite scroll fix
+- **[LOCAL_VS_PRODUCTION_ANALYSIS.md](LOCAL_VS_PRODUCTION_ANALYSIS.md)** - Local vs production environment differences
+- **[TEST_FAILURE_ROOT_CAUSE_ANALYSIS.md](TEST_FAILURE_ROOT_CAUSE_ANALYSIS.md)** - Test failure analysis
+- **[WHY_TESTS_DIDNT_CATCH_BUG.md](WHY_TESTS_DIDNT_CATCH_BUG.md)** - Test coverage gaps analysis
+
 ### Performance
 
 - **[JAVASCRIPT_OPTIMIZATION.md](JAVASCRIPT_OPTIMIZATION.md)** - JS modernization (jQuery to vanilla)

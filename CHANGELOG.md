@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 📋 Recent Updates Summary (January 2026)
 
+### Latest Bug Fixes (January 16, 2026)
+- 🐛 **Achievement Modal**: Fixed event handler for infinite scroll items (event delegation pattern)
+- 🐛 **Mark as Done**: Fixed syntax error in routes causing 500 errors
+- 🐛 **Error Handling**: Improved error validation and user feedback on /undone page
+- ✅ **Enhanced Tests**: Added error-path tests to catch similar issues
+
 ### Latest Features (v2.0)
 - ✅ **User Registration**: Email verification system with 24-hour token expiration
 - ✅ **Terms Management**: Versioned terms and disclaimer with admin control
