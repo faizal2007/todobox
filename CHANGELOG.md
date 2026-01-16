@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Achievement Modal Not Appearing for Items Loaded via Infinite Scroll**: Fixed event handler issue
+  - Problem: When user had >20 completed todos, clicking on items 21+ (loaded via infinite scroll) didn't open modal
+  - Root cause: Individual event listeners were being cloned and re-attached on each scroll load, causing handlers to fail
+  - Solution: Changed to event delegation pattern using single parent listener with `event.target.closest()`
+  - Benefits: Works for all items (existing and dynamically loaded), no re-binding needed, more memory efficient
+  - This fix applies to all pages with dynamically loaded content and modal triggers
+
+- **Mark as Done Button Not Working on /undone Page**: Fixed syntax error in mark_done and mark_kiv routes
+  - Fixed incorrect jsonify syntax in mark_done route (line 2045-2048): Changed `jsonify({...}, 404)` to `jsonify({...}), 404`
+  - Fixed identical syntax error in mark_kiv route (line 2072-2075)
+  - This was causing a 500 Internal Server Error when trying to mark todos as done or KIV
+  - Improved error handling in JavaScript to properly check response status and display user-friendly error messages
+  - Added response validation in fetch handlers for done, kiv, and delete actions on /undone page
+  - **Added enhanced error-path tests** (tests/test_mark_done_enhanced.py) to catch similar errors in the future
+    - Tests that explicitly trigger error handlers with non-existent todo IDs
+    - Validates error response structure
+    - Prevents regression where error handlers contain bugs missed by success-path-only tests
+
 - **Checkbox List Rendering Without Bullets**: Fixed bullet points appearing in checkbox lists in modal descriptions
   - Changed checkbox HTML rendering from `<ul>/<li>` tags to `<div>` elements with flexbox styling
   - Added 'div' and 'style' attributes to HTML sanitizer whitelist (ALLOWED_TAGS and ALLOWED_ATTRIBUTES)
@@ -25,9 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added proper modal header layout with star icon and title/subtitle
   - Modal now displays properly with all sections formatted correctly
   - Section titles separated from content areas (titles have no box, content has gray background)
-  - Removed blue left borders from section titles, kept only on content areas
-
-### Added
+  - Removed blue left borders from section titles, kept only on content areas### Added
 - **Achievement Modal Detail View**: Added interactive modal dialog for viewing full todo details in achievements page
   - New API endpoint `/api/todo/<int:todo_id>/details` for fetching complete todo information
   - Endpoint calculates time-to-completion from creation and completion tracker timestamps
