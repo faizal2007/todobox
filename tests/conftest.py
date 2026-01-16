@@ -35,7 +35,10 @@ def app():
                 Status(name='done'),
                 Status(name='failed'),
                 Status(name='re-assign'),
-                Status(name='kiv')
+                Status(name='kiv'),
+                Status(name='started'),
+                Status(name='paused'),
+                Status(name='resumed')
             ]
             for i, status in enumerate(statuses, start=5):
                 status.id = i

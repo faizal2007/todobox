@@ -626,17 +626,40 @@
         
         // Show time to complete if available
         if (todoData.time_to_complete !== null && todoData.time_to_complete !== undefined) {
-            const hours = Math.floor(todoData.time_to_complete);
-            const minutes = Math.round((todoData.time_to_complete - hours) * 60);
+            // time_to_complete is in hours (as a float from the API)
+            const totalSeconds = todoData.time_to_complete * 3600;
+            const seconds = Math.round(totalSeconds % 60);
+            const minutes = Math.floor((totalSeconds / 60) % 60);
+            const hours = Math.floor((totalSeconds / 3600) % 24);
+            const days = Math.floor((totalSeconds / 86400) % 365);
+            const years = Math.floor(totalSeconds / (86400 * 365));
+            
             let timeStr = '';
-            if (hours > 0) {
+            
+            if (years > 0) {
+                timeStr = `${years}y`;
+                if (days > 0) {
+                    timeStr += ` ${days}d`;
+                }
+            } else if (days > 0) {
+                timeStr = `${days}d`;
+                if (hours > 0) {
+                    timeStr += ` ${hours}h`;
+                }
+            } else if (hours > 0) {
                 timeStr = `${hours}h`;
                 if (minutes > 0) {
                     timeStr += ` ${minutes}m`;
                 }
-            } else {
+            } else if (minutes > 0) {
                 timeStr = `${minutes}m`;
+                if (seconds > 0) {
+                    timeStr += ` ${seconds}s`;
+                }
+            } else {
+                timeStr = `${seconds}s`;
             }
+            
             document.getElementById('modalTimeToComplete').textContent = timeStr;
         } else {
             document.getElementById('modalTimeToComplete').textContent = '-';

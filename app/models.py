@@ -402,7 +402,10 @@ class Status(db.Model): # type: ignore[attr-defined]
             Status(name='done'),
             Status(name='failed'),
             Status(name='re-assign'),
-            Status(name='kiv')
+            Status(name='kiv'),
+            Status(name='started'),      # Status 10: Work session started
+            Status(name='paused'),        # Status 11: Work session paused
+            Status(name='resumed')        # Status 12: Work session resumed
         ]
         for i, status in enumerate(statuses, start=5):
             status.id = i

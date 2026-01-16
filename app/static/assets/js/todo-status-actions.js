@@ -125,7 +125,7 @@ var TodoStatusActions = (function() {
 
         // Use event delegation to handle dynamically added elements
         document.addEventListener('click', function(e) {
-            const btn = e.target.closest('.done, .kiv, .close-todo');
+            const btn = e.target.closest('.done, .kiv, .close-todo, .start-work, .pause-work, .resume-work');
             if (!btn) return;
             
             e.preventDefault();
@@ -154,6 +154,12 @@ var TodoStatusActions = (function() {
                     setLoadingState(btn, false);
                     return;
                 }
+            } else if (btn.classList.contains('start-work')) {
+                actionPromise = startWorkSession(todoId, csrfToken);
+            } else if (btn.classList.contains('pause-work')) {
+                actionPromise = pauseWorkSession(todoId, csrfToken);
+            } else if (btn.classList.contains('resume-work')) {
+                actionPromise = resumeWorkSession(todoId, csrfToken);
             }
             
             if (actionPromise) {
@@ -191,13 +197,115 @@ var TodoStatusActions = (function() {
         }
     }
 
-    // Public API
+    /**
+     * Start a work session for a todo
+     * @param {string} todoId - The ID of the todo
+     * @param {string} csrfToken - CSRF token for the request
+     */
+    function startWorkSession(todoId, csrfToken) {
+        return fetch('/' + todoId + '/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken
+            },
+            body: '_csrf_token=' + encodeURIComponent(csrfToken)
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        });
+    }
+
+    /**
+     * Pause a work session for a todo
+     * @param {string} todoId - The ID of the todo
+     * @param {string} csrfToken - CSRF token for the request
+     */
+    function pauseWorkSession(todoId, csrfToken) {
+        return fetch('/' + todoId + '/pause', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken
+            },
+            body: '_csrf_token=' + encodeURIComponent(csrfToken)
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        });
+    }
+
+    /**
+     * Resume a work session for a todo
+     * @param {string} todoId - The ID of the todo
+     * @param {string} csrfToken - CSRF token for the request
+     */
+    function resumeWorkSession(todoId, csrfToken) {
+        return fetch('/' + todoId + '/resume', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken
+            },
+            body: '_csrf_token=' + encodeURIComponent(csrfToken)
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        });
+    }
+
+    /**
+     * Update work session button visibility based on current status
+     * @param {Element} card - The todo card element
+     * @param {string} status - The current work session status ('idle', 'started', 'paused')
+     */
+    function updateWorkSessionButtons(card, status) {
+        const startBtn = card.querySelector('.start-work');
+        const pauseBtn = card.querySelector('.pause-work');
+        const resumeBtn = card.querySelector('.resume-work');
+        
+        if (!startBtn || !pauseBtn || !resumeBtn) return;
+        
+        // Reset all buttons
+        startBtn.style.display = 'none';
+        pauseBtn.style.display = 'none';
+        resumeBtn.style.display = 'none';
+        
+        // Show appropriate button based on status
+        switch(status) {
+            case 'started':
+                pauseBtn.style.display = '';
+                break;
+            case 'paused':
+                resumeBtn.style.display = '';
+                startBtn.style.display = '';
+                break;
+            case 'idle':
+            default:
+                startBtn.style.display = '';
+        }
+    }
+
+    // Expose work session functions in public API
     return {
         initialize: initialize,
         markAsDone: markAsDone,
         markAsKiv: markAsKiv,
         deleteTodo: deleteTodo,
         setLoadingState: setLoadingState,
-        handleKivTabSwitch: handleKivTabSwitch
+        handleKivTabSwitch: handleKivTabSwitch,
+        startWorkSession: startWorkSession,
+        pauseWorkSession: pauseWorkSession,
+        resumeWorkSession: resumeWorkSession,
+        updateWorkSessionButtons: updateWorkSessionButtons
     };
 })();
