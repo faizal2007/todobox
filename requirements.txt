@@ -47,9 +47,16 @@ rsa==4.9.1
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
 
-# Server
+# Server and Performance
 gunicorn==23.0.0
 blinker==1.9.0
+Flask-Compress==1.14  # Gzip compression for responses
+Flask-Caching==2.0.2  # Caching layer
+redis==5.0.1  # Redis client for distributed caching
+
+# Load Testing and Performance Monitoring
+locust==2.16.1  # Load testing tool
+py-spy==0.3.14  # Python profiler
 
 # Development dependencies (optional)
 greenlet==3.2.4

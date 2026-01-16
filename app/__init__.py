@@ -4,6 +4,7 @@ from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager
 from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_compress import Compress
 from datetime import timedelta 
 from app.utils import momentjs
 from lib.database import connect_db
@@ -27,6 +28,13 @@ app.wsgi_app = ProxyFix(  # type: ignore[assignment]
 )
 
 csrf = CSRFProtect(app)
+
+# Initialize compression for all responses (production optimization)
+Compress(app)
+
+# Initialize caching layer (Redis with SimpleCache fallback)
+from app.cache import init_cache
+cache = init_cache(app)
 
 if app.config['DATABASE_DEFAULT'] == 'postgres':
     connect_db('postgres', app)
