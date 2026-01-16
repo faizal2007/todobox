@@ -646,22 +646,26 @@
         achievementModal.classList.add('show');
     }
 
-    // Add click handlers to achievement items
-    function attachAchievementClickHandlers() {
-        const achievementItems = document.querySelectorAll('.achievement-item');
-        achievementItems.forEach(item => {
-            // Remove any existing listeners by cloning
-            const newItem = item.cloneNode(true);
-            item.parentNode.replaceChild(newItem, item);
+    // Add click handlers to achievement items using event delegation
+    // This automatically works for dynamically added items without re-binding
+    if (achievementsList) {
+        achievementsList.addEventListener('click', async function(event) {
+            // Find the closest achievement-item if clicked element is inside one
+            const achievementItem = event.target.closest('.achievement-item');
             
-            // Add click listener to the cloned item
-            newItem.addEventListener('click', async function() {
-                const todoId = this.id.replace('achievement-', '');
+            if (achievementItem) {
+                const todoId = achievementItem.id.replace('achievement-', '');
+                
+                // Validate that we have a valid todo ID
+                if (!todoId || isNaN(parseInt(todoId))) {
+                    console.log('Invalid achievement ID:', achievementItem.id);
+                    return;
+                }
                 
                 // Try to get data from the item's children
-                const titleEl = this.querySelector('.achievement-title');
-                const detailsEl = this.querySelector('.achievement-text');
-                const dateEl = this.querySelector('.achievement-date');
+                const titleEl = achievementItem.querySelector('.achievement-title');
+                const detailsEl = achievementItem.querySelector('.achievement-text');
+                const dateEl = achievementItem.querySelector('.achievement-date');
                 
                 if (titleEl && dateEl) {
                     // Extract data from HTML
@@ -681,28 +685,18 @@
                             todoData.details = fullData.details || todoData.details;
                             todoData.completed_at = fullData.completed_at || todoData.completed_at;
                             todoData.time_to_complete = fullData.time_to_complete;
+                            todoData.is_simple_mode = fullData.is_simple_mode;
                         }
                     } catch (error) {
                         console.log('Could not fetch full details, using available data');
                     }
                     
                     showAchievementModal(todoData);
+                } else {
+                    console.log('Missing required elements in achievement item');
                 }
-            });
+            }
         });
     }
-
-    // Attach handlers to initially loaded items
-    attachAchievementClickHandlers();
-
-    // Update handler when new items are loaded via infinite scroll
-    const originalLoadMore = window.loadMoreAchievements;
-    window.loadMoreAchievements = function() {
-        if (originalLoadMore) {
-            originalLoadMore.call(this);
-        }
-        // Attach handlers to newly loaded items after a short delay
-        setTimeout(attachAchievementClickHandlers, 100);
-    };
 </script>
 {% endblock %}
