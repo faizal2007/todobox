@@ -624,6 +624,64 @@ def update_todo(todo_id):
             details = normalize_checkboxes(details)
         todo.details = details
         todo.details_html = convert_details_to_html(details)
+def calculate_total_work_time_hours(todo_id):
+    """Calculate total logged work session time (in hours) for a todo."""
+    session_entries = Tracker.query.filter(
+        Tracker.todo_id == todo_id,
+        Tracker.status_id.in_([10, 11, 12])
+    ).order_by(Tracker.timestamp.asc()).all()
+    total_seconds = 0
+    current_start = None
+
+    for entry in session_entries:
+        if entry.status_id in (10, 12):
+            current_start = entry.timestamp
+        elif entry.status_id == 11 and current_start is not None:
+            total_seconds += max(0, (entry.timestamp - current_start).total_seconds())
+            current_start = None
+
+    return round(total_seconds / 3600, 2)
+
+def parse_duration_input(duration_str):
+    """Convert a duration string like '15 m' or '1 h' into seconds."""
+    if not duration_str or not duration_str.strip():
+        raise ValueError('Duration is required.')
+
+    import re
+
+    pattern = r'(\d+(?:\.\d+)?)\s*(s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours)'
+    matches = re.findall(pattern, duration_str.lower())
+    if not matches:
+        raise ValueError('Use formats like "20 s", "15 m", or "1 h" to log time.')
+
+    total_seconds = 0.0
+    for amount, unit in matches:
+        value = float(amount)
+        if unit.startswith('h'):
+            total_seconds += value * 3600
+        elif unit.startswith('m'):
+            total_seconds += value * 60
+        else:
+            total_seconds += value
+
+    if total_seconds <= 0:
+        raise ValueError('Duration must be greater than zero.')
+
+    return int(total_seconds)
+
+def parse_datetime_local(value):
+    """Parse datetime-local input (YYYY-MM-DDTHH:MM) into a datetime object."""
+    if not value:
+        raise ValueError('Datetime value is required.')
+
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        try:
+            return datetime.strptime(value, '%Y-%m-%d %H:%M')
+        except ValueError as exc:
+            raise ValueError('Invalid datetime format. Use YYYY-MM-DDTHH:MM.') from exc
+
     
     if 'status' in data:
         status_name = data['status']
@@ -2077,10 +2135,110 @@ def mark_kiv(todo_id):
             'message': 'Todo not found'
         }), 404
 
+@app.route('/<path:todo_id>/get_active_session', methods=['GET'])
+@login_required
+def get_active_session(todo_id):
+    """Get active session info for a todo (for timer persistence across page refresh)"""
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return jsonify({
+            'status': 'Error',
+            'message': 'Todo not found',
+            'is_active': False
+        }), 404
+    
+    # Find the most recent event for this todo
+    last_event = Tracker.query.filter(
+        Tracker.todo_id == todo.id
+    ).order_by(Tracker.timestamp.desc()).first()
+    
+    # Session is active only if the last event is START (status 10) or RESUME (status 12)
+    is_active = last_event and last_event.status_id in [10, 12]
+    
+    # Calculate elapsed time
+    elapsed_seconds = 0
+    last_start = None
+    
+    if is_active:
+        # Active session: Calculate total elapsed time correctly
+        # Strategy: Sum all completed START→PAUSE intervals, then add current active interval
+        
+        all_events = Tracker.query.filter(
+            Tracker.todo_id == todo.id
+        ).order_by(Tracker.timestamp.asc()).all()
+        
+        # First pass: calculate all completed work periods
+        total_elapsed = 0
+        current_session_start = None
+        
+        for event in all_events:
+            if event.status_id == 10:  # START
+                current_session_start = event.timestamp
+            elif event.status_id == 11:  # PAUSE
+                # Add elapsed time from start to pause
+                if current_session_start:
+                    elapsed_in_this_period = (event.timestamp - current_session_start).total_seconds()
+                    total_elapsed += int(elapsed_in_this_period)
+                    current_session_start = None
+            elif event.status_id == 12:  # RESUME
+                # RESUME doesn't add any time; it continues from the pause
+                # The session_start for ongoing calculation is now this resume point
+                current_session_start = event.timestamp
+        
+        # Add time from last START/RESUME to now
+        if current_session_start:
+            current_elapsed = (datetime.utcnow() - current_session_start).total_seconds()
+            total_elapsed += int(current_elapsed)
+        
+        elapsed_seconds = total_elapsed
+        last_start = Tracker.query.filter(
+            Tracker.todo_id == todo.id,
+            Tracker.status_id.in_([10, 12])
+        ).order_by(Tracker.timestamp.desc()).first()
+    else:
+        # Not active - find most recent session (START to PAUSE/END)
+        # Get the most recent PAUSE or END
+        last_pause_or_end = Tracker.query.filter(
+            Tracker.todo_id == todo.id,
+            Tracker.status_id.in_([11])  # Status 11 = Paused
+        ).order_by(Tracker.timestamp.desc()).first()
+        
+        # Find the START/RESUME that preceded this pause
+        if last_pause_or_end:
+            last_start = Tracker.query.filter(
+                Tracker.todo_id == todo.id,
+                Tracker.status_id.in_([10, 12]),
+                Tracker.timestamp < last_pause_or_end.timestamp
+            ).order_by(Tracker.timestamp.desc()).first()
+            
+            if last_start:
+                # Calculate from start time to pause time (fixed)
+                elapsed_seconds = int((last_pause_or_end.timestamp - last_start.timestamp).total_seconds())
+    
+    if is_active:
+        return jsonify({
+            'status': 'Success',
+            'is_active': True,
+            'session_start_time': last_start.timestamp.isoformat() if last_start else None,
+            'elapsed_seconds': elapsed_seconds,
+            'todo_id': todo.id
+        }), 200
+    else:
+        return jsonify({
+            'status': 'Success',
+            'is_active': False,
+            'session_start_time': last_start.timestamp.isoformat() if last_start else None,
+            'elapsed_seconds': elapsed_seconds,
+            'todo_id': todo.id
+        }), 200
+
 @app.route('/<path:todo_id>/start', methods=['POST'])
 @login_required
 def start_work_session(todo_id):
-    """Start a work session for a todo (Status 10: Started)"""
+    """Start a work session for a todo (Status 10: Started)
+    
+    IDEMPOTENT: If session already running, returns existing session start time
+    """
     todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
     if not todo:
         return jsonify({
@@ -2088,6 +2246,32 @@ def start_work_session(todo_id):
             'message': 'Todo not found'
         }), 404
     
+    # CRITICAL FIX: Check if session already running
+    # Find most recent START or RESUME (session active states)
+    last_start_or_resume = Tracker.query.filter(
+        Tracker.todo_id == todo.id,
+        Tracker.status_id.in_([10, 12])  # 10=START, 12=RESUME
+    ).order_by(Tracker.timestamp.desc()).first()
+    
+    if last_start_or_resume:
+        # Check if there's a PAUSE (status 11) after the last START/RESUME
+        last_pause = Tracker.query.filter(
+            Tracker.todo_id == todo.id,
+            Tracker.status_id == 11,  # 11=PAUSE
+            Tracker.timestamp > last_start_or_resume.timestamp
+        ).order_by(Tracker.timestamp.desc()).first()
+        
+        if not last_pause:
+            # Session already running - return existing session time (idempotent)
+            return jsonify({
+                'status': 'Success',
+                'todo_id': todo.id,
+                'session_start_time': last_start_or_resume.timestamp.isoformat(),
+                'was_already_running': True,
+                'message': 'Session already running'
+            }), 200
+    
+    # Session not running - create new one
     date_entry = datetime.now()
     todo.modified = date_entry
     db.session.commit()  # type: ignore[attr-defined]
@@ -2098,13 +2282,17 @@ def start_work_session(todo_id):
     return jsonify({
         'status': 'Success',
         'todo_id': todo.id,
-        'session_start_time': date_entry.isoformat()
+        'session_start_time': date_entry.isoformat(),
+        'was_already_running': False
     }), 200
 
 @app.route('/<path:todo_id>/pause', methods=['POST'])
 @login_required
 def pause_work_session(todo_id):
-    """Pause a work session for a todo (Status 11: Paused)"""
+    """Pause a work session for a todo (Status 11: Paused)
+    
+    IDEMPOTENT: If already paused, returns success with last known session data
+    """
     todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
     if not todo:
         return jsonify({
@@ -2112,6 +2300,34 @@ def pause_work_session(todo_id):
             'message': 'Todo not found'
         }), 404
     
+    # CRITICAL FIX: Check if already paused (idempotent)
+    # Find most recent event
+    last_event = Tracker.query.filter_by(todo_id=todo.id).order_by(Tracker.timestamp.desc()).first()
+    
+    if last_event and last_event.status_id == 11:
+        # Already paused - return success (idempotent)
+        previous_session_start = Tracker.query.filter(
+            Tracker.todo_id == todo.id,
+            Tracker.status_id.in_([10, 12])
+        ).order_by(Tracker.timestamp.desc()).first()
+        
+        session_duration = 0
+        if previous_session_start and previous_session_start.timestamp:
+            delta = last_event.timestamp - previous_session_start.timestamp
+            session_duration = round(max(0, delta.total_seconds()) / 3600, 2)
+        
+        total_work_time = calculate_total_work_time_hours(todo.id)
+        
+        return jsonify({
+            'status': 'Success',
+            'todo_id': todo.id,
+            'session_duration_hours': session_duration,
+            'total_work_time_hours': total_work_time,
+            'was_already_paused': True,
+            'message': 'Session already paused'
+        }), 200
+    
+    # Not paused - record pause now
     date_entry = datetime.now()
     todo.modified = date_entry
     db.session.commit()  # type: ignore[attr-defined]
@@ -2119,41 +2335,25 @@ def pause_work_session(todo_id):
     # Record that work session has paused (Status 11)
     Tracker.add(todo.id, 11, date_entry)
     
-    # Calculate current session duration
-    # Find the most recent 'started' (Status 10) or 'resumed' (Status 12) before this pause
-    previous_session_start = db.session.execute(
-        """SELECT timestamp FROM tracker 
-           WHERE todo_id = :todo_id AND status_id IN (10, 12) 
-           ORDER BY timestamp DESC LIMIT 1""",
-        {'todo_id': todo.id}
-    ).first()
-    
+    # Calculate current session duration using the last start/resume timestamp
+    previous_session_start = Tracker.query.filter(
+        Tracker.todo_id == todo.id,
+        Tracker.status_id.in_([10, 12])
+    ).order_by(Tracker.timestamp.desc()).first()
+
     session_duration = 0
-    if previous_session_start:
-        time_diff = date_entry - previous_session_start[0]
-        session_duration = round(time_diff.total_seconds() / 3600, 2)
-    
-    # Calculate total work time so far
-    started_paused_records = db.session.execute(
-        """SELECT timestamp FROM tracker 
-           WHERE todo_id = :todo_id AND status_id IN (10, 11, 12)
-           ORDER BY timestamp ASC""",
-        {'todo_id': todo.id}
-    ).fetchall()
-    
-    total_work_time = 0
-    i = 0
-    while i < len(started_paused_records) - 1:
-        if started_paused_records[i + 1]:
-            time_diff = started_paused_records[i + 1][0] - started_paused_records[i][0]
-            total_work_time += time_diff.total_seconds() / 3600
-        i += 2
+    if previous_session_start and previous_session_start.timestamp:
+        delta = date_entry - previous_session_start.timestamp
+        session_duration = round(max(0, delta.total_seconds()) / 3600, 2)
+
+    total_work_time = calculate_total_work_time_hours(todo.id)
     
     return jsonify({
         'status': 'Success',
         'todo_id': todo.id,
         'session_duration_hours': session_duration,
-        'total_work_time_hours': round(total_work_time, 2)
+        'total_work_time_hours': total_work_time,
+        'was_already_paused': False
     }), 200
 
 @app.route('/<path:todo_id>/resume', methods=['POST'])
@@ -2178,6 +2378,148 @@ def resume_work_session(todo_id):
         'status': 'Success',
         'todo_id': todo.id,
         'session_start_time': date_entry.isoformat()
+    }), 200
+
+@app.route('/<path:todo_id>/log_manual_time', methods=['POST'])
+@login_required
+def log_manual_work_session(todo_id):
+    """Allow users to log work session time manually via start/end or duration."""
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return jsonify({
+            'status': 'Error',
+            'message': 'Todo not found'
+        }), 404
+
+    payload = request.get_json(silent=True) or {}
+    mode = (payload.get('mode') or '').lower()
+    user_timezone = payload.get('user_timezone') or current_user.timezone or 'UTC'
+
+    start_utc = None
+    end_utc = None
+    session_seconds = 0
+
+    if mode == 'range':
+        start_raw = payload.get('start_time')
+        end_raw = payload.get('end_time')
+        if not start_raw or not end_raw:
+            return jsonify({'status': 'Error', 'message': 'Start and end times are required.'}), 400
+
+        try:
+            start_local = parse_datetime_local(start_raw)
+            end_local = parse_datetime_local(end_raw)
+        except ValueError as exc:
+            return jsonify({'status': 'Error', 'message': str(exc)}), 400
+
+        if end_local <= start_local:
+            return jsonify({'status': 'Error', 'message': 'End time must be later than start time.'}), 400
+
+        from app.timezone_utils import convert_from_user_timezone
+
+        start_utc = convert_from_user_timezone(start_local, user_timezone)
+        end_utc = convert_from_user_timezone(end_local, user_timezone)
+        session_seconds = int((end_utc - start_utc).total_seconds())
+    elif mode == 'duration':
+        # Support both old format (duration_input as string) and new format (duration_seconds as number)
+        duration_seconds_value = payload.get('duration_seconds')
+        if duration_seconds_value is not None and isinstance(duration_seconds_value, (int, float)):
+            # New format from duration picker
+            session_seconds = int(duration_seconds_value)
+        else:
+            # Old format (fallback for string parsing)
+            duration_input = payload.get('duration_input', '')
+            try:
+                session_seconds = parse_duration_input(duration_input)
+            except ValueError as exc:
+                return jsonify({'status': 'Error', 'message': str(exc)}), 400
+
+        end_utc = datetime.utcnow()
+        start_utc = end_utc - timedelta(seconds=session_seconds)
+    else:
+        return jsonify({'status': 'Error', 'message': 'Invalid manual entry mode.'}), 400
+
+    if session_seconds <= 0 or not start_utc or not end_utc:
+        return jsonify({'status': 'Error', 'message': 'Session time must be greater than zero.'}), 400
+
+    if end_utc <= start_utc:
+        return jsonify({'status': 'Error', 'message': 'End time must be later than start time.'}), 400
+
+    # Update todo modified time to reflect most recent manual entry
+    todo.modified = end_utc
+    db.session.commit()  # type: ignore[attr-defined]
+
+    # Record manual session as start + pause entries for consistency
+    Tracker.add(todo.id, 10, start_utc)
+    Tracker.add(todo.id, 11, end_utc)
+
+    session_hours = round(session_seconds / 3600, 2)
+    total_hours = calculate_total_work_time_hours(todo.id)
+
+    return jsonify({
+        'status': 'Success',
+        'todo_id': todo.id,
+        'session_duration_hours': session_hours,
+        'total_work_time_hours': total_hours
+    }), 200
+
+@app.route('/<path:todo_id>/get_work_time', methods=['GET'])
+@login_required
+def get_work_time(todo_id):
+    """Get the total work hours logged for a todo."""
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return jsonify({'status': 'Error', 'message': 'Todo not found'}), 404
+
+    total_hours = calculate_total_work_time_hours(todo.id)
+    return jsonify({
+        'status': 'Success',
+        'todo_id': todo.id,
+        'total_work_time_hours': total_hours
+    }), 200
+
+@app.route('/<path:todo_id>/get_recent_session_times', methods=['GET'])
+@login_required
+def get_recent_session_times(todo_id):
+    """Get the most recent start and end times for a todo's work session."""
+    todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return jsonify({'status': 'Error', 'message': 'Todo not found'}), 404
+
+    # Get the most recent start time (status_id = 10)
+    start_entry = Tracker.query.filter_by(todo_id=todo.id, status_id=10).order_by(
+        Tracker.timestamp.desc()
+    ).first()
+
+    # Get the most recent end time (status_id = 11)
+    end_entry = Tracker.query.filter_by(todo_id=todo.id, status_id=11).order_by(
+        Tracker.timestamp.desc()
+    ).first()
+
+    start_time = None
+    end_time = None
+
+    if start_entry:
+        # Convert UTC to user's timezone
+        from app.timezone_utils import convert_to_user_timezone
+        user_tz = current_user.timezone or 'UTC'
+        start_local = convert_to_user_timezone(start_entry.timestamp, user_tz)
+        # Format: "Jan 17, 2:30 PM"
+        start_time = start_local.strftime('%b %d, %-I:%M %p').replace(' 0', ' ')
+
+    if end_entry:
+        # Convert UTC to user's timezone
+        from app.timezone_utils import convert_to_user_timezone
+        user_tz = current_user.timezone or 'UTC'
+        end_local = convert_to_user_timezone(end_entry.timestamp, user_tz)
+        # Format: "Jan 17, 2:30 PM"
+        end_time = end_local.strftime('%b %d, %-I:%M %p').replace(' 0', ' ')
+
+    return jsonify({
+        'status': 'Success',
+        'todo_id': todo.id,
+        'start_time': start_time,
+        'end_time': end_time,
+        'has_sessions': start_entry is not None
     }), 200
 
 @app.route('/<path:todo>/view')

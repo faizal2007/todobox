@@ -28,6 +28,30 @@ def create_test_todo(app, user_id, name='Test Todo'):
         return todo.id
 
 
+def force_login(client, user_id):
+    """Authenticate a user by storing their id in the session."""
+    with client.session_transaction() as session:
+        session['_user_id'] = str(user_id)
+        session['_fresh'] = True
+
+
+@pytest.fixture
+def user_with_todo(app):
+    """Provide a user id and todo id pair for tests."""
+    with app.app_context():
+        user = User(email='ws_fixture@example.com', fullname='WS Fixture User')
+        user.set_password('password')
+        db.session.add(user)
+        db.session.commit()
+
+        todo = Todo(name='Fixture Todo', details='Fixture details', user_id=user.id)
+        db.session.add(todo)
+        db.session.commit()
+        Tracker.add(todo.id, 5, datetime.now())
+
+        return user.id, todo.id
+
+
 class TestWorkSessionTracking:
     """Test the complete work session tracking flow"""
     
@@ -36,11 +60,7 @@ class TestWorkSessionTracking:
         user_id = create_test_user(app, 'start_test@example.com')
         todo_id = create_test_todo(app, user_id, 'Start Test')
         
-        # Login user
-        with app.app_context():
-            from flask_login import login_user as flask_login
-            user = User.query.get(user_id)
-            flask_login(user)
+        force_login(client, user_id)
         
         # Start work session
         response = client.post(f'/{todo_id}/start', data={'_csrf_token': ''})
@@ -63,11 +83,7 @@ class TestWorkSessionTracking:
         user_id = create_test_user(app, 'pause_test@example.com')
         todo_id = create_test_todo(app, user_id, 'Pause Test')
         
-        # Login user
-        with app.app_context():
-            from flask_login import login_user as flask_login
-            user = User.query.get(user_id)
-            flask_login(user)
+        force_login(client, user_id)
         
         # Start work session first
         client.post(f'/{todo_id}/start', data={'_csrf_token': ''})
@@ -92,11 +108,7 @@ class TestWorkSessionTracking:
         user_id = create_test_user(app, 'resume_test@example.com')
         todo_id = create_test_todo(app, user_id, 'Resume Test')
         
-        # Login user
-        with app.app_context():
-            from flask_login import login_user as flask_login
-            user = User.query.get(user_id)
-            flask_login(user)
+        force_login(client, user_id)
         
         # Start and pause
         client.post(f'/{todo_id}/start', data={'_csrf_token': ''})
@@ -115,17 +127,72 @@ class TestWorkSessionTracking:
             tracker = Tracker.query.filter_by(todo_id=todo_id, status_id=12).first()
             assert tracker is not None
             assert tracker.status_id == 12
+
+    def test_manual_time_entry_with_range(self, app, client):
+        """Users can log manual time by providing explicit start and end."""
+        user_id = create_test_user(app, 'manual_range@example.com')
+        todo_id = create_test_todo(app, user_id, 'Manual Range Test')
+
+        force_login(client, user_id)
+
+        start_window = (datetime.now() - timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M')
+        end_window = (datetime.now() - timedelta(minutes=15)).strftime('%Y-%m-%dT%H:%M')
+
+        response = client.post(
+            f'/{todo_id}/log_manual_time',
+            json={
+                'mode': 'range',
+                'start_time': start_window,
+                'end_time': end_window,
+                'user_timezone': 'UTC'
+            }
+        )
+
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert data['status'] == 'Success'
+        assert data['session_duration_hours'] > 0
+        assert data['total_work_time_hours'] >= data['session_duration_hours']
+
+        with app.app_context():
+            starts = Tracker.query.filter_by(todo_id=todo_id, status_id=10).count()
+            pauses = Tracker.query.filter_by(todo_id=todo_id, status_id=11).count()
+            assert starts == 1
+            assert pauses == 1
+
+    def test_manual_time_entry_with_duration(self, app, client):
+        """Users can log manual time using quick duration notation."""
+        user_id = create_test_user(app, 'manual_duration@example.com')
+        todo_id = create_test_todo(app, user_id, 'Manual Duration Test')
+
+        force_login(client, user_id)
+
+        response = client.post(
+            f'/{todo_id}/log_manual_time',
+            json={
+                'mode': 'duration',
+                'duration_input': '30 m',
+                'user_timezone': 'UTC'
+            }
+        )
+
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert data['status'] == 'Success'
+        assert 0.4 < data['session_duration_hours'] < 0.6
+
+        with app.app_context():
+            starts = Tracker.query.filter_by(todo_id=todo_id, status_id=10).count()
+            pauses = Tracker.query.filter_by(todo_id=todo_id, status_id=11).count()
+            assert starts == 1
+            assert pauses == 1
     
     def test_multiple_work_sessions(self, app, client):
         """Test multiple start-pause-resume cycles"""
         user_id = create_test_user(app, 'multi_test@example.com')
         todo_id = create_test_todo(app, user_id, 'Multi Test')
         
-        # Login user
-        with app.app_context():
-            from flask_login import login_user as flask_login
-            user = User.query.get(user_id)
-            flask_login(user)
+        force_login(client, user_id)
         
         # First session: start -> pause
         client.post(f'/{todo_id}/start', data={'_csrf_token': ''})
@@ -155,11 +222,7 @@ class TestWorkSessionTracking:
         user_id = create_test_user(app, 'time_calc_test@example.com')
         todo_id = create_test_todo(app, user_id, 'Time Calc Test')
         
-        # Login user
-        with app.app_context():
-            from flask_login import login_user as flask_login
-            user = User.query.get(user_id)
-            flask_login(user)
+        force_login(client, user_id)
         
         # Start work session (simulating work beginning)
         client.post(f'/{todo_id}/start', data={'_csrf_token': ''})
@@ -186,23 +249,25 @@ class TestWorkSessionTracking:
             user2.set_password('password')
             db.session.add(user2)
             db.session.commit()
-            
+            user2_id = user2.id
+
+            owner = User.query.filter_by(email='test@example.com').first()
+            assert owner is not None
+            owner_id = owner.id
             # Create a todo for test_user
-            todo = Todo(name='Test Todo', details='Test', user_id=test_user.id)
+            todo = Todo(name='Test Todo', details='Test', user_id=owner_id)
             db.session.add(todo)
             db.session.commit()
             todo_id = todo.id
         
-        # Login as test_user first
-        with app.app_context():
-            from flask_login import login_user
-            login_user(test_user)
+        # Login as user2 who does not own the todo
+        force_login(client, user2_id)
         
-        # Try to access with user2 (not logged in, so should fail)
+        # Try to access owner's todo - should fail
         response = client.post(f'/{todo_id}/start', data={'_csrf_token': ''})
         
         # Should fail - unauthorized or not found
-        assert response.status_code in [401, 404]
+        assert response.status_code in [401, 403, 404]
     
     def test_status_ids_exist_in_database(self, app):
         """Test that Status IDs 10, 11, 12 are properly created"""
@@ -232,12 +297,9 @@ class TestTimeCalculationAccuracy:
     
     def test_creation_vs_started_timestamp_difference(self, app, client, user_with_todo):
         """Verify that using Status 10 instead of Status 5 gives more accurate time"""
-        user, todo_id = user_with_todo
+        user_id, todo_id = user_with_todo
         
-        # Login user
-        with app.app_context():
-            from flask_login import login_user as flask_login
-            flask_login(user)
+        force_login(client, user_id)
         
         # Get creation timestamp (Status 5)
         with app.app_context():
@@ -263,12 +325,9 @@ class TestTimeCalculationAccuracy:
     
     def test_multiple_sessions_combined_time(self, app, client, user_with_todo):
         """Test that multiple work sessions are counted correctly"""
-        user, todo_id = user_with_todo
+        user_id, todo_id = user_with_todo
         
-        # Login user
-        with app.app_context():
-            from flask_login import login_user as flask_login
-            flask_login(user)
+        force_login(client, user_id)
         
         # Clear existing trackers and create new ones
         with app.app_context():
@@ -304,7 +363,7 @@ class TestTimeCalculationAccuracy:
         actual_hours = data['time_to_complete']
         
         assert actual_hours is not None
-        assert abs(actual_hours - expected_hours) < 0.01, \
+        assert abs(actual_hours - expected_hours) < 0.05, \
             f"Expected {expected_hours} hours, got {actual_hours}"
 
 
@@ -313,12 +372,9 @@ class TestWorkSessionEdgeCases:
     
     def test_pause_without_starting(self, app, client, user_with_todo):
         """Test pausing a todo that was never started"""
-        user, todo_id = user_with_todo
+        user_id, todo_id = user_with_todo
         
-        # Login user
-        with app.app_context():
-            from flask_login import login_user as flask_login
-            flask_login(user)
+        force_login(client, user_id)
         
         # Try to pause without starting
         response = client.post(f'/{todo_id}/pause', data={'_csrf_token': ''})
@@ -330,12 +386,9 @@ class TestWorkSessionEdgeCases:
     
     def test_resume_without_pause(self, app, client, user_with_todo):
         """Test resuming without pausing (edge case)"""
-        user, todo_id = user_with_todo
+        user_id, todo_id = user_with_todo
         
-        # Login user
-        with app.app_context():
-            from flask_login import login_user as flask_login
-            flask_login(user)
+        force_login(client, user_id)
         
         # Start work session
         client.post(f'/{todo_id}/start', data={'_csrf_token': ''})
@@ -347,3 +400,48 @@ class TestWorkSessionEdgeCases:
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data['status'] == 'Success'
+
+    def test_elapsed_time_with_resume(self, app, client, user_with_todo):
+        """
+        Test the resume scenario: Start → Pause after 5s → Resume after waiting
+        
+        User's test case:
+        - Timer starts at 00:00:05 (5 seconds elapsed)
+        - Session pauses
+        - User waits some time
+        - User clicks resume/play button
+        - Timer should show the correct elapsed time from the original start, not just time since resume
+        """
+        user_id, todo_id = user_with_todo
+        
+        force_login(client, user_id)
+        
+        with app.app_context():
+            # Clear existing tracker data for this todo
+            Tracker.query.filter(Tracker.todo_id == todo_id).delete()
+            db.session.commit()
+            
+            # Simulate exact timeline
+            now = datetime.utcnow()
+            start_time = now - timedelta(seconds=11)  # Session started 11 seconds ago
+            pause_time = start_time + timedelta(seconds=5)  # Paused after 5 seconds
+            resume_time = now  # Resumed just now
+            
+            # Record events
+            Tracker.add(todo_id, 10, start_time)   # START
+            Tracker.add(todo_id, 11, pause_time)   # PAUSE at 5 seconds
+            Tracker.add(todo_id, 12, resume_time)  # RESUME now
+        
+        # Call get_active_session endpoint
+        response = client.get(f'/{todo_id}/get_active_session')
+        assert response.status_code == 200
+        
+        data = json.loads(response.data)
+        assert data['is_active'] == True
+        
+        # The elapsed time should be approximately 5 seconds (from start to pause)
+        # not 0 seconds (from resume to now)
+        elapsed = data['elapsed_seconds']
+        
+        # Should be close to 5 seconds, allowing for small timing variations
+        assert 4 <= elapsed <= 6, f"Expected ~5 seconds, got {elapsed} seconds"

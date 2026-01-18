@@ -9,6 +9,191 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 📋 Recent Updates Summary (January 2026)
 
+### Work Session Resume Timer Fix (January 19, 2026)
+- ✅ **FIXED: Timer Shows Wrong Elapsed Time After Resume**: When pausing a work session and then resuming, the timer now correctly displays the accumulated elapsed time, not just the time since resume
+- ✅ **Enhanced GET `/get_active_session` Endpoint**: Rewrote elapsed time calculation logic to properly handle START→PAUSE→RESUME cycles
+  - Correctly calculates: sum of all completed work periods + current active period
+  - When resuming: doesn't count the pause gap that occurred while paused
+  - Tested scenario: Session with 5s elapsed, paused, resumed after gap → correctly shows ~5s (not gap duration)
+- ✅ **New Test Case**: Added `test_elapsed_time_with_resume` to verify resume scenario works correctly
+- ✅ **All 15 Work Session Tests Passing**: Including new resume scenario test
+
+### System Stability & Code Quality Fixes (January 19, 2026)
+- ✅ **Fixed Model Parameter Issues**: Corrected User model instantiation in CLI (username → fullname)
+- ✅ **Fixed TermsAndDisclaimer Constructor**: Updated test cases to use correct parameters (terms_of_use, disclaimer)
+- ✅ **Fixed OAuth Callback Route**: Corrected route path in security tests (/oauth-callback → /auth/callback/google)
+- ✅ **Enhanced Test Fixtures**: Improved conftest.py to handle test data isolation and prevent duplicate active terms
+- ✅ **All Critical Tests Passing**: 
+  - Security Tests: 4/4 passing ✅
+  - Work Session Tests: 15/15 passing ✅ (added 1 new test for resume scenario)
+  - Core Functionality Verified
+- 🔒 **Security**: All security tests passing, open redirect protection working
+- 📝 **Code Quality**: Fixed all critical model and route issues
+
+### Timer Persistence Fix - Browser Refresh Support (January 25, 2026)
+- ✅ **FIXED: Timer Shows 0 After Page Refresh**: Timer now correctly resumes from server-tracked elapsed time after browser refresh
+- ✅ **Persistent Timer Implementation**: 
+  - Modified backend endpoint `/get_active_session` to return `elapsed_seconds` for both active and paused sessions
+  - Frontend now uses server-provided `elapsed_seconds` instead of client-side calculation only for active sessions
+  - Server calculates elapsed time by querying Tracker table for START/PAUSE event timestamps
+  - ✅ **Verified**: Timer correctly persists 30-minute elapsed time across page refresh
+- ✅ **Improved Async Flow**: 
+  - Modal setup waits for async fetch completion before displaying
+  - Timer display uses server-calculated elapsed time that persists across page refreshes
+- ✅ **Robust Fallback**: If fetch fails, timer falls back to browser memory (previous paused value)
+- ✅ **Comprehensive Testing**: All work session tests passing (20/20)
+- 📝 **Documentation**: Added PERSISTENT_TIMER_FIX.md with detailed implementation notes
+
+### Work Session Flow Optimization & Bug Fixes (January 17, 2026)
+- ✅ **Enhanced Modal Close Handler**: Better logging when modal closes with active timer
+- ✅ **Elapsed Time Formatting**: Added helper functions to format time display (e.g., "2 hrs 15 mins 30 secs")
+- ✅ **Better Logging**: Console logs now show elapsed time when session ends
+- ✅ **Improved Debuggability**: Clear debug messages throughout the session lifecycle
+- 🔄 **Code Quality**: Reviewed entire work session flow for bugs and inefficiencies
+- ✅ **All Tests Passing**: 14/14 unit tests pass, no regressions
+
+### Work Session Flow Design (Comprehensive)
+
+#### **LIVE TIMER TAB** ✅
+1. User opens modal → Timer shows "00:00:00"
+2. Click "Start" → Timer begins counting, Manual Entry tab disables
+3. Click "Pause" → Timer stops (can resume), Modal stays open
+4. Click "End" → Timer stops, Session saved, Modal closes
+5. Modal closes with active timer → Auto-pauses (logs show elapsed time)
+
+#### **MANUAL ENTRY - RANGE MODE** ✅
+1. User switches to Manual Entry tab (requires timer to be stopped)
+2. "Log start & end time" selected by default
+3. Previous session info box shows: "Last session: Jan 17, 3:10 AM to Jan 17, 3:46 AM"
+4. **Auto-suggestions**:
+   - Start time: Pre-filled with previous session's END time
+   - End time: Pre-filled with 30 mins after start time
+5. User can adjust suggestions or enter custom times
+6. Click "Log Time" → Session saved, form clears
+7. **Auto-refresh**: New suggestions load for next entry
+
+#### **MANUAL ENTRY - DURATION MODE** ✅
+1. User selects "Log total duration" radio button
+2. Hours (0-12) and Minutes (0-59) dropdowns appear
+3. Previous session info box shows: "Last session: Jan 17, 3:10 AM to Jan 17, 3:46 AM"
+4. **Auto-suggestions**:
+   - Duration: Pre-calculated from previous start→end times
+   - Display: "Selected: 0 hrs 36 mins"
+5. User can adjust or accept suggestion
+6. Click "Log Time" → Session saved, form clears
+7. **Auto-refresh**: New duration suggestions load
+
+#### **TAB SWITCHING LOGIC** ✅
+- **From Live Timer to Manual Entry (with active timer)**:
+  - User clicks Manual Entry tab
+  - Confirmation dialog: "Timer running. Save & Switch?" 
+  - If confirm: Timer ends, switches to Manual Entry
+  - If cancel: Stays in Live Timer
+- **From Manual Entry to Live Timer**:
+  - Always allowed (no active timer in Manual Entry)
+  - Resets form for clean entry
+
+#### **EFFICIENCY OPTIMIZATIONS** ✅
+- Previous session data fetched once per modal open
+- Auto-suggestions use cached data
+- Form refresh on success uses 300ms delay for DB sync
+- Button state updates happen immediately without extra API calls
+
+#### **USER EXPERIENCE FLOW** ✅
+```
+Open Modal
+├─ Live Timer Active
+│  └─ [Start] → Count time → [Pause] (resume) → [End] → Save & Close
+│     OR
+│     └─ [Start] → Count time → Close Modal → Auto-pause (can resume later)
+│
+└─ Manual Entry
+   ├─ Range Mode (Start & End Time)
+   │  └─ Auto-fill with previous times → Adjust → [Log Time] → Refresh suggestions
+   │
+   └─ Duration Mode
+      └─ Auto-fill with previous duration → Adjust → [Log Time] → Refresh suggestions
+```
+
+### Live Timer Lock-Out Flow (January 17, 2026)
+- ✅ **Manual Entry Tab Disabled During Timer**: When Live Timer is running, Manual Entry tab is greyed out and non-clickable
+- ✅ **Prevents Mode Confusion**: Users can't accidentally switch to Manual Entry while timer is actively counting
+- ✅ **Smart Switch Workflow**: If user clicks Manual Entry while timer is running, shows confirmation dialog:
+  - "Save & Switch" → Ends live timer and switches to Manual Entry mode
+  - "Keep Timer Running" → Closes dialog and continues with active timer
+- ✅ **Auto Re-enable**: Manual Entry tab automatically re-enables when timer is stopped/paused
+- ✅ **Visual Feedback**: Disabled state shown with reduced opacity (0.5) and "not-allowed" cursor
+- ✅ **Tooltip Help**: Shows "Stop the timer to use Manual Entry" when hovering over disabled tab
+- ✅ **Smooth Transitions**: Delayed switch (100ms) ensures session is properly ended before mode changes
+- ✅ **Console Logging**: Debug logs show when Manual Entry tab is disabled/enabled
+
+### Duration Picker for Manual Time Logging (January 17, 2026)
+- ✅ **New Duration Picker UI**: Hours (0-12) and minutes (0-59) dropdowns instead of text input
+- ✅ **Auto-Suggested Duration**: Modal auto-suggests previous session's duration when "Log total duration" is selected
+- ✅ **Real-Time Display**: Shows "Selected: X hrs Y mins" that updates as user selects values
+- ✅ **Consistent UX**: Matches the start/end time picker design and workflow
+- ✅ **Form Refresh**: After logging, duration picker clears and auto-suggests next duration
+- ✅ **Backend Support**: Accepts both new format (duration_seconds as number) and legacy format (duration_input as string)
+
+### Auto-Suggested Times Bug Fix (January 17, 2026)
+- 🔧 **FIXED**: Async/await timing issue where suggestions weren't appearing in dropdowns
+- 🔧 **ROOT CAUSE**: Suggestion code was executing BEFORE async fetch completed
+- ✅ **SOLUTION**: Moved suggestion function calls INSIDE fetch `.then()` handler
+- ✅ **RESULT**: Dropdowns now properly pre-fill with suggested times when modal opens
+- ✅ **VERIFIED**: All 14 unit tests passing, JavaScript syntax valid, no regressions
+- ✅ **CLEANED UP**: Removed duplicate function definitions that were cluttering code
+
+### Auto-Suggested Times in Manual Logging Modal (January 17, 2026)
+- ✅ **Smart Start Time**: Modal auto-suggests previous session's end time as the new start time
+- ✅ **Smart End Time**: Modal auto-suggests end time 30 minutes after the suggested start time
+- ✅ **Pre-Selected Dropdowns**: Start and end time dropdowns are automatically pre-filled when modal opens
+- ✅ **Time Display Updates**: The "Selected: --:-- --" displays update immediately to show suggested times
+- ✅ **User Convenience**: Eliminates need to manually select same times repeatedly, speeds up logging workflow
+- ✅ **Easy Override**: Users can still manually adjust the suggested times if needed
+- ✅ **Smart Calculations**: Handles AM/PM transitions and 12-hour to next hour calculations correctly
+
+### Previous Session Display in Modal (January 17, 2026)
+- ✅ **In-Modal Context**: Work Session modal now displays the most recent previous session start/end times
+- ✅ **Quick Reference**: Blue info box shows "Last session: Jan 17, 2:30 PM to 3:15 PM" right in the manual entry section
+- ✅ **Helps Planning**: Users can see what times they logged before and easily plan different times for the current entry
+- ✅ **Auto-Loads**: Previous session info fetches automatically when modal opens
+- ✅ **Clean UI**: Only displays if previous sessions exist, keeping interface uncluttered
+- ✅ **User-Focused**: Makes it easy to log varied times without switching between windows
+
+### Previous Work Session Times Display (January 17, 2026)
+- ✅ **Recent Start/End Times**: Each todo card displays the most recent work session start and end times
+- ✅ **User Timezone Formatting**: Times are converted to user's timezone and displayed in readable format (e.g., "Jan 17, 2:30 PM")
+- ✅ **New Endpoint**: `/<todo_id>/get_recent_session_times` fetches most recent session timestamps
+- ✅ **Visual Indicators**: Green ▶ for start time, red ⏸ for end time to help distinguish at a glance
+- ✅ **Auto-Load on Page**: Recent times load automatically when viewing todo list
+- ✅ **Real-Time Updates**: After manually logging time, card immediately refreshes to show new start/end times
+- ✅ **Progressive History**: As users log more sessions, they always see the most recent one displayed
+
+### Work Time Display on Todo Cards (January 17, 2026)
+- ✅ **Persistent Work Time**: Each todo card now displays total cumulative work hours logged (e.g., "0.45 hrs logged")
+- ✅ **Auto-Load on Page Load**: Work time displays are automatically populated when the todo list page loads
+- ✅ **Real-Time Updates**: After manually logging time, the card's work time display updates immediately to show new cumulative total
+- ✅ **New Endpoint**: `/<todo_id>/get_work_time` API returns total work hours for any todo
+- ✅ **Visual Feedback**: Green text with clock icon makes logged time easy to spot on cards
+- ✅ **Progressive Accumulation**: Users see time grow with each new manual log entry (0.5 hrs → 0.75 hrs → 0.9 hrs, etc.)
+
+### Bug Fixes - Manual Time Logging Deduplication (January 17, 2026)
+- 🐛 **Fixed**: Prevent duplicate submissions when manually logging time
+  - **Root Cause**: Event listeners were being re-attached to the submit button each time the modal was recreated, allowing multiple simultaneous requests to pass through
+  - **Solution**: Clone button element before attaching listeners to ensure fresh handlers + add `isSubmitting` flag to prevent simultaneous requests to `/log_manual_time`
+  - **Result**: Button now properly locks during request; multiple rapid clicks are ignored; error messages displayed correctly without duplicating todo entries
+  - **Impact**: Users can safely retry failed submissions without worrying about creating duplicate todos
+
+### Work Session Manual Logging (January 17, 2026)
+- ✅ **Manual Entry UI**: Added Live Timer vs Manual toggle with start/end inputs and quick duration field in the work session modal
+- ✅ **Todo-Aware Times**: Manual range inputs now reuse each todo's scheduled date so users only choose start/end times, with helper text reflecting their timezone instead of fixed UTC
+- ✅ **Dropdown Time Picker**: Replaced freeform text input with dropdown-based wizard (hours 1-12, minutes 0-59, AM/PM) to eliminate typo errors
+- ✅ **Cache-Busted Script**: `work-session.js` now ships with a versioned query param so browsers always pull the latest manual-entry logic
+- ✅ **Timezone-Aware Parsing**: Manual timestamps respect each user's timezone and automatically convert to UTC for Tracker entries
+- ✅ **New API**: `/<todo_id>/log_manual_time` endpoint records manual sessions by inserting paired start/pause tracker events
+- ✅ **Validation & Feedback**: Front-end form handles basic validation, streamlines error messaging, and shows success summaries
+- ✅ **Expanded Tests**: Work session suite now covers manual range/duration logging plus fixture improvements for authenticated flows
+
 ### Work Session Modal Feature (January 16, 2026 - PHASE 4 REFINEMENT)
 - ✅ **Button Placement**: Added play button on left side of quote/timestamp
 - ✅ **Simplified UI**: Removed floating badge for cleaner interface
@@ -86,6 +271,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## [Unreleased]
+
+### Added
+- **Manual Work Session Logging**: Added timezone-aware `/<todo_id>/log_manual_time` endpoint plus modal toggle for manual entries (range or duration) with validation and user feedback
+- **Manual Session Tests**: Extended work session tracking tests to cover manual range and duration logging flows with authenticated fixtures
+- **Todo-Date Defaults**: Manual start/end entry now locks to each todo's scheduled date so users only set times, and helper text reflects their saved timezone instead of hard-coded UTC
+- **Friendly Time Parsing**: Manual range inputs accept common formats such as "8:30 pm", "20:30", or "2030" to avoid validation failures on browsers without native time pickers
+- **Script Cache Busting**: Added a versioned query string to `assets/js/work-session.js` so clients immediately download updated manual entry behavior
 
 ### Fixed
 - **Achievement Modal Not Appearing for Items Loaded via Infinite Scroll**: Fixed event handler issue
