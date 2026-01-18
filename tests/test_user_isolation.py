@@ -754,7 +754,7 @@ class TestTodoEncryption:
         
         with app_with_encryption.app_context():
             # Create a test user
-            user = User(username='test_backward', email='backward@test.com')
+            user = User(email='backward@test.com', fullname='test_backward')
             user.set_password('password')
             db.session.add(user)
             db.session.commit()

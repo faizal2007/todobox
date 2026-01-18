@@ -641,9 +641,9 @@ class TestOpenRedirectProtection:
         
         # Create active terms
         terms = TermsAndDisclaimer(
-            title='Test Terms',
-            content='Test content',
-            version=1,
+            terms_of_use='Test terms of use',
+            disclaimer='Test disclaimer',
+            version='1.0',
             is_active=True
         )
         db_session.session.add(terms)
@@ -680,9 +680,9 @@ class TestOpenRedirectProtection:
         
         # Create active terms
         terms = TermsAndDisclaimer(
-            title='Test Terms',
-            content='Test content',
-            version=1,
+            terms_of_use='Test terms of use',
+            disclaimer='Test disclaimer',
+            version='1.0',
             is_active=True
         )
         db_session.session.add(terms)
@@ -695,7 +695,7 @@ class TestOpenRedirectProtection:
             mock_callback.return_value = (user, False)  # (user, is_new)
             
             # Test with malicious next parameter
-            response = client.get('/oauth-callback?code=testcode&next=https://evil.com/phishing', 
+            response = client.get('/auth/callback/google?code=testcode&next=https://evil.com/phishing', 
                                  follow_redirects=False)
             
             # Should redirect to accept terms

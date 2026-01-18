@@ -24,6 +24,15 @@
         <link href='{{ url_for('static', filename='assets/css/app-modern.min.css') }}' rel="stylesheet" type="text/css" id="light-style" />
         <link href='{{ url_for('static', filename='assets/css/app-modern-dark.min.css') }}' rel="stylesheet" type="text/css" id="dark-style" />
         <link href='{{ url_for('static', filename='css/style.css') }}' rel="stylesheet" type="text/css" />
+        <style>
+            /* Ensure midnight crossing modal appears on top of work session modal */
+            #midnightCrossingModal {
+                z-index: 1060 !important;
+            }
+            #midnightCrossingModal .modal-backdrop {
+                z-index: 1059 !important;
+            }
+        </style>
     		<script type="text/javascript">
     			// Initialize PWA and reminder system
     			if (!window.SCRIPT_ROOT) {
@@ -770,6 +779,6 @@
 			}
 		</style>
 		<!-- Work Session Manager -->
-		<script src='{{ url_for('static', filename='assets/js/work-session.js') }}'></script>
+		<script src='{{ url_for('static', filename='assets/js/work-session.js') }}?v=20260119b'></script>
     </body>
 </html>

@@ -29,6 +29,12 @@ class TestTermsAndDisclaimerModel:
     def test_get_active_terms(self, app, db_session):
         """Test getting active terms"""
         with app.app_context():
+            # Deactivate any existing active terms
+            existing_active = TermsAndDisclaimer.query.filter_by(is_active=True).all()
+            for term in existing_active:
+                term.is_active = False
+            db_session.session.commit()
+            
             # Create inactive terms
             inactive_terms = TermsAndDisclaimer(
                 terms_of_use="<p>Old Terms</p>",
@@ -43,7 +49,7 @@ class TestTermsAndDisclaimerModel:
             active_terms = TermsAndDisclaimer(
                 terms_of_use="<p>Current Terms</p>",
                 disclaimer="<p>Current Disclaimer</p>",
-                version="1.0",
+                version="1.1",
                 is_active=True
             )
             db_session.session.add(active_terms)
@@ -51,7 +57,7 @@ class TestTermsAndDisclaimerModel:
             
             result = TermsAndDisclaimer.get_active()
             assert result.id == active_terms.id
-            assert result.version == "1.0"
+            assert result.version == "1.1"
     
     def test_get_or_create_default(self, app, db_session):
         """Test getting or creating default terms"""
@@ -207,21 +213,28 @@ class TestTermsVersioning:
                 version="1.0",
                 terms_of_use="<p>v1</p>",
                 disclaimer="<p>v1 disclaimer</p>",
-                is_active=False
+                is_active=False  # Old version is inactive
             )
             v2 = TermsAndDisclaimer(
                 version="2.0",
                 terms_of_use="<p>v2</p>",
                 disclaimer="<p>v2 disclaimer</p>",
-                is_active=True
+                is_active=True  # New version is active
             )
             db_session.session.add(v1)
             db_session.session.add(v2)
             db_session.session.commit()
             
+            # Deactivate the seeded term from conftest if it exists
+            seeded_terms = TermsAndDisclaimer.query.filter_by(version="1.0").filter(TermsAndDisclaimer.id != v1.id).all()
+            for term in seeded_terms:
+                term.is_active = False
+            db_session.session.commit()
+            
             all_versions = TermsAndDisclaimer.query.all()
             assert len(all_versions) >= 2
-            assert len([v for v in all_versions if v.is_active]) == 1
+            active_count = len([v for v in all_versions if v.is_active])
+            assert active_count == 1, f"Expected 1 active version, got {active_count}. Active versions: {[v.version for v in all_versions if v.is_active]}"
     
     def test_version_timestamps(self, app, db_session):
         """Test that created_at and updated_at are set"""
