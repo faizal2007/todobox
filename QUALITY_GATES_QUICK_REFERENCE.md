@@ -20,13 +20,34 @@ git push origin master
 ✅ Blocks if requirements are invalid  
 ❌ Can't push broken code
 
+⚠️ **Important**: Pre-push hook **only works for local terminal `git push`**. For GitHub web push, use Branch Protection Rules (see below).
+
 **That's it!** The system does the rest.
+
+---
+
+## 🔐 GitHub Web Push Protection
+
+**Problem**: Pre-push hooks don't run when pushing via GitHub web interface.
+
+**Solution**: Enable **GitHub Branch Protection Rules** to protect master from all push methods:
+
+1. Go to: GitHub → Repository Settings → Branches
+2. Click "Add rule" 
+3. Enter: `master`
+4. Enable:
+   - ✓ Require a pull request before merging
+   - ✓ Require approvals (suggest 1+)
+   - ✓ Require status checks to pass before merging
+   - ✓ Dismiss stale pull request approvals
+
+**Result**: Master is protected from direct pushes (web UI, local, all methods). Code requires review & tests.
 
 ---
 
 ## What Happens Automatically
 
-### At Commit Time
+### At Commit Time (Local - All Users)
 - ✓ Python syntax validation
 - ✓ Import resolution check
 - ✓ requirements.txt validation
@@ -34,13 +55,19 @@ git push origin master
 - ✓ API route tests (2 critical tests)
 - ✓ Critical file dependency checks
 
-### At Push to Master
+### At Push to Master (Local Terminal Only)
 - ✓ Full test suite (all 41 tests)
 - ✓ Requirements conflict detection
 - ✓ Import validation
 - ✓ Critical API routes test
 - ✓ Database integrity check
 - ✓ Coverage metrics
+
+### At GitHub Web Push (If Branch Protection Enabled)
+- ✓ Requires pull request
+- ✓ Requires code review approval
+- ✓ Can integrate with CI/CD tests
+- ✓ Blocks direct master push from web UI
 
 ---
 
@@ -60,7 +87,7 @@ git commit -m "message"
 
 ---
 
-## If Pre-Push Blocks You
+## If Pre-Push Blocks You (Local Terminal)
 
 ```bash
 # 1. You were about to push to MASTER
@@ -78,6 +105,18 @@ git commit -m "FIX: whatever"
 # Try push again
 git push origin master
 ```
+
+---
+
+## If GitHub Web Push is Blocked
+
+**This means Branch Protection Rules are working!**
+
+To push your changes:
+1. Create a **pull request** (PR) instead of direct push
+2. Ask a team member to review your PR
+3. Merge via GitHub after approval
+4. Branch protection ensures code quality even via web UI
 
 ---
 
