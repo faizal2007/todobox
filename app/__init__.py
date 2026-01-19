@@ -4,8 +4,15 @@ from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager
 from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_compress import Compress
-from datetime import timedelta 
+from datetime import timedelta
+
+# Try to import Flask-Compress, but fall back gracefully if not available
+try:
+    from flask_compress import Compress
+    COMPRESS_AVAILABLE = True
+except (ImportError, ModuleNotFoundError):
+    Compress = None
+    COMPRESS_AVAILABLE = False 
 from app.utils import momentjs
 from lib.database import connect_db
 import os
@@ -30,7 +37,9 @@ app.wsgi_app = ProxyFix(  # type: ignore[assignment]
 csrf = CSRFProtect(app)
 
 # Initialize compression for all responses (production optimization)
-Compress(app)
+# Only initialize if Flask-Compress is available
+if COMPRESS_AVAILABLE and Compress is not None:
+    Compress(app)
 
 # Initialize caching layer (Redis with SimpleCache fallback)
 from app.cache import init_cache
