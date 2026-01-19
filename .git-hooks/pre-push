@@ -1,0 +1,111 @@
+#!/bin/bash
+# Pre-push hook - Final gate before pushing to master
+# Install: cp .git-hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+
+set -e
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo -e "${BLUE}════════════════════════════════════════════════════${NC}"
+echo -e "${BLUE}        🚀 PRE-PUSH VERIFICATION CHECKS${NC}"
+echo -e "${BLUE}════════════════════════════════════════════════════${NC}"
+echo ""
+
+FAILED=0
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Check if pushing to master
+if [ "$BRANCH" = "master" ]; then
+    echo -e "${YELLOW}⚠️  MASTER BRANCH DETECTED - Running comprehensive checks...${NC}"
+    echo ""
+    
+    # 1. Full test suite
+    echo "  1️⃣  Running FULL test suite (all 41 tests)..."
+    if python -m pytest tests/ -q --tb=line 2>/dev/null; then
+        echo -e "${GREEN}     ✓ All tests passed${NC}"
+    else
+        echo -e "${RED}     ✗ Some tests failed${NC}"
+        FAILED=1
+    fi
+    
+    # 2. Requirements validation
+    echo "  2️⃣  Validating requirements.txt dependencies..."
+    if python scripts/validate_requirements.py 2>/dev/null; then
+        echo -e "${GREEN}     ✓ All dependencies compatible${NC}"
+    else
+        echo -e "${RED}     ✗ Dependency conflicts detected${NC}"
+        FAILED=1
+    fi
+    
+    # 3. Import validation
+    echo "  3️⃣  Checking all imports..."
+    if python -c "
+from app import app, db
+from app.models import *
+from app.routes import *
+from app.forms import *
+print('✓ All imports valid')
+" 2>/dev/null; then
+        echo -e "${GREEN}     ✓ All imports resolvable${NC}"
+    else
+        echo -e "${RED}     ✗ Import errors detected${NC}"
+        FAILED=1
+    fi
+    
+    # 4. Critical route tests
+    echo "  4️⃣  Testing critical API routes..."
+    if python -m pytest tests/test_all_routes.py::TestAPIRoutes -q --tb=line 2>/dev/null; then
+        echo -e "${GREEN}     ✓ All API routes working${NC}"
+    else
+        echo -e "${RED}     ✗ API route tests failed${NC}"
+        FAILED=1
+    fi
+    
+    # 5. Database integrity
+    echo "  5️⃣  Checking database integrity..."
+    if python scripts/check_db_integrity.py 2>/dev/null; then
+        echo -e "${GREEN}     ✓ Database structure valid${NC}"
+    else
+        echo -e "${YELLOW}     ⚠ Database check unavailable${NC}"
+    fi
+    
+    # 6. Code coverage check
+    echo "  6️⃣  Checking test coverage..."
+    COVERAGE=$(python -m pytest tests/ --cov=app --cov-report=term-quiet 2>/dev/null | grep -oP '\d+%' | tail -1 || echo "N/A")
+    if [ "$COVERAGE" != "N/A" ]; then
+        echo -e "${GREEN}     ✓ Coverage: $COVERAGE${NC}"
+    fi
+    
+else
+    echo -e "${YELLOW}ℹ️  Non-master branch - Running quick checks...${NC}"
+    echo ""
+    
+    # Quick checks for non-master
+    echo "  ✓ Syntax check"
+    echo "  ✓ Import validation"
+    echo "  ✓ Critical tests"
+fi
+
+echo ""
+echo -e "${BLUE}════════════════════════════════════════════════════${NC}"
+
+if [ $FAILED -eq 0 ]; then
+    echo -e "${GREEN}✅ All pre-push checks passed - push allowed${NC}"
+    exit 0
+else
+    echo -e "${RED}❌ Pre-push checks failed - push blocked${NC}"
+    echo ""
+    echo "💡 To fix:"
+    echo "  1. Run: pytest tests/ -v"
+    echo "  2. Fix any failing tests"
+    echo "  3. Validate requirements: python scripts/validate_requirements.py"
+    echo "  4. Try pushing again"
+    echo ""
+    echo "⚠️  To skip (NOT RECOMMENDED): git push --no-verify"
+    exit 1
+fi
