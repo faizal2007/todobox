@@ -1085,6 +1085,75 @@ var WorkSessionManager = (function() {
             }
         }
         
+        /**
+         * Suggest reasonable default times when no previous session exists
+         * Suggests: start time = now (rounded to nearest 15 min), end time = start + 1 hour
+         */
+        function suggestDefaultTimes() {
+            console.log('[WorkSession] No previous sessions - suggesting default times based on current time');
+            
+            const now = new Date();
+            let hour = now.getHours();
+            let minute = now.getMinutes();
+            
+            // Round to nearest 15 minutes
+            const remainder = minute % 15;
+            if (remainder < 8) {
+                minute = minute - remainder;
+            } else {
+                minute = minute - remainder + 15;
+            }
+            
+            if (minute >= 60) {
+                minute = 0;
+                hour += 1;
+            }
+            
+            // Convert to 12-hour format
+            const meridiem = hour >= 12 ? 'pm' : 'am';
+            const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+            const minuteStr = String(minute).padStart(2, '0');
+            
+            console.log('[WorkSession] Current time rounded to nearest 15 min:', hour12 + ':' + minuteStr, meridiem);
+            
+            // Set START time to now
+            if (startHourSelect) {
+                startHourSelect.value = String(hour12);
+            }
+            if (startMinuteSelect) {
+                startMinuteSelect.value = minuteStr;
+            }
+            if (startMeridiemSelect) {
+                startMeridiemSelect.value = meridiem;
+            }
+            updateTimeDisplay(startHourSelect, startMinuteSelect, startMeridiemSelect, startDisplay);
+            
+            // Set END time to start + 1 hour (common work session duration)
+            let endHour = hour12 + 1;
+            let endMeridiem = meridiem;
+            if (endHour > 12) {
+                endHour = 1;
+                endMeridiem = meridiem === 'am' ? 'pm' : 'am';
+            } else if (endHour === 12 && meridiem === 'am') {
+                endMeridiem = 'pm'; // 11 AM + 1h = 12 PM
+            } else if (endHour === 12 && meridiem === 'pm') {
+                endMeridiem = 'am'; // 11 PM + 1h = 12 AM (next day)
+            }
+            
+            if (endHourSelect) {
+                endHourSelect.value = String(endHour);
+            }
+            if (endMinuteSelect) {
+                endMinuteSelect.value = minuteStr;
+            }
+            if (endMeridiemSelect) {
+                endMeridiemSelect.value = endMeridiem;
+            }
+            updateTimeDisplay(endHourSelect, endMinuteSelect, endMeridiemSelect, endDisplay);
+            
+            console.log('[WorkSession] Suggested times: START', hour12 + ':' + minuteStr, meridiem, '→ END', endHour + ':' + minuteStr, endMeridiem);
+        }
+
         if (previousSessionInfo && previousSessionDisplay) {
             fetch('/' + todoId + '/get_recent_session_times', {
                 method: 'GET',
@@ -1114,11 +1183,21 @@ var WorkSessionManager = (function() {
                         console.log('[WorkSession] Suggesting duration from:', data.start_time, 'to', data.end_time);
                         suggestDurationFromPrevious(data.start_time, data.end_time);
                     }
+                } else {
+                    // NO previous sessions - suggest reasonable default times
+                    console.log('[WorkSession] No previous sessions found - using default suggestions');
+                    previousSessionInfo.style.display = 'none';
+                    suggestDefaultTimes();
                 }
             })
             .catch(error => {
                 console.error('[WorkSession] Error loading previous session times:', error);
+                // Even if fetch fails, suggest default times
+                suggestDefaultTimes();
             });
+        } else {
+            // If previousSessionInfo doesn't exist, still suggest default times
+            suggestDefaultTimes();
         }
 
         // Prevent multiple event listeners on same button by removing any existing ones first
