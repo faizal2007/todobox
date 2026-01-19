@@ -979,7 +979,7 @@ def login():
     
     try:
         if form.validate_on_submit():
-            user = User.query.filter_by(email=form.email.data).first()
+            user = User.query.filter_by(email=form.email.data.lower()).first()
             if user is None or not user.check_password(form.password.data):
                 flash('Invalid email or password')
                 return redirect(url_for('login'))
@@ -1223,21 +1223,9 @@ def email_exists():
                 app.logger.error(f'Error resending verification email: {str(e)}')
                 flash('Failed to resend verification email. Please try again.', 'error')
         
-        elif action == 'delete':
-            # Request account deletion
-            try:
-                from datetime import datetime, timedelta
-                user.pending_deletion = True
-                user.deletion_requested_at = datetime.utcnow()
-                db.session.commit()
-                
-                flash('Your account has been marked for deletion. It will be permanently removed in 1 hour. You can cancel this by verifying your email.', 'warning')
-                app.logger.info(f'Account deletion requested for: {email}')
-                return redirect(url_for('login'))
-            
-            except Exception as e:
-                app.logger.error(f'Error requesting account deletion: {str(e)}')
-                flash('Failed to process deletion request. Please try again.', 'error')
+        # REMOVED: Delete account option removed from email-exists page
+        # Users should use the proper account deletion flow in their settings
+        # which requires email code verification for safety
     
     return render_template('email_exists.html', email=email, is_verified=user.email_verified)
 

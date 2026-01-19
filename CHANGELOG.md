@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 📋 Recent Updates Summary (January 2026)
 
+### Account Deletion Safety Improvements (January 19, 2026)
+- ✅ **ROOT CAUSE FOUND**: Account `faizal@geekdo.me` was deleted by aggressive cleanup process
+  - **Issue**: Phase 7 commit `f00b007` added `cleanup_pending_deletions()` that runs on EVERY request
+  - **Problem**: Deletion window was only 1 hour - too aggressive for accidental marks
+  - **Migration Bug**: Migration added `nullable=True` instead of `nullable=False, server_default='0'` 
+  - **Impact**: Any account marked for deletion could be wiped out minutes later with no recovery option
+- ✅ **FIXED: Extended deletion window from 1 hour to 24 hours**
+  - Users now have a full day to recover from accidentally marking their account for deletion
+  - Proper time window allows for email notifications and user action
+- ✅ **REMOVED: Dangerous delete button from `/email-exists` page**
+  - Delete option that required no email verification removed
+  - Users must use proper account deletion flow in settings (which requires email code)
+- ✅ **FIXED: Migration properly sets default values**
+  - Updated migration to use `nullable=False, server_default='0'` for safety
+  - Existing rows will have proper FALSE default instead of NULL
+- 📋 **Changes Made**:
+  - app/__init__.py: Changed cleanup window from 1 hour → 24 hours
+  - app/routes.py: Removed delete action from `/email-exists` endpoint
+  - migrations/versions/0e7e1c5570bc_...: Fixed column defaults in migration
+
+### Login & Account Recovery Fixes (January 19, 2026)
+- ✅ **FIXED: Login Fails with Different Email Case**: Login now works regardless of email case (MyEmail@example.com = myemail@example.com)
+  - Fixed app/routes.py line 982: Added `.lower()` to email query in login endpoint
+  - Fixed app/oauth.py: Added `.lower()` to Google OAuth email normalization
+  - Fixed app/forms.py: Updated all form validators to use `.lower()` for consistent email matching
+  - Root cause: Emails are stored in lowercase but login queries weren't normalizing input
+
 ### Work Session Resume Timer Fix (January 19, 2026)
 - ✅ **FIXED: Timer Shows Wrong Elapsed Time After Resume**: When pausing a work session and then resuming, the timer now correctly displays the accumulated elapsed time, not just the time since resume
 - ✅ **Enhanced GET `/get_active_session` Endpoint**: Rewrote elapsed time calculation logic to properly handle START→PAUSE→RESUME cycles
@@ -37,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Frontend now uses server-provided `elapsed_seconds` instead of client-side calculation only for active sessions
   - Server calculates elapsed time by querying Tracker table for START/PAUSE event timestamps
   - ✅ **Verified**: Timer correctly persists 30-minute elapsed time across page refresh
-- ✅ **Improved Async Flow**: 
+- ✅ **Improved Async Flow**:
   - Modal setup waits for async fetch completion before displaying
   - Timer display uses server-calculated elapsed time that persists across page refreshes
 - ✅ **Robust Fallback**: If fetch fails, timer falls back to browser memory (previous paused value)

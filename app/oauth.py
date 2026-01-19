@@ -101,6 +101,10 @@ def process_google_callback(code):
         name = id_info.get("name", "")
         google_id = id_info.get("sub")
         
+        # Normalize email to lowercase for consistency
+        if email:
+            email = email.lower()
+        
         # SECURITY: Check if this account was recently deleted
         from app.models import DeletedAccount
         def redact_email(email):
