@@ -18,6 +18,7 @@ var WorkSessionManager = (function() {
     let sessionStartTime = null;
     let pausedTime = 0;
     let currentSessionTargetDate = null;
+    let sessionWasStarted = false;  // Track if /start endpoint was called successfully
 
     /**
      * Initialize the work session manager
@@ -198,6 +199,7 @@ var WorkSessionManager = (function() {
         // Only reset elapsed time if this is a NEW session (not same todo resuming)
         if (currentSessionTodoId !== todoId) {
             elapsedSeconds = 0;
+            sessionWasStarted = false;  // Reset flag for new session
         }
         
         currentSessionTodoId = todoId;
@@ -505,6 +507,7 @@ var WorkSessionManager = (function() {
         })
         .then(data => {
             console.log('Session started successfully:', data);
+            sessionWasStarted = true;  // Mark that /start was successful
         })
         .catch(error => {
             // CRITICAL FIX: Don't call pauseSession() on error!
@@ -515,6 +518,7 @@ var WorkSessionManager = (function() {
             isSessionRunning = false;
             isPaused = true;
             stopTimer();
+            sessionWasStarted = false;  // Mark that /start failed
             
             // Try to check actual session state
             fetch('/' + currentSessionTodoId + '/get_active_session', {
@@ -708,6 +712,13 @@ var WorkSessionManager = (function() {
      * Handle modal close/dismiss
      */
     function handleModalClose() {
+        // CRITICAL FIX: Only auto-pause if we actually called /start successfully
+        // If modal closed before /start completed, don't send orphaned /pause
+        if (!sessionWasStarted && !isPaused) {
+            console.log('[WorkSession] Modal closed without session being started - skipping pause');
+            return;
+        }
+        
         // Warn user if closing with active timer
         if (isSessionRunning) {
             isSessionRunning = false;
