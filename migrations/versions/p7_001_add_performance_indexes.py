@@ -22,7 +22,7 @@ import sqlalchemy as sa
 
 # Revision identifiers
 revision = 'p7_001_performance_indexes'
-down_revision = None
+down_revision = 'j9876543210'
 branch_labels = None
 depends_on = None
 
