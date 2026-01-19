@@ -200,8 +200,8 @@
         
         // Simple approach: replace task list syntax with HTML inline
         // Handle: - [] text and - [x] text
-        markdown = markdown.replace(/^- \[\s*\]\s*/gm, '<input type="checkbox" disabled> ');
-        markdown = markdown.replace(/^- \[[xX]\]\s*/gm, '<input type="checkbox" checked disabled> ');
+        markdown = markdown.replace(/^- \[\s*\] /gm, '<input type="checkbox" disabled> ');
+        markdown = markdown.replace(/^- \[[xX]\] /gm, '<input type="checkbox" checked disabled> ');
         
         return markdown;
     }
@@ -211,7 +211,7 @@
         if (!html) return html;
         
         // Replace <li>[] pattern in HTML output
-        html = html.replace(/<li>\[\s*\]/g, '<li><input type="checkbox" disabled>');
+        html = html.replace(/<li>\[\]/g, '<li><input type="checkbox" disabled>');
         html = html.replace(/<li>\[[xX]\]/g, '<li><input type="checkbox" checked disabled>');
         
         return html;
@@ -300,7 +300,7 @@
                             ${item.details ? `<div class="achievement-text">${escapeHtml(item.details)}</div>` : ''}
                             <p class="achievement-date mb-0">
                                 <i class="mdi mdi-calendar-check"></i>
-                                Completed ${item.completed_from_now}
+                                Completed ${escapeHtml(item.completed_from_now)}
                             </p>
                         </div>
                     </div>
@@ -394,13 +394,13 @@
         let html = '<ul style="list-style: none; padding-left: 0;">';
         
         lines.forEach(line => {
-            // Match checkbox pattern: dash/asterisk/plus + [content] + text
-            const match = line.match(/^(\s*)([-*+])\s*\[([^\]]*)\]\s*(.*)/);
+            // Match checkbox pattern: dash/asterisk/plus + [content] + text (simplified regex for security)
+            const match = line.match(/^(\s*)([-*+]) ?\[([^\]]*)\] ?(.*)/);
             
             if (match) {
                 const indent = match[1];
                 const bracketContent = match[3];
-                const isChecked = /x/i.test(bracketContent);
+                const isChecked = bracketContent.toLowerCase().includes('x');
                 const textContent = match[4].trim();
                 
                 const indentLevel = indent.length / 2;
