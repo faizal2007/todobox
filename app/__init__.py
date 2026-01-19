@@ -4,6 +4,7 @@ from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager
 from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_compress import Compress
 from datetime import timedelta 
 from app.utils import momentjs
 from lib.database import connect_db
@@ -27,6 +28,13 @@ app.wsgi_app = ProxyFix(  # type: ignore[assignment]
 )
 
 csrf = CSRFProtect(app)
+
+# Initialize compression for all responses (production optimization)
+Compress(app)
+
+# Initialize caching layer (Redis with SimpleCache fallback)
+from app.cache import init_cache
+cache = init_cache(app)
 
 if app.config['DATABASE_DEFAULT'] == 'postgres':
     connect_db('postgres', app)
@@ -157,16 +165,21 @@ def service_worker():
 _initialized = False
 
 def cleanup_pending_deletions():
-    """Delete accounts marked for deletion if 1 hour has passed"""
+    """Delete accounts marked for deletion if 24 hours has passed
+    
+    IMPORTANT: Changed from 1 hour to 24 hours to prevent accidental deletions
+    This gives users time to recover from accidentally marking their account for deletion
+    """
     try:
         from datetime import datetime, timedelta
         from app import models
         
-        # Find accounts marked for deletion that are older than 1 hour
-        one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+        # Find accounts marked for deletion that are older than 24 HOURS (was 1 hour)
+        # This gives users a full day to recover from accidental deletion requests
+        twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
         pending_deletions = models.User.query.filter(
             models.User.pending_deletion == True,
-            models.User.deletion_requested_at <= one_hour_ago
+            models.User.deletion_requested_at <= twenty_four_hours_ago
         ).all()
         
         for user in pending_deletions:
@@ -176,7 +189,7 @@ def cleanup_pending_deletions():
                 
                 # Delete the user
                 db.session.delete(user)
-                logging.info(f'Permanently deleted unverified account: {user.email}')
+                logging.info(f'Permanently deleted account after 24-hour pending period: {user.email}')
             except Exception as e:
                 logging.error(f'Error deleting user {user.email}: {str(e)}')
         

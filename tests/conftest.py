@@ -55,6 +55,13 @@ def app():
             )
             db.session.add(terms)
             db.session.commit()
+        else:
+            # Ensure only one active terms record
+            active_terms = TermsAndDisclaimer.query.filter_by(is_active=True).all()
+            if len(active_terms) > 1:
+                for term in active_terms[1:]:
+                    term.is_active = False
+                db.session.commit()
         
         yield app
         

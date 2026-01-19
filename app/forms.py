@@ -25,7 +25,7 @@ class SetupAccountForm(FlaskForm):
     
     def validate_email(self, email):
         try:
-            user = User.query.filter_by(email=email.data).first()
+            user = User.query.filter_by(email=email.data.lower()).first()
             if user is not None:
                 raise ValidationError('Email already in use')
         except Exception:
@@ -76,7 +76,7 @@ class UpdateAccount(FlaskForm):
 
     def validate_email(self, email):
         # Allow current email, but prevent duplicates
-        user = User.query.filter_by(email=email.data).first()
+        user = User.query.filter_by(email=email.data.lower()).first()
         if user is not None and user.id != current_user.id:
             raise ValidationError('Email already in use')
 
@@ -92,7 +92,7 @@ class ShareInvitationForm(FlaskForm):
             raise ValidationError('You cannot invite yourself')
         
         # Check if email belongs to an existing user
-        user = User.query.filter_by(email=email.data).first()
+        user = User.query.filter_by(email=email.data.lower()).first()
         if user:
             # If user exists, they must be a Gmail/OAuth user (not a direct login user)
             # Direct login users cannot be invited through sharing

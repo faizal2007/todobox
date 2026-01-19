@@ -67,7 +67,7 @@ def create_cli(app):
         
         # Create user
         try:
-            user = User(username=username, email=email)
+            user = User(email=email, fullname=username)
             user.set_password(password)
             db.session.add(user)
             db.session.commit()
