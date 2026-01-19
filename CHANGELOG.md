@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 📋 Recent Updates Summary (January 2026)
 
+### Critical Bug Fix - Broken Todo Update Endpoint (January 19, 2026)
+- ✅ **FIXED: Todo Editing Not Saving Changes**
+  - **Issue**: Users reported that editing todos (especially changing target dates) wouldn't save. Changes appeared to be accepted but weren't persisted.
+  - **Root Cause**: The `update_todo()` function in [app/routes.py](app/routes.py#L598) was incomplete - the function body ended prematurely without:
+    1. Handling status updates
+    2. Calling `db.session.commit()` to persist changes
+    3. Returning a response to the client
+  - **Impact**: ALL todo updates via API were broken - users couldn't edit todos
+  - **Solution**: Restored complete implementation of update_todo() function with:
+    - Status field handling with Tracker logging
+    - Database persistence (db.session.commit())
+    - Proper JSON response with updated todo details
+  - **Status**: ✅ Fixed and tested
+  - **Test Coverage**: `tests/test_all_routes.py::TestAPIRoutes::test_update_todo_api` ✓ PASSING
+
 ### Achievements Time Display - Precision Fix (January 19, 2026)
 - ✅ **FIXED: Time Taken Showing "0s" for Durations Under 1 Hour**
   - **Issue**: When completing a todo in 2 minutes, Time Taken showed "0s" instead of "2m"
