@@ -38,10 +38,10 @@ git push origin master
 4. Enable:
    - ✓ Require a pull request before merging
    - ✓ Require approvals (suggest 1+)
-   - ✓ Require status checks to pass before merging
    - ✓ Dismiss stale pull request approvals
+   - ⊙ Require status checks to pass: **SKIP THIS** (requires GitHub Actions)
 
-**Result**: Master is protected from direct pushes (web UI, local, all methods). Code requires review & tests.
+**Result**: Master is protected from direct pushes (web UI + local). Code requires review.
 
 ---
 
@@ -66,8 +66,8 @@ git push origin master
 ### At GitHub Web Push (If Branch Protection Enabled)
 - ✓ Requires pull request
 - ✓ Requires code review approval
-- ✓ Can integrate with CI/CD tests
 - ✓ Blocks direct master push from web UI
+- ℹ️ Status checks optional (requires GitHub Actions setup)
 
 ---
 
