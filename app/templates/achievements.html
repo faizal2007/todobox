@@ -626,8 +626,8 @@
         
         // Show time to complete if available
         if (todoData.time_to_complete !== null && todoData.time_to_complete !== undefined) {
-            // time_to_complete is in hours (as a float from the API)
-            const totalSeconds = todoData.time_to_complete * 3600;
+            // time_to_complete is now in seconds (as a number from the API)
+            const totalSeconds = todoData.time_to_complete;
             const seconds = Math.round(totalSeconds % 60);
             const minutes = Math.floor((totalSeconds / 60) % 60);
             const hours = Math.floor((totalSeconds / 3600) % 24);

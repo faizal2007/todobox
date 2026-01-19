@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 📋 Recent Updates Summary (January 2026)
 
+### Achievements Time Display - Precision Fix (January 19, 2026)
+- ✅ **FIXED: Time Taken Showing "0s" for Durations Under 1 Hour**
+  - **Issue**: When completing a todo in 2 minutes, Time Taken showed "0s" instead of "2m"
+  - **Root Cause**: Backend was rounding seconds to hours, losing precision for short durations (120s → 0.0h)
+  - **Solution**: Changed API to return time in seconds (full precision) instead of rounded hours
+  - **Changes**:
+    - [app/routes.py](app/routes.py#L2008): `/api/achievements/batch` returns time in seconds
+    - [app/routes.py](app/routes.py#L2060): `/api/todo/details` returns time in seconds  
+    - [achievements.html](app/templates/achievements.html#L630): JavaScript now correctly converts seconds to s/m/h/d display
+  - **Display Examples**:
+    - 10 seconds → "10s"
+    - 120 seconds → "2m"
+    - 7200 seconds → "2h"
+    - Uses the most appropriate unit automatically
+  - **Status**: ✅ Complete
+
 ### Achievements Time Calculation Fix (January 19, 2026)
 - ✅ **FIXED: Time Taken Calculation Uses Wrong Timestamp Basis**
   - **Issue**: Achievements page was calculating Time Taken from todo creation (Status 5) instead of work session start (Status 10)

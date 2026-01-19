@@ -2005,9 +2005,9 @@ def achievements_batch():
             
             time_to_complete = None
             if started_tracker:
-                # Calculate total work time from all sessions
+                # Calculate total work time from all sessions (return in seconds to preserve precision)
                 time_diff = tracker.timestamp - started_tracker.timestamp
-                time_to_complete = round(time_diff.total_seconds() / 3600, 1)
+                time_to_complete = time_diff.total_seconds()  # Return in seconds, not rounded hours
             
             items.append({
                 'id': todo.id,
@@ -2056,9 +2056,9 @@ def get_todo_details(todo_id):
         
         time_to_complete = None
         if started_tracker and completion_tracker:
-            # Calculate total work time from when work started to when completed
+            # Calculate total work time from when work started to when completed (return in seconds to preserve precision)
             time_diff = completion_tracker.timestamp - started_tracker.timestamp
-            time_to_complete = round(time_diff.total_seconds() / 3600, 1)
+            time_to_complete = time_diff.total_seconds()  # Return in seconds, not rounded hours
         
         # Detect if content is in simple mode (has checkbox patterns)
         details = todo.details or ''
