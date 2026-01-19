@@ -64,10 +64,12 @@ git push origin master
 - ✓ Coverage metrics
 
 ### At GitHub Web Push (If Branch Protection Enabled)
-- ✓ Requires pull request
+- ✓ Requires pull request (your code is blocked from direct push ✅)
 - ✓ Requires code review approval
 - ✓ Blocks direct master push from web UI
 - ℹ️ Status checks optional (requires GitHub Actions setup)
+
+**You just experienced this!** GitHub rejected your direct master push because of the branch protection rule. This is working as intended.
 
 ---
 
