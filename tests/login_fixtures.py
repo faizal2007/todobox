@@ -19,7 +19,18 @@ def test_user(app):
                 user.terms_accepted_version = active_terms.version
             db.session.add(user)
             db.session.commit()
-        return user
+        
+        # Return user ID instead of user object to avoid detached instance errors
+        user_id = user.id
+        user_email = user.email
+    
+    # Create a simple object to hold user info without database attachment
+    class TestUserInfo:
+        def __init__(self, id, email):
+            self.id = id
+            self.email = email
+    
+    return TestUserInfo(user_id, user_email)
 
 @pytest.fixture
 def login_user(app, client, test_user):

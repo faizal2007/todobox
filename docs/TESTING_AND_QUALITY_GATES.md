@@ -70,11 +70,9 @@ cp .git-hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
    - ✓ "Require a pull request before merging"
    - ✓ "Require approvals" (set to 1+)
    - ✓ "Dismiss stale pull request approvals when new commits are pushed"
+   - ✓ "Require status checks to pass before merging"
+   - ✓ "Require branches to be up to date before merging"
 
-   > Note: We intentionally **do not enable** "Require status checks to pass before merging" or
-   > "Require branches to be up to date before merging" by default. These options require a
-   > working GitHub Actions / CI setup. If you already have CI configured, you may enable them
-   > for stricter enforcement.
 **Benefits of Branch Protection:**
 - ✅ Prevents direct pushes to master (even from web UI)
 - ✅ Requires pull request review
