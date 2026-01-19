@@ -39,7 +39,7 @@ Markdown==3.10
 pymdown-extensions==10.16.1
 click==8.3.1
 cachetools==6.2.2
-cachelib==0.13.0
+cachelib==0.9.0  # Fixed: Flask-Caching 2.0.2 requires cachelib<0.10.0
 
 # API
 oauthlib==2.1.0
