@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 📋 Recent Updates Summary (January 2026)
 
+### Work Session Modal - Modal Close Without Start Fix (January 19, 2026)
+- ✅ **FIXED: Todo Duplication on Modal Close Without Starting**
+  - **Issue**: When user closed the work session modal without clicking Start, then refreshed, todo would duplicate
+  - **Root Cause**: `handleModalClose()` sent `/pause` request even without `/start` being called, creating orphaned pause records
+  - **Solution**: Added `sessionWasStarted` flag to track if `/start` endpoint succeeded before allowing `/pause`
+  - **Changes**:
+    - Added `sessionWasStarted` global variable to track session state
+    - `startSession()` sets flag when `/start` response succeeds
+    - `handleModalClose()` skips `/pause` if `sessionWasStarted` is false
+  - **Tests**: Added comprehensive test suite with 5 new tests, all passing
+  - **Result**: Orphaned pause records no longer created, todo duplication prevented ✓
+
 ### Account Deletion Safety Improvements (January 19, 2026)
 - ✅ **ROOT CAUSE FOUND**: Account `faizal@geekdo.me` was deleted by aggressive cleanup process
   - **Issue**: Phase 7 commit `f00b007` added `cleanup_pending_deletions()` that runs on EVERY request
