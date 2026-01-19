@@ -1548,7 +1548,19 @@ var WorkSessionManager = (function() {
                         const cancelBtn = document.getElementById('midnightCrossingCancel');
                         
                         if (midnightDisplay) {
-                            midnightDisplay.innerHTML = baseDateForEntry + ' ' + startTime + ' <br><strong>→</strong><br> ' + endDateForEntry + ' ' + endTime;
+                            // Build content safely without interpreting user-controlled values as HTML
+                            midnightDisplay.textContent = '';
+                            midnightDisplay.appendChild(
+                                document.createTextNode(baseDateForEntry + ' ' + startTime + ' ')
+                            );
+                            midnightDisplay.appendChild(document.createElement('br'));
+                            const arrowStrong = document.createElement('strong');
+                            arrowStrong.textContent = '→';
+                            midnightDisplay.appendChild(arrowStrong);
+                            midnightDisplay.appendChild(document.createElement('br'));
+                            midnightDisplay.appendChild(
+                                document.createTextNode(' ' + endDateForEntry + ' ' + endTime)
+                            );
                         }
                         
                         // Set up one-time click handlers
