@@ -31,7 +31,13 @@ cp .git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 
 ### Layer 2: Pre-Push Checks (BEFORE push to master)
 **File**: `.git-hooks/pre-push`  
-**Triggers**: When you run `git push origin master`
+**Triggers**: When you run `git push origin master` (LOCAL COMMAND ONLY)
+
+**⚠️ IMPORTANT**: This hook **only works for local `git push` commands**. It does NOT run when:
+- Pushing via GitHub web interface
+- Using GitHub Desktop
+- Using other GUI tools
+- GitHub Actions or CI/CD systems pushing code
 
 **What it validates (MASTER ONLY):**
 1. ✓ Full test suite (all 41 tests)
@@ -49,6 +55,38 @@ cp .git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 # Install the hook
 cp .git-hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
 ```
+
+---
+
+### Layer 3: GitHub Branch Protection Rules (PREVENTS web push issues)
+**Location**: GitHub Repository Settings → Branches → Branch Protection Rules
+
+**To protect master from ALL push methods (local & web):**
+
+1. Go to: GitHub Repository → Settings → Branches
+2. Click "Add rule"
+3. Pattern: `master`
+4. Enable:
+   - ✓ "Require a pull request before merging"
+   - ✓ "Require approvals" (set to 1+)
+   - ✓ "Dismiss stale pull request approvals when new commits are pushed"
+   - ✓ "Require status checks to pass before merging"
+   - ✓ "Require branches to be up to date before merging"
+
+**Benefits of Branch Protection:**
+- ✅ Prevents direct pushes to master (even from web UI)
+- ✅ Requires pull request review
+- ✅ Can integrate with CI/CD for automated testing
+- ✅ Protects against accidental master push
+- ✅ Works for ALL push methods (local, web, GUI tools)
+
+---
+
+### Layer 4: CI/CD Integration (Optional - for complete automation)
+For maximum protection, set up GitHub Actions to:
+- Run full test suite on every pull request
+- Block merge if tests fail
+- Auto-deploy to production only if all tests pass
 
 ---
 
