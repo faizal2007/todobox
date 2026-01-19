@@ -624,6 +624,34 @@ def update_todo(todo_id):
             details = normalize_checkboxes(details)
         todo.details = details
         todo.details_html = convert_details_to_html(details)
+    
+    if 'status' in data:
+        status_name = data['status']
+        status = Status.query.filter_by(name=status_name).first()
+        if status:
+            todo.modified = datetime.now()
+            Tracker.add(todo.id, status.id, todo.modified)
+    
+    db.session.commit()  # type: ignore[attr-defined]
+    
+    # Get current status
+    latest_tracker = Tracker.query.filter_by(todo_id=todo.id).order_by(desc(Tracker.timestamp)).first()
+    current_status = 'pending'
+    if latest_tracker:
+        status_obj = Status.query.get(latest_tracker.status_id)
+        if status_obj:
+            current_status = status_obj.name
+    
+    return jsonify({
+        'id': todo.id,
+        'title': todo.name,
+        'details': todo.details,
+        'status': current_status,
+        'created_at': todo.timestamp.isoformat(),
+        'modified_at': todo.modified.isoformat()
+    })
+
+
 def calculate_total_work_time_hours(todo_id):
     """Calculate total logged work session time (in hours) for a todo."""
     session_entries = Tracker.query.filter(
