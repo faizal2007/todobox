@@ -2398,7 +2398,8 @@ def log_manual_work_session(todo_id):
             start_local = parse_datetime_local(start_raw)
             end_local = parse_datetime_local(end_raw)
         except ValueError as exc:
-            return jsonify({'status': 'Error', 'message': str(exc)}), 400
+            logging.exception("Invalid datetime input in manual work session: %s", exc)
+            return jsonify({'status': 'Error', 'message': 'Invalid date/time format.'}), 400
 
         if end_local <= start_local:
             return jsonify({'status': 'Error', 'message': 'End time must be later than start time.'}), 400
@@ -2420,7 +2421,8 @@ def log_manual_work_session(todo_id):
             try:
                 session_seconds = parse_duration_input(duration_input)
             except ValueError as exc:
-                return jsonify({'status': 'Error', 'message': str(exc)}), 400
+                logging.exception("Invalid duration input in manual work session: %s", exc)
+                return jsonify({'status': 'Error', 'message': 'Invalid duration format.'}), 400
 
         end_utc = datetime.utcnow()
         start_utc = end_utc - timedelta(seconds=session_seconds)
