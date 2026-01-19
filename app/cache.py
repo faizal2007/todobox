@@ -14,7 +14,14 @@ Cache Invalidation:
 - Pattern-based invalidation via cache.delete_many()
 """
 
-from flask_caching import Cache
+# Try to import Flask-Caching, but fall back gracefully if not available
+try:
+    from flask_caching import Cache
+    CACHING_AVAILABLE = True
+except (ImportError, ModuleNotFoundError):
+    Cache = None
+    CACHING_AVAILABLE = False
+
 from flask import Flask
 from typing import Optional
 import logging
@@ -23,6 +30,32 @@ logger = logging.getLogger(__name__)
 
 # Global cache instance
 cache: Optional[Cache] = None
+
+
+class DummyCache:
+    """Dummy cache that does nothing - used when flask_caching is not available"""
+    def __init__(self):
+        pass
+    
+    def get(self, key):
+        return None
+    
+    def set(self, key, value, timeout=None):
+        pass
+    
+    def delete(self, key):
+        pass
+    
+    def delete_many(self, *keys):
+        pass
+    
+    def clear(self):
+        pass
+    
+    def cached(self, timeout=None, key_prefix='view/%s'):
+        def decorator(f):
+            return f
+        return decorator
 
 
 def init_cache(app: Flask) -> Cache:
@@ -35,11 +68,16 @@ def init_cache(app: Flask) -> Cache:
         Cache instance configured for the environment
         
     Cache Selection:
-    1. Redis (if available) - recommended for production
-    2. SimpleCache - fallback for development
-    3. FileSystemCache - option for persistent cache
+    1. Flask-Caching with Redis (if available) - recommended for production
+    2. DummyCache - fallback when Flask-Caching not installed
     """
     global cache
+    
+    # If Flask-Caching is not available, return dummy cache
+    if not CACHING_AVAILABLE or Cache is None:
+        logger.warning("Flask-Caching not available, using dummy cache (no caching)")
+        cache = DummyCache()
+        return cache
     
     # Try Redis first (production)
     try:
