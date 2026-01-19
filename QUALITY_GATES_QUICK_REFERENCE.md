@@ -39,7 +39,7 @@ git push origin master
    - ✓ Require a pull request before merging
    - ✓ Require approvals (suggest 1+)
    - ✓ Dismiss stale pull request approvals
-   - ⊙ Require status checks to pass: **SKIP THIS** (requires GitHub Actions)
+   - ❌ Require status checks to pass: **SKIP THIS** (requires GitHub Actions)
 
 **Result**: Master is protected from direct pushes (web UI + local). Code requires review.
 
