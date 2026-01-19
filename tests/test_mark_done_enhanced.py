@@ -10,16 +10,6 @@ import pytest
 from app.models import Todo, User
 
 
-@pytest.fixture
-def auth_client(client, test_user):
-    """Authenticated test client."""
-    client.post('/login', data={
-        'email': 'testuser@example.com',
-        'password': 'TestPass123!'
-    }, follow_redirects=True)
-    return client
-
-
 class TestMarkDoneErrorPaths:
     """Test error paths for mark_done and mark_kiv routes - these catch hidden errors!"""
         

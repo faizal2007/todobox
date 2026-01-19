@@ -76,12 +76,16 @@ def test_user(db_session):
 
 
 @pytest.fixture
-def auth_client(client, test_user):
-    """Authenticated test client."""
-    client.post('/login', data={
-        'email': 'testuser@example.com',
-        'password': 'TestPass123!'
-    }, follow_redirects=True)
+def auth_client(app, client, test_user):
+    """Authenticated test client - using Flask-Login directly."""
+    from flask_login import login_user as flask_login_user
+    
+    # Use Flask-Login to set up the session properly
+    with app.test_request_context():
+        flask_login_user(test_user)
+        # Get the session cookie
+        client.get('/')  # Make a request to trigger session setup
+    
     return client
 
 
