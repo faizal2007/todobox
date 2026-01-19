@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 📋 Recent Updates Summary (January 2026)
 
+### Achievements Time Calculation Fix (January 19, 2026)
+- ✅ **FIXED: Time Taken Calculation Uses Wrong Timestamp Basis**
+  - **Issue**: Achievements page was calculating Time Taken from todo creation (Status 5) instead of work session start (Status 10)
+  - **Impact**: Time Taken values were inflated, not reflecting actual work session duration
+  - **Root Cause**: `achievements()` route used Status 5 (Created) timestamp instead of Status 10 (Started) timestamp
+  - **Solution**: Updated calculation to use Status 10 (Started) → Status 6 (Done) per work session design
+  - **Changes**:
+    - Modified [app/routes.py](app/routes.py#L1963) line 1963: Changed `status_id=5` to `status_id=10` in achievements time calculation
+    - Already correct in `/api/achievements/batch` endpoint (was using Status 10 correctly)
+  - **Testing**: Added comprehensive test suite `test_achievements_time_calculation.py` with 5 tests covering:
+    - Basic Started vs Created calculation (2 hours vs 3 hours)
+    - Todos never started (edge case handling)
+    - Average calculation accuracy across multiple todos
+    - Paused sessions (total elapsed time from first start to completion)
+    - Multiple sessions (uses first Start timestamp, not latest)
+  - **Status**: ✅ All tests passing (5/5)
+
 ### Work Session Modal - Modal Close Without Start Fix (January 19, 2026)
 - ✅ **FIXED: Todo Duplication on Modal Close Without Starting**
   - **Issue**: When user closed the work session modal without clicking Start, then refreshed, todo would duplicate

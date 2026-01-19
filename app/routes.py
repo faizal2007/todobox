@@ -1959,11 +1959,12 @@ def achievements():
         # Calculate average completion time from first batch
         completion_times = []
         for todo, completion_tracker in completed_todos:
-            creation_tracker = db.session.query(Tracker).filter_by(
-                todo_id=todo.id, status_id=5
+            # Use Status 10 (Started) instead of Status 5 (Created) to calculate actual work time
+            started_tracker = db.session.query(Tracker).filter_by(
+                todo_id=todo.id, status_id=10
             ).order_by(Tracker.timestamp.asc()).first()
-            if creation_tracker:
-                time_diff = completion_tracker.timestamp - creation_tracker.timestamp
+            if started_tracker:
+                time_diff = completion_tracker.timestamp - started_tracker.timestamp
                 completion_times.append(time_diff.total_seconds() / 3600)
         
         if completion_times:
