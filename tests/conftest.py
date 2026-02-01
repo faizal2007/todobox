@@ -43,7 +43,7 @@ def app():
     
     with app.app_context():
         # Cleanup test data from previous runs BEFORE running tests
-        from app.models import User, Todo, Tracker, KIV
+        from app.models import User, Todo, Tracker, KIV, TodoShare
         try:
             # Find test users
             test_users = User.query.filter(
@@ -54,12 +54,17 @@ def app():
             ).all()
             
             for user in test_users:
-                # Delete related data (foreign key constraints)
+                # Delete todo shares (owner_id and shared_with_id)
+                TodoShare.query.filter_by(owner_id=user.id).delete()
+                TodoShare.query.filter_by(shared_with_id=user.id).delete()
+                
+                # Delete todos and their related data
                 todos = Todo.query.filter_by(user_id=user.id).all()
                 for todo in todos:
                     Tracker.query.filter_by(todo_id=todo.id).delete()
                     KIV.query.filter_by(todo_id=todo.id).delete()
                 Todo.query.filter_by(user_id=user.id).delete()
+                
                 db.session.delete(user)
             db.session.commit()
         except Exception as e:
@@ -109,7 +114,7 @@ def app():
         
         # Cleanup test data after tests complete
         try:
-            from app.models import User, Todo, Tracker, KIV
+            from app.models import User, Todo, Tracker, KIV, TodoShare
             test_users = User.query.filter(
                 (User.email.contains('test')) | 
                 (User.email.contains('persist')) |
@@ -118,6 +123,11 @@ def app():
             ).all()
             
             for user in test_users:
+                # Delete todo shares (owner_id and shared_with_id)
+                TodoShare.query.filter_by(owner_id=user.id).delete()
+                TodoShare.query.filter_by(shared_with_id=user.id).delete()
+                
+                # Delete todos and related data
                 todos = Todo.query.filter_by(user_id=user.id).all()
                 for todo in todos:
                     Tracker.query.filter_by(todo_id=todo.id).delete()
