@@ -209,7 +209,7 @@ sa.Column('pending_deletion', sa.Boolean(), nullable=False, server_default='0')
 
 ## Verification Results
 
-All safety improvements have been verified using [verify_account_deletion_safety.py](verify_account_deletion_safety.py):
+All safety improvements have been verified using [verify_account_deletion_safety.py](../../tests/verify_account_deletion_safety.py):
 
 ✅ **Email Case Sensitivity**: 6 instances of `.lower()` normalization in place  
 ✅ **Deletion Window**: Confirmed as 24 hours (not 1 hour)  
@@ -217,7 +217,7 @@ All safety improvements have been verified using [verify_account_deletion_safety
 ✅ **Cleanup Function**: Proper safeguards in place  
 ✅ **Migration Defaults**: Uses `nullable=False, server_default='0'`  
 
-Run verification: `python verify_account_deletion_safety.py`
+Run verification: `python tests/verify_account_deletion_safety.py`
 
 ---
 

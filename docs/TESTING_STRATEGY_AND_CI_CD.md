@@ -417,7 +417,7 @@ tests/TEST_REQUIREMENTS.md          # Test checklist
 ### Updated Files:
 ```
 .git/hooks/pre-commit               # Pre-commit hook
-TESTING_QUICK_REFERENCE.sh          # Add new test commands
+tests/TESTING_QUICK_REFERENCE.sh          # Add new test commands
 ```
 
 This ensures: **Every patch/update automatically catches breaking changes before they reach users.**

@@ -86,7 +86,7 @@ Test Resume Without Pause .................... ✅ PASSED
 - **TIMER_PERSISTENCE_FIX_COMPLETE.md** - Implementation details
 - **TIMER_PERSISTENCE_IMPLEMENTATION_REPORT.md** - Comprehensive report
 - **CHANGES_SUMMARY.md** - Summary of all changes
-- **validate_timer_fix.sh** - Validation script
+- **tests/validate_timer_fix.sh** - Validation script
 - **Status:** ✅ All created and verified
 
 ---
@@ -120,7 +120,7 @@ Test Resume Without Pause .................... ✅ PASSED
 
 Run validation script:
 ```bash
-bash validate_timer_fix.sh
+bash tests/validate_timer_fix.sh
 ```
 
 Expected output:

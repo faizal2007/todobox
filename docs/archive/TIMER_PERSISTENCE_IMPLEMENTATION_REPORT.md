@@ -317,7 +317,7 @@ Test Results:
 ✅ PERSISTENT_TIMER_FIX.md created
 ✅ TIMER_PERSISTENCE_FIX_COMPLETE.md created
 ✅ CHANGELOG.md updated
-✅ validate_timer_fix.sh validation script created
+✅ tests/validate_timer_fix.sh validation script created
 ```
 
 ---
@@ -451,7 +451,7 @@ Test Results:
 4. **Documentation Files (New)**
    - PERSISTENT_TIMER_FIX.md
    - TIMER_PERSISTENCE_FIX_COMPLETE.md
-   - validate_timer_fix.sh (validation script)
+   - tests/validate_timer_fix.sh (validation script)
 
 ---
 
