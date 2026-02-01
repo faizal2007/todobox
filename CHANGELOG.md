@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Session Expiration Handler, Client-Side Monitoring & Critical Database Protection Fixes
 
-### Fixed (CRITICAL - DATABASE PROTECTION)
+### Fixed (CRITICAL - DATABASE & TEST INFRASTRUCTURE)
+
+- **Test Data Cleanup Fixed**: Corrected TodoShare cleanup in test fixtures to use correct column names
+  - Changed from non-existent `recipient_id` to actual `shared_with_id` column
+  - Prevents "Cannot add or update child row" foreign key constraint errors
+  - Test data now properly cleaned up before and after each test run
+  - Result: 228 tests passing, eliminated test data persistence issues
 
 - **Production Database Protection - ROOT CAUSE FIXED**: Identified and fixed the actual source of table drops
   - **Root Cause**: Pre-commit hook was running pytest during every commit, which executed test fixtures that dropped production database tables
