@@ -142,7 +142,9 @@ def run_todobox():
         db_file = os.path.join(project_dir, 'instance', 'todobox.db')
         if not os.path.exists(db_file):
             print("❌ SQLite database not found. Please run the Install option first.")
+            print("   The database file should be at: instance/todobox.db")
             return False
+        print(f"✅ SQLite database found at: {db_file}")
     
     print("📝 Configuration loaded from .flaskenv")
     print("🗄️  Database connection verified")
@@ -154,14 +156,17 @@ def run_todobox():
     print("ℹ️  Press Ctrl+C to stop the server\n")
     
     try:
-        # Run Flask app
+        # Run Flask app using python3 (not 'python' for compatibility)
         subprocess.run(
-            ["python", "todobox.py"],
+            ["python3", "todobox.py"],
             cwd=project_dir
         )
     except KeyboardInterrupt:
         print("\n\n✅ Server stopped by user.")
         return True
+    except FileNotFoundError:
+        print("\n❌ Error: python3 not found. Make sure Python 3 is installed.")
+        return False
     except Exception as e:
         print(f"\n❌ Error running application: {e}")
         return False
