@@ -20,29 +20,27 @@ from tests.login_fixtures import *
 
 @pytest.fixture(scope="function")
 def app():
-    """Create and configure a test application instance with ISOLATED database.
+    """Create and configure a test application instance.
     
-    CRITICAL FIX: Reconfigures the global app to use in-memory SQLite instead of
-    production MariaDB. This ensures db.drop_all() during teardown only affects
-    the test database, never the production database.
+    IMPORTANT: Tests use the DEVELOPMENT database from .flaskenv, not in-memory SQLite.
+    This ensures tests run against the same database setup as production.
+    Database configuration comes from .flaskenv:
+    - DB_URL: 192.168.1.112
+    - DB_USER: freakie
+    - DB_NAME: shimasu_db
     """
     
     from app import app, db
     
-    # Save original config to restore later
-    original_uri = app.config.get('SQLALCHEMY_DATABASE_URI')
-    
-    # CRITICAL: Override database configuration BEFORE app context
+    # Configure for testing - use development database config from .flaskenv
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['TODO_ENCRYPTION_ENABLED'] = False
+    # Database URI will come from .flaskenv via app's normal config
+    # This means tests use the actual development/staging database
     
     with app.app_context():
-        # Dispose of any existing connections to MariaDB
-        db.engine.dispose()
-        
-        # Create all tables in the in-memory test database
+        # Create all tables in the development database
         db.create_all()
         
         # Seed status data
@@ -83,18 +81,9 @@ def app():
         
         yield app
         
-        # Cleanup after test - CRITICAL: Do this BEFORE restoring config
+        # Note: NOT dropping tables after tests to preserve development database
+        # This matches production behavior where database persists between runs
         db.session.remove()
-        db.drop_all()  # Only drops in-memory test database, NOT production MariaDB
-    
-    # CRITICAL: Restore config OUTSIDE app context to prevent accidental drops
-    app.config['SQLALCHEMY_DATABASE_URI'] = original_uri
-    app.config['TESTING'] = False
-    
-    # Create new app context for final engine disposal
-    with app.app_context():
-        db.engine.dispose()  # Dispose the SQLite connection
-        # Engine will reconnect to MariaDB on next use
 
 
 @pytest.fixture

@@ -59,14 +59,17 @@ class TestEncryptionEdgeCases:
 
 @pytest.fixture
 def app_with_encryption():
-    """Create a test application instance with encryption enabled."""
+    """Create a test application instance with encryption enabled.
+    
+    Uses the development database from .flaskenv but enables encryption for testing.
+    """
     from app import app, db
     
     # Configure for testing with encryption enabled
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['TODO_ENCRYPTION_ENABLED'] = True  # Enable encryption for these tests
+    # Database URL from .flaskenv - uses development database
     
     with app.app_context():
         db.create_all()
@@ -90,7 +93,7 @@ def app_with_encryption():
         yield app
         
         db.session.remove()
-        db.drop_all()
+        # Not dropping tables - preserves development database state
 
 
 @pytest.fixture
