@@ -141,6 +141,7 @@ Comprehensive documentation is available in the `docs/` directory:
 
 ### Testing & Quality Gates
 
+- **[docs/TEST_FILE_ORGANIZATION.md](docs/TEST_FILE_ORGANIZATION.md)** - Test file locations and organization guide
 - **[docs/QUALITY_GATES_QUICK_REFERENCE.md](docs/QUALITY_GATES_QUICK_REFERENCE.md)** - Daily workflow with pre-commit/pre-push hooks
 - **[docs/TESTING_AND_QUALITY_GATES.md](docs/TESTING_AND_QUALITY_GATES.md)** - Comprehensive testing system guide
 - **[docs/QUALITY_GATE_SETUP.md](docs/QUALITY_GATE_SETUP.md)** - Setup and troubleshooting for quality gates

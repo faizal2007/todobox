@@ -23,7 +23,7 @@ You now have a **production-ready test suite** that validates against your real 
 - **Troubleshooting guide** for common issues
 - **Comparison** before vs after approach
 
-### 3. Quick Reference: `TESTING_QUICK_REFERENCE.sh`
+### 3. Quick Reference: `tests/TESTING_QUICK_REFERENCE.sh`
 - Quick guide to running tests
 - Common questions answered
 - Testing philosophy explained
@@ -221,7 +221,7 @@ System works in production ✓
 - ✅ `TEST_ACCURATE_COMPREHENSIVE_README.md`
   - Full documentation and usage guide
   
-- ✅ `TESTING_QUICK_REFERENCE.sh`
+- ✅ `tests/TESTING_QUICK_REFERENCE.sh`
   - Quick reference for running tests
 
 ### Modified Files
