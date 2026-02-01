@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased] - Session Expiration Handler, Client-Side Monitoring & Test Cleanup
+## [Unreleased] - Session Expiration Handler, Client-Side Monitoring & Test Infrastructure Fixes
+
+### Fixed (CRITICAL)
+
+- **Database Isolation in Tests**: Fixed critical bug where tests were dropping production MariaDB tables during teardown
+  - Moved db.engine.dispose() inside app.app_context() to prevent RuntimeError
+  - Tests now properly use in-memory SQLite instead of production database
+  - Production database (shimasu_db at 192.168.1.112) is now completely protected from test cleanup operations
+  - Added proper session cleanup in test fixture
+
+- **Werkzeug Compatibility**: Downgraded Werkzeug from 3.1.5 to 2.3.7 for Flask 2.3.2 LTS compatibility
+  - Fixes AttributeError: module 'werkzeug' has no attribute '__version__'
+  - All Flask-SQLAlchemy and Flask dependencies now properly aligned
 
 ### Added
 
