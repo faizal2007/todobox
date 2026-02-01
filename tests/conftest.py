@@ -45,12 +45,10 @@ def app():
         # Cleanup test data from previous runs BEFORE running tests
         from app.models import User, Todo, Tracker, KIV, TodoShare
         try:
-            # Find test users
+            # Find test users - use @example.com domain pattern which is used by all tests
+            # This catches all test emails: admin@example.com, user@example.com, workflow@example.com, etc.
             test_users = User.query.filter(
-                (User.email.contains('test')) | 
-                (User.email.contains('persist')) |
-                (User.email.contains('exists')) |
-                (User.email.contains('unverified'))
+                User.email.like('%@example.com')
             ).all()
             
             for user in test_users:
