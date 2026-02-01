@@ -28,6 +28,8 @@ def app():
     - DB_URL: 192.168.1.112
     - DB_USER: freakie
     - DB_NAME: shimasu_db
+    
+    NOTE: Test data cleanup happens between tests to avoid conflicts.
     """
     
     from app import app, db
@@ -40,10 +42,34 @@ def app():
     # This means tests use the actual development/staging database
     
     with app.app_context():
+        # Cleanup test data from previous runs BEFORE running tests
+        from app.models import User, Todo, Tracker, KIV
+        try:
+            # Find test users
+            test_users = User.query.filter(
+                (User.email.contains('test')) | 
+                (User.email.contains('persist')) |
+                (User.email.contains('exists')) |
+                (User.email.contains('unverified'))
+            ).all()
+            
+            for user in test_users:
+                # Delete related data (foreign key constraints)
+                todos = Todo.query.filter_by(user_id=user.id).all()
+                for todo in todos:
+                    Tracker.query.filter_by(todo_id=todo.id).delete()
+                    KIV.query.filter_by(todo_id=todo.id).delete()
+                Todo.query.filter_by(user_id=user.id).delete()
+                db.session.delete(user)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"Note: Cleanup error (may occur on first run): {e}")
+        
         # Create all tables in the development database
         db.create_all()
         
-        # Seed status data
+        # Seed status data if needed
         from app.models import Status, TermsAndDisclaimer
         if Status.query.count() == 0:
             statuses = [
@@ -61,7 +87,7 @@ def app():
             db.session.add_all(statuses)
             db.session.commit()
         
-        # Seed terms and disclaimer
+        # Seed terms and disclaimer if needed
         if TermsAndDisclaimer.query.count() == 0:
             terms = TermsAndDisclaimer(
                 terms_of_use='These are the terms of use.',
@@ -81,8 +107,27 @@ def app():
         
         yield app
         
-        # Note: NOT dropping tables after tests to preserve development database
-        # This matches production behavior where database persists between runs
+        # Cleanup test data after tests complete
+        try:
+            from app.models import User, Todo, Tracker, KIV
+            test_users = User.query.filter(
+                (User.email.contains('test')) | 
+                (User.email.contains('persist')) |
+                (User.email.contains('exists')) |
+                (User.email.contains('unverified'))
+            ).all()
+            
+            for user in test_users:
+                todos = Todo.query.filter_by(user_id=user.id).all()
+                for todo in todos:
+                    Tracker.query.filter_by(todo_id=todo.id).delete()
+                    KIV.query.filter_by(todo_id=todo.id).delete()
+                Todo.query.filter_by(user_id=user.id).delete()
+                db.session.delete(user)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+        
         db.session.remove()
 
 

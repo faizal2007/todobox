@@ -62,6 +62,7 @@ def app_with_encryption():
     """Create a test application instance with encryption enabled.
     
     Uses the development database from .flaskenv but enables encryption for testing.
+    Cleans up test data before and after tests.
     """
     from app import app, db
     
@@ -72,6 +73,27 @@ def app_with_encryption():
     # Database URL from .flaskenv - uses development database
     
     with app.app_context():
+        # Clean up test data from previous runs
+        from app.models import User, Todo, Tracker, KIV
+        try:
+            test_users = User.query.filter(
+                (User.email.contains('test')) | 
+                (User.email.contains('persist')) |
+                (User.email.contains('exists')) |
+                (User.email.contains('unverified'))
+            ).all()
+            
+            for user in test_users:
+                todos = Todo.query.filter_by(user_id=user.id).all()
+                for todo in todos:
+                    Tracker.query.filter_by(todo_id=todo.id).delete()
+                    KIV.query.filter_by(todo_id=todo.id).delete()
+                Todo.query.filter_by(user_id=user.id).delete()
+                db.session.delete(user)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        
         db.create_all()
         
         # Seed required data
@@ -92,8 +114,27 @@ def app_with_encryption():
         
         yield app
         
+        # Clean up test data after test
+        try:
+            test_users = User.query.filter(
+                (User.email.contains('test')) | 
+                (User.email.contains('persist')) |
+                (User.email.contains('exists')) |
+                (User.email.contains('unverified'))
+            ).all()
+            
+            for user in test_users:
+                todos = Todo.query.filter_by(user_id=user.id).all()
+                for todo in todos:
+                    Tracker.query.filter_by(todo_id=todo.id).delete()
+                    KIV.query.filter_by(todo_id=todo.id).delete()
+                Todo.query.filter_by(user_id=user.id).delete()
+                db.session.delete(user)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        
         db.session.remove()
-        # Not dropping tables - preserves development database state
 
 
 @pytest.fixture
