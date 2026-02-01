@@ -276,7 +276,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Button state updates happen immediately without extra API calls
 
 #### **USER EXPERIENCE FLOW** ✅
-```
+```bash
 Open Modal
 ├─ Live Timer Active
 │  └─ [Start] → Count time → [Pause] (resume) → [End] → Save & Close
