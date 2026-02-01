@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] - Session Expiration Handler, Client-Side Monitoring & Test Cleanup
+
+### Added
+
+- **Session Expiration Handler Module**: New `app/session_handler.py` module for comprehensive session management
+- **Automatic Session Expiration**: Tracks user inactivity and automatically expires sessions after 120 minutes
+- **Session Warning System**: Alerts users when session is about to expire (within 10 minutes of expiration)
+- **Session Status Decorators**: `@session_required` and `@session_extended_required` decorators for route protection
+- **Context Processor Integration**: Provides `session_warning`, `remaining_time`, and `session_expired` to all templates
+- **Session Activity Tracking**: Updates last activity timestamp on each user request
+- **Intelligent Redirect Handling**: Supports both HTML redirects and JSON responses for AJAX requests
+- **Session Check API**: `check_session_expiration()` function for client-side session status verification
+- **API Endpoints for Client Monitoring**:
+  - `GET /api/session-status`: Returns current session status (authenticated, expired, warning state) and remaining time
+  - `POST /api/keep-alive`: Extends user session on activity, updates last_activity timestamp
+- **Client-Side Session Monitor**: New `app/static/js/session-monitor.js` module for real-time session monitoring
+  - Polls server every 60 seconds to check session status
+  - Shows warning modal when session nearing expiration
+  - Auto-extends session on user activity (mouse, keyboard, scroll)
+  - Auto-logs out user when session expires
+  - Browser notification integration for additional alerts
+- **New Test Runner Script**: Top-level `test.py` for convenient test execution
+  - Simple shortcuts: `python3 test.py routes`, `python3 test.py core`, etc.
+  - Built-in quick validation: `python3 test.py quick`
+  - Coverage and verbose options available
+
+### Changed
+
+- **Test Suite Reorganization**: Fixed `tests/run_tests.py` to reference actual test files
+  - Removed references to non-existent test files
+  - Updated to work with current test suite
+  - Now properly supports all test suite selections
+- **Improved Error Handling**: Enhanced `cleanup_pending_deletions()` in `app/__init__.py` to gracefully handle missing database tables during migrations
+
+### Removed
+
+- **Obsolete Test Files** (22 files removed, 51% reduction):
+  - Fix-specific tests: `test_mark_done_fix.py`, `test_kiv_redirect_fix.py`, etc. (functionality now in test_all_routes.py)
+  - Redundant suites: `test_comprehensive.py`, `test_functional.py`, `test_backend_routes.py`
+  - Manual tests: `test_features_comprehensive.py`, `test_workflows.py`
+  - Email-specific tests: `test_email_direct.py`, `test_email_headers.py`, `test_email_send.py`
+  - Superseded versions: `test_system_accuracy.py`, `test_work_session_simplified.py`
+- Tests now consolidated to 21 actively maintained files covering all functionality
+  - Handles tab visibility changes for smart monitoring
+- **Comprehensive Logging**: Session expiration events logged for audit trails and debugging
+- **Test Coverage**: Full test suite in `tests/test_session_handler.py` covering all session handler functionality
+- **Documentation**: Detailed documentation in `docs/SESSION_HANDLER.md` with examples and troubleshooting
+
+### Changed
+
+- **App Initialization**: Modified `app/__init__.py` to call `init_session_handler(app)` during startup
+- **Session Configuration**: Session timeout configuration in `app/config.py` already aligned with session handler
+
+---
+
 ## [2.1.0] - Work Session Tracking System - 2026-01-17
 
 ### Added

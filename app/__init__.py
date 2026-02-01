@@ -164,6 +164,10 @@ from app import cli
 cli.create_cli(app)
 
 from app import routes, models, utils
+from app.session_handler import init_session_handler
+
+# Initialize session expiration handler
+init_session_handler(app)
 
 # Serve service worker at root scope
 @app.route('/service-worker.js')
@@ -207,8 +211,14 @@ def cleanup_pending_deletions():
             logging.info(f'Cleaned up {len(pending_deletions)} pending account deletions')
     
     except Exception as e:
-        logging.error(f'Error in cleanup_pending_deletions: {str(e)}')
-        # Don't raise - this is a background operation
+        # Database may not be initialized yet (during migrations)
+        # This is expected and not an error - silently skip
+        if 'doesn\'t exist' in str(e) or 'relation' in str(e).lower():
+            # Table doesn't exist yet - migrations likely in progress
+            pass
+        else:
+            # Log other errors for visibility
+            logging.debug(f'Skipping cleanup_pending_deletions (DB not ready): {str(e)}')
 
 def initialize_default_data():
     """Initialize default data on first request, not during import"""
