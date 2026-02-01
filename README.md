@@ -139,6 +139,14 @@ Comprehensive documentation is available in the `docs/` directory:
 - **[docs/JQUERY_MIGRATION_GUIDE.md](docs/JQUERY_MIGRATION_GUIDE.md)** - Developer guide for JavaScript patterns
 - **[docs/AXE_LINTER_BEST_PRACTICES.md](docs/AXE_LINTER_BEST_PRACTICES.md)** - Accessibility guidelines
 
+### Testing & Quality Gates
+
+- **[docs/QUALITY_GATES_QUICK_REFERENCE.md](docs/QUALITY_GATES_QUICK_REFERENCE.md)** - Daily workflow with pre-commit/pre-push hooks
+- **[docs/TESTING_AND_QUALITY_GATES.md](docs/TESTING_AND_QUALITY_GATES.md)** - Comprehensive testing system guide
+- **[docs/QUALITY_GATE_SETUP.md](docs/QUALITY_GATE_SETUP.md)** - Setup and troubleshooting for quality gates
+- **[docs/TESTING_STRATEGY_AND_CI_CD.md](docs/TESTING_STRATEGY_AND_CI_CD.md)** - Testing strategy and CI/CD integration
+- **[docs/TESTING_SUMMARY.md](docs/TESTING_SUMMARY.md)** - Test coverage and results summary
+
 ### Migration Guides
 
 - **[docs/README_MIGRATIONS.md](docs/README_MIGRATIONS.md)** - Database migration documentation
