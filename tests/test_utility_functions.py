@@ -8,28 +8,7 @@ from datetime import datetime, timedelta
 import pytz
 from unittest.mock import Mock, patch, MagicMock
 
-
-@pytest.fixture
-def app():
-    """Create and configure a test Flask application"""
-    from app import app, db
-    
-    # Configure for testing
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    app.config['WTF_CSRF_ENABLED'] = False
-    app.config['SECRET_KEY'] = 'test-secret-key-for-encryption'
-    app.config['SALT'] = 'test-salt-for-encryption'
-    app.config['TODO_ENCRYPTION_ENABLED'] = True
-    app.config['SERVER_NAME'] = 'localhost'
-    
-    with app.app_context():
-        db.create_all()
-        from tests.test_utils import seed_status_data
-        seed_status_data(db)
-        yield app
-        db.session.remove()
-        db.drop_all()
+# Using app fixture from conftest.py for proper database isolation
 
 
 @pytest.fixture

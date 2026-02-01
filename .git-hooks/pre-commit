@@ -43,25 +43,17 @@ else
     echo -e "${YELLOW}  ⚠ Requirements validation skipped (non-critical)${NC}"
 fi
 
-# 4. Run quick unit tests (ignore pre-existing failures)
-echo "  • Running quick unit tests..."
-TEST_OUTPUT=$(python3 -m pytest tests/test_accurate_comprehensive.py -q --tb=no 2>&1 || true)
-PASSED=$(echo "$TEST_OUTPUT" | grep -o "[0-9]* passed" | grep -o "[0-9]*" || echo "0")
-if [ "$PASSED" -gt 0 ]; then
-    echo -e "${GREEN}  ✓ Unit tests passed (${PASSED} tests)${NC}"
-else
-    echo -e "${YELLOW}  ⚠ Unit tests skipped (check manually if concerned)${NC}"
-fi
+# 4. Run quick unit tests (DISABLED - tests cause database issues)
+# Tests should be run separately, not during commit
+# Pre-commit hook should only do syntax/import checks
+echo "  • Quick unit tests skipped (run manually: pytest tests/ -v)"
+echo -e "${YELLOW}  ⚠ Unit tests skipped${NC}"
 
-# 5. Run API route tests (ignore pre-existing failures)
-echo "  • Running API route tests..."
-TEST_OUTPUT=$(python3 -m pytest tests/test_all_routes.py -q --tb=no 2>&1 || true)
-PASSED=$(echo "$TEST_OUTPUT" | grep -o "[0-9]* passed" | grep -o "[0-9]*" || echo "0")
-if [ "$PASSED" -gt 0 ]; then
-    echo -e "${GREEN}  ✓ API tests passed (${PASSED} tests)${NC}"
-else
-    echo -e "${YELLOW}  ⚠ Some tests skipped (check manually if concerned)${NC}"
-fi
+# 5. Run API route tests (DISABLED - tests cause database issues)
+# Tests should be run separately, not during commit
+# Pre-commit hook should only do syntax/import checks
+echo "  • API route tests skipped (run manually: pytest tests/test_all_routes.py -v)"
+echo -e "${YELLOW}  ⚠ API tests skipped${NC}"
 
 # 6. Check for uncommitted changes in critical files
 echo "  • Checking critical file modifications..."

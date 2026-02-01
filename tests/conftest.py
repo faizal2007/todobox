@@ -83,13 +83,18 @@ def app():
         
         yield app
         
-        # Cleanup after test
+        # Cleanup after test - CRITICAL: Do this BEFORE restoring config
         db.session.remove()
         db.drop_all()  # Only drops in-memory test database, NOT production MariaDB
-        
-        # Restore original database URI
-        app.config['SQLALCHEMY_DATABASE_URI'] = original_uri
-        db.engine.dispose()
+    
+    # CRITICAL: Restore config OUTSIDE app context to prevent accidental drops
+    app.config['SQLALCHEMY_DATABASE_URI'] = original_uri
+    app.config['TESTING'] = False
+    
+    # Create new app context for final engine disposal
+    with app.app_context():
+        db.engine.dispose()  # Dispose the SQLite connection
+        # Engine will reconnect to MariaDB on next use
 
 
 @pytest.fixture

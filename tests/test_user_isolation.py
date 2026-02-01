@@ -54,41 +54,7 @@ class TestEncryptionEdgeCases:
             assert encrypt_text('') == ''
             assert decrypt_text('') == ''
 
-
-@pytest.fixture
-def app():
-    """Create and configure a test application instance."""
-    from app import app, db
-    
-    # Configure for testing
-    app.config['TESTING'] = True
-    app.config['WTF_CSRF_ENABLED'] = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    app.config['TODO_ENCRYPTION_ENABLED'] = False  # Default: encryption disabled
-    
-    with app.app_context():
-        db.create_all()
-        
-        # Seed required data
-        from app.models import Status
-        
-        # Add status records manually (Status.__init__ only accepts name)
-        if Status.query.count() == 0:
-            status_new = Status(name='new')
-            status_new.id = 5
-            status_done = Status(name='done')
-            status_done.id = 6
-            status_failed = Status(name='failed')
-            status_failed.id = 7
-            status_reassign = Status(name='re-assign')
-            status_reassign.id = 8
-            db.session.add_all([status_new, status_done, status_failed, status_reassign])
-            db.session.commit()
-        
-        yield app
-        
-        db.session.remove()
-        db.drop_all()
+# Using app fixture from conftest.py for proper database isolation
 
 
 @pytest.fixture
