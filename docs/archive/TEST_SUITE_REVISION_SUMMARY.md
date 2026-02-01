@@ -138,7 +138,7 @@ python -m pytest tests/test_accurate_comprehensive.py tests/test_frontend_assets
 ### Before Deploying to Production
 ```bash
 # Full test suite
-./TESTING_QUICK_REFERENCE.sh all
+./tests/TESTING_QUICK_REFERENCE.sh all
 
 # Verify service worker specifically
 python -m pytest tests/test_frontend_assets.py::TestServiceWorker -v
@@ -163,7 +163,7 @@ python -m pytest tests/test_frontend_assets.py::TestServiceWorker -v
    - Permission verification
 
 ### Updated Files
-1. `TESTING_QUICK_REFERENCE.sh` (Updated)
+1. `tests/TESTING_QUICK_REFERENCE.sh` (Updated)
    - Added multi-layer testing workflow
    - Clear phase-by-phase testing instructions
    - Explains why each layer is needed

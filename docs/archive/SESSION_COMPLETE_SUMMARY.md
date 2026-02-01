@@ -45,7 +45,7 @@ You now have a **production-ready system** with:
 - `test_accurate_comprehensive.py` - 25 comprehensive tests (670 lines)
 - `TEST_ACCURATE_COMPREHENSIVE_README.md` - Full documentation
 - `ACCURATE_TESTING_SUMMARY.md` - Quick overview
-- `TESTING_QUICK_REFERENCE.sh` - Quick reference
+- `tests/TESTING_QUICK_REFERENCE.sh` - Quick reference
 
 **Test Results**:
 - ✅ 25 comprehensive tests
@@ -100,7 +100,7 @@ Failed: 0
 ### Testing Documentation
 - `TEST_ACCURATE_COMPREHENSIVE_README.md` - Full test suite guide
 - `ACCURATE_TESTING_SUMMARY.md` - Quick overview
-- `TESTING_QUICK_REFERENCE.sh` - Quick reference commands
+- `tests/TESTING_QUICK_REFERENCE.sh` - Quick reference commands
 
 ### General Documentation
 - `CHANGELOG.md` - All changes documented (scroll to top)
@@ -163,7 +163,7 @@ python test_accurate_comprehensive.py
 1. `test_accurate_comprehensive.py` - Main test suite
 2. `TEST_ACCURATE_COMPREHENSIVE_README.md` - Test documentation
 3. `ACCURATE_TESTING_SUMMARY.md` - Test summary
-4. `TESTING_QUICK_REFERENCE.sh` - Quick reference
+4. `tests/TESTING_QUICK_REFERENCE.sh` - Quick reference
 5. `KIV_TABLE_REFACTORING_PLAN.md` - Refactoring guide
 6. `KIV_REFACTORING_STATUS.md` - Refactoring status
 7. `KIV_REFACTORING_COMPLETE.md` - Refactoring summary
@@ -294,7 +294,7 @@ head -100 CHANGELOG.md  # See what's new
 ## Questions?
 
 Refer to these documents:
-1. **How to run tests?** → `TESTING_QUICK_REFERENCE.sh`
+1. **How to run tests?** → `tests/TESTING_QUICK_REFERENCE.sh`
 2. **How to extend tests?** → `TEST_ACCURATE_COMPREHENSIVE_README.md`
 3. **What changed in KIV?** → `KIV_REFACTORING_COMPLETE.md`
 4. **What are all the changes?** → `CHANGELOG.md`

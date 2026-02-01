@@ -8,7 +8,9 @@ echo "║       TIMER PERSISTENCE FIX - VALIDATION REPORT               ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
 echo ""
 
-cd /storage/linux/Projects/mysandbox
+# Get the directory of the script and go to project root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$SCRIPT_DIR/.."
 
 echo "📋 STEP 1: Syntax Validation"
 echo "─────────────────────────────"

@@ -31,12 +31,12 @@ Layer 3: Static File Tests (MANIFEST, ICONS, FILES)
 🚀 QUICK START:
 
 Run all tests (recommended before any deployment):
-  $ ./TESTING_QUICK_REFERENCE.sh all
+  $ ./tests/TESTING_QUICK_REFERENCE.sh all
 
 Run specific layer:
-  $ ./TESTING_QUICK_REFERENCE.sh backend
-  $ ./TESTING_QUICK_REFERENCE.sh frontend
-  $ ./TESTING_QUICK_REFERENCE.sh assets
+  $ ./tests/TESTING_QUICK_REFERENCE.sh backend
+  $ ./tests/TESTING_QUICK_REFERENCE.sh frontend
+  $ ./tests/TESTING_QUICK_REFERENCE.sh assets
 
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -44,17 +44,17 @@ Run specific layer:
 
 1. Before Committing Code
    ──────────────────────
-   Run: ./TESTING_QUICK_REFERENCE.sh all
+   Run: ./tests/TESTING_QUICK_REFERENCE.sh all
    Expected: All layers pass ✓
    
 2. After Pulling Changes
    ────────────────────
-   Run: ./TESTING_QUICK_REFERENCE.sh all
+   Run: ./tests/TESTING_QUICK_REFERENCE.sh all
    Expected: All layers pass ✓
    
 3. Before Deploying to Production
    ──────────────────────────────
-   Run: ./TESTING_QUICK_REFERENCE.sh all
+   Run: ./tests/TESTING_QUICK_REFERENCE.sh all
    Expected: All 44+ tests pass ✓
    Do NOT deploy if any layer fails ✗
 
@@ -197,7 +197,7 @@ Expected results:
 
 📝 NEXT STEPS:
 
-1. Run: ./TESTING_QUICK_REFERENCE.sh all
+1. Run: ./tests/TESTING_QUICK_REFERENCE.sh all
 2. If all tests pass ✓ - You're good to deploy
 3. If any test fails ✗ - Fix the issue and rerun
 4. Never deploy with failing tests
@@ -221,6 +221,6 @@ This new strategy ensures:
 
 ═══════════════════════════════════════════════════════════════════════════════
 
-✓ Ready to test! Run: ./TESTING_QUICK_REFERENCE.sh all
+✓ Ready to test! Run: ./tests/TESTING_QUICK_REFERENCE.sh all
 
 "

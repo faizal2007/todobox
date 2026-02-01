@@ -153,7 +153,7 @@ Each matched checkbox line becomes:
 - `/app/routes.py` - Main implementation (3 commits)
 
 ## Testing
-- Manual test script: `test_checkbox_html_conversion.py` created and verified
+- Manual test script: `tests/test_checkbox_html_conversion.py` created and verified
 - All edge cases pass (spacing, checked/unchecked, indentation)
 - No syntax errors in routes.py
 

@@ -167,7 +167,7 @@ python -m pytest tests/test_static_files.py -v
 ### Before Every Pull Request
 ```bash
 # Run all tests
-./TESTING_QUICK_REFERENCE.sh all
+./tests/TESTING_QUICK_REFERENCE.sh all
 
 # Generate coverage report
 pytest --cov=app tests/ --cov-report=html
@@ -179,7 +179,7 @@ pytest --cov=app tests/ --cov-fail-under=80
 ### Before Every Production Deploy
 ```bash
 # Full test suite
-./TESTING_QUICK_REFERENCE.sh all
+./tests/TESTING_QUICK_REFERENCE.sh all
 
 # Verify service worker
 python -m pytest tests/test_frontend_assets.py::test_service_worker_* -v
@@ -201,7 +201,7 @@ pytest tests/ -v --tb=short > deployment-test-report.txt
 - Add fixtures for mocking external resources
 - Add setup/teardown for service worker cache
 
-### 2. `TESTING_QUICK_REFERENCE.sh`
+### 2. `tests/TESTING_QUICK_REFERENCE.sh`
 - Update to run all layers
 - Add layer-by-layer reporting
 - Add failure cause analysis
@@ -256,7 +256,7 @@ pytest tests/ -v --tb=short > deployment-test-report.txt
 ### Phase 1 (Immediate - This Week)
 - [ ] Create `test_frontend_assets.py` (service worker syntax, file existence)
 - [ ] Create `test_static_files.py` (icon/manifest validation)
-- [ ] Update `TESTING_QUICK_REFERENCE.sh` to run all tests
+- [ ] Update `tests/TESTING_QUICK_REFERENCE.sh` to run all tests
 - [ ] Update pre-commit hook to check frontend tests
 
 ### Phase 2 (This Sprint)
