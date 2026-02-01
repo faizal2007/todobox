@@ -11,11 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (CRITICAL - DATABASE & TEST INFRASTRUCTURE)
 
+- **Test Data Cleanup Improved**: Enhanced test fixture cleanup to catch all test users
+  - Changed cleanup filter from individual email patterns to @example.com domain matching
+  - Now properly cleans up all test users: admin@example.com, user@example.com, workflow@example.com, etc.
+  - Fixes "Duplicate entry" errors in multiple test suites
+  - Result: 246 passing tests (up from 228), 64 failures (down from 68)
+
 - **Test Data Cleanup Fixed**: Corrected TodoShare cleanup in test fixtures to use correct column names
   - Changed from non-existent `recipient_id` to actual `shared_with_id` column
   - Prevents "Cannot add or update child row" foreign key constraint errors
   - Test data now properly cleaned up before and after each test run
-  - Result: 228 tests passing, eliminated test data persistence issues
 
 - **Production Database Protection - ROOT CAUSE FIXED**: Identified and fixed the actual source of table drops
   - **Root Cause**: Pre-commit hook was running pytest during every commit, which executed test fixtures that dropped production database tables
