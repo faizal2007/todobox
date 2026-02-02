@@ -115,6 +115,7 @@ jobs:
           pip-audit
 
       - name: Initialize DB schema (create tables)
+        if: matrix.db == 'sqlite'
         run: |
           python - <<'PY'
           from app import db, app
