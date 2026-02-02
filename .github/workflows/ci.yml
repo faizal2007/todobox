@@ -69,6 +69,10 @@ jobs:
           echo "TEST_DB_USER=test" >> $GITHUB_ENV
           echo "TEST_DB_PASSWORD=testpw" >> $GITHUB_ENV
           echo "TEST_DB_NAME=todobox_test" >> $GITHUB_ENV
+          echo "DB_URL=127.0.0.1:3306" >> $GITHUB_ENV
+          echo "DB_USER=test" >> $GITHUB_ENV
+          echo "DB_PASSWORD=testpw" >> $GITHUB_ENV
+          echo "DB_NAME=todobox_test" >> $GITHUB_ENV
 
       - name: Set DB env (postgres)
         if: matrix.db == 'postgres'
@@ -78,6 +82,10 @@ jobs:
           echo "TEST_DB_USER=test" >> $GITHUB_ENV
           echo "TEST_DB_PASSWORD=testpw" >> $GITHUB_ENV
           echo "TEST_DB_NAME=todobox_test" >> $GITHUB_ENV
+          echo "DB_URL=127.0.0.1:5432" >> $GITHUB_ENV
+          echo "DB_USER=test" >> $GITHUB_ENV
+          echo "DB_PASSWORD=testpw" >> $GITHUB_ENV
+          echo "DB_NAME=todobox_test" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: |
@@ -115,17 +123,14 @@ jobs:
           pip-audit || echo "pip-audit found vulnerabilities (non-blocking)"
 
       - name: Initialize DB schema (create tables)
-        if: matrix.db == 'sqlite'
         run: |
           python - <<'PY'
           from app import db, app
           with app.app_context():
               db.create_all()
-          print("Initialized schema via db.create_all()")
+          print("Initialized schema via db.create_all() against", db.engine.url)
           PY
 
-      - name: Run test suite (SQLite)
-        env:
-          FORCE_SQLITE_FOR_TESTS: "1"
+      - name: Run test suite
         run: |
           pytest -q
