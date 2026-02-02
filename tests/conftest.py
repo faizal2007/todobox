@@ -17,6 +17,52 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import login fixtures for pytest discovery
 from tests.login_fixtures import *
+@pytest.fixture(autouse=True)
+def purge_example_test_users(app):
+    """Autouse fixture to remove test users and their data before each test.
+
+    Deletes rows for emails under known test domains to avoid UNIQUE
+    constraint violations when tests re-create the same users repeatedly.
+    Does NOT drop tables.
+    """
+    from app import db
+    from app.models import User, Todo, Tracker, KIV, TodoShare, ShareInvitation, DeletedAccount
+    with app.app_context():
+        # Allow disabling via env if needed
+        import os as _os
+        if _os.environ.get('DISABLE_PURGE_TEST_EMAILS') == '1':
+            return
+
+        # Purge emails under test domains
+        test_domains = ['@example.com', '@test.com']
+
+        # Collect users to purge
+        users = User.query.filter(
+            (User.email.like('%@example.com')) | (User.email.like('%@test.com'))
+        ).all()
+
+        for u in users:
+            try:
+                # Delete trackers and KIV entries for user's todos
+                todos = Todo.query.filter_by(user_id=u.id).all()
+                todo_ids = [t.id for t in todos]
+                if todo_ids:
+                    Tracker.query.filter(Tracker.todo_id.in_(todo_ids)).delete(synchronize_session=False)
+                    KIV.query.filter(KIV.todo_id.in_(todo_ids)).delete(synchronize_session=False)
+                    Todo.query.filter(Todo.id.in_(todo_ids)).delete(synchronize_session=False)
+
+                # Delete sharing relationships and invitations
+                TodoShare.query.filter((TodoShare.owner_id == u.id) | (TodoShare.shared_with_id == u.id)).delete(synchronize_session=False)
+                ShareInvitation.query.filter((ShareInvitation.from_user_id == u.id) | (ShareInvitation.to_email == u.email)).delete(synchronize_session=False)
+                DeletedAccount.query.filter(DeletedAccount.email == u.email).delete(synchronize_session=False)
+
+                # Finally delete the user
+                db.session.delete(u)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                # Continue purging other users even if one fails
+                continue
 
 
 @pytest.fixture(scope="function")
