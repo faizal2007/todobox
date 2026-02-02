@@ -51,6 +51,17 @@ jobs:
         run: |
           pip-audit
 
+      - name: Initialize SQLite DB (create tables)
+        env:
+          FORCE_SQLITE_FOR_TESTS: "1"
+        run: |
+          python - <<'PY'
+          from app import db, app
+          with app.app_context():
+              db.create_all()
+          print("Initialized SQLite schema via db.create_all()")
+          PY
+
       - name: Run test suite (SQLite)
         env:
           FORCE_SQLITE_FOR_TESTS: "1"
