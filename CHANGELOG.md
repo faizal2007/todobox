@@ -13,6 +13,7 @@
 - Encryption tests: Use get-or-create helpers for test users to prevent UNIQUE email conflicts across persistent DB runs.
 - CI: Add GitHub Actions workflow to run `pip check` and `pytest` (SQLite) on push/PR and weekly schedule.
 - Security: Integrate `pip-audit` into CI to report known vulnerabilities without blocking merges.
+- Testing: Respect `.flaskenv` DB selection; remove `db.drop_all()` from tests to prevent accidental table drops; allow `FORCE_SQLITE_FOR_TESTS=1` only when isolation is needed.
 # Changelog
 
 All notable changes to TodoBox will be documented in this file.

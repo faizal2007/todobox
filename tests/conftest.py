@@ -1,17 +1,15 @@
 """
 Pytest configuration and shared fixtures for all tests
 
-CRITICAL FIX: Prevents tests from dropping production MariaDB tables by:
-1. Using in-memory SQLite for all tests
-2. Disposing old connections and creating fresh test database
-3. Ensuring db.drop_all() only affects test database, never production
+Goal: Run tests against the configured database (from .flaskenv) without
+ever dropping tables. Tests may insert/update/delete rows, but schema
+changes are prohibited.
 """
 import pytest
 import os
 import sys
 
-# Ensure app uses SQLite for tests even if imported early
-os.environ.setdefault('FORCE_SQLITE_FOR_TESTS', '1')
+# Respect the configured database. To force SQLite, set FORCE_SQLITE_FOR_TESTS=1
 
 
 # Add project root to path
@@ -48,8 +46,10 @@ def app(request):
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     app.config['PREFERRED_URL_SCHEME'] = 'http'
     app.config['SERVER_NAME'] = 'localhost'
-    # Use in-memory SQLite for test isolation and cross-DB SQL compatibility
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    # If explicitly forced, use in-memory SQLite for isolation; otherwise
+    # use the configured DB from .flaskenv (mysql/postgres/sqlite file)
+    if os.environ.get('FORCE_SQLITE_FOR_TESTS') == '1':
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 
     # Enable encryption for utility tests that expect it
     try:
@@ -60,12 +60,13 @@ def app(request):
         pass
     
     with app.app_context():
-        # Fresh schema for each test function
+        # Initialize schema only for in-memory SQLite; never drop tables.
         try:
-            db.drop_all()
+            uri = str(app.config.get('SQLALCHEMY_DATABASE_URI', ''))
         except Exception:
-            db.session.rollback()
-        db.create_all()
+            uri = ''
+        if uri.startswith('sqlite:///:memory:'):
+            db.create_all()
         
         # Seed status data if needed
         from app.models import Status, TermsAndDisclaimer
@@ -105,7 +106,7 @@ def app(request):
         
         yield app
         
-        # Nothing to cleanup with in-memory DB; ensure session removal
+        # Ensure session removal after each test
         db.session.remove()
 
 
