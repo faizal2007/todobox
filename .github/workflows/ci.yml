@@ -128,7 +128,7 @@ jobs:
           from app import db, app
           with app.app_context():
               db.create_all()
-          print("Initialized schema via db.create_all() against", db.engine.url)
+              print("Initialized schema via db.create_all() against", db.engine.url)
           PY
 
       - name: Run test suite
