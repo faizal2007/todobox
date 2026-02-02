@@ -1031,8 +1031,11 @@ def login():
                     SessionExpirationHandler.update_last_activity()
                 except Exception:
                     pass
-                next_page = request.args.get('next')
-                if not next_page or url_parse(next_page).netloc != '':
+                next_page = request.args.get('next') or ''
+                # Normalize and validate next_page to prevent open redirects
+                next_page = next_page.replace('\\', '').strip()
+                parsed_next = url_parse(next_page)
+                if not next_page or parsed_next.netloc or parsed_next.scheme:
                     next_page = url_for('dashboard')
                 return redirect(next_page)
 
@@ -1068,8 +1071,11 @@ def login():
                 SessionExpirationHandler.update_last_activity()
             except Exception:
                 pass
-            next_page = request.args.get('next')
-            if not next_page or url_parse(next_page).netloc != '':
+            next_page = request.args.get('next') or ''
+            # Normalize and validate next_page to prevent open redirects
+            next_page = next_page.replace('\\', '').strip()
+            parsed_next = url_parse(next_page)
+            if not next_page or parsed_next.netloc or parsed_next.scheme:
                 next_page = url_for('dashboard')
             return redirect(next_page)
     except Exception as e:
