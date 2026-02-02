@@ -17,30 +17,7 @@ from datetime import datetime, timedelta
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-
-@pytest.fixture
-def app():
-    """Create and configure a test application instance."""
-    from app import app, db
-    
-    # Configure for testing
-    app.config['TESTING'] = True
-    app.config['WTF_CSRF_ENABLED'] = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    app.config['TODO_ENCRYPTION_ENABLED'] = False
-    
-    with app.app_context():
-        db.create_all()
-        
-        # Seed status data
-        from app.models import Status
-        if Status.query.count() == 0:
-            Status.seed()
-        
-        yield app
-        
-        db.session.remove()
-        db.drop_all()
+# Using app fixture from conftest.py for proper database isolation
 
 
 @pytest.fixture

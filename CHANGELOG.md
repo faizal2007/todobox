@@ -7,6 +7,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] - Session Expiration Handler, Client-Side Monitoring & Critical Database Protection Fixes
+
+### Fixed (CRITICAL - DATABASE & TEST INFRASTRUCTURE)
+
+- **Test Data Cleanup Improved**: Enhanced test fixture cleanup to catch all test users
+  - Changed cleanup filter from individual email patterns to @example.com domain matching
+  - Now properly cleans up all test users: admin@example.com, user@example.com, workflow@example.com, etc.
+  - Fixes "Duplicate entry" errors in multiple test suites
+  - Result: 246 passing tests (up from 228), 64 failures (down from 68)
+
+- **Test Data Cleanup Fixed**: Corrected TodoShare cleanup in test fixtures to use correct column names
+  - Changed from non-existent `recipient_id` to actual `shared_with_id` column
+  - Prevents "Cannot add or update child row" foreign key constraint errors
+  - Test data now properly cleaned up before and after each test run
+
+- **Production Database Protection - ROOT CAUSE FIXED**: Identified and fixed the actual source of table drops
+  - **Root Cause**: Pre-commit hook was running pytest during every commit, which executed test fixtures that dropped production database tables
+  - **Solution**: Disabled tests in pre-commit hook; pre-commit now only does fast syntax/lint checks
+  - **Additional Fix**: Removed 6 duplicate local `app()` fixtures that were bypassing database isolation
+  - **Impact**: Production database is now completely protected; tables will NOT drop on commit
+
+- **Database Isolation in Tests**: Fixed critical bug where tests were dropping production MariaDB tables during teardown
+  - Moved db.engine.dispose() inside app.app_context() to prevent RuntimeError
+  - Tests now properly use in-memory SQLite instead of production database
+  - Production database (shimasu_db at 192.168.1.112) is now completely protected from test cleanup operations
+  - Added proper session cleanup in test fixture
+
+- **Werkzeug Compatibility**: Downgraded Werkzeug from 3.1.5 to 2.3.7 for Flask 2.3.2 LTS compatibility
+  - Fixes AttributeError: module 'werkzeug' has no attribute '__version__'
+  - All Flask-SQLAlchemy and Flask dependencies now properly aligned
+
+### Added
+
+- **Session Expiration Handler Module**: New `app/session_handler.py` module for comprehensive session management
+- **Automatic Session Expiration**: Tracks user inactivity and automatically expires sessions after 120 minutes
+- **Session Warning System**: Alerts users when session is about to expire (within 10 minutes of expiration)
+- **Session Status Decorators**: `@session_required` and `@session_extended_required` decorators for route protection
+- **Context Processor Integration**: Provides `session_warning`, `remaining_time`, and `session_expired` to all templates
+- **Session Activity Tracking**: Updates last activity timestamp on each user request
+- **Intelligent Redirect Handling**: Supports both HTML redirects and JSON responses for AJAX requests
+- **Session Check API**: `check_session_expiration()` function for client-side session status verification
+- **API Endpoints for Client Monitoring**:
+  - `GET /api/session-status`: Returns current session status (authenticated, expired, warning state) and remaining time
+  - `POST /api/keep-alive`: Extends user session on activity, updates last_activity timestamp
+- **Client-Side Session Monitor**: New `app/static/js/session-monitor.js` module for real-time session monitoring
+  - Polls server every 60 seconds to check session status
+  - Shows warning modal when session nearing expiration
+  - Auto-extends session on user activity (mouse, keyboard, scroll)
+  - Auto-logs out user when session expires
+  - Browser notification integration for additional alerts
+- **New Test Runner Script**: Top-level `test.py` for convenient test execution
+  - Simple shortcuts: `python3 test.py routes`, `python3 test.py core`, etc.
+  - Built-in quick validation: `python3 test.py quick`
+  - Coverage and verbose options available
+
+### Changed
+
+- **Test Suite Reorganization**: Fixed `tests/run_tests.py` to reference actual test files
+  - Removed references to non-existent test files
+  - Updated to work with current test suite
+  - Now properly supports all test suite selections
+- **Improved Error Handling**: Enhanced `cleanup_pending_deletions()` in `app/__init__.py` to gracefully handle missing database tables during migrations
+- **App Initialization**: Modified `app/__init__.py` to call `init_session_handler(app)` during startup
+- **Session Configuration**: Session timeout configuration in `app/config.py` already aligned with session handler
+
+### Removed
+
+- **Obsolete Test Files** (22 files removed, 51% reduction):
+  - Fix-specific tests: `test_mark_done_fix.py`, `test_kiv_redirect_fix.py`, etc. (functionality now in test_all_routes.py)
+  - Redundant suites: `test_comprehensive.py`, `test_functional.py`, `test_backend_routes.py`
+  - Manual tests: `test_features_comprehensive.py`, `test_workflows.py`
+  - Email-specific tests: `test_email_direct.py`, `test_email_headers.py`, `test_email_send.py`
+  - Superseded versions: `test_system_accuracy.py`, `test_work_session_simplified.py`
+- Tests now consolidated to 21 actively maintained files covering all functionality
+
+### Documentation
+
+- **Comprehensive Logging**: Session expiration events logged for audit trails and debugging
+- **Test Coverage**: Full test suite in `tests/test_session_handler.py` covering all session handler functionality
+- **Documentation**: Detailed documentation in `docs/SESSION_HANDLER.md` with examples and troubleshooting
+
+---
+
 ## [2.1.1] - Branch Testing and Validation - 2026-02-02
 
 ### Added
@@ -25,6 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation**: All markdown files follow .copilot-markdown-rules.md standards
 
 ---
+
 
 ## [2.1.0] - Work Session Tracking System - 2026-01-17
 

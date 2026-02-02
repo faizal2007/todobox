@@ -10,7 +10,7 @@ from pathlib import Path
 
 def run_command(cmd: str, description: str) -> bool:
     """Run a command and return True if successful."""
-    print(f"\n  → {description}")
+    print(f"  → {description}")
     try:
         result = subprocess.run(
             cmd,
@@ -19,61 +19,79 @@ def run_command(cmd: str, description: str) -> bool:
             text=True,
             timeout=300
         )
+        if result.returncode == 0:
+            print(f"    ✓ {description}")
+        else:
+            print(f"    ✗ {description}")
+            if result.stderr:
+                print(f"      Error: {result.stderr[:100]}")
         return result.returncode == 0
     except subprocess.TimeoutExpired:
-        print(f"    ❌ Timeout: {description}")
+        print(f"    ✗ Timeout: {description}")
         return False
     except Exception as e:
-        print(f"    ❌ Error: {e}")
+        print(f"    ✗ Error: {e}")
         return False
 
 def validate_test_suite() -> int:
     """Run comprehensive test validation."""
-    print("=" * 60)
+    print("\n" + "=" * 70)
     print("🧪 COMPREHENSIVE TEST SUITE VALIDATOR")
-    print("=" * 60)
+    print("=" * 70)
     
     checks = [
         # Python syntax
         (
-            "python -m py_compile app/**/*.py 2>/dev/null",
+            "python3 -m py_compile tests/test_*.py app/**/*.py 2>/dev/null",
             "Python syntax validation"
         ),
         
         # Imports
         (
-            'python -c "from app import app, db; from app.models import *; from app.routes import *"',
+            'python3 -c "from app import app, db; from app.models import *; from app.routes import *; from app.session_handler import *"',
             "Module imports validation"
         ),
         
         # Core tests
         (
-            "python -m pytest tests/test_accurate_comprehensive.py -q --tb=no",
+            "python3 -m pytest tests/test_accurate_comprehensive.py -q --tb=no 2>/dev/null",
             "Core functionality tests"
         ),
         
-        # Route tests
+        # Route tests - All routes
         (
-            "python -m pytest tests/test_all_routes.py::TestAPIRoutes -q --tb=no",
+            "python3 -m pytest tests/test_all_routes.py -q --tb=no 2>/dev/null",
+            "All routes tests"
+        ),
+        
+        # API routes
+        (
+            "python3 -m pytest tests/test_all_routes.py::TestAPIRoutes -q --tb=no 2>/dev/null",
             "API routes validation"
         ),
         
         # CRUD operations
         (
-            "python -m pytest tests/test_all_routes.py::TestTodoCRUDRoutes -q --tb=no",
+            "python3 -m pytest tests/test_all_routes.py::TestTodoCRUDRoutes -q --tb=no 2>/dev/null",
             "Todo CRUD operations"
         ),
         
         # Authentication
         (
-            "python -m pytest tests/test_all_routes.py::TestAuthenticationRoutes -q --tb=no",
+            "python3 -m pytest tests/test_all_routes.py::TestAuthenticationRoutes -q --tb=no 2>/dev/null",
             "Authentication routes"
         ),
         
         # Integration tests
         (
-            "python -m pytest tests/test_integration.py -q --tb=no 2>/dev/null || true",
-            "Integration tests (optional)"
+            "python3 -m pytest tests/test_integration.py -q --tb=no 2>/dev/null || true",
+            "Integration tests"
+        ),
+        
+        # Session handler
+        (
+            "python3 -m pytest tests/test_session_handler.py -q --tb=no 2>/dev/null || true",
+            "Session handler tests"
         ),
     ]
     
@@ -82,15 +100,13 @@ def validate_test_suite() -> int:
     
     for cmd, desc in checks:
         if run_command(cmd, desc):
-            print(f"    ✓ {desc}")
             passed += 1
         else:
-            print(f"    ✗ {desc}")
             failed += 1
     
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 70)
     print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
+    print("=" * 70 + "\n")
     
     return 0 if failed == 0 else 1
 

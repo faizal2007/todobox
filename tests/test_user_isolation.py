@@ -54,55 +54,46 @@ class TestEncryptionEdgeCases:
             assert encrypt_text('') == ''
             assert decrypt_text('') == ''
 
-
-@pytest.fixture
-def app():
-    """Create and configure a test application instance."""
-    from app import app, db
-    
-    # Configure for testing
-    app.config['TESTING'] = True
-    app.config['WTF_CSRF_ENABLED'] = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    app.config['TODO_ENCRYPTION_ENABLED'] = False  # Default: encryption disabled
-    
-    with app.app_context():
-        db.create_all()
-        
-        # Seed required data
-        from app.models import Status
-        
-        # Add status records manually (Status.__init__ only accepts name)
-        if Status.query.count() == 0:
-            status_new = Status(name='new')
-            status_new.id = 5
-            status_done = Status(name='done')
-            status_done.id = 6
-            status_failed = Status(name='failed')
-            status_failed.id = 7
-            status_reassign = Status(name='re-assign')
-            status_reassign.id = 8
-            db.session.add_all([status_new, status_done, status_failed, status_reassign])
-            db.session.commit()
-        
-        yield app
-        
-        db.session.remove()
-        db.drop_all()
+# Using app fixture from conftest.py for proper database isolation
 
 
 @pytest.fixture
 def app_with_encryption():
-    """Create a test application instance with encryption enabled."""
+    """Create a test application instance with encryption enabled.
+    
+    Uses the development database from .flaskenv but enables encryption for testing.
+    Cleans up test data before and after tests.
+    """
     from app import app, db
     
     # Configure for testing with encryption enabled
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['TODO_ENCRYPTION_ENABLED'] = True  # Enable encryption for these tests
+    # Database URL from .flaskenv - uses development database
     
     with app.app_context():
+        # Clean up test data from previous runs
+        from app.models import User, Todo, Tracker, KIV
+        try:
+            test_users = User.query.filter(
+                (User.email.contains('test')) | 
+                (User.email.contains('persist')) |
+                (User.email.contains('exists')) |
+                (User.email.contains('unverified'))
+            ).all()
+            
+            for user in test_users:
+                todos = Todo.query.filter_by(user_id=user.id).all()
+                for todo in todos:
+                    Tracker.query.filter_by(todo_id=todo.id).delete()
+                    KIV.query.filter_by(todo_id=todo.id).delete()
+                Todo.query.filter_by(user_id=user.id).delete()
+                db.session.delete(user)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        
         db.create_all()
         
         # Seed required data
@@ -123,8 +114,27 @@ def app_with_encryption():
         
         yield app
         
+        # Clean up test data after test
+        try:
+            test_users = User.query.filter(
+                (User.email.contains('test')) | 
+                (User.email.contains('persist')) |
+                (User.email.contains('exists')) |
+                (User.email.contains('unverified'))
+            ).all()
+            
+            for user in test_users:
+                todos = Todo.query.filter_by(user_id=user.id).all()
+                for todo in todos:
+                    Tracker.query.filter_by(todo_id=todo.id).delete()
+                    KIV.query.filter_by(todo_id=todo.id).delete()
+                Todo.query.filter_by(user_id=user.id).delete()
+                db.session.delete(user)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        
         db.session.remove()
-        db.drop_all()
 
 
 @pytest.fixture

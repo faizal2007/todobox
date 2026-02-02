@@ -27,15 +27,16 @@ def run_command(cmd_list, description=""):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Run TodoBox functional tests',
+        description='Run TodoBox test suites',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python test_runner.py all              Run all tests
-  python test_runner.py auth             Run authentication tests
-  python test_runner.py todos            Run todo management tests
-  python test_runner.py --verbose        Run with verbose output
-  python test_runner.py --coverage       Run with coverage report
+  python run_tests.py all              Run all tests
+  python run_tests.py routes           Run all route tests
+  python run_tests.py core             Run core functionality tests
+  python run_tests.py features         Run feature tests
+  python run_tests.py --verbose        Run with verbose output
+  python run_tests.py --coverage       Run with coverage report
         """
     )
     
@@ -43,7 +44,7 @@ Examples:
         'suite',
         nargs='?',
         default='all',
-        choices=['all', 'auth', 'todos', 'isolation', 'sharing', 'admin', 'settings', 'integration'],
+        choices=['all', 'routes', 'core', 'features', 'auth', 'todos', 'integration'],
         help='Test suite to run (default: all)'
     )
     parser.add_argument(
@@ -73,25 +74,19 @@ Examples:
     
     args = parser.parse_args()
     
-    # Build pytest command as a list (safer than shell=True)
-    test_file = 'tests/test_functional.py'
-    cmd = ['python', '-m', 'pytest', test_file]
-    
-    # Add test suite selection
+    # Build pytest command - run appropriate test files based on suite
     suite_map = {
-        'all': '',
-        'auth': '::TestAuthentication',
-        'todos': '::TestTodoManagement',
-        'isolation': '::TestUserIsolation',
-        'sharing': '::TestTodoSharing',
-        'admin': '::TestAdminFunctionality',
-        'settings': '::TestUserSettings',
-        'integration': '::TestEndToEndWorkflow'
+        'all': ['tests/test_all_routes.py', 'tests/test_accurate_comprehensive.py', 'tests/test_integration.py'],
+        'routes': ['tests/test_all_routes.py'],
+        'core': ['tests/test_accurate_comprehensive.py'],
+        'features': ['tests/test_achievements.py', 'tests/test_backup.py', 'tests/test_registration.py'],
+        'auth': ['tests/test_all_routes.py::TestAuthenticationRoutes'],
+        'todos': ['tests/test_all_routes.py::TestTodoCRUDRoutes'],
+        'integration': ['tests/test_integration.py'],
     }
     
-    if args.suite != 'all':
-        # Replace the test file with the file + test class selector
-        cmd[cmd.index(test_file)] = test_file + suite_map[args.suite]
+    test_targets = suite_map.get(args.suite, suite_map['all'])
+    cmd = ['python', '-m', 'pytest'] + test_targets
     
     # Add flags
     if args.verbose:

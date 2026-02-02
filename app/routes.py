@@ -4149,3 +4149,95 @@ def backup_todos():
         app.logger.error(f'Error creating backup for user {current_user.email}: {str(e)}', exc_info=True)
         flash('Error creating backup. Please try again later.', 'error')
         return redirect(url_for('dashboard'))
+
+
+# ==================== Session Management API Routes ====================
+
+@app.route('/api/session-status', methods=['GET'])
+@csrf.exempt
+def get_session_status():
+    """Get current session status for client-side monitoring
+    
+    Returns session expiration status and remaining time for authenticated users.
+    For AJAX/XHR requests, returns JSON. For regular requests, returns HTML redirect.
+    """
+    from app.session_handler import SessionExpirationHandler
+    
+    # Check if user is authenticated
+    if not current_user.is_authenticated:
+        return jsonify({
+            'is_authenticated': False,
+            'is_expired': True,
+            'is_warning': False,
+            'remaining_minutes': 0,
+            'message': 'Not authenticated'
+        }), 401
+    
+    try:
+        # Check if session has expired
+        is_expired = SessionExpirationHandler.is_session_expired()
+        is_warning = SessionExpirationHandler.is_session_warning_time()
+        remaining_seconds = SessionExpirationHandler.get_remaining_session_time()
+        remaining_minutes = round(remaining_seconds / 60) if remaining_seconds > 0 else 0
+        
+        response_data = {
+            'is_authenticated': True,
+            'is_expired': is_expired,
+            'is_warning': is_warning,
+            'remaining_minutes': remaining_minutes,
+            'remaining_seconds': remaining_seconds,
+            'message': 'Session active'
+        }
+        
+        # If session has expired, log out the user
+        if is_expired:
+            logout_user()
+            response_data['is_authenticated'] = False
+            response_data['message'] = 'Session expired'
+            return jsonify(response_data), 401
+        
+        return jsonify(response_data), 200
+    
+    except Exception as e:
+        app.logger.error(f'Error checking session status: {str(e)}')
+        return jsonify({
+            'is_authenticated': False,
+            'error': 'Session status check failed',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/keep-alive', methods=['POST'])
+@csrf.exempt
+@login_required
+def extend_session():
+    """Extend user session on activity
+    
+    Called by client-side monitor when user is active. Updates last_activity
+    timestamp to keep session alive.
+    """
+    from app.session_handler import SessionExpirationHandler
+    
+    try:
+        # Update last activity timestamp in session
+        SessionExpirationHandler.update_activity()
+        
+        # Calculate remaining session time
+        remaining_seconds = SessionExpirationHandler.get_remaining_session_time()
+        remaining_minutes = round(remaining_seconds / 60) if remaining_seconds > 0 else 0
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Session extended',
+            'remaining_minutes': remaining_minutes,
+            'remaining_seconds': remaining_seconds,
+            'is_authenticated': current_user.is_authenticated
+        }), 200
+    
+    except Exception as e:
+        app.logger.error(f'Error extending session: {str(e)}')
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to extend session',
+            'error': str(e)
+        }), 500
