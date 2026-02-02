@@ -799,9 +799,24 @@ class TestTodoEncryption:
             plaintext_details = 'Unencrypted todo details'
             plaintext_html = '<p>Unencrypted HTML</p>'
             
+            # Use cross-database compatible current timestamp function
+            # Detect the active SQL dialect robustly
+            try:
+                dialect = db.engine.dialect.name
+            except Exception:
+                dialect = 'sqlite'
+            if dialect in ('mysql', 'mariadb', 'postgresql'):
+                ts_func = 'CURRENT_TIMESTAMP'
+            else:
+                ts_func = "datetime('now')"
+
+            insert_sql = (
+                f'INSERT INTO todo (name, details, details_html, timestamp, modified, target_date, user_id) '
+                f'VALUES (:name, :details, :html, {ts_func}, {ts_func}, {ts_func}, :user_id)'
+            )
+
             db.session.execute(
-                text('INSERT INTO todo (name, details, details_html, timestamp, modified, target_date, user_id) '
-                     'VALUES (:name, :details, :html, datetime("now"), datetime("now"), datetime("now"), :user_id)'),
+                text(insert_sql),
                 {'name': plaintext_name, 'details': plaintext_details, 'html': plaintext_html, 'user_id': user.id}
             )
             db.session.commit()

@@ -18,15 +18,16 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Import login fixtures for pytest discovery
 from tests.login_fixtures import *
 @pytest.fixture(autouse=True)
-def purge_example_test_users(app):
+def purge_example_test_users():
     """Autouse fixture to remove test users and their data before each test.
 
     Deletes rows for emails under known test domains to avoid UNIQUE
     constraint violations when tests re-create the same users repeatedly.
     Does NOT drop tables.
     """
-    from app import db
+    from app import app, db
     from app.models import User, Todo, Tracker, KIV, TodoShare, ShareInvitation, DeletedAccount
+    # Use a temporary app context for cleanup only; do not keep it active
     with app.app_context():
         # Allow disabling via env if needed
         import os as _os
@@ -92,6 +93,11 @@ def app(request):
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     app.config['PREFERRED_URL_SCHEME'] = 'http'
     app.config['SERVER_NAME'] = 'localhost'
+    # Allow adding routes in tests even if app handled prior requests
+    try:
+        app._got_first_request = False  # type: ignore[attr-defined]
+    except Exception:
+        pass
     # If explicitly forced, use in-memory SQLite for isolation; otherwise
     # use the configured DB from .flaskenv (mysql/postgres/sqlite file)
     if os.environ.get('FORCE_SQLITE_FOR_TESTS') == '1':
@@ -105,6 +111,7 @@ def app(request):
     except Exception:
         pass
     
+    # Perform setup within an application context and keep it active during tests
     with app.app_context():
         # Initialize schema only for in-memory SQLite; never drop tables.
         try:
@@ -113,7 +120,7 @@ def app(request):
             uri = ''
         if uri.startswith('sqlite:///:memory:'):
             db.create_all()
-        
+
         # Seed status data if needed
         from app.models import Status, TermsAndDisclaimer
         if Status.query.count() == 0:
@@ -131,27 +138,36 @@ def app(request):
                 status.id = i
             db.session.add_all(statuses)
             db.session.commit()
-        
-        # Seed terms and disclaimer if needed
-        if TermsAndDisclaimer.query.count() == 0:
-            terms = TermsAndDisclaimer(
+
+        # Seed/normalize terms: ensure exactly one active version and it's '1.0'
+        from sqlalchemy import or_
+        existing_terms = TermsAndDisclaimer.query.all()
+        for term in existing_terms:
+            term.is_active = False
+        db.session.commit()
+
+        default = TermsAndDisclaimer.query.filter_by(version='1.0').first()
+        if not default:
+            default = TermsAndDisclaimer(
                 terms_of_use='These are the terms of use.',
                 disclaimer='This is the disclaimer.',
                 version='1.0',
                 is_active=True
             )
-            db.session.add(terms)
-            db.session.commit()
+            db.session.add(default)
         else:
-            # Ensure only one active terms record
-            active_terms = TermsAndDisclaimer.query.filter_by(is_active=True).all()
-            if len(active_terms) > 1:
-                for term in active_terms[1:]:
-                    term.is_active = False
-                db.session.commit()
-        
+            default.is_active = True
+        db.session.commit()
+
+        # Yield app while context is active
+        # Clean any test endpoints that might conflict when redefined in tests
+        try:
+            for ep in ['test_route']:
+                app.view_functions.pop(ep, None)
+        except Exception:
+            pass
         yield app
-        
+
         # Ensure session removal after each test
         db.session.remove()
 

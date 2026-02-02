@@ -24,7 +24,13 @@ class User(UserMixin, db.Model): # type: ignore[attr-defined]
     terms_accepted_version = db.Column(db.String(50)) # type: ignore[attr-defined]  # Version of terms user accepted (None if not accepted)
     pending_deletion = db.Column(db.Boolean, default=False) # type: ignore[attr-defined]  # Mark account for deletion
     deletion_requested_at = db.Column(db.DateTime) # type: ignore[attr-defined]  # When deletion was requested
-    todo = db.relationship('Todo', backref='user', lazy='dynamic') # type: ignore[attr-defined]
+    # Cascade delete todos when a user is deleted to avoid orphan data
+    todo = db.relationship(
+        'Todo',
+        backref='user',
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    ) # type: ignore[attr-defined]
 
     def __init__(self, email, oauth_provider=None, oauth_id=None, fullname=None):
         self.email = email
@@ -113,8 +119,12 @@ class ShareInvitation(db.Model): # type: ignore[attr-defined]
     expires_at = db.Column(db.DateTime) # type: ignore[attr-defined]
     responded_at = db.Column(db.DateTime) # type: ignore[attr-defined]
     
-    # Relationship to the sender
-    from_user = db.relationship('User', foreign_keys=[from_user_id], backref='sent_invitations') # type: ignore[attr-defined]
+    # Relationship to the sender; cascade on parent delete to remove invitations
+    from_user = db.relationship(
+        'User',
+        foreign_keys=[from_user_id],
+        backref=db.backref('sent_invitations', cascade='all, delete')
+    ) # type: ignore[attr-defined]
     
     def __init__(self, from_user_id, to_email, token=None, expires_in_days=7):
         import secrets
@@ -153,9 +163,15 @@ class TodoShare(db.Model): # type: ignore[attr-defined]
     shared_with_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # type: ignore[attr-defined]  # User who can see the todos
     created_at = db.Column(db.DateTime, default=datetime.now) # type: ignore[attr-defined]
     
-    # Relationships
-    owner = db.relationship('User', foreign_keys=[owner_id], backref='shared_by_me') # type: ignore[attr-defined]
-    shared_with = db.relationship('User', foreign_keys=[shared_with_id], backref='shared_with_me') # type: ignore[attr-defined]
+    # Relationships; ensure share rows are deleted when a user is removed
+    owner = db.relationship(
+        'User', foreign_keys=[owner_id],
+        backref=db.backref('shared_by_me', cascade='all, delete')
+    ) # type: ignore[attr-defined]
+    shared_with = db.relationship(
+        'User', foreign_keys=[shared_with_id],
+        backref=db.backref('shared_with_me', cascade='all, delete')
+    ) # type: ignore[attr-defined]
     
     # Unique constraint - each pair of users can only have one sharing relationship
     __table_args__ = (db.UniqueConstraint('owner_id', 'shared_with_id', name='unique_share'),) # type: ignore[attr-defined]
@@ -234,6 +250,15 @@ class KIV(db.Model): # type: ignore[attr-defined]
     entered_at = db.Column(db.DateTime, index=True, default=datetime.now) # type: ignore[attr-defined]  # When entered KIV
     exited_at = db.Column(db.DateTime, nullable=True) # type: ignore[attr-defined]  # When exited KIV (for history)
     is_active = db.Column(db.Boolean, default=True, index=True) # type: ignore[attr-defined]  # Whether currently in KIV
+    # Relationships to support cascade deletes via ORM
+    todo = db.relationship(
+        'Todo',
+        backref=db.backref('kiv_entry', uselist=False, cascade='all, delete-orphan')
+    ) # type: ignore[attr-defined]
+    user = db.relationship(
+        'User',
+        backref=db.backref('kiv_entries', cascade='all, delete-orphan')
+    ) # type: ignore[attr-defined]
 
     def __init__(self, todo_id, user_id, entered_at=None):
         self.todo_id = todo_id
@@ -285,7 +310,13 @@ class Todo(db.Model): # type: ignore[attr-defined]
     reminder_first_notification_time = db.Column(db.DateTime, nullable=True) # type: ignore[attr-defined]  # Time of first notification
     todo_type = db.Column(db.String(20), default='advanced') # type: ignore[attr-defined]  # 'simple' or 'advanced' - default is advanced for backward compatibility
     user_id = db.Column(db.Integer, db.ForeignKey('user.id')) # type: ignore[attr-defined]
-    tracker_entries = db.relationship('Tracker', backref='todo', lazy='dynamic') # type: ignore[attr-defined]
+    # Cascade delete tracker entries when a todo is deleted
+    tracker_entries = db.relationship(
+        'Tracker',
+        backref='todo',
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    ) # type: ignore[attr-defined]
 
     @property
     def name(self):

@@ -1,4 +1,5 @@
 ## [Unreleased]
+- ORM cascades: Deleting a user now removes related todos, trackers, KIV entries, shares, and invitations to prevent orphaned data (non-destructive; no table drops).
 - Test isolation: Switch pytest to in-memory SQLite for compatibility and safety.
 - Encryption: Enable `TODO_ENCRYPTION_ENABLED` during tests; fix failing utility tests.
 - Auth in tests: Add `testing_or_login_required` decorator to allow session-based test access without full login.
