@@ -1,4 +1,5 @@
 ## [Unreleased]
+- Tests: Ensure `status_id=5` exists during test setup by inserting a fallback `Status(id=5, name="Completed")` if missing to prevent foreign key violations.
 - CI: Fix schema init step to run entirely within Flask app context; avoid RuntimeError when accessing `db.engine.url` in CI.
 - CI: Fix matrix DB configuration to avoid forcing SQLite across all jobs; set DB_* env for external DBs and initialize schema for mariadb/postgres. Postgres/MariaDB jobs should now run against their respective databases.
 - ORM cascades: Deleting a user now removes related todos, trackers, KIV entries, shares, and invitations to prevent orphaned data (non-destructive; no table drops).
