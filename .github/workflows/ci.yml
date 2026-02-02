@@ -11,6 +11,34 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [sqlite, mariadb, postgres]
+
+    services:
+      mariadb:
+        image: mariadb:10.6
+        env:
+          MARIADB_ROOT_PASSWORD: rootpw
+          MARIADB_DATABASE: todobox_test
+          MARIADB_USER: test
+          MARIADB_PASSWORD: testpw
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 --silent" --health-interval=10s --health-timeout=5s --health-retries=10
+
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: todobox_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: testpw
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U test -h 127.0.0.1 -p 5432" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
       - name: Checkout
@@ -28,11 +56,46 @@ jobs:
           sudo apt-get install -y build-essential python3-dev pkg-config default-libmysqlclient-dev \
             rustc cargo libunwind-dev
 
+      - name: Set DB env (sqlite)
+        if: matrix.db == 'sqlite'
+        run: |
+          echo "FORCE_SQLITE_FOR_TESTS=1" >> $GITHUB_ENV
+
+      - name: Set DB env (mariadb)
+        if: matrix.db == 'mariadb'
+        run: |
+          echo "DATABASE_DEFAULT=mysql" >> $GITHUB_ENV
+          echo "TEST_DB_URL=127.0.0.1:3306" >> $GITHUB_ENV
+          echo "TEST_DB_USER=test" >> $GITHUB_ENV
+          echo "TEST_DB_PASSWORD=testpw" >> $GITHUB_ENV
+          echo "TEST_DB_NAME=todobox_test" >> $GITHUB_ENV
+
+      - name: Set DB env (postgres)
+        if: matrix.db == 'postgres'
+        run: |
+          echo "DATABASE_DEFAULT=postgres" >> $GITHUB_ENV
+          echo "TEST_DB_URL=127.0.0.1:5432" >> $GITHUB_ENV
+          echo "TEST_DB_USER=test" >> $GITHUB_ENV
+          echo "TEST_DB_PASSWORD=testpw" >> $GITHUB_ENV
+          echo "TEST_DB_NAME=todobox_test" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
+
+      - name: Wait for MariaDB
+        if: matrix.db == 'mariadb'
+        run: |
+          sudo apt-get install -y mysql-client
+          for i in {1..30}; do mysqladmin ping -h 127.0.0.1 -P 3306 --silent && break || sleep 2; done
+
+      - name: Wait for Postgres
+        if: matrix.db == 'postgres'
+        run: |
+          sudo apt-get install -y postgresql-client
+          for i in {1..30}; do pg_isready -h 127.0.0.1 -p 5432 && break || sleep 2; done
 
       - name: Prepare instance directory
         run: |
@@ -51,15 +114,13 @@ jobs:
         run: |
           pip-audit
 
-      - name: Initialize SQLite DB (create tables)
-        env:
-          FORCE_SQLITE_FOR_TESTS: "1"
+      - name: Initialize DB schema (create tables)
         run: |
           python - <<'PY'
           from app import db, app
           with app.app_context():
               db.create_all()
-          print("Initialized SQLite schema via db.create_all()")
+          print("Initialized schema via db.create_all()")
           PY
 
       - name: Run test suite (SQLite)
