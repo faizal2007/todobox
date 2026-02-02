@@ -76,6 +76,7 @@ New to TodoBox? Start here:
 
 ### Testing & Verification
 
+- **[MARKDOWN_VERIFICATION_REPORT.md](MARKDOWN_VERIFICATION_REPORT.md)** - Markdown code fence compliance verification
 - **[TEST_FILE_ORGANIZATION.md](TEST_FILE_ORGANIZATION.md)** - Test file locations and organization
 - **[TESTING_STRATEGY_AND_CI_CD.md](TESTING_STRATEGY_AND_CI_CD.md)** - Testing strategy (if exists)
 - **[COMPREHENSIVE_TEST_STRATEGY.md](COMPREHENSIVE_TEST_STRATEGY.md)** - Multi-layer testing
