@@ -78,7 +78,7 @@ class ReminderService:
         Args:
             todo_id: ID of the todo
         """
-        todo = Todo.query.get(todo_id)
+        todo = db.session.get(Todo, todo_id)
         if todo:
             # Increment notification count
             if todo.reminder_notification_count is None:
@@ -111,7 +111,7 @@ class ReminderService:
         Returns:
             bool: True if reminder was cancelled successfully, False otherwise
         """
-        todo = Todo.query.get(todo_id)
+        todo = db.session.get(Todo, todo_id)
         if todo and todo.reminder_enabled:
             # Disable the reminder but don't mark as sent
             # This allows the user to set a new reminder later if needed

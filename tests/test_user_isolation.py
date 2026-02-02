@@ -162,17 +162,34 @@ def runner(app):
 def create_test_users(db):
     """Create two test users for testing isolation."""
     from app.models import User
-    
-    user1 = User(email='user1@test.com')
-    user1.set_password('password1')
-    
-    user2 = User(email='user2@test.com')
-    user2.set_password('password2')
-    
-    db.session.add(user1)
-    db.session.add(user2)
-    db.session.commit()
-    
+    # Get or create users to avoid UNIQUE email conflicts across tests
+    user1 = User.query.filter_by(email='user1@test.com').first()
+    if not user1:
+        user1 = User(email='user1@test.com')
+        user1.set_password('password1')
+        db.session.add(user1)
+        db.session.commit()
+    else:
+        # Ensure password is set
+        try:
+            user1.set_password('password1')
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+    user2 = User.query.filter_by(email='user2@test.com').first()
+    if not user2:
+        user2 = User(email='user2@test.com')
+        user2.set_password('password2')
+        db.session.add(user2)
+        db.session.commit()
+    else:
+        try:
+            user2.set_password('password2')
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
     return user1, user2
 
 
@@ -223,7 +240,8 @@ class TestUserIsolation:
             assert response.status_code in [404, 302]
             
             # Verify todo still exists
-            todo_check = Todo.query.get(todo_id)
+            from app import db
+            todo_check = db.session.get(Todo, todo_id)
             assert todo_check is not None
     
     def test_user_cannot_get_others_todo(self, app, client):
@@ -308,7 +326,8 @@ class TestUserIsolation:
             assert data['status'] == 'failed'
             
             # Verify todo was not modified
-            todo_check = Todo.query.get(todo_id)
+            from app import db
+            todo_check = db.session.get(Todo, todo_id)
             assert todo_check.name == original_title
     
     def test_user_can_access_own_todo(self, app, client):
@@ -358,7 +377,8 @@ class TestUserIsolation:
             assert response.status_code == 302
             
             # Verify todo was deleted
-            todo_check = Todo.query.get(todo_id)
+            from app import db
+            todo_check = db.session.get(Todo, todo_id)
             assert todo_check is None
     
     def test_user_can_mark_own_todo_done(self, app, client):
@@ -501,7 +521,8 @@ class TestAPIUserIsolation:
             assert response.status_code == 404
             
             # Verify todo was not modified
-            todo_check = Todo.query.get(todo_id)
+            from app import db
+            todo_check = db.session.get(Todo, todo_id)
             assert todo_check.name == 'User1 Protected Todo'
     
     def test_api_cannot_delete_others_todo(self, app, client):
@@ -529,7 +550,8 @@ class TestAPIUserIsolation:
             assert response.status_code == 404
             
             # Verify todo still exists
-            todo_check = Todo.query.get(todo_id)
+            from app import db
+            todo_check = db.session.get(Todo, todo_id)
             assert todo_check is not None
 
 
@@ -614,7 +636,8 @@ class TestSharedTodoAccess:
             assert response.status_code == 404
             
             # Verify todo still exists
-            todo_check = Todo.query.get(todo_id)
+            from app import db
+            todo_check = db.session.get(Todo, todo_id)
             assert todo_check is not None
     
     def test_shared_user_cannot_update_shared_todo(self, app, client):
@@ -651,7 +674,8 @@ class TestSharedTodoAccess:
             assert data['status'] == 'failed'
             
             # Verify todo was not modified
-            todo_check = Todo.query.get(todo_id)
+            from app import db
+            todo_check = db.session.get(Todo, todo_id)
             assert todo_check.name == original_title
 
 
@@ -691,7 +715,8 @@ class TestTodoEncryption:
             assert raw_details != plaintext_details, "Todo details should be encrypted in database"
             
             # But when accessed through the model, they should be decrypted
-            todo_check = Todo.query.get(todo_id)
+            from app import db
+            todo_check = db.session.get(Todo, todo_id)
             assert todo_check.name == plaintext_name, "Todo name should be decrypted when accessed"
             assert todo_check.details == plaintext_details, "Todo details should be decrypted when accessed"
     
@@ -790,7 +815,8 @@ class TestTodoEncryption:
             
             # Now retrieve the todo through the model (which uses decrypt_text)
             # This should NOT raise an exception - it should return the plaintext
-            todo = Todo.query.get(todo_id)
+            from app import db
+            todo = db.session.get(Todo, todo_id)
             
             # Verify the unencrypted data is returned correctly
             assert todo.name == plaintext_name, "Unencrypted name should be readable"

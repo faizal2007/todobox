@@ -95,7 +95,7 @@ class TestTodoLifecycle:
         todo_id = todo.id
         
         # Verify creation
-        created_todo = Todo.query.get(todo_id)
+        created_todo = db_session.session.get(Todo, todo_id)
         assert created_todo is not None
         assert created_todo.name == 'Lifecycle Todo'
         
@@ -105,7 +105,7 @@ class TestTodoLifecycle:
         db_session.session.commit()
         
         # Verify update
-        updated_todo = Todo.query.get(todo_id)
+        updated_todo = db_session.session.get(Todo, todo_id)
         assert updated_todo.name == 'Updated Lifecycle Todo'
         assert updated_todo.details == 'Updated details'
         
@@ -114,7 +114,7 @@ class TestTodoLifecycle:
         db_session.session.commit()
         
         # Verify deletion
-        deleted_todo = Todo.query.get(todo_id)
+        deleted_todo = db_session.session.get(Todo, todo_id)
         assert deleted_todo is None
 
 

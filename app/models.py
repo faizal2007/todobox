@@ -369,16 +369,19 @@ class Todo(db.Model): # type: ignore[attr-defined]
         done = 2
         latest_todo = db.session.query(func.max(Tracker.timestamp)).group_by(Tracker.todo_id) # type: ignore[attr-defined]
         
+        from app.models import Status
+        done_id = Status.id_for('done')
+        kiv_id = Status.id_for('kiv')
         query = db.session.query( # type: ignore[attr-defined]
-                                Todo, 
-                                Tracker
-            ).join(
+                    Todo, 
                     Tracker
+            ).join(
+                Tracker
             ).filter(
-                    Tracker.timestamp == Todo.modified, # type: ignore[attr-defined]
-                    Tracker.timestamp.between(start, end), # type: ignore[attr-defined]
-                    Tracker.status_id != 6,  # Status 6 = done # pyright: ignore[reportGeneralTypeIssues]
-                    Tracker.status_id != 9   # Status 9 = kiv # pyright: ignore[reportGeneralTypeIssues]
+                Tracker.timestamp == Todo.modified, # type: ignore[attr-defined]
+                Tracker.timestamp.between(start, end), # type: ignore[attr-defined]
+                Tracker.status_id != done_id,
+                Tracker.status_id != kiv_id
             )
         
         # Filter by user if user_id is provided
@@ -411,6 +414,21 @@ class Status(db.Model): # type: ignore[attr-defined]
             status.id = i
         db.session.add_all(statuses)
         db.session.commit() # type: ignore[attr-defined]
+
+    @classmethod
+    def id_for(cls, name: str) -> int:
+        """Return the status id for a given name, creating it if missing.
+
+        In environments where the `status` table is already populated and IDs
+        may differ, this method avoids hardcoded IDs and ensures foreign key
+        integrity for tracker entries.
+        """
+        status = cls.query.filter_by(name=name).first()
+        if status is None:
+            status = Status(name=name)
+            db.session.add(status) # type: ignore[attr-defined]
+            db.session.commit() # type: ignore[attr-defined]
+        return int(status.id)
 
     def __repr__(self):
         return '<Status {}>'.format(self.name)
@@ -475,7 +493,8 @@ class TermsAndDisclaimer(db.Model): # type: ignore[attr-defined]
     @classmethod
     def get_active(cls):
         """Get the currently active terms and disclaimer"""
-        return cls.query.filter_by(is_active=True).first()
+        # Prefer the most recently updated active terms if multiple are active
+        return cls.query.filter_by(is_active=True).order_by(cls.updated_at.desc(), cls.id.desc()).first()
     
     @classmethod
     def get_or_create_default(cls):
@@ -514,4 +533,4 @@ class TermsAndDisclaimer(db.Model): # type: ignore[attr-defined]
 
 @login.user_loader
 def load_user(id):
-    return User.query.get(int(id))
+    return db.session.get(User, int(id))
