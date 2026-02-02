@@ -139,17 +139,19 @@ def app(request):
             db.session.add_all(statuses)
             db.session.commit()
 
-        # Ensure status with id=5 exists to prevent FK violations in tests
-        # Some tests or legacy data may insert tracker rows with status_id=5.
-        # If the status table is pre-populated without id=5, add a fallback row.
+        # Ensure status with id=5 exists and represents 'new' to prevent FK violations
+        # Some tests insert tracker rows with status_id=5 expecting the 'new' status.
         try:
             existing_id5 = db.session.get(Status, 5)
         except Exception:
             existing_id5 = Status.query.filter_by(id=5).first()
         if existing_id5 is None:
-            s = Status(name='Completed')
+            s = Status(name='new')
             s.id = 5
             db.session.add(s)
+            db.session.commit()
+        elif getattr(existing_id5, 'name', None) != 'new':
+            existing_id5.name = 'new'
             db.session.commit()
 
         # Seed/normalize terms: ensure exactly one active version and it's '1.0'
