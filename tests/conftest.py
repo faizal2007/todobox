@@ -66,6 +66,31 @@ def purge_example_test_users():
                 continue
 
 
+@pytest.fixture(autouse=True)
+def ensure_status_new_id5():
+    """Autouse fixture to ensure `Status(id=5, name='new')` exists.
+
+    Some tests insert `Tracker` rows referencing `status_id=5` without using
+    the `app` fixture. To avoid foreign key violations across all databases,
+    ensure this status row is present and normalized before each test.
+    """
+    from app import app, db
+    from app.models import Status
+    with app.app_context():
+        try:
+            existing_id5 = db.session.get(Status, 5)
+        except Exception:
+            existing_id5 = Status.query.filter_by(id=5).first()
+        if existing_id5 is None:
+            s = Status(name='new')
+            s.id = 5
+            db.session.add(s)
+            db.session.commit()
+        elif getattr(existing_id5, 'name', None) != 'new':
+            existing_id5.name = 'new'
+            db.session.commit()
+
+
 @pytest.fixture(scope="function")
 def app(request):
     """Create and configure a test application instance.
