@@ -111,7 +111,9 @@ TEST_HTML = """
 
 @app.route('/')
 def test_kiv():
-    return render_template_string(TEST_HTML)
+    # Ensure an application context exists when invoked directly by pytest
+    with app.app_context():
+        return render_template_string(TEST_HTML)
 
 if __name__ == '__main__':
     print("🧪 Starting KIV tab test server...")

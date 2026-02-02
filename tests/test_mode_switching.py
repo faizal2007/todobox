@@ -100,7 +100,7 @@ class TestModeSwitch:
             db.session.commit()
             
             # Load and verify
-            todo = Todo.query.get(simple_todo.id)
+            todo = db.session.get(Todo, simple_todo.id)
             assert todo.todo_type == 'simple'
     
     @staticmethod
@@ -119,7 +119,7 @@ class TestModeSwitch:
             db.session.commit()
             
             # Load and verify
-            todo = Todo.query.get(advanced_todo.id)
+            todo = db.session.get(Todo, advanced_todo.id)
             assert todo.todo_type == 'advanced'
     
     @staticmethod
@@ -139,7 +139,7 @@ class TestModeSwitch:
             db.session.commit()
             
             # Verify all content is preserved
-            retrieved = Todo.query.get(todo.id)
+            retrieved = db.session.get(Todo, todo.id)
             assert '# Instructions' in retrieved.details
             assert '- [ ] Task 1' in retrieved.details
             assert '- [ ] Task 2' in retrieved.details
@@ -162,7 +162,7 @@ class TestModeSwitch:
             db.session.commit()
             
             # Verify it was created
-            retrieved = Todo.query.get(todo.id)
+            retrieved = db.session.get(Todo, todo.id)
             assert retrieved is not None
             assert retrieved.details == ''
     
@@ -187,7 +187,7 @@ class TestModeSwitch:
             db.session.commit()
             
             # Verify type is preserved
-            retrieved = Todo.query.get(todo_id)
+            retrieved = db.session.get(Todo, todo_id)
             assert retrieved.todo_type == 'simple'
             assert '- [ ] Updated Item 1' in retrieved.details
     
@@ -213,7 +213,7 @@ class TestModeSwitch:
             db.session.commit()
             
             # Verify ID is unchanged
-            retrieved = Todo.query.get(original_id)
+            retrieved = db.session.get(Todo, original_id)
             assert retrieved is not None
             assert retrieved.id == original_id
     
@@ -383,7 +383,7 @@ class TestDataPersistence:
             db.session.commit()
             
             # Retrieve and verify
-            retrieved = Todo.query.get(todo_id)
+            retrieved = db.session.get(Todo, todo_id)
             assert retrieved.details == '- [ ] Updated Item'
             assert retrieved.todo_type == 'simple'
     
@@ -414,7 +414,7 @@ class TestDataPersistence:
             db.session.commit()
             
             # Retrieve and verify
-            retrieved = Todo.query.get(todo_id)
+            retrieved = db.session.get(Todo, todo_id)
             assert retrieved.details == '# Updated Header\n\nNew content'
             assert retrieved.todo_type == 'advanced'
 

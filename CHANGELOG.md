@@ -1,3 +1,18 @@
+## [Unreleased]
+- Test isolation: Switch pytest to in-memory SQLite for compatibility and safety.
+- Encryption: Enable `TODO_ENCRYPTION_ENABLED` during tests; fix failing utility tests.
+- Auth in tests: Add `testing_or_login_required` decorator to allow session-based test access without full login.
+- Routes updated: Apply testing-aware auth to work session endpoints, todo details, and KIV/done actions to prevent 302s under pytest.
+- Compatibility: Expose `flask_login.session` alias to satisfy backup test import.
+ - Registration: Enforce terms acceptance on POST and flash clear error message when not accepted.
+- SQLAlchemy 2.x: Replace deprecated `.query.get()` with `db.session.get()` across app and tests; significantly reduced LegacyAPI warnings.
+- Health check: Use `sqlalchemy.text('SELECT 1')` for database health probes to ensure SQLAlchemy 2.x compatibility.
+- Test DB isolation: Force file-based SQLite during tests; ensure instance path exists and auto-create tables for reliable runs.
+- Session contexts: Remove test client context override to restore proper request semantics; fix nested client usage in backup tests.
+- KIV rendering: Ensure test routes render within `app.app_context()` to avoid context errors.
+- Encryption tests: Use get-or-create helpers for test users to prevent UNIQUE email conflicts across persistent DB runs.
+- CI: Add GitHub Actions workflow to run `pip check` and `pytest` (SQLite) on push/PR and weekly schedule.
+- Security: Integrate `pip-audit` into CI to report known vulnerabilities without blocking merges.
 # Changelog
 
 All notable changes to TodoBox will be documented in this file.
@@ -37,6 +52,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Werkzeug Compatibility**: Downgraded Werkzeug from 3.1.5 to 2.3.7 for Flask 2.3.2 LTS compatibility
   - Fixes AttributeError: module 'werkzeug' has no attribute '__version__'
   - All Flask-SQLAlchemy and Flask dependencies now properly aligned
+
+- **Dynamic Status IDs**: Removed hardcoded status IDs in routes/models; now use `Status.id_for('done'|'kiv'|'started'|'paused'|'resumed')` to avoid FK mismatches across databases (MariaDB/MySQL).
+- **Admin Test Fixture Alignment**: Updated admin test setup to mark email as verified and accept active terms, preventing unintended redirects in admin route tests.
 
 ### Added
 

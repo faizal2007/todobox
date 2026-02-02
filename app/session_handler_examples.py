@@ -361,7 +361,7 @@ def update_todo(todo_id):
     SessionExpirationHandler.extend_session_expiration()
     
     # Continue with actual logic...
-    todo = Todo.query.get(todo_id)
+    todo = db.session.get(Todo, todo_id)
     if not todo or todo.user_id != current_user.id:
         return jsonify({'error': 'Not found'}), 404
     

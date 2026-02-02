@@ -314,7 +314,7 @@ class TestTodoCRUDRoutes:
         assert response.status_code == 200
         
         # Verify todo was deleted
-        deleted_todo = Todo.query.get(todo_id)
+        deleted_todo = db_session.session.get(Todo, todo_id)
         assert deleted_todo is None
     
     def test_done_with_date_context(self, auth_client, db_session):
@@ -428,9 +428,13 @@ class TestAdminRoutes:
     def admin_user(self, db_session):
         """Create an admin user."""
         from app.models import User
+        from app.models import TermsAndDisclaimer
+        active_terms = TermsAndDisclaimer.get_or_create_default()
         
         user = User(email='admin@example.com', fullname='Admin User')
         user.is_admin = True
+        user.email_verified = True
+        user.terms_accepted_version = active_terms.version
         user.set_password('AdminPass123!')
         db_session.session.add(user)
         db_session.session.commit()
@@ -726,7 +730,7 @@ class TestIntegrationScenarios:
         assert response.status_code in [200, 302]
         
         # Verify deleted
-        deleted = Todo.query.get(todo_id)
+        deleted = db_session.session.get(Todo, todo_id)
         assert deleted is None
     
     def test_user_authentication_flow(self, client, test_user):

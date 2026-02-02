@@ -10,6 +10,9 @@ import pytest
 import os
 import sys
 
+# Ensure app uses SQLite for tests even if imported early
+os.environ.setdefault('FORCE_SQLITE_FOR_TESTS', '1')
+
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,7 +22,7 @@ from tests.login_fixtures import *
 
 
 @pytest.fixture(scope="function")
-def app():
+def app(request):
     """Create and configure a test application instance.
     
     IMPORTANT: Tests use the DEVELOPMENT database from .flaskenv, not in-memory SQLite.
@@ -34,42 +37,34 @@ def app():
     
     from app import app, db
     
-    # Configure for testing - use development database config from .flaskenv
+    # Configure for testing - isolate using SQLite to avoid impacting dev DB
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
+    # Default encryption disabled; selectively enable for specific test modules
     app.config['TODO_ENCRYPTION_ENABLED'] = False
-    # Database URI will come from .flaskenv via app's normal config
-    # This means tests use the actual development/staging database
+    # Ensure cookies persist in test client (HTTP, not HTTPS)
+    app.config['SESSION_COOKIE_SECURE'] = False
+    app.config['REMEMBER_COOKIE_SECURE'] = False
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['PREFERRED_URL_SCHEME'] = 'http'
+    app.config['SERVER_NAME'] = 'localhost'
+    # Use in-memory SQLite for test isolation and cross-DB SQL compatibility
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+
+    # Enable encryption for utility tests that expect it
+    try:
+        fspath = str(request.node.fspath)
+        if fspath.endswith('test_utility_functions.py'):
+            app.config['TODO_ENCRYPTION_ENABLED'] = True
+    except Exception:
+        pass
     
     with app.app_context():
-        # Cleanup test data from previous runs BEFORE running tests
-        from app.models import User, Todo, Tracker, KIV, TodoShare
+        # Fresh schema for each test function
         try:
-            # Find test users - use @example.com domain pattern which is used by all tests
-            # This catches all test emails: admin@example.com, user@example.com, workflow@example.com, etc.
-            test_users = User.query.filter(
-                User.email.like('%@example.com')
-            ).all()
-            
-            for user in test_users:
-                # Delete todo shares (owner_id and shared_with_id)
-                TodoShare.query.filter_by(owner_id=user.id).delete()
-                TodoShare.query.filter_by(shared_with_id=user.id).delete()
-                
-                # Delete todos and their related data
-                todos = Todo.query.filter_by(user_id=user.id).all()
-                for todo in todos:
-                    Tracker.query.filter_by(todo_id=todo.id).delete()
-                    KIV.query.filter_by(todo_id=todo.id).delete()
-                Todo.query.filter_by(user_id=user.id).delete()
-                
-                db.session.delete(user)
-            db.session.commit()
-        except Exception as e:
+            db.drop_all()
+        except Exception:
             db.session.rollback()
-            print(f"Note: Cleanup error (may occur on first run): {e}")
-        
-        # Create all tables in the development database
         db.create_all()
         
         # Seed status data if needed
@@ -110,32 +105,7 @@ def app():
         
         yield app
         
-        # Cleanup test data after tests complete
-        try:
-            from app.models import User, Todo, Tracker, KIV, TodoShare
-            test_users = User.query.filter(
-                (User.email.contains('test')) | 
-                (User.email.contains('persist')) |
-                (User.email.contains('exists')) |
-                (User.email.contains('unverified'))
-            ).all()
-            
-            for user in test_users:
-                # Delete todo shares (owner_id and shared_with_id)
-                TodoShare.query.filter_by(owner_id=user.id).delete()
-                TodoShare.query.filter_by(shared_with_id=user.id).delete()
-                
-                # Delete todos and related data
-                todos = Todo.query.filter_by(user_id=user.id).all()
-                for todo in todos:
-                    Tracker.query.filter_by(todo_id=todo.id).delete()
-                    KIV.query.filter_by(todo_id=todo.id).delete()
-                Todo.query.filter_by(user_id=user.id).delete()
-                db.session.delete(user)
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-        
+        # Nothing to cleanup with in-memory DB; ensure session removal
         db.session.remove()
 
 
