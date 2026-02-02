@@ -22,10 +22,11 @@ jobs:
           python-version: "3.10"
           cache: "pip"
 
-      - name: Install system packages (build deps for mysqlclient)
+      - name: Install system packages (build deps for mysqlclient & py-spy)
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential python3-dev pkg-config default-libmysqlclient-dev
+          sudo apt-get install -y build-essential python3-dev pkg-config default-libmysqlclient-dev \
+            rustc cargo libunwind-dev
 
       - name: Install dependencies
         run: |
