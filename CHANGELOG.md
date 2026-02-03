@@ -21,6 +21,11 @@
 - Testing: Respect `.flaskenv` DB selection; remove `db.drop_all()` from tests to prevent accidental table drops; allow `FORCE_SQLITE_FOR_TESTS=1` only when isolation is needed.
 # Changelog
 
+## [Unreleased]
+- tests: Add autouse fixture `ensure_required_status_ids` to upsert status IDs 5(new), 6(done), 7(failed), 8(re-assign), 9(kiv), 10(started), 11(paused), 12(resumed) before each test, preventing FK failures across sqlite/mariadb/postgres.
+- tests(postgres): Align `status.id` sequence to `MAX(id)` to avoid `UniqueViolation` when explicit IDs are inserted during seeding.
+
+
 All notable changes to TodoBox will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

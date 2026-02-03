@@ -91,6 +91,68 @@ def ensure_status_new_id5():
             db.session.commit()
 
 
+@pytest.fixture(autouse=True)
+def ensure_required_status_ids():
+    """Ensure all required status IDs exist with expected names.
+
+    Tests reference fixed status IDs:
+    - 5: new
+    - 6: done
+    - 7: failed
+    - 8: re-assign
+    - 9: kiv
+    - 10: started
+    - 11: paused
+    - 12: resumed
+
+    To prevent foreign key violations across DBs, upsert these rows
+    before each test and, for PostgreSQL, align the sequence to MAX(id).
+    """
+    from app import app, db
+    from app.models import Status
+    with app.app_context():
+        mapping = {
+            5: 'new',
+            6: 'done',
+            7: 'failed',
+            8: 're-assign',
+            9: 'kiv',
+            10: 'started',
+            11: 'paused',
+            12: 'resumed',
+        }
+        try:
+            for sid, name in mapping.items():
+                try:
+                    row = db.session.get(Status, sid)
+                except Exception:
+                    row = Status.query.filter_by(id=sid).first()
+                if row is None:
+                    s = Status(name=name)
+                    s.id = sid
+                    db.session.add(s)
+                else:
+                    if getattr(row, 'name', None) != name:
+                        row.name = name
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+        # For PostgreSQL, adjust the sequence to avoid duplicate key errors
+        try:
+            if 'postgres' in str(db.engine.dialect.name):
+                from sqlalchemy import text
+                db.session.execute(
+                    text(
+                        "SELECT setval(pg_get_serial_sequence('status','id'), (SELECT COALESCE(MAX(id), 1) FROM status))"
+                    )
+                )
+                db.session.commit()
+        except Exception:
+            # If sequence alignment fails, continue; tests may still pass on other DBs
+            db.session.rollback()
+
+
 @pytest.fixture(scope="function")
 def app(request):
     """Create and configure a test application instance.
