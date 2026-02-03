@@ -114,12 +114,16 @@ jobs:
           pip check
 
       - name: Validate Markdown locations (repository)
+        if: ${{ hashFiles('scripts/validate_markdown_locations.py') != '' }}
         run: |
-          if [ -f scripts/validate_markdown_locations.py ]; then
-            python scripts/validate_markdown_locations.py
-          else
-            echo "ℹ️ validate_markdown_locations.py not found; skipping repo-wide check."
-          fi
+          python scripts/validate_markdown_locations.py
+
+      - name: Ensure validator exists on default branch
+        if: ${{ hashFiles('scripts/validate_markdown_locations.py') == '' && github.ref == 'refs/heads/master' }}
+        run: |
+          echo "❌ scripts/validate_markdown_locations.py missing on default branch (master)."
+          echo "Add the validator script or adjust the workflow."
+          exit 1
 
       - name: Validate Markdown file locations
         if: github.event_name == 'pull_request'

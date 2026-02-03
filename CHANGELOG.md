@@ -83,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Comprehensive Logging**: Session expiration events logged for audit trails and debugging
 - **Test Coverage**: Full test suite in `tests/test_session_handler.py` covering all session handler functionality
 - **Documentation**: Detailed documentation in `docs/SESSION_HANDLER.md` with examples and troubleshooting
+- **CI**: Markdown validator step now fails only on default branch if missing; on other branches it is skipped.
 
 ### Removed
 
