@@ -113,6 +113,10 @@ jobs:
         run: |
           pip check
 
+      - name: Validate Markdown locations (repository)
+        run: |
+          python scripts/validate_markdown_locations.py
+
       - name: Validate Markdown file locations
         if: github.event_name == 'pull_request'
         run: |

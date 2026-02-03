@@ -43,6 +43,15 @@ else
     echo -e "${YELLOW}  ⚠ Requirements validation skipped (non-critical)${NC}"
 fi
 
+# 3a. Validate Markdown file locations per rules
+echo "  • Validating Markdown file locations..."
+if python3 scripts/validate_markdown_locations.py --staged >/dev/null 2>&1; then
+    echo -e "${GREEN}  ✓ Markdown locations valid${NC}"
+else
+    echo -e "${RED}  ✗ Root-level Markdown not allowed (except README.md, CHANGELOG.md, SECURITY.md, .copilot-markdown-rules.md)${NC}"
+    FAILED=1
+fi
+
 # 4. Run quick unit tests (DISABLED - tests cause database issues)
 # Tests should be run separately, not during commit
 # Pre-commit hook should only do syntax/import checks
