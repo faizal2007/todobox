@@ -1,15 +1,5 @@
 # Changelog
 
-## [Unreleased]
-
-### Added
-- CI: Enforce Markdown file locations — block PRs that add new root-level `.md` files outside the allowlist (`README.md`, `CHANGELOG.md`, `SECURITY.md`, `.copilot-markdown-rules.md`).
-
-### Fixed
-- Tests: Upsert required status IDs (5=new, 6=done, 7=failed, 8=re-assign, 9=kiv, 10=started, 11=paused, 12=resumed) before each test to prevent foreign key failures across SQLite/MariaDB/Postgres.
-- Tests (Postgres): Align `status.id` sequence to `MAX(id)` to avoid `UniqueViolation` when explicit IDs are inserted during test seeding.
-
-
 All notable changes to TodoBox will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -17,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased] - Session Expiration Handler, Client-Side Monitoring & Critical Database Protection Fixes
+## [Unreleased]
 
 ### Fixed
 
@@ -51,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dynamic Status IDs**: Removed hardcoded status IDs in routes/models; now use `Status.id_for('done'|'kiv'|'started'|'paused'|'resumed')` to avoid FK mismatches across databases (MariaDB/MySQL).
 - **Admin Test Fixture Alignment**: Updated admin test setup to mark email as verified and accept active terms, preventing unintended redirects in admin route tests.
 
+- Tests: Upsert required status IDs (5=new, 6=done, 7=failed, 8=re-assign, 9=kiv, 10=started, 11=paused, 12=resumed) before each test to prevent foreign key failures across SQLite/MariaDB/Postgres.
+- Tests (Postgres): Align `status.id` sequence to `MAX(id)` to avoid `UniqueViolation` when explicit IDs are inserted during test seeding.
+
 ### Added
 
 - **Session Expiration Handler Module**: New `app/session_handler.py` module for comprehensive session management
@@ -75,6 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Built-in quick validation: `python3 test.py quick`
   - Coverage and verbose options available
 
+- CI: Enforce Markdown file locations — block PRs that add new root-level `.md` files outside the allowlist (`README.md`, `CHANGELOG.md`, `SECURITY.md`, `.copilot-markdown-rules.md`).
+
 ### Changed
 
 - **Test Suite Reorganization**: Fixed `tests/run_tests.py` to reference actual test files
@@ -84,6 +79,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Improved Error Handling**: Enhanced `cleanup_pending_deletions()` in `app/__init__.py` to gracefully handle missing database tables during migrations
 - **App Initialization**: Modified `app/__init__.py` to call `init_session_handler(app)` during startup
 - **Session Configuration**: Session timeout configuration in `app/config.py` already aligned with session handler
+
+- **Comprehensive Logging**: Session expiration events logged for audit trails and debugging
+- **Test Coverage**: Full test suite in `tests/test_session_handler.py` covering all session handler functionality
+- **Documentation**: Detailed documentation in `docs/SESSION_HANDLER.md` with examples and troubleshooting
 
 ### Removed
 
@@ -95,11 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Superseded versions: `test_system_accuracy.py`, `test_work_session_simplified.py`
 - Tests now consolidated to 21 actively maintained files covering all functionality
 
-### Changed
-
-- **Comprehensive Logging**: Session expiration events logged for audit trails and debugging
-- **Test Coverage**: Full test suite in `tests/test_session_handler.py` covering all session handler functionality
-- **Documentation**: Detailed documentation in `docs/SESSION_HANDLER.md` with examples and troubleshooting
+*** End Patch
 
 ---
 
