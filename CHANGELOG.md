@@ -24,6 +24,7 @@
 ## [Unreleased]
 - tests: Add autouse fixture `ensure_required_status_ids` to upsert status IDs 5(new), 6(done), 7(failed), 8(re-assign), 9(kiv), 10(started), 11(paused), 12(resumed) before each test, preventing FK failures across sqlite/mariadb/postgres.
 - tests(postgres): Align `status.id` sequence to `MAX(id)` to avoid `UniqueViolation` when explicit IDs are inserted during seeding.
+- ci: Enforce Markdown file locations — block PRs that add new root-level `.md` files outside the allowlist (`README.md`, `CHANGELOG.md`, `SECURITY.md`, `.copilot-markdown-rules.md`).
 
 
 All notable changes to TodoBox will be documented in this file.
