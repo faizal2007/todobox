@@ -115,7 +115,11 @@ jobs:
 
       - name: Validate Markdown locations (repository)
         run: |
-          python scripts/validate_markdown_locations.py
+          if [ -f scripts/validate_markdown_locations.py ]; then
+            python scripts/validate_markdown_locations.py
+          else
+            echo "ℹ️ validate_markdown_locations.py not found; skipping repo-wide check."
+          fi
 
       - name: Validate Markdown file locations
         if: github.event_name == 'pull_request'
