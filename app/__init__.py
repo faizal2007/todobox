@@ -52,16 +52,21 @@ cache = init_cache(app)
 
 # Force test database isolation when running under pytest
 import os as _os
-if _os.environ.get('PYTEST_CURRENT_TEST') or _os.environ.get('FORCE_SQLITE_FOR_TESTS'):
+# Mark testing mode when running under pytest, but do not force SQLite
+if _os.environ.get('PYTEST_CURRENT_TEST'):
     app.config['TESTING'] = True
+
+# Explicit override to use SQLite for tests when desired
+if _os.environ.get('FORCE_SQLITE_FOR_TESTS'):
     app.config['DATABASE_DEFAULT'] = 'sqlite'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.instance_path, 'test.db')
-    # Allow adding routes after first request in TESTING to support decorator tests
+
+# In testing, allow flexible route registration to support decorator tests
+if app.config.get('TESTING'):
     try:
         app._check_setup_finished = lambda f_name: None  # type: ignore[attr-defined]
     except Exception:
         pass
-    # Allow overriding duplicate endpoints in tests by removing existing mapping
     try:
         _orig_add_url_rule = app.add_url_rule
         def _test_add_url_rule(rule, endpoint=None, view_func=None, provide_automatic_options=None, **options):
@@ -72,8 +77,18 @@ if _os.environ.get('PYTEST_CURRENT_TEST') or _os.environ.get('FORCE_SQLITE_FOR_T
         app.add_url_rule = _test_add_url_rule  # type: ignore[assignment]
     except Exception:
         pass
-    # Allow nested client contexts in tests
-    # Do not override FlaskClient context management; preserve request context behavior
+
+# When testing against external DBs, allow TEST_DB_* to override .flaskenv safely
+if app.config.get('TESTING'):
+    test_db_url = _os.environ.get('TEST_DB_URL')
+    test_db_user = _os.environ.get('TEST_DB_USER')
+    test_db_pw = _os.environ.get('TEST_DB_PASSWORD') or _os.environ.get('TEST_DB_PW')
+    test_db_name = _os.environ.get('TEST_DB_NAME')
+    if test_db_url and test_db_user and test_db_pw and test_db_name:
+        _os.environ['DB_URL'] = test_db_url
+        _os.environ['DB_USER'] = test_db_user
+        _os.environ['DB_PASSWORD'] = test_db_pw
+        _os.environ['DB_NAME'] = test_db_name
 
 if app.config['DATABASE_DEFAULT'] == 'postgres':
     connect_db('postgres', app)

@@ -283,10 +283,21 @@ def testing_or_login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         from flask import current_app, request, jsonify
+        from flask_login import login_user
+        from app.models import User
+        from app import db
 
         if not current_user.is_authenticated:
             # Allow test clients that set `_user_id` directly in session
             if current_app.config.get('TESTING') and session.get('_user_id'):
+                # Actively authenticate the user in testing so `current_user` works
+                try:
+                    user_id = int(session.get('_user_id'))
+                    user = db.session.get(User, user_id)
+                    if user:
+                        login_user(user, remember=False, force=True)
+                except Exception:
+                    pass
                 SessionExpirationHandler.update_last_activity()
                 return f(*args, **kwargs)
             # For API endpoints, return 401 JSON instead of redirect
