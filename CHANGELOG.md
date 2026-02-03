@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Documentation Cleanup (Feb 3, 2026)**: Reorganized and streamlined documentation
+  - Moved 26 obsolete/redundant documents to archive (reports, summaries, phase docs)
+  - Consolidated session documentation from 8 to 2 core files (SESSION_HANDLER.md, SESSION_HANDLER_QUICKSTART.md)
+  - Updated docs/README.md to reflect current documentation structure
+  - Updated root README.md to remove references to non-existent documents
+  - Reduced active docs from 62 to 36 core files for easier navigation
+  - Archived: test reports, completion summaries, phase progress, markdown compliance reports, duplicate analyses
+
 ### Fixed
 
 - **Test Data Cleanup Improved**: Enhanced test fixture cleanup to catch all test users

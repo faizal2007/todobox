@@ -128,16 +128,17 @@ Comprehensive documentation is available in the `docs/` directory:
 - **[docs/AUTO_CLOSE_REMINDERS.md](docs/AUTO_CLOSE_REMINDERS.md)** - Auto-close reminder feature documentation
 - **[docs/TIMEZONE_AUTO_DETECTION.md](docs/TIMEZONE_AUTO_DETECTION.md)** - Automatic timezone detection
 - **[docs/TIMEZONE_INTEGRATION.md](docs/TIMEZONE_INTEGRATION.md)** - Timezone integration for reminders
+- **[docs/WORK_SESSION_TRACKING_IMPLEMENTATION.md](docs/WORK_SESSION_TRACKING_IMPLEMENTATION.md)** - Work session tracking
+- **[docs/WORK_SESSION_MODAL_IMPLEMENTATION.md](docs/WORK_SESSION_MODAL_IMPLEMENTATION.md)** - Work session modal
+- **[docs/SESSION_HANDLER.md](docs/SESSION_HANDLER.md)** - Session expiration and management
+- **[docs/SESSION_HANDLER_QUICKSTART.md](docs/SESSION_HANDLER_QUICKSTART.md)** - Session management quick start
 
-### Sharing & Collaboration
+### Code Quality & Security
 
-- **[docs/SHARING.md](docs/SHARING.md)** - Todo sharing feature documentation (if exists)
-
-### Code Quality & Performance
-
-- **[docs/JAVASCRIPT_OPTIMIZATION.md](docs/JAVASCRIPT_OPTIMIZATION.md)** - JavaScript modernization (jQuery to vanilla JS)
-- **[docs/JQUERY_MIGRATION_GUIDE.md](docs/JQUERY_MIGRATION_GUIDE.md)** - Developer guide for JavaScript patterns
 - **[docs/AXE_LINTER_BEST_PRACTICES.md](docs/AXE_LINTER_BEST_PRACTICES.md)** - Accessibility guidelines
+- **[docs/CODE_REVIEW.md](docs/CODE_REVIEW.md)** - Code review findings and best practices
+- **[docs/SECURITY_AUDIT.md](docs/SECURITY_AUDIT.md)** - Security audit results
+- **[docs/EMAIL_DELIVERABILITY.md](docs/EMAIL_DELIVERABILITY.md)** - Email configuration and deliverability
 
 ### Testing & Quality Gates
 
@@ -151,7 +152,6 @@ Comprehensive documentation is available in the `docs/` directory:
 ### Migration Guides
 
 - **[docs/README_MIGRATIONS.md](docs/README_MIGRATIONS.md)** - Database migration documentation
-- **[docs/MIGRATION_FIX_GUIDE.md](docs/MIGRATION_FIX_GUIDE.md)** - Migration troubleshooting guide
 
 ### Complete Index
 
