@@ -84,6 +84,8 @@ For a comprehensive guide with detailed navigation, see:
 
 **[DOCUMENTATION_MASTER_INDEX.md](DOCUMENTATION_MASTER_INDEX.md)** - Complete documentation index with reading paths, quick navigation, and detailed sections
 
+**[DOCUMENTATION_STATUS.md](DOCUMENTATION_STATUS.md)** - Recent documentation changes, cleanup status, and known issues
+
 ---
 
 ## 💡 Quick Links
