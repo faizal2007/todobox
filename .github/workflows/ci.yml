@@ -113,6 +113,45 @@ jobs:
         run: |
           pip check
 
+      - name: Validate Markdown locations (repository)
+        run: |
+          if [ -f scripts/validate_markdown_locations.py ]; then
+            python scripts/validate_markdown_locations.py
+          else
+            echo "ℹ️ validate_markdown_locations.py not found; skipping repo-wide check."
+          fi
+
+      - name: Validate Markdown file locations (PR diff; additions/modifications only)
+        if: github.event_name == 'pull_request'
+        run: |
+          ALLOWLIST=("README.md" "CHANGELOG.md" "SECURITY.md" ".copilot-markdown-rules.md")
+          BAD_FILES=()
+          while IFS=$'\t' read -r STATUS PATH; do
+            # Only consider Added or Modified files
+            if [[ "$STATUS" == "A" || "$STATUS" == "M" ]]; then
+              if [[ "$PATH" =~ ^[^/]+\.md$ ]]; then
+                allowed=false
+                for a in "${ALLOWLIST[@]}"; do
+                  if [[ "$PATH" == "$a" ]]; then
+                    allowed=true
+                    break
+                  fi
+                done
+                if [[ "$allowed" == false ]]; then
+                  BAD_FILES+=("$PATH")
+                fi
+              fi
+            fi
+          done < <(git diff --name-status "${{ github.event.pull_request.base.sha }}".."${{ github.sha }}")
+
+          if [[ ${#BAD_FILES[@]} -gt 0 ]]; then
+            echo "❌ Root-level Markdown not allowed (added/modified): ${BAD_FILES[*]}"
+            echo "Move docs into docs/ or add to allowlist if truly necessary."
+            exit 1
+          else
+            echo "✅ Markdown locations valid."
+          fi
+
       - name: Install pip-audit
         run: |
           pip install pip-audit

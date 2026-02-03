@@ -1,30 +1,4 @@
-## [Unreleased]
- - Tests: Ensure `status_id=5` exists during test setup and maps to `'new'`; insert or correct `Status(id=5, name="new")` to prevent foreign key violations in tracker inserts.
- - Tests: Add autouse fixture to enforce `Status(id=5,'new')` even for tests that bypass the `app` fixture, fixing Postgres/MariaDB FK errors.
-- CI: Fix schema init step to run entirely within Flask app context; avoid RuntimeError when accessing `db.engine.url` in CI.
-- CI: Fix matrix DB configuration to avoid forcing SQLite across all jobs; set DB_* env for external DBs and initialize schema for mariadb/postgres. Postgres/MariaDB jobs should now run against their respective databases.
-- ORM cascades: Deleting a user now removes related todos, trackers, KIV entries, shares, and invitations to prevent orphaned data (non-destructive; no table drops).
-- Test isolation: Switch pytest to in-memory SQLite for compatibility and safety.
-- Encryption: Enable `TODO_ENCRYPTION_ENABLED` during tests; fix failing utility tests.
-- Auth in tests: Add `testing_or_login_required` decorator to allow session-based test access without full login.
-- Routes updated: Apply testing-aware auth to work session endpoints, todo details, and KIV/done actions to prevent 302s under pytest.
-- Compatibility: Expose `flask_login.session` alias to satisfy backup test import.
- - Registration: Enforce terms acceptance on POST and flash clear error message when not accepted.
-- SQLAlchemy 2.x: Replace deprecated `.query.get()` with `db.session.get()` across app and tests; significantly reduced LegacyAPI warnings.
-- Health check: Use `sqlalchemy.text('SELECT 1')` for database health probes to ensure SQLAlchemy 2.x compatibility.
-- Test DB isolation: Force file-based SQLite during tests; ensure instance path exists and auto-create tables for reliable runs.
-- Session contexts: Remove test client context override to restore proper request semantics; fix nested client usage in backup tests.
-- KIV rendering: Ensure test routes render within `app.app_context()` to avoid context errors.
-- Encryption tests: Use get-or-create helpers for test users to prevent UNIQUE email conflicts across persistent DB runs.
-- CI: Add GitHub Actions workflow to run `pip check` and `pytest` (SQLite) on push/PR and weekly schedule.
-- Security: Integrate `pip-audit` into CI to report known vulnerabilities without blocking merges.
-- Testing: Respect `.flaskenv` DB selection; remove `db.drop_all()` from tests to prevent accidental table drops; allow `FORCE_SQLITE_FOR_TESTS=1` only when isolation is needed.
 # Changelog
-
-## [Unreleased]
-- tests: Add autouse fixture `ensure_required_status_ids` to upsert status IDs 5(new), 6(done), 7(failed), 8(re-assign), 9(kiv), 10(started), 11(paused), 12(resumed) before each test, preventing FK failures across sqlite/mariadb/postgres.
-- tests(postgres): Align `status.id` sequence to `MAX(id)` to avoid `UniqueViolation` when explicit IDs are inserted during seeding.
-
 
 All notable changes to TodoBox will be documented in this file.
 
@@ -33,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased] - Session Expiration Handler, Client-Side Monitoring & Critical Database Protection Fixes
+## [Unreleased]
 
-### Fixed (CRITICAL - DATABASE & TEST INFRASTRUCTURE)
+### Fixed
 
 - **Test Data Cleanup Improved**: Enhanced test fixture cleanup to catch all test users
   - Changed cleanup filter from individual email patterns to @example.com domain matching
@@ -67,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dynamic Status IDs**: Removed hardcoded status IDs in routes/models; now use `Status.id_for('done'|'kiv'|'started'|'paused'|'resumed')` to avoid FK mismatches across databases (MariaDB/MySQL).
 - **Admin Test Fixture Alignment**: Updated admin test setup to mark email as verified and accept active terms, preventing unintended redirects in admin route tests.
 
+- Tests: Upsert required status IDs (5=new, 6=done, 7=failed, 8=re-assign, 9=kiv, 10=started, 11=paused, 12=resumed) before each test to prevent foreign key failures across SQLite/MariaDB/Postgres.
+- Tests (Postgres): Align `status.id` sequence to `MAX(id)` to avoid `UniqueViolation` when explicit IDs are inserted during test seeding.
+
 ### Added
 
 - **Session Expiration Handler Module**: New `app/session_handler.py` module for comprehensive session management
@@ -91,6 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Built-in quick validation: `python3 test.py quick`
   - Coverage and verbose options available
 
+- CI: Enforce Markdown file locations — block PRs that add new root-level `.md` files outside the allowlist (`README.md`, `CHANGELOG.md`, `SECURITY.md`, `.copilot-markdown-rules.md`).
+
 ### Changed
 
 - **Test Suite Reorganization**: Fixed `tests/run_tests.py` to reference actual test files
@@ -100,6 +79,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Improved Error Handling**: Enhanced `cleanup_pending_deletions()` in `app/__init__.py` to gracefully handle missing database tables during migrations
 - **App Initialization**: Modified `app/__init__.py` to call `init_session_handler(app)` during startup
 - **Session Configuration**: Session timeout configuration in `app/config.py` already aligned with session handler
+
+- **Comprehensive Logging**: Session expiration events logged for audit trails and debugging
+- **Test Coverage**: Full test suite in `tests/test_session_handler.py` covering all session handler functionality
+- **Documentation**: Detailed documentation in `docs/SESSION_HANDLER.md` with examples and troubleshooting
+- **CI**: Markdown validator step now fails only on default branch if missing; on other branches it is skipped.
 
 ### Removed
 
@@ -111,15 +95,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Superseded versions: `test_system_accuracy.py`, `test_work_session_simplified.py`
 - Tests now consolidated to 21 actively maintained files covering all functionality
 
-### Documentation
-
-- **Comprehensive Logging**: Session expiration events logged for audit trails and debugging
-- **Test Coverage**: Full test suite in `tests/test_session_handler.py` covering all session handler functionality
-- **Documentation**: Detailed documentation in `docs/SESSION_HANDLER.md` with examples and troubleshooting
+*** End Patch
 
 ---
 
-## [2.1.1] - Branch Testing and Validation - 2026-02-02
+## [2.1.1] - 2026-02-02
+
+Branch Testing and Validation.
 
 ### Added
 
@@ -128,7 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Markdown Verification**: Verified 100% compliance with markdown standards across 55 code blocks in README.md, docs/SETUP.md, and docs/API.md
 - **Documentation Updates**: Updated CHANGELOG.md and docs/README.md to reference new testing reports
 
-### Verified
+### Changed
 
 - **Merge Readiness**: No conflicts with master, ready to merge
 - **Code Quality**: All Python files compile without syntax errors, all modules import successfully
@@ -139,7 +121,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 
-## [2.1.0] - Work Session Tracking System - 2026-01-17
+## [2.1.0] - 2026-01-17
+
+Work Session Tracking System.
 
 ### Added
 
@@ -170,7 +154,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0.0] - Major Quality & UX Improvements - 2026-01-19
+## [2.0.0] - 2026-01-19
+
+Major Quality & UX Improvements.
 
 ### Added
 
