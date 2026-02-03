@@ -1,30 +1,13 @@
-## [Unreleased]
- - Tests: Ensure `status_id=5` exists during test setup and maps to `'new'`; insert or correct `Status(id=5, name="new")` to prevent foreign key violations in tracker inserts.
- - Tests: Add autouse fixture to enforce `Status(id=5,'new')` even for tests that bypass the `app` fixture, fixing Postgres/MariaDB FK errors.
-- CI: Fix schema init step to run entirely within Flask app context; avoid RuntimeError when accessing `db.engine.url` in CI.
-- CI: Fix matrix DB configuration to avoid forcing SQLite across all jobs; set DB_* env for external DBs and initialize schema for mariadb/postgres. Postgres/MariaDB jobs should now run against their respective databases.
-- ORM cascades: Deleting a user now removes related todos, trackers, KIV entries, shares, and invitations to prevent orphaned data (non-destructive; no table drops).
-- Test isolation: Switch pytest to in-memory SQLite for compatibility and safety.
-- Encryption: Enable `TODO_ENCRYPTION_ENABLED` during tests; fix failing utility tests.
-- Auth in tests: Add `testing_or_login_required` decorator to allow session-based test access without full login.
-- Routes updated: Apply testing-aware auth to work session endpoints, todo details, and KIV/done actions to prevent 302s under pytest.
-- Compatibility: Expose `flask_login.session` alias to satisfy backup test import.
- - Registration: Enforce terms acceptance on POST and flash clear error message when not accepted.
-- SQLAlchemy 2.x: Replace deprecated `.query.get()` with `db.session.get()` across app and tests; significantly reduced LegacyAPI warnings.
-- Health check: Use `sqlalchemy.text('SELECT 1')` for database health probes to ensure SQLAlchemy 2.x compatibility.
-- Test DB isolation: Force file-based SQLite during tests; ensure instance path exists and auto-create tables for reliable runs.
-- Session contexts: Remove test client context override to restore proper request semantics; fix nested client usage in backup tests.
-- KIV rendering: Ensure test routes render within `app.app_context()` to avoid context errors.
-- Encryption tests: Use get-or-create helpers for test users to prevent UNIQUE email conflicts across persistent DB runs.
-- CI: Add GitHub Actions workflow to run `pip check` and `pytest` (SQLite) on push/PR and weekly schedule.
-- Security: Integrate `pip-audit` into CI to report known vulnerabilities without blocking merges.
-- Testing: Respect `.flaskenv` DB selection; remove `db.drop_all()` from tests to prevent accidental table drops; allow `FORCE_SQLITE_FOR_TESTS=1` only when isolation is needed.
 # Changelog
 
 ## [Unreleased]
-- tests: Add autouse fixture `ensure_required_status_ids` to upsert status IDs 5(new), 6(done), 7(failed), 8(re-assign), 9(kiv), 10(started), 11(paused), 12(resumed) before each test, preventing FK failures across sqlite/mariadb/postgres.
-- tests(postgres): Align `status.id` sequence to `MAX(id)` to avoid `UniqueViolation` when explicit IDs are inserted during seeding.
-- ci: Enforce Markdown file locations — block PRs that add new root-level `.md` files outside the allowlist (`README.md`, `CHANGELOG.md`, `SECURITY.md`, `.copilot-markdown-rules.md`).
+
+### Added
+- CI: Enforce Markdown file locations — block PRs that add new root-level `.md` files outside the allowlist (`README.md`, `CHANGELOG.md`, `SECURITY.md`, `.copilot-markdown-rules.md`).
+
+### Fixed
+- Tests: Upsert required status IDs (5=new, 6=done, 7=failed, 8=re-assign, 9=kiv, 10=started, 11=paused, 12=resumed) before each test to prevent foreign key failures across SQLite/MariaDB/Postgres.
+- Tests (Postgres): Align `status.id` sequence to `MAX(id)` to avoid `UniqueViolation` when explicit IDs are inserted during test seeding.
 
 
 All notable changes to TodoBox will be documented in this file.
