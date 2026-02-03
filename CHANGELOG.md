@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Session Expiration Handler, Client-Side Monitoring & Critical Database Protection Fixes
 
-### Fixed (CRITICAL - DATABASE & TEST INFRASTRUCTURE)
+### Fixed
 
 - **Test Data Cleanup Improved**: Enhanced test fixture cleanup to catch all test users
   - Changed cleanup filter from individual email patterns to @example.com domain matching
@@ -95,7 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Superseded versions: `test_system_accuracy.py`, `test_work_session_simplified.py`
 - Tests now consolidated to 21 actively maintained files covering all functionality
 
-### Documentation
+### Changed
 
 - **Comprehensive Logging**: Session expiration events logged for audit trails and debugging
 - **Test Coverage**: Full test suite in `tests/test_session_handler.py` covering all session handler functionality
