@@ -2,7 +2,7 @@
 
 Quick navigation guide to TodoBox documentation.
 
-**Last Updated:** January 16, 2026  
+**Last Updated:** February 3, 2026  
 **Version:** 2.0
 
 ---
@@ -38,8 +38,14 @@ New to TodoBox? Start here:
 
 #### Todo Management
 - **[KIV_STATUS.md](KIV_STATUS.md)** - Keep In View feature
-- **[CHECKBOX_HTML_RENDERING_IMPLEMENTATION.md](CHECKBOX_HTML_RENDERING_IMPLEMENTATION.md)** - Checkbox rendering
-- **[STRIKETHROUGH_IMPLEMENTATION.md](STRIKETHROUGH_IMPLEMENTATION.md)** - Strikethrough feature
+- **[WORK_SESSION_TRACKING_IMPLEMENTATION.md](WORK_SESSION_TRACKING_IMPLEMENTATION.md)** - Work session tracking
+- **[WORK_SESSION_MODAL_IMPLEMENTATION.md](WORK_SESSION_MODAL_IMPLEMENTATION.md)** - Work session modal
+- **[TIME_TAKEN_CALCULATION.md](TIME_TAKEN_CALCULATION.md)** - Time tracking calculations
+- **[TIME_TRACKING_WITH_RESCHEDULING_ANALYSIS.md](TIME_TRACKING_WITH_RESCHEDULING_ANALYSIS.md)** - Time tracking with rescheduling
+
+#### Session Management
+- **[SESSION_HANDLER.md](SESSION_HANDLER.md)** - Session expiration and management
+- **[SESSION_HANDLER_QUICKSTART.md](SESSION_HANDLER_QUICKSTART.md)** - Quick start guide for session handling
 
 #### Reminders & Timezone
 - **[AUTO_CLOSE_REMINDERS.md](AUTO_CLOSE_REMINDERS.md)** - Smart reminders with auto-close
@@ -47,51 +53,28 @@ New to TodoBox? Start here:
 - **[TIMEZONE_INTEGRATION.md](TIMEZONE_INTEGRATION.md)** - Timezone for reminders
 
 #### User Features
-- **[USER_REGISTRATION_GUIDE.md](USER_REGISTRATION_GUIDE.md)** - Registration and email verification (if exists)
-- **[REGISTRATION_IMPLEMENTATION_SUMMARY.md](REGISTRATION_IMPLEMENTATION_SUMMARY.md)** - Registration implementation details
+- **[USER_REGISTRATION_GUIDE.md](USER_REGISTRATION_GUIDE.md)** - Registration and email verification
 
-#### UI/UX
-- **[FLOATING_PROGRESS_WIDGET.md](FLOATING_PROGRESS_WIDGET.md)** - Progress widget implementation
-- **[DONUT_CHART_FIX.md](DONUT_CHART_FIX.md)** - Dashboard charts
+### Code Quality & Security
 
-### Code Quality & Analysis
-
-- **[CODE_REVIEW.md](CODE_REVIEW.md)** - Code review findings
-- **[SECURITY_PATCHES.md](SECURITY_PATCHES.md)** - Security improvements
+- **[CODE_REVIEW.md](CODE_REVIEW.md)** - Code review findings and best practices
 - **[SECURITY_AUDIT.md](SECURITY_AUDIT.md)** - Security audit results
-- **[AXE_LINTER_BEST_PRACTICES.md](AXE_LINTER_BEST_PRACTICES.md)** - Accessibility
-- **[REASSIGN_PENDING_LOGIC_ANALYSIS.md](REASSIGN_PENDING_LOGIC_ANALYSIS.md)** - Status workflow analysis
+- **[SECURITY_FIX_CREDENTIALS.md](SECURITY_FIX_CREDENTIALS.md)** - Credential security fixes
+- **[AXE_LINTER_BEST_PRACTICES.md](AXE_LINTER_BEST_PRACTICES.md)** - Accessibility guidelines
+- **[EMAIL_DELIVERABILITY.md](EMAIL_DELIVERABILITY.md)** - Email configuration and deliverability
 
-### Bug Fixes & Analysis (Latest)
-
-- **[ACHIEVEMENT_MODAL_BUG_FIX.md](ACHIEVEMENT_MODAL_BUG_FIX.md)** - Achievement modal infinite scroll fix
-- **[LOCAL_VS_PRODUCTION_ANALYSIS.md](LOCAL_VS_PRODUCTION_ANALYSIS.md)** - Local vs production environment differences
-- **[TEST_FAILURE_ROOT_CAUSE_ANALYSIS.md](TEST_FAILURE_ROOT_CAUSE_ANALYSIS.md)** - Test failure analysis
-- **[WHY_TESTS_DIDNT_CATCH_BUG.md](WHY_TESTS_DIDNT_CATCH_BUG.md)** - Test coverage gaps analysis
-
-### Performance
-
-- **[JAVASCRIPT_OPTIMIZATION.md](JAVASCRIPT_OPTIMIZATION.md)** - JS modernization (jQuery to vanilla)
-- **[JQUERY_MIGRATION_GUIDE.md](JQUERY_MIGRATION_GUIDE.md)** - jQuery migration guide
-
-### Testing & Verification
+### Testing & Quality Gates
 
 - **[TEST_FILE_ORGANIZATION.md](TEST_FILE_ORGANIZATION.md)** - Test file locations and organization
-- **[TESTING_STRATEGY_AND_CI_CD.md](TESTING_STRATEGY_AND_CI_CD.md)** - Testing strategy (if exists)
-- **[COMPREHENSIVE_TEST_STRATEGY.md](COMPREHENSIVE_TEST_STRATEGY.md)** - Multi-layer testing
-- **[TEST_SUITE_COMPREHENSIVE.md](TEST_SUITE_COMPREHENSIVE.md)** - Comprehensive test suite
-- **[TEST_UPDATE_SUMMARY.md](TEST_UPDATE_SUMMARY.md)** - Test updates summary
-- **[DECISION_KEEP_AS_IS.md](DECISION_KEEP_AS_IS.md)** - Implementation decisions
+- **[TESTING_AND_QUALITY_GATES.md](TESTING_AND_QUALITY_GATES.md)** - Comprehensive testing and quality gates
+- **[TESTING_STRATEGY_AND_CI_CD.md](TESTING_STRATEGY_AND_CI_CD.md)** - Testing strategy and CI/CD integration
+- **[TESTING_SUMMARY.md](TESTING_SUMMARY.md)** - Test coverage and results
+- **[QUALITY_GATES_QUICK_REFERENCE.md](QUALITY_GATES_QUICK_REFERENCE.md)** - Quality gates quick reference
+- **[QUALITY_GATE_SETUP.md](QUALITY_GATE_SETUP.md)** - Quality gate setup and configuration
 
 ### Migrations
 
 - **[README_MIGRATIONS.md](README_MIGRATIONS.md)** - Database migrations guide
-- **[MIGRATION_FIX_GUIDE.md](MIGRATION_FIX_GUIDE.md)** - Migration troubleshooting
-
-### Recent Updates
-
-- **[FEATURE_TEST_RESULTS_DECEMBER_16_2025.md](FEATURE_TEST_RESULTS_DECEMBER_16_2025.md)** - Latest feature testing
-- **[BULLET_POINT_ISSUE_FIX.md](BULLET_POINT_ISSUE_FIX.md)** - Recent bug fixes
 
 ---
 
@@ -116,11 +99,21 @@ For a comprehensive guide with detailed navigation, see:
 
 ## 📊 Documentation Stats (v2.0)
 
-- **Total Files:** 50+ documentation files
+- **Active Documentation:** 36 core documentation files
+- **Archived Documents:** 80+ historical documents
 - **Core Models:** 9 database models
-- **Services:** 6 specialized service modules
-- **Test Coverage:** 227 tests (80.6% passing)
+- **Services:** 6+ specialized service modules
+- **Test Coverage:** 246+ tests (79% passing)
 - **Architecture:** Layered with 8 distinct layers
+
+## 📦 Archived Documentation
+
+Historical documentation and reports are available in the **[archive](archive/)** folder, including:
+- Feature implementation reports
+- Bug fix documentation
+- Test reports and analysis
+- Phase-specific progress reports
+- Session feature implementation details
 
 ---
 
