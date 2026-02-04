@@ -43,13 +43,14 @@ def upgrade():
     
     # Find all todos that are currently KIV (status_id=9)
     # Query: Get the most recent tracker entry for each todo where status_id=9
-    # SQLite-compatible version using INSERT OR REPLACE
+    # SQLite-compatible version using INSERT OR IGNORE (skip duplicates)
+    # Use tracker timestamp to preserve historical data
     migrate_sql = """
-    INSERT OR REPLACE INTO KIV (todo_id, user_id, entered_at, is_active)
+    INSERT OR IGNORE INTO KIV (todo_id, user_id, entered_at, is_active)
     SELECT DISTINCT 
         t.id,
         t.user_id,
-        datetime('now'),
+        tr.timestamp,
         1
     FROM todo t
     INNER JOIN tracker tr ON t.id = tr.todo_id
