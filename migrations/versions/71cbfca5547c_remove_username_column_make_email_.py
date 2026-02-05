@@ -19,6 +19,7 @@ depends_on = None
 def upgrade():
     # Make email column NOT NULL
     with op.batch_alter_table('user', schema=None) as batch_op:
+        batch_op.drop_index('ix_user_username')
         batch_op.alter_column('email',
                existing_type=sa.String(length=120),
                nullable=False)
