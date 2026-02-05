@@ -1,5 +1,5 @@
 # Core Flask and Database
-Flask==2.3.2
+Flask==3.1.0
 Flask-Login==0.6.3
 Flask-SQLAlchemy==3.1.1
 Flask-WTF==1.2.2
@@ -22,7 +22,7 @@ pytz==2025.2
 requests==2.32.5
 requests-oauthlib==1.1.0
 urllib3==2.6.3
-Werkzeug==2.3.7
+Werkzeug==3.1.5
 python-dotenv==1.0.0
 Jinja2==3.1.6
 itsdangerous==2.2.0
@@ -38,7 +38,7 @@ Markdown==3.10
 pymdown-extensions==10.16.1
 click==8.3.1
 cachetools==6.2.2
-cachelib==0.9.0  # Fixed: Flask-Caching 2.0.2 requires cachelib<0.10.0
+cachelib==0.9.0
 
 # API
 oauthlib==2.1.0
@@ -50,7 +50,7 @@ pyasn1_modules==0.4.2
 gunicorn==23.0.0
 blinker==1.9.0
 Flask-Compress==1.14  # Gzip compression for responses
-Flask-Caching==2.0.2  # Caching layer
+Flask-Caching==2.3.1  # Caching layer
 redis==5.0.1  # Redis client for distributed caching
 
 # Load Testing and Performance Monitoring

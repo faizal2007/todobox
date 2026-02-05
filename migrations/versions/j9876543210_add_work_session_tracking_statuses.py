@@ -25,8 +25,9 @@ def upgrade():
     # Status 11: Paused - marks when user pauses work on a todo
     # Status 12: Resumed - marks when user resumes work on a paused todo
     
+    # SQLite-compatible version using INSERT OR IGNORE
     insert_sql = """
-    INSERT IGNORE INTO status (id, name) VALUES
+    INSERT OR IGNORE INTO status (id, name) VALUES
     (10, 'started'),
     (11, 'paused'),
     (12, 'resumed');
