@@ -15,7 +15,7 @@ alembic==1.13.2
 Flask-OAuthlib==0.9.6
 google-auth==2.41.1
 google-auth-oauthlib==1.2.3
-cryptography==46.0.3
+cryptography==46.0.5
 pytz==2025.2
 
 # Web and HTTP
