@@ -31,6 +31,21 @@ from wtforms.csrf.core import CSRF
 import requests
 import logging
 
+def get_safe_next_page(default_endpoint: str) -> str:
+    """
+    Return a safe URL for redirection based on the 'next' query parameter.
+    Only relative URLs (no scheme, no netloc) are allowed. Everything else
+    falls back to the given default endpoint.
+    """
+    next_page = request.args.get('next') or ''
+    # Normalize backslashes and whitespace, since some browsers treat '\' as '/'
+    next_page = next_page.replace('\\', '').strip()
+    parsed_next = url_parse(next_page)
+    # Disallow any absolute URL (with scheme or netloc) or empty value
+    if not next_page or parsed_next.netloc or parsed_next.scheme:
+        return url_for(default_endpoint)
+    return next_page
+
 # API Token Authentication Decorator
 def require_api_token(f):
     """Decorator to require API token authentication for API endpoints"""
@@ -1031,12 +1046,7 @@ def login():
                     SessionExpirationHandler.update_last_activity()
                 except Exception:
                     pass
-                next_page = request.args.get('next') or ''
-                # Normalize and validate next_page to prevent open redirects (same logic as below)
-                next_page = next_page.replace('\\', '').strip()
-                parsed_next = url_parse(next_page)
-                if not next_page or parsed_next.netloc or parsed_next.scheme:
-                    next_page = url_for('dashboard')
+                next_page = get_safe_next_page('dashboard')
                 return redirect(next_page)
 
         if form.validate_on_submit():
@@ -1071,12 +1081,7 @@ def login():
                 SessionExpirationHandler.update_last_activity()
             except Exception:
                 pass
-            next_page = request.args.get('next') or ''
-            # Normalize and validate next_page to prevent open redirects
-            next_page = next_page.replace('\\', '').strip()
-            parsed_next = url_parse(next_page)
-            if not next_page or parsed_next.netloc or parsed_next.scheme:
-                next_page = url_for('dashboard')
+            next_page = get_safe_next_page('dashboard')
             return redirect(next_page)
     except Exception as e:
         if 'csrf' in str(e).lower():
