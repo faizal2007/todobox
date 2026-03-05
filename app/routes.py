@@ -4318,7 +4318,7 @@ def get_session_status():
         return jsonify({
             'is_authenticated': False,
             'error': 'Session status check failed',
-            'message': str(e)
+            'message': 'An internal error occurred while checking session status.'
         }), 500
 
 
@@ -4354,7 +4354,7 @@ def extend_session():
         return jsonify({
             'status': 'error',
             'message': 'Failed to extend session',
-            'error': str(e)
+            'error': 'An internal error occurred while extending the session.'
         }), 500
 
 # Test-only helper route to authenticate a user without the login form
