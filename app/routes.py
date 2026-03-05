@@ -1032,7 +1032,7 @@ def login():
                 except Exception:
                     pass
                 next_page = request.args.get('next') or ''
-                # Normalize and validate next_page to prevent open redirects
+                # Normalize and validate next_page to prevent open redirects (same logic as below)
                 next_page = next_page.replace('\\', '').strip()
                 parsed_next = url_parse(next_page)
                 if not next_page or parsed_next.netloc or parsed_next.scheme:
