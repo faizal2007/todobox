@@ -21,7 +21,7 @@ pytz==2025.2
 # Web and HTTP
 requests==2.33.0
 requests-oauthlib==1.1.0
-urllib3==2.6.3
+urllib3==2.7.0
 Werkzeug==3.1.6
 python-dotenv==1.0.0
 Jinja2==3.1.6
